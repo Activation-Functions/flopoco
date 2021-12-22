@@ -75,29 +75,6 @@ namespace flopoco{
 			}
 			
 			REPORT(DETAILED, "maxCycle=" << maxCycle <<  "  maxCP=" << maxCP <<  "  totalPeriod=" << totalPeriod <<  "  targetPeriod=" << targetPeriod );
-#if 0
-			
-			int chunks=0; // optimistic case
-			vector<int> chunkSizes;		
-			int coveredSize=0;	
-			while(coveredSize<w) {
-				chunks++;
-				int chunkSize=1;
-				while (maxCP + (flags==2?getTarget()->eqComparatorDelay(chunkSize):getTarget()->ltComparatorDelay(chunkSize)) < targetPeriod)
-					chunkSize++;
-				chunkSize--;
-				if(coveredSize+chunkSize>w) {
-					chunkSize = w-coveredSize;
-				}
-				coveredSize += chunkSize;
-				chunkSizes.push_back(chunkSize);
-				maxCP=0; // after the first chunk
-			}
-			REPORT(DETAILED, "Found " << chunks << " chunks");
-			for (int i=0; i<chunks; i++) {
-				REPORT(DETAILED, "   chunk " <<i << " : " << chunkSizes[i] << " bit");
-			}
-#else
 			int chunkSize=1;
 			while (maxCP + (flags==2?getTarget()->eqComparatorDelay(chunkSize):getTarget()->ltComparatorDelay(chunkSize)) < targetPeriod)
 				chunkSize++;
@@ -116,7 +93,6 @@ namespace flopoco{
 				}
 			}
 			
-#endif
 			if(chunkSizes.size() == 1)		{
 				if(flags&1) vhdl << tab << declare(getTarget()->ltComparatorDelay(w), "XltYi") << " <= '1' when X<Y else '0';"<<endl;
 				if(flags&2) vhdl << tab << declare(getTarget()->eqComparatorDelay(w), "XeqYi") << " <= '1' when X=Y else '0';"<<endl;
@@ -201,7 +177,7 @@ namespace flopoco{
 				vhdl << tab << declare("C_" + to_string(i) + "_" + to_string(i), 2)
 						 << " <= " << "X" << of(i) << " & "  <<  "Y" << of(i) <<  ";"<<endl;
 			}
-			// padding to the next power of two
+			REPORT(DETAILED, "padding to the next power of two");
 			int j=1 << intlog2(w); // next power of two
 			for(int i=w; i<j; i++) {
 				vhdl << tab << declare("C_" + to_string(i) + "_" + to_string(i), 2)
@@ -213,6 +189,7 @@ namespace flopoco{
 			int stride=1; // invariant stride=2^level
 			string Cd; // it needs to exit the loop
 			while (stride<w) { // need to add one more level
+				REPORT(DETAILED, "level=" << level);
 				level+=1;
 				stride *= 2;
 				for(int i=0; i<w; i+=stride) {
@@ -279,10 +256,13 @@ namespace flopoco{
 
 			for(int w=4; w<1000; w+=300) { // 4 is an exhaustive test. The others test the decomposition in chunks
 				for(int flags=1; flags<8; flags++) { // 5 is an exhaustive test. The others test the decomposition in chunks
-					paramList.push_back(make_pair("w",to_string(w)));
-					paramList.push_back(make_pair("flags",to_string(flags)));
-					testStateList.push_back(paramList);
-					paramList.clear();
+					for(int method=0; method<3; method++) { // 5 is an exhaustive test. The others test the decomposition in chunks
+						paramList.push_back(make_pair("w",to_string(w)));
+						paramList.push_back(make_pair("flags",to_string(flags)));
+						paramList.push_back(make_pair("method",to_string(method)));
+						testStateList.push_back(paramList);
+						paramList.clear();
+					}
 				}
 			}
 		}

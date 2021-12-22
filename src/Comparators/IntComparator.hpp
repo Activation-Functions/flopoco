@@ -1,5 +1,5 @@
-#ifndef FPCOMPARATPOR_HPP
-#define FPCOMPARATPOR_HPP
+#ifndef INTCOMPARATPOR_HPP
+#define INTCOMPARATPOR_HPP
 #include "../Operator.hpp"
 
 
