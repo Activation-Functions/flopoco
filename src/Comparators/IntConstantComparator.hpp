@@ -3,11 +3,6 @@
 #include "../Operator.hpp"
 
 
-// THIS OPERATOR WORKS BUT IS USELESS
-// IT IS UNPLUGGED ON PURPOSE
-// FPGA VENDOR TOOLS DO IT RIGHT, AND THE LATENCY IS SO SHORT PIPELINING WILL BE OK
-//
-// Still we may want to resurrect it some day to target a newer techno with poorer tools?
 
 namespace flopoco{
 	class IntConstantComparator : public Operator{
@@ -52,7 +47,7 @@ namespace flopoco{
 		int method;
 
 		/** the constant to compare to */
-		mpz_class c;
+		mpz_class mpC;
 	};
 }
 #endif
