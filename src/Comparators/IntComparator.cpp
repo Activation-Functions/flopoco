@@ -56,31 +56,35 @@ namespace flopoco{
 		if(flags&2) addOutput("XeqY");
 		if(flags&4) addOutput("XgtY");
 
+		int chunkSize;
 
 
 		if (method==0 || method ==1) {
-			// determine if we have to split the input to reach the target frequency
-			
-			double targetPeriod = 1.0/getTarget()->frequency() - getTarget()->ffDelay();
-			// What is the maximum lexicographic time of our inputs?
-			int maxCycle;
-			double maxCP;
-			getIOMaxLexicographicTime(maxCycle, maxCP);
-			double totalPeriod;
-			if(flags==2){ // equality test only
-				totalPeriod = maxCP + getTarget()->eqComparatorDelay(w);
+			if(getTarget()->plainVHDL()) {
+				chunkSize=w;
 			}
-			else { // at least one lt or gt
-				totalPeriod = maxCP + getTarget()->ltComparatorDelay(w);
-			}
+			else {
+				// determine if we have to split the input to reach the target frequency
+				double targetPeriod = 1.0/getTarget()->frequency() - getTarget()->ffDelay();
+				// What is the maximum lexicographic time of our inputs?
+				int maxCycle;
+				double maxCP;
+				getIOMaxLexicographicTime(maxCycle, maxCP);
+				double totalPeriod;
+				if(flags==2){ // equality test only
+					totalPeriod = maxCP + getTarget()->eqComparatorDelay(w);
+				}
+				else { // at least one lt or gt
+					totalPeriod = maxCP + getTarget()->ltComparatorDelay(w);
+				}
 			
-			REPORT(DETAILED, "maxCycle=" << maxCycle <<  "  maxCP=" << maxCP <<  "  totalPeriod=" << totalPeriod <<  "  targetPeriod=" << targetPeriod );
-			int chunkSize=1;
-			while (maxCP + (flags==2?getTarget()->eqComparatorDelay(chunkSize):getTarget()->ltComparatorDelay(chunkSize)) < targetPeriod)
-				chunkSize++;
-			chunkSize--;
-			REPORT(DETAILED, "The first level must be split in chunks of " << chunkSize << " bits");
-
+				REPORT(DETAILED, "maxCycle=" << maxCycle <<  "  maxCP=" << maxCP <<  "  totalPeriod=" << totalPeriod <<  "  targetPeriod=" << targetPeriod );
+				chunkSize=1;
+				while (maxCP + (flags==2?getTarget()->eqComparatorDelay(chunkSize):getTarget()->ltComparatorDelay(chunkSize)) < targetPeriod)
+					chunkSize++;
+				chunkSize--;
+				REPORT(DETAILED, "The first level must be split in chunks of " << chunkSize << " bits");
+			}
 			int coveredSize=0;	
 			vector<int> chunkSizes;		
 			while(coveredSize<w) {
@@ -254,9 +258,9 @@ namespace flopoco{
 		if(index==-1) 
 		{ // The unit tests
 
-			for(int w=4; w<1000; w+=300) { // 4 is an exhaustive test. The others test the decomposition in chunks
+			for(int w=4; w<1000; w+=(w<10?1:300)) { // 4 is an exhaustive test. The others test the decomposition in chunks
 				for(int flags=1; flags<8; flags++) { // 5 is an exhaustive test. The others test the decomposition in chunks
-					for(int method=0; method<3; method++) { // 5 is an exhaustive test. The others test the decomposition in chunks
+					for(int method=0; method<(w<100?3:2); method++) { // 5 is an exhaustive test. The others test the decomposition in chunks
 						paramList.push_back(make_pair("w",to_string(w)));
 						paramList.push_back(make_pair("flags",to_string(flags)));
 						paramList.push_back(make_pair("method",to_string(method)));

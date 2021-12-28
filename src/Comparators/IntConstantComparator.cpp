@@ -61,7 +61,7 @@ namespace flopoco{
 		if(flags&2) addOutput("XeqC");
 		if(flags&4) addOutput("XgtC");
 
-
+		vhdl << tab << declare("C",w) << " <= \""<<unsignedBinary(mpC, w)<<"\";"<<endl;
 
 		if (method==0 || method ==1) {
 			// determine if we have to split the input to reach the target frequency			
@@ -78,8 +78,6 @@ namespace flopoco{
 				totalPeriod = maxCP + getTarget()->ltComparatorDelay(w);
 			}
 			
-			vhdl << tab << declare("C",w) << " <= \""<<unsignedBinary(mpC, w)<<"\";"<<endl;
-
 			// The following is copypasted from IntComparator, except the part defining chunkSize
 			int chunkSize;
 			if(getTarget()->plainVHDL()) {
@@ -114,7 +112,6 @@ namespace flopoco{
 				}
 			}
 			else {
-				addComment("For this frequency we need to split the comparison into two levels");
 				int l=0;
 				for(int i=0; i<chunkSizes.size(); i++) {
 					string chunkX = "X" + range(l+chunkSizes[i]-1, l);
@@ -261,14 +258,19 @@ namespace flopoco{
 		// the static list of mandatory tests
 		TestList testStateList;
 		vector<pair<string,string>> paramList;
-		
+		FloPoCoRandomState::init(10, false);
+
 		if(index==-1) 
 		{ // The unit tests
 
-			for(int w=4; w<1000; w+=300) { // 4 is an exhaustive test. The others test the decomposition in chunks
+			for(int w=4; w<1000; w+=1+(w<10?0:2)+(w<50?0:13)+(w<100?0:300)) { // 4 is an exhaustive test. The others test the decomposition in chunks
 				for(int flags=1; flags<8; flags++) { // 5 is an exhaustive test. The others test the decomposition in chunks
-					for(int method=0; method<3; method++) { // 5 is an exhaustive test. The others test the decomposition in chunks
+					for(int method=0; method<(w<200?3:2); method++) { // 5 is an exhaustive test. The others test the decomposition in chunks
+						mpz_class c = getLargeRandom(w);
+						ostringstream s;
+						s << c;
 						paramList.push_back(make_pair("w",to_string(w)));
+						paramList.push_back(make_pair("c", s.str()));
 						paramList.push_back(make_pair("flags",to_string(flags)));
 						paramList.push_back(make_pair("method",to_string(method)));
 						testStateList.push_back(paramList);
