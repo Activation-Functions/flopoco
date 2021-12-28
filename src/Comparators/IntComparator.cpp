@@ -59,12 +59,18 @@ namespace flopoco{
 		int chunkSize;
 
 
+<<<<<<< HEAD
 		if (method==0 || method ==1 || method ==3) {
 			if(getTarget()->plainVHDL()) {
 				chunkSize=w;
 			}
 			else if (method == 3) {
 				chunkSize = (int) ceil(sqrt(w));
+=======
+		if (method==0 || method ==1) {
+			if(getTarget()->plainVHDL()) {
+				chunkSize=w;
+>>>>>>> improved autotest
 			}
 			else {
 				// determine if we have to split the input to reach the target frequency
@@ -263,8 +269,13 @@ namespace flopoco{
 		{ // The unit tests
 
 			for(int w=4; w<1000; w+=(w<10?1:300)) { // 4 is an exhaustive test. The others test the decomposition in chunks
+<<<<<<< HEAD
 				for(int flags=1; flags<8; flags++) { // exhaustive test. 
 					for(int method=0; method<(w<100?3:2); method++) { // exhaustive for small sizes
+=======
+				for(int flags=1; flags<8; flags++) { // 5 is an exhaustive test. The others test the decomposition in chunks
+					for(int method=0; method<(w<100?3:2); method++) { // 5 is an exhaustive test. The others test the decomposition in chunks
+>>>>>>> improved autotest
 						paramList.push_back(make_pair("w",to_string(w)));
 						paramList.push_back(make_pair("flags",to_string(flags)));
 						paramList.push_back(make_pair("method",to_string(method)));
