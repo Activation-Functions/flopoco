@@ -38,9 +38,9 @@ namespace flopoco{
 	private:
 		/** bit width */
 		int w;
-		/** cmpflags */
+		/** cmpflags, see flopoco doc */
 		int flags;
-		/** method */
+		/** method, see flopoco doc */
 		int method;
 	};
 }
