@@ -259,15 +259,9 @@ namespace flopoco{
 		if(index==-1) 
 		{ // The unit tests
 
-<<<<<<< HEAD
 			for(int w=4; w<1000; w+=1+(w<10?0:2)+(w<30?0:17)+(w<100?0:300)) {
 				for(int flags=1; flags<(w<100?8:3); flags++) { 
 					for(int method=0; method<3; method++) { 
-=======
-			for(int w=4; w<1000; w+=1+(w<10?0:2)+(w<50?0:13)+(w<100?0:300)) { // 4 is an exhaustive test. The others test the decomposition in chunks
-				for(int flags=1; flags<8; flags++) { // 5 is an exhaustive test. The others test the decomposition in chunks
-					for(int method=0; method<(w<200?3:2); method++) { // 5 is an exhaustive test. The others test the decomposition in chunks
->>>>>>> improved autotest
 						mpz_class c = getLargeRandom(w);
 						ostringstream s;
 						s << c;
