@@ -1,7 +1,7 @@
 #include "IntConstantComparator.hpp"
 
-// some Kintex7 experiments
-// flopoco IntConstantComparator plainVHDL=1 flags=1 method=1 w=64 c=17979737894628297144
+// some Kintex7 experiments using vivado 2020.2
+// flopoco IntConstantComparator w=64 c=17979737894628297144
 
 // Using plainVHDL, method=1, (gt is computed out of lt and eq)
 //  w=64 flags=7: 53 LUT , 8 Carry4, Data Path Delay:	2.119ns (same as IntComparator)
@@ -12,14 +12,10 @@
 // It seems the logic optimizer is used in this case.
 
 // Using two-level where the first level is a 5-bit comparison and the second level is a <:
-//  w=64 flags=7: 34 LUT , 2 Carry4 (on the second level), Data Path Delay: 2.631ns  
-// Perfectly conform to predictions:
-//    2nd level is a 13-bit comparator (cost 13/2+13/3 approx 10 LUTs
-//    first level is 13*2 LUT5 = 26 LUT
+//  w=64 flags=1: 24 LUT, 2 Carry4 (on the second level), Data Path Delay:  2.365ns    
+// More or less conform to predictions: 64/5 -> 13 chunks -> 26 LUT + fast carry
 
-// Using method=2 (binary tree, not exploiting fast carry) :  69 LUTs, 3.42 ns
-	// We essentially need 2*63 LUT4 that can be packed as 64 LUT6.
-	// No miracle here
+// Using method=2 (binary tree, not exploiting fast carry) :  29 LUTs, 2.568 ns
 
 using namespace std;
 namespace flopoco{
@@ -263,9 +259,9 @@ namespace flopoco{
 		if(index==-1) 
 		{ // The unit tests
 
-			for(int w=4; w<1000; w+=1+(w<10?0:2)+(w<50?0:13)+(w<100?0:300)) { // 4 is an exhaustive test. The others test the decomposition in chunks
-				for(int flags=1; flags<8; flags++) { // 5 is an exhaustive test. The others test the decomposition in chunks
-					for(int method=0; method<(w<200?3:2); method++) { // 5 is an exhaustive test. The others test the decomposition in chunks
+			for(int w=4; w<1000; w+=1+(w<10?0:2)+(w<30?0:17)+(w<100?0:300)) {
+				for(int flags=1; flags<(w<100?8:3); flags++) { 
+					for(int method=0; method<3; method++) { 
 						mpz_class c = getLargeRandom(w);
 						ostringstream s;
 						s << c;
@@ -295,9 +291,9 @@ namespace flopoco{
 			"BasicInteger",
 			"", //seeAlso
 			"w(int): size in bits of integers to be compared;\
-			constant(int): constant;\
+			c(int): constant;\
 			flags(int)=7: if bit 0 set output  X<C, if bit 1 set output X=C, if bit 2 set output  X>C;\
-			method(int)=-1: method to be used, for experimental purpose (-1: automatic, 0: symmetric plain VHDL, 1: asymmetric plain VHDL where gt is computed out of lt and eq, 2: binary tree);",
+			method(int)=-1: method to be used, for experimental purpose (-1: automatic, 0: symmetric, 1: asymmetric where gt is computed out of lt and eq, 2: binary tree) (plainVHDL option also supported);",
 			"Outputs up to 3 mutually exclusive signals:  XltC (less than, strictly), XeqC (equal), XgtC (greater than, strictly)",
 			IntConstantComparator::parseArguments,
 			IntConstantComparator::unitTest

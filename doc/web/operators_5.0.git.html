@@ -193,9 +193,9 @@
 <dd class="operatordescription">An integer comparator.</dd>
 <dd><em>Parameters:</em> <dl>
 <dt> <code class="parametername">w</code>  (<code class="parametertype">int</code>) </dt><dd>size in bits of integers to be compared</dd>
-<dt> <code class="parametername">constant</code>  (<code class="parametertype">int</code>) </dt><dd>constant</dd>
+<dt> <code class="parametername">c</code>  (<code class="parametertype">int</code>) </dt><dd>constant</dd>
 <span class="optionalparam"> <dt> <code class="parametername">flags</code>  (<code class="parametertype">int</code>)   (optional, default value is 7)</dt><dd>if bit 0 set output  X<C, if bit 1 set output X=C, if bit 2 set output  X>C</dd> </span>
-<span class="optionalparam"> <dt> <code class="parametername">method</code>  (<code class="parametertype">int</code>)   (optional, default value is -1)</dt><dd>method to be used, for experimental purpose (-1: automatic, 0: symmetric plain VHDL, 1: asymmetric plain VHDL where gt is computed out of lt and eq, 2: binary tree)</dd> </span>
+<span class="optionalparam"> <dt> <code class="parametername">method</code>  (<code class="parametertype">int</code>)   (optional, default value is -1)</dt><dd>method to be used, for experimental purpose (-1: automatic, 0: symmetric, 1: asymmetric where gt is computed out of lt and eq, 2: binary tree) (plainVHDL option also supported)</dd> </span>
 </dl></dd>
 <dd>Outputs up to 3 mutually exclusive signals:  XltC (less than, strictly), XeqC (equal), XgtC (greater than, strictly)</dd>
 </dl>
