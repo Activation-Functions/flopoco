@@ -60,6 +60,7 @@ namespace flopoco{
 
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 		if (method==0 || method ==1 || method ==3) {
 			if(getTarget()->plainVHDL()) {
 				chunkSize=w;
@@ -68,9 +69,15 @@ namespace flopoco{
 				chunkSize = (int) ceil(sqrt(w));
 =======
 		if (method==0 || method ==1) {
+=======
+		if (method==0 || method ==1 || method ==3) {
+>>>>>>> added the min delay option
 			if(getTarget()->plainVHDL()) {
 				chunkSize=w;
 >>>>>>> improved autotest
+			}
+			else if (method == 3) {
+				chunkSize = (int) ceil(sqrt(w));
 			}
 			else {
 				// determine if we have to split the input to reach the target frequency
