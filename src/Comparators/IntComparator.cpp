@@ -59,9 +59,12 @@ namespace flopoco{
 		int chunkSize;
 
 
-		if (method==0 || method ==1) {
+		if (method==0 || method ==1 || method ==3) {
 			if(getTarget()->plainVHDL()) {
 				chunkSize=w;
+			}
+			else if (method == 3) {
+				chunkSize = (int) ceil(sqrt(w));
 			}
 			else {
 				// determine if we have to split the input to reach the target frequency
@@ -105,7 +108,8 @@ namespace flopoco{
 						vhdl << tab << declare(getTarget()->ltComparatorDelay(w), "XgtYi") << " <= '1' when X>Y else '0';"<<endl;
 					}
 					else{ // compute gt out of lt and eq
-						vhdl << tab << declare(getTarget()->logicDelay(), "XgtYi") << " <= not (XeqYi or XltYi);"<<endl;
+						vhdl << tab << declare( // getTarget()->logicDelay(), // almost surely fused by the optimizer
+																	 "XgtYi") << " <= not (XeqYi or XltYi);"<<endl;
 					}
 				}
 			}
@@ -287,7 +291,7 @@ namespace flopoco{
 			"", //seeAlso
 			"w(int): size in bits of integers to be compared;\
 			flags(int)=7: if bit 0 set output  X<Y, if bit 1 set output X=Y, if bit 2 set output  X>Y;\
-			method(int)=-1: method to be used, for experimental purpose (-1: automatic, 0: symmetric plain VHDL, 1: asymmetric plain VHDL where gt is computed out of lt and eq, 2: binary tree);",
+			method(int)=-1: method to be used, for experimental purpose (-1: automatic, 0: symmetric, 1: asymmetric where gt is computed out of lt and eq, 2: binary tree, 3: two-level minimum latency);",
 			"Outputs up to 3 mutually exclusive signals:  XltY (less than, strictly), XeqY (equal), XgtY (greater than, strictly)",
 			IntComparator::parseArguments,
 			IntComparator::unitTest
