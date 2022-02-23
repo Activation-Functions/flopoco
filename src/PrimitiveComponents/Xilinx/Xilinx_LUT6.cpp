@@ -24,7 +24,7 @@ namespace flopoco {
 	Xilinx_LUT6::Xilinx_LUT6(Operator *parentOp, Target *target ) : Xilinx_LUT6_base( parentOp, target ) {
 		setName( "LUT6" );
         addOutput( "o" );
-        vhdl << "o <= i0" << endl;
+        //vhdl << "o <= i0" << endl;
     }
 
 	Xilinx_LUT6_2::Xilinx_LUT6_2(Operator* parentOp, Target *target ) : Xilinx_LUT6_base( parentOp,target ) {

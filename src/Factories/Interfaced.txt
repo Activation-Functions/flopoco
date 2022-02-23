@@ -71,6 +71,7 @@ BaseMultiplierXilinx2xk
 BaseMultiplierIrregularLUTXilinx
 BaseMultiplierDSPKaratsuba
 BaseSquarerLUT
+BaseMultiplierBoothArrayXilinx
 
 TestBench
 Wrapper
