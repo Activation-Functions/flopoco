@@ -193,8 +193,6 @@ BaseMultiplierBoothArrayXilinxOp::BaseMultiplierBoothArrayXilinxOp(Operator *par
     for(int j = 0; j < stages; j++){
 
             declare(join("t", j), needed_cc * 4);
-            //declare( join("sin", j), needed_cc * 4 * 6);
-
             declare(join("cc_s", j), needed_cc * 4);
             declare(join("cc_di", j), needed_cc * 4);
             declare(join("cc_co", j), needed_cc * 4);
@@ -202,6 +200,7 @@ BaseMultiplierBoothArrayXilinxOp::BaseMultiplierBoothArrayXilinxOp(Operator *par
             vhdl << tab << join("cc_di", j, " <= ") << join("t", j) << ";" << endl;
 
             vhdl << tab << join("t", j, "(", width + 3, ") <= '1';") << endl;
+            //vhdl << tab << join("t", j, "(", width + 3, ") <= '0';") << endl;
             if (j == 0) {
                 vhdl << tab << join("t0(", width + 2, ") <= '1';") << endl;
                 if (!useAccumulate) {
@@ -228,6 +227,8 @@ BaseMultiplierBoothArrayXilinxOp::BaseMultiplierBoothArrayXilinxOp(Operator *par
                 lut_op mux0 = (~s & lut_in(4) | s & lut_in(5));
                 lut_op mux1 = (~c & mux0 | c & ~mux0);
                 lut_op mux2 = ~z & mux1;
+
+                /*
                 if (i < width + 2) {                    //Mapping A
                     lutab = lut_in(3) ^ mux2;
                 } else if (i == width + 2 & (!yIsSigned && !xIsSigned)) {          //Mapping B
@@ -237,6 +238,22 @@ BaseMultiplierBoothArrayXilinxOp::BaseMultiplierBoothArrayXilinxOp(Operator *par
                 } else if (i == width + 3) {                                    //Mapping C
                     lutab = lut_in(3);
                 }
+                */
+
+
+                if (i < width + 2) {                    //Mapping A
+                    lutab = lut_in(3) ^ mux2;
+                } else if (i == width + 1) {                                    //Mapping A*
+                    lutab = ~lut_in(3) ^mux2 ;
+                }else if (i == width + 2 & (!yIsSigned && !xIsSigned)) {          //Mapping B
+                    lutab = lut_in(3) ^ ~c;
+                } else if (i == width + 2 & (xIsSigned || yIsSigned)) {          //Mapping B (negative)
+                    lutab = lut_in(3) ^ ~e;
+                }
+
+
+
+
                 lut_init lutop(lutab);
 
                 Xilinx_LUT6 *cur_lut = new Xilinx_LUT6(this, target);
@@ -319,6 +336,7 @@ BaseMultiplierBoothArrayXilinxOp::BaseMultiplierBoothArrayXilinxOp(Operator *par
             }
             vhdl << endl;
 
+/*
             for (int i = 0; i < slices * 4; i++) {
                 if (j < stages - 1) {
                     if (i == 1 || i == 2) {
@@ -335,6 +353,38 @@ BaseMultiplierBoothArrayXilinxOp::BaseMultiplierBoothArrayXilinxOp(Operator *par
                 }
 
             }
+            */
+
+            for (int i = 0; i < slices * 4; i++) {
+                if (j < stages - 1) {
+                    if (i == 1 || i == 2) {
+                        vhdl << tab << join("R(", (i - 1) + j * 2, ")<=") << join("cc_o", j, "(") << i << ");" << endl;
+                    } else {
+                        if (i > 2 && i < width +3)
+                            vhdl << tab << join("t", j + 1, "(", i - 2, ")<=") << join("cc_o", j, "(") << i << ");"
+                                 << endl;
+                    }
+                    if (i == width + 3) {
+                        vhdl << tab << join("t", j + 1, "(", i - 2, ")<=") << join("not cc_co", j, "(") << i-1 << ");"
+                             << endl;
+                        vhdl << tab << join("t", j + 1, "(", i - 1, ")<=") << join("cc_co", j, "(") << i-1 << ");"
+                             << endl;
+                    }
+                }
+
+            }
+
+
+
+
+
+
+
+
+
+
+
+
 
             vhdl << endl;
              }
@@ -342,7 +392,9 @@ BaseMultiplierBoothArrayXilinxOp::BaseMultiplierBoothArrayXilinxOp(Operator *par
     //vhdl << tab << join("R(",(stages-1)*2+needed_luts-1," downto ", (stages-1)*2,") <= ") << join("cc_co", stages-1) << "(" << width+3 << join(") & cc_o",stages-1,"(") << width+3 << " downto 1);" << endl;         //needs change
     //vhdl << tab << join("R(",wX+wY+1," downto ", (stages-1)*2,") <= ") << join("not cc_co", stages-1) << "(" << width+3 << join(") & cc_o",stages-1,"(") << width+3 << " downto 1);" << endl;
     if((isSignedY)&& !heightparity){
-        vhdl << tab << join("R(",wX+wY," downto ", (stages-1)*2,") <= ") << join(" cc_o",stages-2,"(") << width+wY%2+3 << " downto 3);" << endl;
+        vhdl << tab << join("R(",wX+wY,") <= ") << join("not cc_o",stages-2,"(") << width+wY%2+3 << ");" << endl;
+        vhdl << tab << join("R(",wX+wY-1," downto ", (stages-1)*2,") <= ") << join(" cc_o",stages-2,"(") << width+wY%2+2 << " downto 3);" << endl;
+        //vhdl << tab << join("R(",wX+wY," downto ", (stages-1)*2,") <= ") << join(" cc_o",stages-2,"(") << width+wY%2+3 << " downto 3);" << endl;
     }else{
         vhdl << tab << join("R(",wX+wY," downto ", (stages-1)*2,") <= ") << join(" cc_o",stages-1,"(") << width+wY%2+1 << " downto 1);" << endl;
     }
