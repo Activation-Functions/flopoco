@@ -60,9 +60,12 @@ Posit2FP
 FixSinCos
 FixAtan2
 
+XilinxLUT
+Xilinx_CARRY4
 Xilinx_GenericAddSub
 Xilinx_Comparator
 Xilinx_TernaryAdd_2State
+Xilinx_TernaryAdd_2State_slice
 XilinxGPC
 XilinxFourToTwoCompressor
 ApproxCompressor_NAC18

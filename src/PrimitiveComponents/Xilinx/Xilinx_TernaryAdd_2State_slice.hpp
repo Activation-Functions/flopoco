@@ -4,17 +4,25 @@
 #include "Operator.hpp"
 #include "utils.hpp"
 
-namespace flopoco {
+namespace flopoco
+{
 
-    class Xilinx_TernaryAdd_2State_slice : public Operator {
-      private:
-        string build_lutinit_function();
+  class Xilinx_TernaryAdd_2State_slice : public Operator
+  {
+  private:
+    string build_lutinit_function();
 
-      public:
-        Xilinx_TernaryAdd_2State_slice( Operator *parentOp, Target *target, const uint &wIn = 4, const bool &is_initial = false, const std::string &lut_content = "x\"69699696e8e8e8e8\"" );
+    static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args);
 
-        ~Xilinx_TernaryAdd_2State_slice() {}
-	};
+    static void registerFactory();
+
+  public:
+    Xilinx_TernaryAdd_2State_slice(Operator *parentOp, Target *target, const uint &wIn = 4, const bool &is_initial = false, const std::string &lut_content = "x\"69699696e8e8e8e8\"");
+
+    ~Xilinx_TernaryAdd_2State_slice()
+    {}
+
+  };
 
 
 }//namespace

@@ -176,7 +176,7 @@ namespace flopoco{
 
 		cpDelay = getTarget()->tableDelay(wIn, wOut, logicTable);
 		declare(cpDelay, "Y0", wOut);
-		REPORT(DEBUG, "logicTable=" << logicTable << "   table delay is "<< cpDelay << "ns");
+		REPORT(DEBUG, "logicTable=" << logicTable << "   table delay is "<< cpDelay << " s");
 		
 		vhdl << tab << "with X select Y0 <= " << endl;;
 

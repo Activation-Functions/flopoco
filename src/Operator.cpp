@@ -1327,6 +1327,7 @@ namespace flopoco{
 		// actually calling schedule() here for unique instances leads to bugs, as the scheduler manages to follow half-connected signals
 		if(op->isShared() && !op->isOperatorScheduled() ) {
 			op->schedule();
+      op->checkAllSignalsScheduled();
 			op->applySchedule();
 		}
 #endif
@@ -2656,6 +2657,7 @@ namespace flopoco{
 
 
 		// schedule from the root parent op
+    cout << "!!! parentOp_=" << parentOp_ << ", isShared=" << isShared() << endl;
 		if(parentOp_ != nullptr && !isShared()) {
 			REPORT(DEBUG, "schedule(): Not the root Operator, moving up to " << parentOp_->getName());
 			parentOp_ ->schedule();
@@ -2767,7 +2769,47 @@ namespace flopoco{
 
 
 
+  bool Operator::checkAllSignalsScheduled()
+  {
+    auto op=this;
+    auto opName = op->getName();
+    cerr << "Operator::checkAllSignalsScheduled() for operator " << opName << endl;
+    auto ok = true;
+    // check if all signals of this op are scheduled
+    auto signals = op->signalList_;
+    for(auto signal : signals) {
+      // check info
+      auto name = signal->getName();
+      auto isScheduled = signal->hasBeenScheduled();
+      if(isScheduled) {
+        std::cout << "!!! Utility::checkAllSignalsScheduled: Signal '" << name << "' of operator '" << opName << "' is scheduled lexiographic time (" << signal->getCycle() << "," << signal->getCriticalPath() << ")" << std::endl;
+      }
+      else {
+        ok = false;
+        std::cout << "!!! Utility::checkAllSignalsScheduled: Attention! Signal '" << name << "' of operator '" << opName << "' has not been scheduled!" << std::endl;
+      }
+    }
+    // also check I/O ports
+    signals = op->ioList_;
+    for(auto signal : signals) {
+      // skip inputs because they are irrelevant
+      if(signal->type() == flopoco::Signal::SignalType::in) continue;
+      // check info
+      auto name = signal->getName();
+      auto isScheduled = signal->hasBeenScheduled();
+      if(isScheduled) {
+        std::cout << "!!! Utility::checkAllSignalsScheduled: Port '" << name << "' of operator '" << opName << "' is scheduled lexiographic time (" << signal->getCycle() << "," << signal->getCriticalPath() << ")" << std::endl;
+      }
+      else {
+        ok = false;
+        std::cout << "!!! Utility::checkAllSignalsScheduled: Attention! Port '" << name << "' of operator '" << opName << "' has not been scheduled!" << std::endl;
+      }
+    }
 
+//    if(!ok) exit(-1); //!!!
+
+    return ok;
+  }
 
 
 
@@ -2917,7 +2959,7 @@ namespace flopoco{
 
 		for(auto i:ioList_)	{
 			if((i->type() == Signal::out) && (i->getCycle() != maxOutputCycle))
-				REPORT(DEBUG, "A warining from computePipelineDepths(): this operator's outputs are not synchronized!");
+				REPORT(DEBUG, "A warning from computePipelineDepths(): this operator's outputs are not synchronized!");
 		}
 
 		pipelineDepth_ = maxOutputCycle-maxInputCycle;

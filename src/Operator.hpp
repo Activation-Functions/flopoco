@@ -1195,7 +1195,15 @@ namespace flopoco {
 		/**
 		 * Performs as much as possible of an ASAP scheduling for the root operator of this operator.
 		 */
-		void schedule();
+		virtual void schedule();
+
+    /**
+     * Helper function that checks if all signals of the operator have been scheduled.
+     *
+     * returns true if everything is OK.
+     */
+    bool checkAllSignalsScheduled();
+
 
 		/**
 		 * Set the timing of a signal.

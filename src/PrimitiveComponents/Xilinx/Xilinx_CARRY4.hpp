@@ -3,18 +3,25 @@
 
 #include "Xilinx_Primitive.hpp"
 
-namespace flopoco {
+namespace flopoco
+{
 
-    // new operator class declaration
-    class Xilinx_CARRY4 : public Xilinx_Primitive {
-      public:
+  // new operator class declaration
+  class Xilinx_CARRY4 : public Xilinx_Primitive
+  {
+  public:
 
-        // constructor, defined there with two parameters (default value 0 for each)
-		Xilinx_CARRY4(Operator *parentOp, Target *target );
+    // constructor, defined there with two parameters (default value 0 for each)
+    Xilinx_CARRY4(Operator *parentOp, Target *target);
 
-        // destructor
-        ~Xilinx_CARRY4() {};
-    };
+    // destructor
+    ~Xilinx_CARRY4()
+    {};
+
+    static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args);
+    static void registerFactory();
+
+  };
 }//namespace
 
 #endif

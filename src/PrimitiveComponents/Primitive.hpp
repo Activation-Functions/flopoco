@@ -78,6 +78,8 @@ namespace flopoco {
         ///
 //        virtual void outputVHDLComponent( ostream &o, string name );
 
+      virtual void schedule();
+
     };
 }//namespace
 
