@@ -27,7 +27,8 @@ namespace flopoco
   {
     setName("LUT6");
     addOutput("o");
-    setGeneric("init", init, 64);
+    if(!init.empty())
+      setGeneric("init", init, 64);
     //vhdl << "o <= i0" << endl;
   }
 
@@ -36,7 +37,8 @@ namespace flopoco
     setName("LUT6_2");
     addOutput("o5");
     addOutput("o6");
-    setGeneric("init", init, 64);
+    if(!init.empty())
+      setGeneric("init", init, 64);
 
     /*
     vhdl << "--dummy assignment for schedule(), dirty hack!!" << endl;
@@ -51,7 +53,8 @@ namespace flopoco
   {
     setName("LUT6_L");
     addOutput("lo");
-    setGeneric("init", init, 64);
+    if(!init.empty())
+      setGeneric("init", init, 64);
   }
 
   Xilinx_LUT6_D::Xilinx_LUT6_D(Operator *parentOp, Target *target, string init) : XilinxLUT(parentOp, target)
@@ -59,7 +62,8 @@ namespace flopoco
     setName("LUT6_D");
     addOutput("o");
     addOutput("lo");
-    setGeneric("init", init, 64);
+    if(!init.empty())
+      setGeneric("init", init, 64);
   }
 
   OperatorPtr XilinxLUT::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args)
