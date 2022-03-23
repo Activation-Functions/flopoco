@@ -154,255 +154,197 @@ TestList BaseMultiplierBoothArrayXilinx::unitTest(int index)
     return testStateList;
 }
 
-BaseMultiplierBoothArrayXilinxOp::BaseMultiplierBoothArrayXilinxOp(Operator *parentOp, Target* target, bool isSignedX, bool isSignedY, int wX, int wY, bool useAccumulate) : Operator(parentOp,target),xIsSigned(isSignedX),yIsSigned(isSignedY),wX(wX),wY(wY), accumulateUsed(useAccumulate)
-{
-                                                                                                            //Für signed checke http://i.stanford.edu/pub/cstr/reports/csl/tr/94/617/CSL-TR-94-617.appendix.pdf
-                                                                                                            //ZWEIERKOMPLEMENT
-    ostringstream name;
-    string in1,in2, in3;
-    int width, height;
-    bool in2_signed, in1_signed;
+    BaseMultiplierBoothArrayXilinxOp::BaseMultiplierBoothArrayXilinxOp(Operator *parentOp, Target* target, bool isSignedX, bool isSignedY, int wX, int wY, bool useAccumulate) : Operator(parentOp,target),xIsSigned(isSignedX),yIsSigned(isSignedY),wX(wX),wY(wY), accumulateUsed(useAccumulate)
+    {
+        //Für signed checke http://i.stanford.edu/pub/cstr/reports/csl/tr/94/617/CSL-TR-94-617.appendix.pdf
+        //ZWEIERKOMPLEMENT
+        ostringstream name;
+        string in1,in2,in3;
+        int width, height;
+        //bool in2_signed, in1_signed;
 
-    in1 = "X";
-    in2 = "Y";
-    in3 = "Tin";
-    name << "BaseMultiplier" << wX << "x" << wY;
-    width = wX;
-    height = wY;
+        in1 = "X";
+        in2 = "Y";
+        in3 = "Tin";
+        name << "BaseMultiplier" << wX << "x" << wY;
+        width = wX;
+        height = wY;
 
-    in2_signed = isSignedY;         //Y is the short side
-    in1_signed = isSignedX;         //X is the long side
+        //in2_signed = isSignedY;         //Y is the short side
+        //in1_signed = isSignedX;         //X is the long side
 
-    bool heightparity = height%2;
-    int stages = height/2+1;
-    int slices = ceil(float(width)/4+1);
-    int needed_luts = slices*4;//no. of required LUTs
-    int needed_cc = slices; //no. of required carry chains
+        bool heightparity = height%2;
+        int stages = height/2+1;
+        //int slices = ceil(float(width)/4+1);
+        int slices = ceil(float(width+2)/4);
+        int needed_luts = slices*4;//no. of required LUTs
+        int needed_cc = slices; //no. of required carry chains
 
-    setNameWithFreqAndUID(name.str());
+        setNameWithFreqAndUID(name.str());
 
-    addInput("X", wX, true);
-    addInput("Y", wY, true);
-    addInput("Tin", wX+1, true);
+        addInput("X", wX, true);
+        addInput("Y", wY, true);
+        addInput("Tin", wX+1, true);
+        if (useAccumulate && wX >= wY) {
+            addOutput("R", wX + wY + 1, 1, true);
+        } else{
+            addOutput("R", wX + wY , 1, true);
+        }
 
-    addOutput("R", wX+wY+1, 1, true);
-
-    //if(isSignedX || isSignedY) throw string("Signed multiplication is not supported yet!");
-
-
-    for(int j = 0; j < stages; j++){
+        for(int j = 0; j < stages; j++){
 
             declare(join("t", j), needed_cc * 4);
             declare(join("cc_s", j), needed_cc * 4);
             declare(join("cc_di", j), needed_cc * 4);
             declare(join("cc_co", j), needed_cc * 4);
             declare(join("cc_o", j), needed_cc * 4);
+
             vhdl << tab << join("cc_di", j, " <= ") << join("t", j) << ";" << endl;
 
-            vhdl << tab << join("t", j, "(", width + 3, ") <= '1';") << endl;
-            //vhdl << tab << join("t", j, "(", width + 3, ") <= '0';") << endl;
             if (j == 0) {
-                vhdl << tab << join("t0(", width + 2, ") <= '1';") << endl;
+                vhdl << tab << join("t0(", width + 1, ") <= '1';") << endl;
                 if (!useAccumulate) {
-                    vhdl << tab << join("t0(", width + 1, " downto ", 0, ") <= (others => '0');") << endl;
+                    vhdl << tab << join("t0(", width, " downto ", 0, ") <= (others => '0');") << endl;
                 } else{
-                    vhdl << tab << join("t0(", width + 1, " downto ", 1, ") <= Tin;") << endl;
-                    vhdl << tab << join("t0(", 0, ") <= '0';") << endl;
+                    vhdl << tab << join("t0(", width , " downto ", 0, ") <= Tin;") << endl;
                 }
-            } else {
-                vhdl << tab << join("t", j, "(0) <= '0';") << endl;
             }
-        if (!isSignedY||j<stages-1||heightparity) {
+            if (!isSignedY||j<stages-1||heightparity) {
 
 
-            //create the LUTs:
-            for (int i = 0; i < needed_luts; i++) {
-                //LUT content of the LUTs:
-                lut_op lutab;
-                lut_op z = ((~lut_in(0) & ~lut_in(1) & ~lut_in(2)) | (lut_in(0) & lut_in(1) & lut_in(2)));
-                //lut_op c = ((lut_in(0));
-                lut_op c = ((lut_in(0) & ~(lut_in(1)) | (lut_in(0) & ~lut_in(2))));
-                lut_op s = ((~lut_in(0) & lut_in(1) & lut_in(2)) | (lut_in(0) & ~lut_in(1) & ~lut_in(2)));
-                lut_op e = (c ^lut_in(4)) & ~z;
-                lut_op mux0 = (~s & lut_in(4) | s & lut_in(5));
-                lut_op mux1 = (~c & mux0 | c & ~mux0);
-                lut_op mux2 = ~z & mux1;
-
-                /*
-                if (i < width + 2) {                    //Mapping A
-                    lutab = lut_in(3) ^ mux2;
-                } else if (i == width + 2 & (!yIsSigned && !xIsSigned)) {          //Mapping B
-                    lutab = lut_in(3) ^ ~c;
-                } else if (i == width + 2 & (xIsSigned || yIsSigned)) {          //Mapping B (negative)
-                    lutab = lut_in(3) ^ ~e;
-                } else if (i == width + 3) {                                    //Mapping C
-                    lutab = lut_in(3);
-                }
-                */
+                //create the LUTs:
+                for (int i = 0; i < needed_luts; i++) {
+                    //LUT content of the LUTs:
+                    lut_op lutab;
+                    lut_op z = ((~lut_in(0) & ~lut_in(1) & ~lut_in(2)) | (lut_in(0) & lut_in(1) & lut_in(2)));
+                    lut_op c = ((lut_in(0)));
+                    //lut_op c = ((lut_in(0) & ~(lut_in(1)) | (lut_in(0) & ~lut_in(2))));
+                    lut_op s = ((~lut_in(0) & lut_in(1) & lut_in(2)) | (lut_in(0) & ~lut_in(1) & ~lut_in(2)));
+                    lut_op e = (c ^lut_in(4)) & ~z ^(c & z);
+                    lut_op mux0 = (~s & lut_in(4) | s & lut_in(5));
+                    lut_op mux1 = (~c & mux0 | c & ~mux0);
+                    lut_op mux2 = ~z & mux1;
+                    lut_op czflip = mux2 ^ (c & z);
 
 
-                if (i < width + 2) {                    //Mapping A
-                    lutab = lut_in(3) ^ mux2;
-                } else if (i == width + 1) {                                    //Mapping A*
-                    lutab = ~lut_in(3) ^mux2 ;
-                }else if (i == width + 2 & (!yIsSigned && !xIsSigned)) {          //Mapping B
-                    lutab = lut_in(3) ^ ~c;
-                } else if (i == width + 2 & (xIsSigned || yIsSigned)) {          //Mapping B (negative)
-                    lutab = lut_in(3) ^ ~e;
-                }
+                    if (i < width + 1) {                                              //Mapping A
+                         lutab = lut_in(3) ^ czflip;
+                    }else if (i == width + 1 & (!yIsSigned && !xIsSigned)) {          //Mapping B
+                        lutab = lut_in(3) ^ ~c;
+                    } else if (i == width + 1 & (xIsSigned || yIsSigned)) {          //Mapping B (negative)
+                        lutab = lut_in(3) ^ ~e;
+                    }
 
 
 
 
-                lut_init lutop(lutab);
+                    lut_init lutop(lutab);
 
-                Xilinx_LUT6 *cur_lut = new Xilinx_LUT6(this, target);
-                cur_lut->setGeneric("init", lutop.get_hex(), 64);
-
-                /*           vhdl << join("sin", j) + range( i*6+5, i*6) << " <= "
-                            << ((j*2+1 < height)?"in2" + of(j*2+1):"'0'") << " & "
-                            << ((j*2+0 < height)?"in2" + of(j*2+0):"'0'") << " & "
-                            << ((j*2-1 >= 0    )?"in2" + of(j*2-1):"'0'") << " & "
-                            << ((0 < i)?join("t", j) + of(i):"'0'") << " & "
-                            << ((0 < i && i <= width+0)?"in1" + of(i-1):"'0'") << " & "
-                            << ((1 < i && i <= width+1)?"in1" + of(i-2):"'0'") << ";" << endl;*/
-                //vhdl << join("sin", j) + range( i*6+5, i*6) << " <= cc_o(" << 5 << " downto 0);" << endl;
-
-                if (j * 2 + 1 < height) {
-                    inPortMap("i0", in2 + of(j * 2 + 1));
-                } else if (heightparity&&(isSignedY)) {
-                    inPortMap("i0", in2 + of(j * 2 + 0));
-                } else {
-                    inPortMapCst("i0", "'0'");
-                }
-                if (j * 2 + 0 < height) {
-                    inPortMap("i1", in2 + of(j * 2 + 0));
-                }else if (j * 2 + 1<height&&(isSignedY)) {
-                    inPortMap("i1", in2 + of(j * 2 + 0));
-                } else {
-                    inPortMapCst("i1", "'0'");
-                }
-                if (j * 2 - 1 >= 0) {
-                    inPortMap("i2", in2 + of(j * 2 - 1));
-                } else {
-                    inPortMapCst("i2", "'0'");
-                }
-                if (i == 0 || i > width + 3) {
-                    inPortMapCst("i3", "'0'");
-                } else if (i == width + 2 && j == 0 || i == width + 3) {
-                    inPortMapCst("i3", "'1'");
-                } else {
-                    inPortMap("i3", join("t", j) + of(i));
-                }
-                if (0 < i && i <= width ) {
-                    inPortMap("i4", in1 + of(i - 1));
-                } else if (i == width + 1 && (isSignedX)) {
-                    inPortMap("i4", in1 + of(i - 2));
-                } else if (i == width + 2 && (isSignedX)) {
-                    inPortMap("i4", in1 + of(i - 3));
-                } else {
-                    inPortMapCst("i4", "'0'");
-                }
-                if (1 < i && i <= width + 1) {
-                    inPortMap("i5", in1 + of(i - 2));
-                } else {
-                    inPortMapCst("i5", "'0'");
-                }
+                    Xilinx_LUT6 *cur_lut = new Xilinx_LUT6(this, target);
+                    cur_lut->setGeneric("init", lutop.get_hex(), 64);
 
 
-
-                //outPortMap("o5",join("cc_di", j) + of(i));
-                outPortMap("o", join("cc_s", j) + of(i));
-                vhdl << cur_lut->primitiveInstance(join("lut", j, "_", i)) << endl;
-            }
-
-            //create the carry chain:
-            for (int i = 0; i < needed_cc; i++) {
-                Xilinx_CARRY4 *cur_cc = new Xilinx_CARRY4(this, target);
-
-                inPortMapCst("cyinit", "'0'");
-                if (i == 0) {
-                    inPortMapCst("ci", "'1'"); //carry-in can not be used as AX input is blocked!!
-                } else {
-                    inPortMap("ci", join("cc_co", j) + of(i * 4 - 1));
-                }
-                inPortMap("di", join("cc_di", j) + range(i * 4 + 3, i * 4));
-                inPortMap("s", join("cc_s", j) + range(i * 4 + 3, i * 4));
-                outPortMap("co", join("cc_co", j) + range(i * 4 + 3, i * 4));
-                outPortMap("o", join("cc_o", j) + range(i * 4 + 3, i * 4));
-
-                vhdl << cur_cc->primitiveInstance(join("cc_", j, "_", i));
-
-            }
-            vhdl << endl;
-
-/*
-            for (int i = 0; i < slices * 4; i++) {
-                if (j < stages - 1) {
-                    if (i == 1 || i == 2) {
-                        vhdl << tab << join("R(", (i - 1) + j * 2, ")<=") << join("cc_o", j, "(") << i << ");" << endl;
+                    if (j * 2 + 1 < height) {
+                        inPortMap("i0", in2 + of(j * 2 + 1));
+                    } else if (heightparity&&(isSignedY)) {
+                        inPortMap("i0", in2 + of(j * 2 + 0));
                     } else {
-                        if (i > 2)
-                            vhdl << tab << join("t", j + 1, "(", i - 2, ")<=") << join("cc_o", j, "(") << i << ");"
-                                 << endl;
+                        inPortMapCst("i0", "'0'");
                     }
-                    if (i == width + 3) {
-                        vhdl << tab << join("t", j + 1, "(", i - 1, ")<=") << join("cc_co", j, "(") << i << ");"
-                             << endl;
-                    }
-                }
-
-            }
-            */
-
-            for (int i = 0; i < slices * 4; i++) {
-                if (j < stages - 1) {
-                    if (i == 1 || i == 2) {
-                        vhdl << tab << join("R(", (i - 1) + j * 2, ")<=") << join("cc_o", j, "(") << i << ");" << endl;
+                    if (j * 2 + 0 < height) {
+                        inPortMap("i1", in2 + of(j * 2 + 0));
+                    }else if (j * 2 + 1<height&&(isSignedY)) {
+                        inPortMap("i1", in2 + of(j * 2 + 0));
                     } else {
-                        if (i > 2 && i < width +3)
-                            vhdl << tab << join("t", j + 1, "(", i - 2, ")<=") << join("cc_o", j, "(") << i << ");"
-                                 << endl;
+                        inPortMapCst("i1", "'0'");
                     }
-                    if (i == width + 3) {
-                        vhdl << tab << join("t", j + 1, "(", i - 2, ")<=") << join("not cc_co", j, "(") << i-1 << ");"
-                             << endl;
-                        vhdl << tab << join("t", j + 1, "(", i - 1, ")<=") << join("cc_co", j, "(") << i-1 << ");"
-                             << endl;
+                    if (j * 2 - 1 >= 0) {
+                        inPortMap("i2", in2 + of(j * 2 - 1));
+                    } else {
+                        inPortMapCst("i2", "'0'");
                     }
+                    if (i > width + 2) {
+                        inPortMapCst("i3", "'0'");
+                    } else {
+                        inPortMap("i3", join("t", j) + of(i));
+                    }
+                    if (0 <= i && i <= width - 1 ) {
+                        inPortMap("i4", in1 + of(i));
+                    } else if (i == width && (isSignedX)) {
+                        inPortMap("i4", in1 + of(i - 1));
+                    } else if (i == width + 1 && (isSignedX)) {
+                        inPortMap("i4", in1 + of(i - 2));
+                    } else {
+                        inPortMapCst("i4", "'0'");
+                    }
+                    if (0 < i && i <= width ) {
+                        inPortMap("i5", in1 + of(i - 1));
+                    } else {
+                        inPortMapCst("i5", "'0'");
+                    }
+
+                    outPortMap("o", join("cc_s", j) + of(i));
+                    vhdl << cur_lut->primitiveInstance(join("lut", j, "_", i)) << endl;
                 }
 
+                //create the carry chain:
+                for (int i = 0; i < needed_cc; i++) {
+                    Xilinx_CARRY4 *cur_cc = new Xilinx_CARRY4(this, target);
+
+                    inPortMapCst("cyinit", "'0'");
+                    if (i == 0) {
+                        if (j*2+1>wY-1) {
+                            if (isSignedY){
+                                inPortMap("ci", join("Y(", wY-1, ")"));
+                            }else {
+                                inPortMapCst("ci", "'0'");
+                            }
+                        }else{
+                            inPortMap("ci", join("Y(", j * 2 + 1, ")"));
+                        }
+
+
+                    } else {
+                        inPortMap("ci", join("cc_co", j) + of(i * 4 - 1));
+                    }
+                    inPortMap("di", join("cc_di", j) + range(i * 4 + 3, i * 4));
+                    inPortMap("s", join("cc_s", j) + range(i * 4 + 3, i * 4));
+                    outPortMap("co", join("cc_co", j) + range(i * 4 + 3, i * 4));
+                    outPortMap("o", join("cc_o", j) + range(i * 4 + 3, i * 4));
+
+                    vhdl << cur_cc->primitiveInstance(join("cc_", j, "_", i));
+
+                }
+                vhdl << endl;
+                if (j < stages - 1) {
+                    for (int i = 0; i < slices * 4; i++) {
+                        if (i == 0 || i == 1) {
+                            vhdl << tab << join("R(", (i) + j * 2, ")<=") << join("cc_o", j, "(") << i << ");" << endl;
+                        } else {
+                            if (i > 1 && i < width +2)
+                                vhdl << tab << join("t", j + 1, "(", i - 2, ")<=") << join("cc_o", j, "(") << i << ");"
+                                     << endl;
+                        }
+                    }
+                    vhdl << tab << join("t", j + 1, "(", width, ")<=") << join("not cc_co", j, "(") << width + 1 << ");"
+                         << endl;
+                    vhdl << tab << join("t", j + 1, "(", width + 1, ")<=") << join("cc_co", j, "(") << width + 1 << ");"
+                         << endl;
+                }
+                vhdl << endl;
             }
-
-
-
-
-
-
-
-
-
-
-
-
-
-            vhdl << endl;
-             }
+        }
+        if((isSignedY) && !heightparity){
+            if (useAccumulate && wX >= wY) {
+                vhdl << tab << join("R(",wX+wY,") <= ") << join("not cc_co",stages-2,"(") << width+wY%2+1 << ");" << endl;
+            }
+            vhdl << tab << join("R(",wX+wY-1," downto ", (stages-1)*2,") <= ") << join(" cc_o",stages-2,"(") << width+1 << " downto 2);" << endl;
+        }else{
+            if (useAccumulate && wX >= wY) {
+                vhdl << tab << join("R(",wX+wY,") <= ") << join(" cc_o",stages-1,"(") << width+wY%2 << ");" << endl;
+            }
+            vhdl << tab << join("R(",wX+wY-1," downto ", (stages-1)*2,") <= ") << join(" cc_o",stages-1,"(") << width+wY%2-1 << " downto 0);" << endl;
+        }
     }
-    //vhdl << tab << join("R(",(stages-1)*2+needed_luts-1," downto ", (stages-1)*2,") <= ") << join("cc_co", stages-1) << "(" << width+3 << join(") & cc_o",stages-1,"(") << width+3 << " downto 1);" << endl;         //needs change
-    //vhdl << tab << join("R(",wX+wY+1," downto ", (stages-1)*2,") <= ") << join("not cc_co", stages-1) << "(" << width+3 << join(") & cc_o",stages-1,"(") << width+3 << " downto 1);" << endl;
-    if((isSignedY)&& !heightparity){
-        vhdl << tab << join("R(",wX+wY,") <= ") << join("not cc_o",stages-2,"(") << width+wY%2+3 << ");" << endl;
-        vhdl << tab << join("R(",wX+wY-1," downto ", (stages-1)*2,") <= ") << join(" cc_o",stages-2,"(") << width+wY%2+2 << " downto 3);" << endl;
-        //vhdl << tab << join("R(",wX+wY," downto ", (stages-1)*2,") <= ") << join(" cc_o",stages-2,"(") << width+wY%2+3 << " downto 3);" << endl;
-    }else{
-        vhdl << tab << join("R(",wX+wY," downto ", (stages-1)*2,") <= ") << join(" cc_o",stages-1,"(") << width+wY%2+1 << " downto 1);" << endl;
-    }
-    //vhdl << tab << join("R(",(stages-1)*2+needed_luts-2," downto ", (stages-1)*2,") <= ") << join("cc_o",stages-1,"(") << width+3 << " downto 1);" << endl;
-
-
-    //vhdl << tab << "R <= " << join("cc_co", stages-1) << "(" << width << ") & cc_o(" << width << " downto 0);" << endl;         //needs change
-
-}
 
 }   //end namespace flopoco
