@@ -60,7 +60,7 @@ namespace flopoco {
             }
 
             if(squarer && tilingWeights[w] != (-2) && tilingWeights[w] != 2){
-                for(int i = 2; i <= 6; i++) {
+                for(int i = 1; i <= 6; i++) {
                     addBaseTile(target, new BaseSquarerLUT(i), tilingWeights[w]);
                 }
             }

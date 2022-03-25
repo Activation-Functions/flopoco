@@ -17,23 +17,27 @@ namespace flopoco
         addInput("X", wIn);
         addOutput("R", wR);
 
-        vector<mpz_class> val;
-        REPORT(DEBUG, "Filling table for a LUT squarer of size " << wIn << "x" << wIn << " (out put size is " << wR << ")")
-        for (int yx=0; yx < 1<<(wIn); yx++)
-        {
-            val.push_back(function(yx));
-        }
+        if(wIn == 1){
+            vhdl << tab << "R <= X;" << endl;
+        } else {
+            vector<mpz_class> val;
+            REPORT(DEBUG, "Filling table for a LUT squarer of size " << wIn << "x" << wIn << " (out put size is " << wR << ")")
+            for (int yx=0; yx < 1<<(wIn); yx++)
+            {
+                val.push_back(function(yx));
+            }
         Operator *op = new Table(this, target, val, "SquareTable", wIn, wR);
-        op->setShared();
-        UserInterface::addToGlobalOpList(op);
+            op->setShared();
+            UserInterface::addToGlobalOpList(op);
 
-        vhdl << declare(0.0,"Xtable",wIn) << " <= X;" << endl;
+            vhdl << declare(0.0,"Xtable",wIn) << " <= X;" << endl;
 
-        inPortMap("X", "Xtable");
-        outPortMap("Y", "Y1");
+            inPortMap("X", "Xtable");
+            outPortMap("Y", "Y1");
 
-        vhdl << tab << "R <= Y1;" << endl;
-        vhdl << instance(op, "TableSquarer");
+            vhdl << tab << "R <= Y1;" << endl;
+            vhdl << instance(op, "TableSquarer");
+        }
     }
 
     mpz_class BaseSquarerLUTOp::function(int yx)
@@ -73,13 +77,13 @@ namespace flopoco
     double BaseSquarerLUT::getLUTCost(int x_anchor, int y_anchor, int wMultX, int wMultY, bool signedIO) {
         int wInMax = (signedIO)?(-1)*(1<<(wIn-1)):(1<<wIn)-1;
         int wR = ceil(log2(wInMax*wInMax+1));
-        return (double)((wR<6)?ceil(wR/2.0):wR) + wR*getBitHeapCompressionCostperBit();
+        return (double)(((wIn==1)?0:(wR<6)?ceil(wR/2.0):wR)) + wR*getBitHeapCompressionCostperBit();
     }
 
     int BaseSquarerLUT::ownLUTCost(int x_anchor, int y_anchor, int wMultX, int wMultY, bool signedIO) {
         int wInMax = (signedIO)?(-1)*(1<<(wIn-1)):(1<<wIn)-1;
         int wR = ceil(log2(wInMax*wInMax+1));
-        return (wR<6)?ceil(wR/2.0):wR;
+        return (((wIn==1)?0:(wR<6)?(int)ceil(wR/2.0):wR));
     }
 
     unsigned BaseSquarerLUT::getArea(void) {
