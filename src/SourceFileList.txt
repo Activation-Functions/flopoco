@@ -12,6 +12,7 @@ Targets/DSP
 Targets/Virtex6
 Targets/Zynq7000
 Targets/Kintex7
+Targets/Versal
 Targets/VirtexUltrascalePlus
 Targets/StratixV
 AutoTest/AutoTest
@@ -157,6 +158,7 @@ PrimitiveComponents/ASIC/ApproxCompressor_NAC18
 PrimitiveComponents/Xilinx/Xilinx_Primitive
 PrimitiveComponents/Xilinx/Xilinx_LUT_compute
 PrimitiveComponents/Xilinx/Xilinx_CARRY4
+PrimitiveComponents/Xilinx/Xilinx_LOOKAHEAD8
 PrimitiveComponents/Xilinx/Xilinx_LUT5
 PrimitiveComponents/Xilinx/Xilinx_LUT6
 PrimitiveComponents/Xilinx/Xilinx_MUXF7

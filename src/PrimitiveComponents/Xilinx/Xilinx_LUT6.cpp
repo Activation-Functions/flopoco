@@ -66,6 +66,16 @@ namespace flopoco
       setGeneric("init", init, 64);
   }
 
+  Xilinx_LUT6_CY::Xilinx_LUT6_CY(Operator *parentOp, Target *target, string init) : XilinxLUT(parentOp, target)
+  {
+    setName( "LUT6CY" );
+    addOutput( "o51" );
+    addOutput( "o52" );
+    addOutput( "prop" );
+    if(!init.empty())
+      setGeneric("init", init, 64);
+  }
+
   OperatorPtr XilinxLUT::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args)
   {
     if (target->getVendor() != "Xilinx")
@@ -85,6 +95,8 @@ namespace flopoco
       return new Xilinx_LUT6_L(parentOp, target, init);
     else if(variant == "LUT6_D")
       return new Xilinx_LUT6_D(parentOp, target, init);
+    else if(variant == "LUT6_CY")
+      return new Xilinx_LUT6_CY(parentOp, target, init);
     else
       throw std::runtime_error("Unknown variant: " + variant);
   }
@@ -101,6 +113,5 @@ namespace flopoco
                        XilinxLUT::parseArguments
     );
   }
-
 
 }//namespace

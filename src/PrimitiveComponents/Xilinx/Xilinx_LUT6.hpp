@@ -48,6 +48,12 @@ namespace flopoco
   public:
     Xilinx_LUT6_D(Operator *parentOp, Target *target, string init="");
   };
+
+  // avaible since versal
+  class Xilinx_LUT6_CY : public XilinxLUT {
+    public:
+      	Xilinx_LUT6_CY(Operator* parentOp, Target *target, string init="");
+  };
 }//namespace
 
 #endif

@@ -868,5 +868,25 @@ namespace flopoco{
 		mpfr_set_emin(orig_emin);
 		mpfr_set_emax(orig_emax);
 	}
-	
+
+
+  std::string op_shift(std::string dir, std::string sigin,
+    std::string shift_fac, bool is_signed, std::string resize_fac
+  ) {
+    std::stringstream ss;
+
+    std::string tmp = is_signed ? "signed" : "unsigned";
+
+    tmp = tmp + "(" + sigin + ")";
+
+    if (!resize_fac.empty()) {
+      tmp = "resize(" + tmp + ", " + resize_fac + ")";
+    }
+
+    ss << "std_logic_vector(shift_" << dir << "(" << tmp \
+    << ", " << shift_fac << "))";
+
+    return ss.str();
+  }
+
 }

@@ -543,6 +543,11 @@ namespace flopoco{
 	/** A helper function that will convert a signal name into its lowercase version */
 	string toLower(const string& str);
 
+	/** A helper function that generates vhdl shift function code */
+        std::string op_shift(std::string dir, std::string sigin,
+          std::string shift_fac, bool is_signed=true, std::string resize_fac=""
+        );
+
 	/** A helper class to set and restore mpfr emin/emax */
 	class MPFRSetExp {
 	public:

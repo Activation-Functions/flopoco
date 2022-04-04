@@ -24,4 +24,6 @@
 #include "Targets/Kintex7.hpp"
 #include "Targets/VirtexUltrascalePlus.hpp"
 
+#include "Targets/Versal.hpp"
+
 #endif //ALLTARGETSHEADERS_HPP
