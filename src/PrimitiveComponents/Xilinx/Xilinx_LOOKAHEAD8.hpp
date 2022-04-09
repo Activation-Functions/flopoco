@@ -9,10 +9,11 @@ namespace flopoco {
     class Xilinx_LOOKAHEAD8 : public Xilinx_Primitive {
       public:
 
-        // constructor, defined there with two parameters (default value 0 for each)
-        Xilinx_LOOKAHEAD8(Operator *parentOp, Target *target );
+        Xilinx_LOOKAHEAD8(Operator *parentOp, Target *target,
+          std::string lookb, std::string lookd,
+          std::string lookf, std::string lookh
+        );
 
-        // destructor
         ~Xilinx_LOOKAHEAD8() {};
 
         // as lookahead interface is not vector based (it has a named port
@@ -20,10 +21,21 @@ namespace flopoco {
         // generic codegen scenario, this convienience helper method eases
         // the pain somewhat by automatically mapping a vector based signal
         // to corresponding named ports
-        void connectVectorPorts(Operator *parentOp,
+        static void connectVectorPorts(Operator *parentOp,
           std::string signame_cyx, std::string signame_prop,
           std::string signame_out, int rlow_in = 0, int rlow_out = 0
         );
+
+        static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args);
+        static void registerFactory();
+
+        static OperatorPtr newInstanceForVectorConnections(
+           Operator *parentOp, std::string instname, std::string params,
+           std::string signame_cyx, std::string signame_prop,
+           std::string signame_out, std::string extra_ins,
+           std::string extra_ins_cst="", int rlow_in=0, int rlow_out=0
+        );
+
     };
 }//namespace
 

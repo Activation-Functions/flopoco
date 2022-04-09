@@ -19,7 +19,7 @@ namespace flopoco
   class XilinxLUT : public Xilinx_Primitive
   {
   public:
-    XilinxLUT(Operator *parentOp, Target *target);
+    XilinxLUT(Operator *parentOp, Target *target, int inport_cnt=6);
 
     static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args);
     static void registerFactory();

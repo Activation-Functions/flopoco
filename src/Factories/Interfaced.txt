@@ -62,6 +62,7 @@ FixAtan2
 
 XilinxLUT
 Xilinx_CARRY4
+Xilinx_LOOKAHEAD8
 Xilinx_GenericAddSub
 Xilinx_Comparator
 Xilinx_TernaryAdd_2State

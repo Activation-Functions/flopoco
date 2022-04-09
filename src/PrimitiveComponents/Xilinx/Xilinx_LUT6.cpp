@@ -15,11 +15,11 @@
 using namespace std;
 namespace flopoco
 {
-  XilinxLUT::XilinxLUT(Operator *parentOp, Target *target) : Xilinx_Primitive(parentOp, target)
+  XilinxLUT::XilinxLUT(Operator *parentOp, Target *target, int inport_cnt) : Xilinx_Primitive(parentOp, target)
   {
     srcFileName = "Xilinx_LUT6";
 
-    for (int i = 0; i < 6; i++)
+    for (int i = 0; i < inport_cnt; i++)
       addInput(join("i", i));
   }
 
@@ -66,7 +66,7 @@ namespace flopoco
       setGeneric("init", init, 64);
   }
 
-  Xilinx_LUT6_CY::Xilinx_LUT6_CY(Operator *parentOp, Target *target, string init) : XilinxLUT(parentOp, target)
+  Xilinx_LUT6_CY::Xilinx_LUT6_CY(Operator *parentOp, Target *target, string init) : XilinxLUT(parentOp, target, 5)
   {
     setName( "LUT6CY" );
     addOutput( "o51" );
