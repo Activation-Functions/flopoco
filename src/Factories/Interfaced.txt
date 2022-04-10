@@ -61,6 +61,7 @@ FixSinCos
 FixAtan2
 
 XilinxLUT
+Xilinx_LUT5
 Xilinx_CARRY4
 Xilinx_LOOKAHEAD8
 Xilinx_GenericAddSub
