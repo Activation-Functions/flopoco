@@ -133,6 +133,10 @@ bool BaseMultiplierCategory::shape_contribution(int x, int y, int shape_x, int s
 	if(getDSPCost() == 1){
 		int sign_x = (signedIO && wX-(int)tile_param.wX_-1 == shape_x)?1:0;      //The Xilinx DSP-Blocks can process one bit more if signed
 		int sign_y = (signedIO && wY-(int)tile_param.wY_-1 == shape_y)?1:0;
+		if(squarer && shape_x <= shape_y+(int)tile_param.wY_+sign_y-1 && x != y){      //handling of symmetries at the diagonal for squarers
+		    if(shape_x+(int)tile_param.wX_+sign_x-1 < shape_y) return false;           //Avoid redundant decision variables that correspond to tiles completely below the diagonal
+		    if( 0 <= y-shape_x && y-shape_x < (int)tile_param.wX_+sign_x && 0 <= x-shape_y && x-shape_y < (int)tile_param.wY_+sign_y ) return true;    //check position mirrored at bottom-left to top-right diagonal
+		}
 		return ( 0 <= x-shape_x && x-shape_x < (int)tile_param.wX_+sign_x && 0 <= y-shape_y && y-shape_y < (int)tile_param.wY_+sign_y );
 	} else {
 	    if(squarer && shape_x <= shape_y+(int)tile_param.wY_-1 && x != y){      //handling of symmetries at the diagonal for squarers

@@ -222,6 +222,7 @@ void TilingStrategyOptimalILP::constructProblem()
                     for(int xs = 0 - tiles[s]->wX() + 1; xs <= x + diff; xs++){
                         if(occupation_threshold_ == 1.0 && ((wX - xs) < (int)tiles[s]->wX() || (wY - ys) < (int)tiles[s]->wY())) break;
                         if(squarer && tiles[s]->isSquarer() && xs != ys) continue;                 //squarers should only be placed in the diagonal
+                        if(squarer && xs < ys) continue;                 //within squarers tiles should not be placed below the diagonal
                         if(tiles[s]->shape_contribution(x, y, xs, ys, wX, wY, signedIO, squarer)){
                             if((wOut < (int)prodWidth) && ((xs+tiles[s]->wX()+ys+tiles[s]->wY()-2) < ((int)prodWidth-wOut-guardBits))) break;
                             if(signedIO && ((wX == xs+(int)tiles[s]->wX() && !tiles[s]->signSupX()) || (wY == ys+(int)tiles[s]->wY() && !tiles[s]->signSupY()) )) break; //Avoid placing tiles without signed support at the bottom and left |_ edge of the area to be tiled.
