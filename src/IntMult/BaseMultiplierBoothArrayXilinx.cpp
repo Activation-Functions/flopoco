@@ -161,7 +161,6 @@ TestList BaseMultiplierBoothArrayXilinx::unitTest(int index)
         ostringstream name;
         string in1,in2,in3;
         int width, height;
-        //bool in2_signed, in1_signed;
 
         in1 = "X";
         in2 = "Y";
@@ -170,12 +169,9 @@ TestList BaseMultiplierBoothArrayXilinx::unitTest(int index)
         width = wX;
         height = wY;
 
-        //in2_signed = isSignedY;         //Y is the short side
-        //in1_signed = isSignedX;         //X is the long side
 
         bool heightparity = height%2;
         int stages = height/2+1;
-        //int slices = ceil(float(width)/4+1);
         int slices = ceil(float(width+2)/4);
         int needed_luts = slices*4;//no. of required LUTs
         int needed_cc = slices; //no. of required carry chains
@@ -184,7 +180,7 @@ TestList BaseMultiplierBoothArrayXilinx::unitTest(int index)
 
         addInput("X", wX, true);
         addInput("Y", wY, true);
-        addInput("Tin", wX+1, true);
+        addInput("Tin", wX, true);
         if (useAccumulate && wX >= wY) {
             addOutput("R", wX + wY + 1, 1, true);
         } else{
@@ -194,19 +190,22 @@ TestList BaseMultiplierBoothArrayXilinx::unitTest(int index)
         for(int j = 0; j < stages; j++){
 
             declare(join("t", j), needed_cc * 4);
+            //declare(join("h", j), needed_cc * 4);
             declare(join("cc_s", j), needed_cc * 4);
             declare(join("cc_di", j), needed_cc * 4);
             declare(join("cc_co", j), needed_cc * 4);
             declare(join("cc_o", j), needed_cc * 4);
 
-            vhdl << tab << join("cc_di", j, " <= ") << join("t", j) << ";" << endl;
+
 
             if (j == 0) {
                 vhdl << tab << join("t0(", width + 1, ") <= '1';") << endl;
                 if (!useAccumulate) {
-                    vhdl << tab << join("t0(", width, " downto ", 0, ") <= (others => '0');") << endl;
+                    vhdl << tab << join("t0(", width, ") <= '1';") << endl;
+                    vhdl << tab << join("t0(", width - 1, " downto ", 0, ") <= (others => '0');") << endl;
                 } else{
-                    vhdl << tab << join("t0(", width , " downto ", 0, ") <= Tin;") << endl;
+                    vhdl << tab << join("t0(", width, ") <= '1';") << endl;
+                    vhdl << tab << join("t0(", width -1, " downto ", 0, ") <= Tin;") << endl;
                 }
             }
             if (!isSignedY||j<stages-1||heightparity) {
@@ -218,29 +217,43 @@ TestList BaseMultiplierBoothArrayXilinx::unitTest(int index)
                     lut_op lutab;
                     lut_op z = ((~lut_in(0) & ~lut_in(1) & ~lut_in(2)) | (lut_in(0) & lut_in(1) & lut_in(2)));
                     lut_op c = ((lut_in(0)));
-                    //lut_op c = ((lut_in(0) & ~(lut_in(1)) | (lut_in(0) & ~lut_in(2))));
                     lut_op s = ((~lut_in(0) & lut_in(1) & lut_in(2)) | (lut_in(0) & ~lut_in(1) & ~lut_in(2)));
-                    lut_op e = (c ^lut_in(4)) & ~z ^(c & z);
-                    lut_op mux0 = (~s & lut_in(4) | s & lut_in(5));
+                    lut_op e = (c ^lut_in(3)) & ~z ^(c & z);
+                    lut_op mux0 = (~s & lut_in(3) | s & lut_in(4));
                     lut_op mux1 = (~c & mux0 | c & ~mux0);
                     lut_op mux2 = ~z & mux1;
                     lut_op czflip = mux2 ^ (c & z);
 
+                    lut_op wz = (lut_in(4)& ~z);
+                    lut_op wc = (~c & wz | c & ~wz);
+                    lut_op nwc = ~wc;
+                    lut_op w = (~lut_in(5)&nwc |lut_in(5)& (nwc ^ (~lut_in(3))));
 
-                    if (i < width + 1) {                                              //Mapping A
-                         lutab = lut_in(3) ^ czflip;
-                    }else if (i == width + 1 & (!yIsSigned && !xIsSigned)) {          //Mapping B
-                        lutab = lut_in(3) ^ ~c;
-                    } else if (i == width + 1 & (xIsSigned || yIsSigned)) {          //Mapping B (negative)
-                        lutab = lut_in(3) ^ ~e;
+
+                    lut_op test = (~s & ~c | s & (c & lut_in(4)) |s & (~c & ~lut_in(4)));
+                    lut_op test2 = (~lut_in(5) & (test&~(s&c)) |~lut_in(5)&s&~c | lut_in(5)& (test ^ (~lut_in(3))));
+
+
+
+                    if (i < width) {                                              //Mapping A
+                         lutab = lut_in(5) ^ czflip;
+                    }else if (i == width && !xIsSigned) {                                         //Mapping A*
+                        lutab = test2;
+                    }else if (i == width ) {                                         //Mapping A*
+                        lutab = w;
+                    }else if (i == width + 1 && !xIsSigned && useAccumulate ) {                                         //Mapping A*
+                        lutab = ~(lut_in(5) & lut_in(4) & (~lut_in(3))& (lut_in(2))&lut_in(1) & (~lut_in(0))) ;
+                    }else if (i == width + 1) {                                         //Mapping A*
+                        lutab = lut_in(5) ;
                     }
+
 
 
 
 
                     lut_init lutop(lutab);
 
-                    Xilinx_LUT6 *cur_lut = new Xilinx_LUT6(this, target);
+                    Xilinx_LUT6_2 *cur_lut = new Xilinx_LUT6_2(this, target);
                     cur_lut->setGeneric("init", lutop.get_hex(), 64);
 
 
@@ -258,33 +271,45 @@ TestList BaseMultiplierBoothArrayXilinx::unitTest(int index)
                     } else {
                         inPortMapCst("i1", "'0'");
                     }
-                    if (j * 2 - 1 >= 0) {
+                    if (i == width+1 && !xIsSigned &&  useAccumulate) {
+                        inPortMap("i2", in1 + of(width - 1));
+                    }else if(j * 2 - 1 >= 0) {
                         inPortMap("i2", in2 + of(j * 2 - 1));
                     } else {
                         inPortMapCst("i2", "'0'");
                     }
-                    if (i > width + 2) {
-                        inPortMapCst("i3", "'0'");
-                    } else {
-                        inPortMap("i3", join("t", j) + of(i));
-                    }
+
                     if (0 <= i && i <= width - 1 ) {
-                        inPortMap("i4", in1 + of(i));
-                    } else if (i == width && (isSignedX)) {
+                        inPortMap("i3", in1 + of(i));
+                    } else if (i == width & j == 0) {
+                        inPortMapCst("i3", "'0'");
+                    } else if (i == width ) {
+                        inPortMap("i3", join("t", j) + of(i-1));
+                    } else if (i == width+1 && !xIsSigned  && useAccumulate) {
+                        inPortMap("i3", join("t", j) + of(width));
+                    } else {
+                        inPortMapCst("i3", "'0'");
+                    }
+                    if (0 < i && i <= width ) {
                         inPortMap("i4", in1 + of(i - 1));
-                    } else if (i == width + 1 && (isSignedX)) {
-                        inPortMap("i4", in1 + of(i - 2));
+                    } else if (i == width+1 && !xIsSigned  && useAccumulate && j!=0) {
+                        inPortMap("i4", in2 + of(j * 2 - 1));
                     } else {
                         inPortMapCst("i4", "'0'");
                     }
-                    if (0 < i && i <= width ) {
-                        inPortMap("i5", in1 + of(i - 1));
-                    } else {
+                    if (i > width + 1) {
                         inPortMapCst("i5", "'0'");
+                    } else if (i == width+1 && !xIsSigned  && useAccumulate) {
+                        inPortMap("i5", in2 + of(0));
+                    } else if (i > width -1 ) {
+                        inPortMap("i5", "t0" + of(width+1));
+                    } else {
+                        inPortMap("i5", join("t", j) + of(i));
                     }
 
-                    outPortMap("o", join("cc_s", j) + of(i));
-                    vhdl << cur_lut->primitiveInstance(join("lut", j, "_", i)) << endl;
+                    outPortMap("o6", join("cc_s", j) + of(i));
+                    outPortMap("o5", join("cc_di", j) + of(i));
+                    vhdl << cur_lut->primitiveInstance(join("inst_lut", j, "_", i)) << endl;
                 }
 
                 //create the carry chain:
@@ -326,9 +351,7 @@ TestList BaseMultiplierBoothArrayXilinx::unitTest(int index)
                                      << endl;
                         }
                     }
-                    vhdl << tab << join("t", j + 1, "(", width, ")<=") << join("not cc_co", j, "(") << width + 1 << ");"
-                         << endl;
-                    vhdl << tab << join("t", j + 1, "(", width + 1, ")<=") << join("cc_co", j, "(") << width + 1 << ");"
+                    vhdl << tab << join("t", j + 1, "(", width, ")<=") << join("cc_o", j, "(") << width + 1 << ");"
                          << endl;
                 }
                 vhdl << endl;
@@ -336,7 +359,7 @@ TestList BaseMultiplierBoothArrayXilinx::unitTest(int index)
         }
         if((isSignedY) && !heightparity){
             if (useAccumulate && wX >= wY) {
-                vhdl << tab << join("R(",wX+wY,") <= ") << join("not cc_co",stages-2,"(") << width+wY%2+1 << ");" << endl;
+                vhdl << tab << join("R(",wX+wY,") <= ") << join(" cc_o",stages-2,"(") << width+wY%2+1 << ");" << endl;
             }
             vhdl << tab << join("R(",wX+wY-1," downto ", (stages-1)*2,") <= ") << join(" cc_o",stages-2,"(") << width+1 << " downto 2);" << endl;
         }else{
