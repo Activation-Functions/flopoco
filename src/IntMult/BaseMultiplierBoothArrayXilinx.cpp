@@ -54,15 +54,16 @@ int BaseMultiplierBoothArrayXilinx::ownLUTCost(int x_anchor, int y_anchor, int w
 //copied from 2xk
 OperatorPtr BaseMultiplierBoothArrayXilinx::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args)
 {
-    int wX, wY;
-	bool xIsSigned,yIsSigned,useAccumulate;
+    int wX, wY, wAcc;
+	bool xIsSigned,yIsSigned;
     UserInterface::parseStrictlyPositiveInt(args, "wX", &wX);
     UserInterface::parseStrictlyPositiveInt(args, "wY", &wY);
 	UserInterface::parseBoolean(args,"xIsSigned",&xIsSigned);
 	UserInterface::parseBoolean(args,"yIsSigned",&yIsSigned);
-    UserInterface::parseBoolean(args, "useAccumulate", &useAccumulate);
 
-	return new BaseMultiplierBoothArrayXilinxOp(parentOp,target,xIsSigned,yIsSigned, wX, wY, useAccumulate);
+    UserInterface::parsePositiveInt(args, "wAcc", &wAcc);
+
+	return new BaseMultiplierBoothArrayXilinxOp(parentOp,target,xIsSigned,yIsSigned, wX, wY, wAcc);
 }
 
 void BaseMultiplierBoothArrayXilinx::registerFactory()
@@ -120,7 +121,7 @@ void BaseMultiplierBoothArrayXilinxOp::emulate(TestCase* tc)
     //cerr << "Computed product : " << svR.get_str() << endl;
     mpz_class svR=0;
 
-    if  (accumulateUsed){
+    if  (wAcc!=0){
          svR = svX * svY + svT;
     }else{
         svR = svX * svY;
@@ -154,7 +155,7 @@ TestList BaseMultiplierBoothArrayXilinx::unitTest(int index)
     return testStateList;
 }
 
-    BaseMultiplierBoothArrayXilinxOp::BaseMultiplierBoothArrayXilinxOp(Operator *parentOp, Target* target, bool isSignedX, bool isSignedY, int wX, int wY, bool useAccumulate) : Operator(parentOp,target),xIsSigned(isSignedX),yIsSigned(isSignedY),wX(wX),wY(wY), accumulateUsed(useAccumulate)
+    BaseMultiplierBoothArrayXilinxOp::BaseMultiplierBoothArrayXilinxOp(Operator *parentOp, Target* target, bool isSignedX, bool isSignedY, int wX, int wY, int wAcc) : Operator(parentOp,target),xIsSigned(isSignedX),yIsSigned(isSignedY),wX(wX),wY(wY),wAcc(wAcc)
     {
         //Für signed checke http://i.stanford.edu/pub/cstr/reports/csl/tr/94/617/CSL-TR-94-617.appendix.pdf
         //ZWEIERKOMPLEMENT
@@ -168,6 +169,7 @@ TestList BaseMultiplierBoothArrayXilinx::unitTest(int index)
         name << "BaseMultiplier" << wX << "x" << wY;
         width = wX;
         height = wY;
+	wAcc = wAcc;
 
 
         bool heightparity = height%2;
@@ -180,8 +182,12 @@ TestList BaseMultiplierBoothArrayXilinx::unitTest(int index)
 
         addInput("X", wX, true);
         addInput("Y", wY, true);
-        addInput("Tin", wX, true);
-        if (useAccumulate && wX >= wY) {
+	if (wAcc==0){
+		addInput("Tin", 1, true);
+	}else {
+		addInput("Tin", wAcc, true);
+	}
+        if (wAcc!=0 && wX >= wY) {
             addOutput("R", wX + wY + 1, 1, true);
         } else{
             addOutput("R", wX + wY , 1, true);
@@ -200,12 +206,20 @@ TestList BaseMultiplierBoothArrayXilinx::unitTest(int index)
 
             if (j == 0) {
                 vhdl << tab << join("t0(", width + 1, ") <= '1';") << endl;
-                if (!useAccumulate) {
+                if (wAcc==0) {
                     vhdl << tab << join("t0(", width, ") <= '1';") << endl;
                     vhdl << tab << join("t0(", width - 1, " downto ", 0, ") <= (others => '0');") << endl;
                 } else{
                     vhdl << tab << join("t0(", width, ") <= '1';") << endl;
-                    vhdl << tab << join("t0(", width -1, " downto ", 0, ") <= Tin;") << endl;
+		    for (int i =0; i<width; i++){
+			if (i<wAcc){
+				vhdl << tab << join("t0(", i, ") <= Tin(",i,");") << endl;
+			} else{
+				vhdl << tab << join("t0(", i, ") <= '0';") << endl;
+			}
+			    //vhdl << tab << join("t0(", width -1, " downto ", 0, ") <= Tin;") << endl;
+		    }
+
                 }
             }
             if (!isSignedY||j<stages-1||heightparity) {
@@ -241,7 +255,7 @@ TestList BaseMultiplierBoothArrayXilinx::unitTest(int index)
                         lutab = test2;
                     }else if (i == width ) {                                         //Mapping A*
                         lutab = w;
-                    }else if (i == width + 1 && !xIsSigned && useAccumulate ) {                                         //Mapping A*
+                    }else if (i == width + 1 && !xIsSigned && wAcc==width ) {                                         //Mapping A*
                         lutab = ~(lut_in(5) & lut_in(4) & (~lut_in(3))& (lut_in(2))&lut_in(1) & (~lut_in(0))) ;
                     }else if (i == width + 1) {                                         //Mapping A*
                         lutab = lut_in(5) ;
@@ -271,7 +285,7 @@ TestList BaseMultiplierBoothArrayXilinx::unitTest(int index)
                     } else {
                         inPortMapCst("i1", "'0'");
                     }
-                    if (i == width+1 && !xIsSigned &&  useAccumulate) {
+                    if (i == width+1 && !xIsSigned &&  wAcc==width) {
                         inPortMap("i2", in1 + of(width - 1));
                     }else if(j * 2 - 1 >= 0) {
                         inPortMap("i2", in2 + of(j * 2 - 1));
@@ -285,21 +299,21 @@ TestList BaseMultiplierBoothArrayXilinx::unitTest(int index)
                         inPortMapCst("i3", "'0'");
                     } else if (i == width ) {
                         inPortMap("i3", join("t", j) + of(i-1));
-                    } else if (i == width+1 && !xIsSigned  && useAccumulate) {
+                    } else if (i == width+1 && !xIsSigned  && wAcc==width) {
                         inPortMap("i3", join("t", j) + of(width));
                     } else {
                         inPortMapCst("i3", "'0'");
                     }
                     if (0 < i && i <= width ) {
                         inPortMap("i4", in1 + of(i - 1));
-                    } else if (i == width+1 && !xIsSigned  && useAccumulate && j!=0) {
+                    } else if (i == width+1 && !xIsSigned  && wAcc==width && j!=0) {
                         inPortMap("i4", in2 + of(j * 2 - 1));
                     } else {
                         inPortMapCst("i4", "'0'");
                     }
                     if (i > width + 1) {
                         inPortMapCst("i5", "'0'");
-                    } else if (i == width+1 && !xIsSigned  && useAccumulate) {
+                    } else if (i == width+1 && !xIsSigned  && wAcc==width) {
                         inPortMap("i5", in2 + of(0));
                     } else if (i > width -1 ) {
                         inPortMap("i5", "t0" + of(width+1));
@@ -358,12 +372,12 @@ TestList BaseMultiplierBoothArrayXilinx::unitTest(int index)
             }
         }
         if((isSignedY) && !heightparity){
-            if (useAccumulate && wX >= wY) {
+            if (wAcc!=0 && wX >= wY) {
                 vhdl << tab << join("R(",wX+wY,") <= ") << join(" cc_o",stages-2,"(") << width+wY%2+1 << ");" << endl;
             }
             vhdl << tab << join("R(",wX+wY-1," downto ", (stages-1)*2,") <= ") << join(" cc_o",stages-2,"(") << width+1 << " downto 2);" << endl;
         }else{
-            if (useAccumulate && wX >= wY) {
+            if (wAcc!=0 && wX >= wY) {
                 vhdl << tab << join("R(",wX+wY,") <= ") << join(" cc_o",stages-1,"(") << width+wY%2 << ");" << endl;
             }
             vhdl << tab << join("R(",wX+wY-1," downto ", (stages-1)*2,") <= ") << join(" cc_o",stages-1,"(") << width+wY%2-1 << " downto 0);" << endl;

@@ -46,12 +46,12 @@ namespace flopoco {
     class BaseMultiplierBoothArrayXilinxOp : public Operator
     {
     public:
-		BaseMultiplierBoothArrayXilinxOp(Operator *parentOp, Target* target, bool isSignedX, bool isSignedY, int wX, int wY, bool useAccumulate= false);
+		BaseMultiplierBoothArrayXilinxOp(Operator *parentOp, Target* target, bool isSignedX, bool isSignedY, int wX, int wY, int wAcc =0);
 
         void emulate(TestCase* tc);
     private:
-        int wX, wY;
-        bool xIsSigned, yIsSigned, accumulateUsed;
+        int wX, wY, wAcc;
+        bool xIsSigned, yIsSigned;
     };
 
 }
