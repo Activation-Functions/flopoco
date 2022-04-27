@@ -60,9 +60,11 @@ OperatorPtr BaseMultiplierBoothArrayXilinx::parseArguments(OperatorPtr parentOp,
     UserInterface::parseStrictlyPositiveInt(args, "wY", &wY);
 	UserInterface::parseBoolean(args,"xIsSigned",&xIsSigned);
 	UserInterface::parseBoolean(args,"yIsSigned",&yIsSigned);
-
     UserInterface::parsePositiveInt(args, "wAcc", &wAcc);
-
+    if (wAcc>wX) {
+	    throw std::invalid_argument(
+		"The addition input has to be smaller or equal to the X-multiplication input.");
+    }
 	return new BaseMultiplierBoothArrayXilinxOp(parentOp,target,xIsSigned,yIsSigned, wX, wY, wAcc);
 }
 
@@ -175,7 +177,8 @@ TestList BaseMultiplierBoothArrayXilinx::unitTest(int index)
         bool heightparity = height%2;
         int stages = height/2+1;
         int slices = ceil(float(width+2)/4);
-        int needed_luts = slices*4;//no. of required LUTs
+        //int needed_luts = slices*4;//no. of required LUTs
+	int needed_luts = width+2;//no. of required LUTs
         int needed_cc = slices; //no. of required carry chains
 
         setNameWithFreqAndUID(name.str());
@@ -187,7 +190,7 @@ TestList BaseMultiplierBoothArrayXilinx::unitTest(int index)
 	}else {
 		addInput("Tin", wAcc, true);
 	}
-        if (wAcc!=0 && wX >= wY) {
+        if (wAcc>width && wX >= wY) {
             addOutput("R", wX + wY + 1, 1, true);
         } else{
             addOutput("R", wX + wY , 1, true);
@@ -227,6 +230,10 @@ TestList BaseMultiplierBoothArrayXilinx::unitTest(int index)
 
                 //create the LUTs:
                 for (int i = 0; i < needed_luts; i++) {
+			if (j==stages-1 && i> needed_luts-2 ||j==stages-1 && i== needed_luts-2 &&!heightparity){//|| j==stages-2 && i == needed_luts){
+				continue;
+			}
+
                     //LUT content of the LUTs:
                     lut_op lutab;
                     lut_op z = ((~lut_in(0) & ~lut_in(1) & ~lut_in(2)) | (lut_in(0) & lut_in(1) & lut_in(2)));
@@ -372,12 +379,12 @@ TestList BaseMultiplierBoothArrayXilinx::unitTest(int index)
             }
         }
         if((isSignedY) && !heightparity){
-            if (wAcc!=0 && wX >= wY) {
+            if (wAcc>width && wX >= wY) {
                 vhdl << tab << join("R(",wX+wY,") <= ") << join(" cc_o",stages-2,"(") << width+wY%2+1 << ");" << endl;
             }
             vhdl << tab << join("R(",wX+wY-1," downto ", (stages-1)*2,") <= ") << join(" cc_o",stages-2,"(") << width+1 << " downto 2);" << endl;
         }else{
-            if (wAcc!=0 && wX >= wY) {
+            if (wAcc>width && wX >= wY) {
                 vhdl << tab << join("R(",wX+wY,") <= ") << join(" cc_o",stages-1,"(") << width+wY%2 << ");" << endl;
             }
             vhdl << tab << join("R(",wX+wY-1," downto ", (stages-1)*2,") <= ") << join(" cc_o",stages-1,"(") << width+wY%2-1 << " downto 0);" << endl;
