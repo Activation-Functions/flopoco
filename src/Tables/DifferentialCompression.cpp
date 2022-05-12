@@ -230,9 +230,9 @@ namespace flopoco {
 		mpz_class compressedCost = diffCost + subsamplingCost;
 		float ratio = compressedCost.get_d() / originalCost.get_d();
 		ratio=roundf(ratio*100)/100; // 2 chiffres significatifs
-		t << "  Total compressed cost is: " << compressedCost <<   "        compression ratio: " << ratio << " %";
+		t << "  Total compressed cost is: " << compressedCost <<   "        compression ratio: " << 100*ratio << " %";
 		// t << "Total LUT cost: " << (diffLutCost + subsamplingLUTCost)<< endl;
-#define LATEX_OUTPUT 1 // for the paper
+#define LATEX_OUTPUT 0 // for the paper
 #if LATEX_OUTPUT
 		t  << endl << "Latex table line : " << endl;
 		// first line
