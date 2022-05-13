@@ -24,7 +24,7 @@ Operator* BaseMultiplierLUT::generateOperator(
         bool signedY = signedIO && (wMultY == y_anchor+(int)wY());
 		//int ws = (wX()==1)?wY():((wY()==1)?wX():wX()+wY());
 		int ws = (wX()==1 && !signedX)?wY():((wY()==1 && !signedY)?wX():wX()+wY());     //The wOut of 2x1 or 2x1 is 1 bit larger, when the short or both sides are signed.
-		int luts = ((ws <= 5)?ws/2+ws%2:ws);
+		int luts = ((ws <= 5)?ws/2+ws%2:ws) - ((wX()==3 && wY()==3)?1:0);               //In the 3x3-case the 2 LSB-Bits of the result only depend on 4 input bits so two LUTs can be combined and hence one LUT can be saved
 
 		int x_min = ((x_anchor < 0)?0: x_anchor);
 		int y_min = ((y_anchor < 0)?0: y_anchor);
@@ -43,7 +43,7 @@ Operator* BaseMultiplierLUT::generateOperator(
         bool signedY = signedIO && (wMultY == y_anchor+(int)wY());
         //int ws = (wX()==1)?wY():((wY()==1)?wX():wX()+wY());
         int ws = (wX()==1 && !signedX)?wY():((wY()==1 && !signedY)?wX():wX()+wY());
-		int luts = ((ws <= 5)?ws/2+ws%2:ws);
+        int luts = ((ws <= 5)?ws/2+ws%2:ws) - ((wX()==3 && wY()==3)?1:0);               //In the 3x3-case the 2 LSB-Bits of the result only depend on 4 input bits so two LUTs can be combined and hence one LUT can be saved
 		return luts;
 	}
 
