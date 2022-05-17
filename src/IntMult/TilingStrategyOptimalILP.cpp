@@ -206,6 +206,7 @@ void TilingStrategyOptimalILP::constructProblem()
     while (nc /= 10)
         dpC++;
 
+    vector<ScaLP::Term> bitsinColumn(prodWidth + 1), constVecBits(prodWidth + 5);
     vector<vector<vector<ScaLP::Variable>>> solve_Vars(wS, vector<vector<ScaLP::Variable>>(wX+x_neg, vector<ScaLP::Variable>(wY+y_neg)));
     ScaLP::Term maxEpsTerm, minEpsTerm;
     // add the Constraints
@@ -241,6 +242,14 @@ void TilingStrategyOptimalILP::constructProblem()
                                 if((squarer && !tiles[s]->isSquarer() && xs <= ys+(int)tiles[s]->wY()-1 && tiles[s]->shapeValid(y-xs,x-ys) && x != y) || (tiles[s]->isSquarer() && x != y)){   //consideration of symmetries for squarers
                                     pxyTerm.add(solve_Vars[s][xs+x_neg][ys+y_neg], tiles[s]->getParametrisation().getTilingWeight());          //in squarers the symmetric position for the current eq. below the diagonal is covered by the tile s
                                 }
+
+                                if(squarer && tiles[s]->getParametrisation().getTilingWeight()<0){      //Handling of the sign extension bits in dynamically calculated constant bit vector
+                                    if(tiles[s]->wX() == 1 && tiles[s]->wY() == 1 && xs == wX-1 && ys == wY-1) break; //the 1x1 tile with (1,1) signedness should not get a sign extension vector.
+                                    for(unsigned i = xs+ys+tiles[s]->getRelativeResultMSBWeight(tiles[s]->getParametrisation(),signedIO && xs+(int)tiles[s]->wX() == wX, signedIO && ys+(int)tiles[s]->wY() == wY); i < prodWidth; i++){
+                                        constVecBits[i].add(solve_Vars[s][xs+x_neg][ys+y_neg], 1);
+                                    }
+                                }
+
                             }
                         }
                     }
@@ -369,6 +378,33 @@ void TilingStrategyOptimalILP::constructProblem()
         minErrName << "minEps";
         minErrConstraint.name = minErrName.str();
         solver->addConstraint(minErrConstraint);
+    }
+
+    //consideration of the compression cost of the sign extension vector bits
+    if(squarer){
+        vector<ScaLP::Variable> cvBits(prodWidth+5);
+        vector<ScaLP::Variable> ovVars(prodWidth+5);
+        for(unsigned i = 0; i < prodWidth+5; i++){
+            stringstream cvarName;
+            cvarName << "v" << setfill('0') << setw(dpC) << i;
+            //cout << cvarName.str() << " weight " << (double)(1ULL << i) << endl;
+            cvBits[i] = ScaLP::newBinaryVariable(cvarName.str());
+            obj.add(cvBits[i], 0.65);    //append variable to cost function
+
+            stringstream ovarName;
+            ovarName << "o" << setfill('0') << setw(dpC) << i;
+            //cout << cvarName.str() << " weight " << (double)(1ULL << i) << endl;
+            ovVars[i] = ScaLP::newIntegerVariable(ovarName.str());
+            constVecBits[i].add(cvBits[i], -1);                 //constant bit in col i
+            constVecBits[i].add(ovVars[i], -2);                 //for carry to next constraint
+            if(0 < i) constVecBits[i].add(ovVars[i-1], 1);   //carry from previous constraint
+            //Calculate individual constant vector bits
+            ScaLP::Constraint cvbConstraint = constVecBits[i] == 0;
+            stringstream consName;
+            consName << "cBit" << setfill('0') << setw(dpC) << i;
+            cvbConstraint.name = consName.str();
+            solver->addConstraint(cvbConstraint);
+        }
     }
 
     // Set the Objective
