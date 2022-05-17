@@ -209,11 +209,12 @@ namespace flopoco
     }
 
     double BaseSquarerLUT::getLUTCost(int x_anchor, int y_anchor, int wMultX, int wMultY, bool signedIO) {
+        int wInMax = (signedIO)?(-1)*(1<<(wIn-1)):(1<<wIn)-1;
+        int wR = ceil(log2(wInMax*wInMax+1));
+        cout << "wR=" << wR << endl;
         if(wIn<7){
             return (double)((wIn==6)?7:wIn-1) + wR*getBitHeapCompressionCostperBit();
         } else {
-            int wInMax = (signedIO)?(-1)*(1<<(wIn-1)):(1<<wIn)-1;
-            int wR = ceil(log2(wInMax*wInMax+1));
             return (double)(((wIn==1)?0:(wR<6)?ceil(wR/2.0):wR)) + wR*getBitHeapCompressionCostperBit();
         }
     }
