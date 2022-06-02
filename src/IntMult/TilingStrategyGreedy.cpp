@@ -251,10 +251,6 @@ namespace flopoco {
 
 			int dsps = bm->getDSPCost();
 
-			if(dsps == 1 && !bm->isKaratsuba()) {
-				tile = tile.tryDSPExpand(next.first, next.second, wX, wY, signedIO);
-			}
-
 			auto coord (field->placeTileInField(placementPos, bm, tile, fieldState));
 			if(dsps > 0) {
 				usedDSPBlocks += dsps;

@@ -199,12 +199,13 @@ namespace flopoco {
     }
 
     void Field::printField() {
-        //TODO: mirror output
         for(auto v: field_) {
+            string line;
             for(auto c: v) {
-                cout << c;
+                char b = '0' + c;
+                line =  string((const char*)&b, 1) + line;
             }
-            cout << endl;
+            cout << line << endl;
         }
     }
 
