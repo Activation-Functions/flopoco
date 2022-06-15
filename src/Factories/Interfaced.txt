@@ -59,6 +59,7 @@ Posit2FP
 
 FixSinCos
 FixAtan2
+Fix2DNorm
 
 XilinxLUT
 Xilinx_LUT5
