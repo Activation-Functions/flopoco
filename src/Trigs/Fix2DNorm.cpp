@@ -24,8 +24,8 @@ namespace flopoco{
 	Fix2DNorm::Fix2DNorm(OperatorPtr parentOp, Target* target_, int lsbIn_, int lsbOut_) :
 		Operator(parentOp, target_), lsbIn(lsbIn_), lsbOut(lsbOut_)
 	{
-		initKFactor();
-
+		initKFactor();	    
+		
 		srcFileName = "Fix2DNorm";
 		setCopyrightString("Florent de Dinechin (2015-...)");
 		// useNumericStd_Unsigned();
@@ -43,6 +43,8 @@ namespace flopoco{
 		addInput  ("X", wIn);
 		addInput  ("Y", wIn);
 		addOutput ("R", wOut, 2);
+
+		computeGuardBits ();
 		
 		buildCordic (maxIterations);	       		
 		
@@ -51,7 +53,6 @@ namespace flopoco{
 	        mpfr_sprintf (buffer, KFACTOR_FORMAT, kfactor);
 
 		string kfactor_str = string(buffer);		
-		int guard = 32;
 		string args = "method=KCM"				\
 			      " signedIn=0"				\
 			      " msbIn=1"				\
@@ -69,7 +70,6 @@ namespace flopoco{
 
 	/* TODO: No optimization */
 	void Fix2DNorm::buildCordic (int maxIterations) {
-		int guard = 32;
 		int wIn = getWIn();
 		int wOut = getWOut();
 		int sizeX = wIn + guard;
@@ -141,6 +141,11 @@ namespace flopoco{
 		mpfr_clear (temp);
 	}
 
+	// TODO: Compute guard bits exactly
+	void Fix2DNorm::computeGuardBits () {
+		guard = 6;
+	}
+  
 	Fix2DNorm::~Fix2DNorm () {
 		mpfr_clear (kfactor);
 	}

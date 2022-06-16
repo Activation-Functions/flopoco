@@ -48,6 +48,9 @@ namespace flopoco{
 		mpfr_t kfactor;
 		void initKFactor();
 
+		int guard;
+		void computeGuardBits();
+	  
 		inline int getWOut() { return msbOut - lsbOut + 1; }
 		inline int getWIn() { return msbIn - lsbIn + 1; }
 
