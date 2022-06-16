@@ -41,7 +41,7 @@ namespace flopoco{
 	// The expert version // TODO define correctRounding
 
 	FPConstMult::FPConstMult(OperatorPtr parentOp, Target* target, int wE_in_, int wF_in_, int wE_out_, int wF_out_, int cstSgn_, int cst_exp_, mpz_class cstIntSig_):
-		Operator(target), 
+		Operator(parentOp,target), 
 		wE_in(wE_in_), wF_in(wF_in_), wE_out(wE_out_), wF_out(wF_out_), 
 		cstSgn(cstSgn_), cst_exp_when_mantissa_int(cst_exp_), cstIntSig(cstIntSig_), constant_is_zero(false)
 	{
@@ -115,7 +115,7 @@ namespace flopoco{
 
 	// The rational version
 	FPConstMult::FPConstMult(OperatorPtr parentOp, Target* target, int wE_in_, int wF_in_, int wE_out_, int wF_out_, int a_, int b_):
-		Operator(target), 
+		Operator(parentOp,target), 
 		wE_in(wE_in_), wF_in(wF_in_), wE_out(wE_out_), wF_out(wF_out_), constant_is_zero(false)
 	{
 
@@ -638,7 +638,7 @@ namespace flopoco{
 			  << tab << "         else \"11\" when  (x_exn = \"11\")                      -- NaN" << endl
 			  << tab << "         else \"01\";                                          -- normal number" << endl;
 
-		vhdl  << tab << "r <= r_exn & r_sgn & (expfrac_rnd"<< range(wE_out+wF_out-1,0) <<");"<<endl;
+		vhdl  << tab << "R <= r_exn & r_sgn & (expfrac_rnd"<< range(wE_out+wF_out-1,0) <<");"<<endl;
 
 
 	}
@@ -714,10 +714,15 @@ namespace flopoco{
 		int wE_in, wE_out, wF_in, wF_out, cst_width;
 		string constant;
 
-		UserInterface::parseStrictlyPositiveInt(args, "wE_in", &wE_in);
-		UserInterface::parseStrictlyPositiveInt(args, "wE_out", &wE_out);
-		UserInterface::parseStrictlyPositiveInt(args, "wF_in", &wF_in);
-		UserInterface::parseStrictlyPositiveInt(args, "wF_out", &wF_out);
+		UserInterface::parseStrictlyPositiveInt(args, "wE", &wE_in);
+		UserInterface::parseInt(args, "wEout", &wE_out);
+		if(-1==wE_out)
+			wE_out=wE_in;
+		UserInterface::parseStrictlyPositiveInt(args, "wF", &wF_in);
+		UserInterface::parseInt(args, "wFout", &wF_out);
+		if(-1==wF_out)
+			wF_out=wF_in;
+		
 		UserInterface::parsePositiveInt(args, "cst_width", &cst_width);
 		UserInterface::parseString(args, "constant", &constant);
 
@@ -728,10 +733,14 @@ namespace flopoco{
 	{
 		int wE_in, wE_out, wF_in, wF_out, a, b;
 
-		UserInterface::parseStrictlyPositiveInt(args, "wE_in", &wE_in);
-		UserInterface::parseStrictlyPositiveInt(args, "wE_out", &wE_out);
-		UserInterface::parseStrictlyPositiveInt(args, "wF_in", &wF_in);
-		UserInterface::parseStrictlyPositiveInt(args, "wF_out", &wF_out);
+		UserInterface::parseStrictlyPositiveInt(args, "wE", &wE_in);
+		UserInterface::parseInt(args, "wEout", &wE_out);
+		if(-1==wE_out)
+			wE_out=wE_in;
+		UserInterface::parseStrictlyPositiveInt(args, "wF", &wF_in);
+		UserInterface::parseInt(args, "wFout", &wF_out);
+		if(-1==wF_out)
+			wF_out=wF_in;
 		UserInterface::parseStrictlyPositiveInt(args, "a", &a);
 		UserInterface::parseStrictlyPositiveInt(args, "b", &b);
 
@@ -745,11 +754,11 @@ namespace flopoco{
 					"Floating-point constant multiplier using the shift-and-add approach.",
 					"ConstMultDiv",
 					"",
-					"wE_in(int): input exponent width;"
-					"wF_in(int): input significand part width;"
-					"wE_out(int): output exponent width;"
-					"wF_out(int): output significand width;"
+					"wE(int): input exponent width, also output exponent width if weOut=-1;"
+					"wF(int): input significand width, also output significand width if wFOut=-1;"
 					"constant(string): constant in sollya formalism (e.g. \"cos(3*pi/2)\" or \"13176795b-22\");"
+					"wEout(int)=-1: output exponent width, -1 means same as wE;"
+					"wFout(int)=-1: output significand width, -1 means same as wF;"
 					"cst_width(int)=0:constant precision. If set to zero, the actual width will be computed in order to get a faithful result.",
 					"An early version of the technique used is described in  <a href=\"bib/flopoco.html#BrisebarreMullerDinechin2008:ASAP\">this article</a>.",
 					parse
@@ -759,12 +768,12 @@ namespace flopoco{
 					"Correctly rounded floating-point multiplier by a rational constant.",
 					"ConstMultDiv",
 					"",
-					"wE_in(int): input exponent width;"
-					"wF_in(int): input significand part width;"
-					"wE_out(int): output exponent width;"
-					"wF_out(int): output significand width;"
+					"wE(int): input exponent width, also output exponent width if weOut=-1;"
+					"wF(int): input significand width, also output significand width if wFOut=-1;"
 					"a(int): numerator;"
-					"b(int): denominator",
+					"b(int): denominator"
+					"wEout(int)=-1: output exponent width, -1 means same as wE;"
+					"wFout(int)=-1: output significand width, -1 means same as wF;",
 					"The technique used is described in  <a href=\"bib/flopoco.html#Dinechin2012-TCASII\">this article</a>.",
 					parseRational
 				);
