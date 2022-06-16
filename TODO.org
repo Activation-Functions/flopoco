@@ -120,6 +120,7 @@ Nobody should do this if they have read the Muller book, so... people will try t
 ** ./flopoco plainVHDL=1 FixFunctionByPiecewisePoly f="(2^x-1)" d=2 lsbIn=-1 lsbOut=-8 msbout=0 testbench
 ** (check, it is an old bug) compression bug: ./flopoco IntMultiplier 2 16 16 1 0 0 does not produce a simple adder
 * Wanted operators
+** FP sin cos tangent abs neg max min 
 ** NormalCDF
 ... exists in the branch statistical_ops, old framework.
 ** FloatApprox
