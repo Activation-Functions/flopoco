@@ -27,7 +27,7 @@ namespace flopoco{
 		initKFactor();	    
 		
 		srcFileName = "Fix2DNorm";
-		setCopyrightString("Florent de Dinechin (2015-...)");
+		setCopyrightString("Romain Bouarah, Florent de Dinechin (2022-...)");
 		// useNumericStd_Unsigned();
 
 		ostringstream name;
