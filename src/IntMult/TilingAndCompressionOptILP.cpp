@@ -289,10 +289,11 @@ void TilingAndCompressionOptILP::constructProblem(int s_max)
                                     }
 
                                     if(signedIO && (xs+(int)tiles[s]->wX() == (int)wX || ys+(int)tiles[s]->wY() == (int)wY) ){              //Handling of the sign extension bits in dynamically calculated constant bit vector
-                                        if(tiles[s]->wX() == 1 && tiles[s]->wY() == 1 && xs == wX-1 && ys == wY-1) break; //the 1x1 tile with (1,1) signedness should not get a sign extension vector.
-                                        constVecTerm.add(solve_Vars[s][xs+x_neg][ys+y_neg],(double)(((1ULL<<(wX+wY))-(1ULL<<(xs+ys+tiles[s]->getRelativeResultMSBWeight(tiles[s]->getParametrisation(),signedIO && xs+(int)tiles[s]->wX() == wX, signedIO && ys+(int)tiles[s]->wY() == wY))))));
-                                        for(unsigned i = xs+ys+tiles[s]->getRelativeResultMSBWeight(tiles[s]->getParametrisation(),signedIO && xs+(int)tiles[s]->wX() == wX, signedIO && ys+(int)tiles[s]->wY() == wY); i < prodWidth; i++){
-                                            constVecBits[i].add(solve_Vars[s][xs+x_neg][ys+y_neg], 1);
+                                        if(!(tiles[s]->wX() == 1 && tiles[s]->wY() == 1 && xs == wX-1 && ys == wY-1)){   //the 1x1 tile with (1,1) signedness should not get a sign extension vector.
+                                            constVecTerm.add(solve_Vars[s][xs+x_neg][ys+y_neg],(double)(((1ULL<<(wX+wY))-(1ULL<<(xs+ys+tiles[s]->getRelativeResultMSBWeight(tiles[s]->getParametrisation(),signedIO && xs+(int)tiles[s]->wX() == wX, signedIO && ys+(int)tiles[s]->wY() == wY))))));
+                                            for(unsigned i = xs+ys+tiles[s]->getRelativeResultMSBWeight(tiles[s]->getParametrisation(),signedIO && xs+(int)tiles[s]->wX() == wX, signedIO && ys+(int)tiles[s]->wY() == wY); i < prodWidth; i++){
+                                                constVecBits[i].add(solve_Vars[s][xs+x_neg][ys+y_neg], 1);
+                                            }
                                         }
                                         //printf("s=%02d, x=%02d, y=%02d, wx=%01d, wy=%01d, wOut=%02d, msb=%02d, 0x%08llx\n", s, xs, ys, tiles[s]->wX(), tiles[s]->wY(), tiles[s]->getRelativeResultMSBWeight(tiles[s]->getParametrisation(),signedIO && xs+tiles[s]->wX() == wX, signedIO && ys+tiles[s]->wY() == wY)-tiles[s]->getRelativeResultLSBWeight(tiles[s]->getParametrisation())+1, xs+ys+tiles[s]->getRelativeResultMSBWeight(tiles[s]->getParametrisation(),signedIO && xs+tiles[s]->wX() == wX, signedIO && ys+tiles[s]->wY() == wY), ((1ULL<<(wX+wY))-(1ULL<<(xs+ys+tiles[s]->getRelativeResultMSBWeight(tiles[s]->getParametrisation(),signedIO && xs+tiles[s]->wX() == wX, signedIO && ys+tiles[s]->wY() == wY)))));
                                     }
