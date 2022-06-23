@@ -55,6 +55,7 @@ namespace flopoco{
 		inline int getWIn() { return msbIn - lsbIn + 1; }
 
 		void buildCordic(int maxIterations);
+		void buildKDivider();
 	};
 }
 

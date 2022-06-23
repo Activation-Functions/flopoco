@@ -10,16 +10,9 @@
 // #include "FixFunctions/BipartiteTable.hpp"
 // #include "FixFunctions/FixFunctionByPiecewisePoly.hpp"
 
-#define _STRINGIFY(x) #x
-#define STRINGIFY(x) _STRINGIFY(x)
-
-#define KFACTOR_PRECISION 128
-#define KFACTOR_FORMAT "%." STRINGIFY(KFACTOR_PRECISION) "RNf"
 
 using namespace std;
-namespace flopoco{
-
-
+namespace flopoco {
 
 	Fix2DNorm::Fix2DNorm(OperatorPtr parentOp, Target* target_, int lsbIn_, int lsbOut_) :
 		Operator(parentOp, target_), lsbIn(lsbIn_), lsbOut(lsbOut_)
@@ -30,15 +23,14 @@ namespace flopoco{
 		setCopyrightString("Romain Bouarah, Florent de Dinechin (2022-...)");
 		// useNumericStd_Unsigned();
 
+		
 		ostringstream name;
-		// TODO: Error in name if lsb < 0 due to -
-		name << "Fix2DNorm_"; // << msbOut << "_" << lsb;
-		setNameWithFreqAndUID(name.str());
-
-		// TODO: Refactor
 		int wIn = getWIn();
-		int wOut = getWOut();
+		int wOut = getWOut();		
 		int maxIterations = wOut - 1;
+		
+		name << "Fix2DNorm_" << wIn << "_" << wOut << "_uid" << getNewUId();
+		setNameWithFreqAndUID (name.str());
 		
 		addInput  ("X", wIn);
 		addInput  ("Y", wIn);
@@ -47,31 +39,15 @@ namespace flopoco{
 		computeGuardBits ();
 		
 		buildCordic (maxIterations);	       		
-		
-		// TODO: Compute needed precision from lsbIn and lsbOut
-	        char buffer[KFACTOR_PRECISION + 3]; // len("1.") + KFACTOR_PRECISION + '\0'
-	        mpfr_sprintf (buffer, KFACTOR_FORMAT, kfactor);
+		buildKDivider ();
 
-		string kfactor_str = string(buffer);		
-		string args = "method=KCM"				\
-			      " signedIn=0"				\
-			      " msbIn=1"				\
-			      " lsbIn=" + to_string(lsbIn - guard + 2) +
-			      " lsbOut=" + to_string(lsbOut) +
-			      " constant=" + kfactor_str;
-			      
-
-		newInstance("FixRealConstMult", "kfactorDivider",
-					        args,
-						"X=>RK",
-						"R=>Rm");
-		vhdl << tab << "R <= Rm" << range(wOut-1, 0) << ";" << endl;
+		vhdl << tab << "R <= RR" << range(wOut-1, 0) << ";" << endl;
 	}
 
-	/* TODO: No optimization */
+	/* Input  : X, Y
+	 * Output : RK */
 	void Fix2DNorm::buildCordic (int maxIterations) {
 		int wIn = getWIn();
-		int wOut = getWOut();
 		int sizeX = wIn + guard;
 		int sizeY = sizeX;
 
@@ -124,13 +100,46 @@ namespace flopoco{
 		vhdl << tab << declare("RK", sizeX) << " <= X" << stage <<  ";" << endl;
 	}
 	
+	static inline int bits2digits (mpfr_prec_t b) {
+		const double log10_2 = log10(2);
+		return (int)(floor (b*log10_2));
+	}
+
+	/* Input  : RK
+	 * Output : RR */	 
+	void Fix2DNorm::buildKDivider() {
+		mpfr_prec_t kfactor_prec = mpfr_get_prec (kfactor);
+		int digits = bits2digits (kfactor_prec);
+	        char *buffer = (char*)(malloc (digits + 3)); // "0." + #digits + '\0'
+		string format = "%." + to_string(digits) + "RNf";
+		  
+	        mpfr_sprintf (buffer, format.c_str(), kfactor);
+		
+		string kfactor_str = string(buffer);
+		
+		string args = "method=KCM"				\
+			      " signedIn=0"				\
+			      " msbIn=1"				\
+			      " lsbIn=" + to_string(lsbIn - guard + 2) +
+			      " lsbOut=" + to_string(lsbOut) +
+			      " constant=" + kfactor_str;
+			      
+
+		newInstance("FixRealConstMult", "kfactorDivider",
+					        args,
+						"X=>RK",
+						"R=>RR");
+
+		free (buffer);
+	}
+  
 	void Fix2DNorm::initKFactor () {
 		int wOut = getWOut();
 		int maxIterations = wOut - 1;
 		mpfr_t temp;
 		
-		mpfr_init2 (kfactor, 50*wOut);
-		mpfr_init2 (temp, 50*wOut);
+		mpfr_init2 (kfactor, 10*(wOut + getWIn()));
+		mpfr_init2 (temp, 10*(wOut + getWIn()));
 
 		mpfr_set_ui (kfactor, 1, MPFR_RNDN);
 		for (int i = 0; i <= maxIterations; i++) {
