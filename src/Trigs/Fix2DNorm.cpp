@@ -52,6 +52,7 @@ namespace flopoco {
 		int sizeY = sizeX;
 
 		/* CORDIC initialisation */
+		/* sfix(1, lsb) */
 		/* X_0 */
 		vhdl << tab << declare("X0", sizeX) << " <= \"00\" & X & " << zg(sizeX - wIn - 2) << ";" << endl;
 		/* Y_0 */
@@ -67,7 +68,7 @@ namespace flopoco {
 
 		
 	        int stage;
-		for (stage = 1; stage<=maxIterations; stage++, sizeY--) {
+		for (stage = 1; stage<=maxIterations; stage++) {
 			REPORT(DEBUG, "stage=" << stage);
 			vhdl << tab << "--- Iteration " << stage + 1 << " ---" << endl;
 
@@ -75,26 +76,19 @@ namespace flopoco {
 			vhdl << tab << declare(join("sgnY", stage)) << " <= " << join("Y", stage) << of(sizeY - 1) << ";" << endl;
 
 			/* X_{i+1} */
-			if (sizeX - 1 >= sizeY - stage && sizeY - 1 >= stage) { 
-				vhdl << tab << declare(join("YShift", stage), sizeX) << " <= "
-					    << rangeAssign(sizeX - 1, sizeY - stage, join("sgnY", stage))   /* sign extension and format conversion */
-					    << " & Y" << stage << range(sizeY - 1, stage) << ";" << endl;
+			vhdl << tab << declare(join("YShift", stage), sizeX) << " <= "
+				    << rangeAssign(sizeX - 1, sizeX - stage, join("sgnY", stage))   /* sign extension */
+				    << " & Y" << stage << range(sizeY - 1, stage) << ";" << endl;
 
-				vhdl << tab << declare(getTarget()->fanoutDelay(sizeX+1) + getTarget()->adderDelay(sizeX), join("X", stage+1), sizeX) << " <= "
-					    << join("X", stage) << " - " << join("YShift", stage) << " when " << join("sgnY", stage) << "=\'1\'     else "
-					    << join("X", stage) << " + " << join("YShift", stage) << ";" << endl;
-			} else {
-				vhdl << tab << declare(join("X", stage+1), sizeX) << " <= " << join("X", stage) << ";" << endl;
-			}
-			
+			vhdl << tab << declare(getTarget()->fanoutDelay(sizeX+1) + getTarget()->adderDelay(sizeX), join("X", stage+1), sizeX) << " <= "
+				    << join("X", stage) << " - " << join("YShift", stage) << " when " << join("sgnY", stage) << "=\'1\'     else "
+				    << join("X", stage) << " + " << join("YShift", stage) << ";" << endl;
+
 			/* Y_{i+1} */
-			vhdl << tab << declare(join("XShift", stage), sizeY) << " <= '0' & X" << stage << range(sizeX - 1, stage) << ";" <<endl;			
-
-			vhdl << tab << declare(join("YY", stage + 1), sizeY) << " <= "
+			vhdl << tab << declare(join("XShift", stage), sizeY) << " <= " << zg(stage) << " & X" << stage << range(sizeX - 1, stage) << ";" <<endl;			
+			vhdl << tab << declare(join("Y", stage + 1), sizeY) << " <= "
 				    << join("Y", stage) << " + " << join("XShift", stage) << " when " << join("sgnY", stage) << "=\'1\'     else "
-				    << join("Y", stage) << " - " << join("XShift", stage) << ";" << endl;
-			
-			vhdl << tab << declare(join("Y", stage+1), sizeY-1) << " <= " << join("YY", stage+1) << range(sizeY - 2, 0) << ";" <<endl;
+				    << join("Y", stage) << " - " << join("XShift", stage) << ";" << endl;			
 		}
 
 		vhdl << tab << declare("RK", sizeX) << " <= X" << stage <<  ";" << endl;
@@ -220,7 +214,7 @@ namespace flopoco {
 		tcl->add(tc);
 
 		/* Define 0.999_ */
-		int wIn = getWIn();
+		int wIn = msbIn - lsbIn + 1;
 		mpz_class max = (mpz_class(1) << wIn) - mpz_class(1);
 
 		/* N(0.999_, 0) = 0.999_ */
