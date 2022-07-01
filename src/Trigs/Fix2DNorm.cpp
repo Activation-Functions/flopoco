@@ -16,47 +16,45 @@ namespace flopoco {
 
 	Fix2DNorm::Fix2DNorm(OperatorPtr parentOp, Target* target_, int lsbIn_, int lsbOut_) :
 		Operator(parentOp, target_), lsbIn(lsbIn_), lsbOut(lsbOut_)
-	{
-		initKFactor();	    
-		
+	{		
 		srcFileName = "Fix2DNorm";
 		setCopyrightString("Romain Bouarah, Florent de Dinechin (2022-...)");
 		// useNumericStd_Unsigned();
-
 		
 		ostringstream name;
 		int wIn = getWIn();
-		int wOut = getWOut();		
-		int maxIterations = wOut - 1;
+		int wOut = getWOut();				
 		
 		name << "Fix2DNorm_" << wIn << "_" << wOut << "_uid" << getNewUId();
 		setNameWithFreqAndUID (name.str());
+
+		computeGuardBits ();
+		initKFactor();
 		
 		addInput  ("X", wIn);
 		addInput  ("Y", wIn);
 		addOutput ("R", wOut, 2);
-
-		computeGuardBits ();
 		
-		buildCordic (maxIterations);	       		
+		buildCordic ();
 		buildKDivider ();
 
-		vhdl << tab << "R <= RR" << range(wOut-1, 0) << ";" << endl;
+		vhdl << tab << "R <= RR" << range(wOut - 1, 0) << ";" << endl;
 	}
 
 	/* Input  : X, Y
 	 * Output : RK */
-	void Fix2DNorm::buildCordic (int maxIterations) {
+	void Fix2DNorm::buildCordic () {
+		int wOut = getWOut();
 		int wIn = getWIn();
-		int sizeX = wIn + guard;
+		int sizeX = 2 + wIn + magic + guard;
 		int sizeY = sizeX;
 
 		/* CORDIC initialisation */
-		/* sfix(1, lsb) */
 		/* X_0 */
-		vhdl << tab << declare("X0", sizeX) << " <= \"00\" & X & " << zg(sizeX - wIn - 2) << ";" << endl;
+		/* Turning ufix(-1, lsbIn) X into ufix(1, lsbIn - magic - guard) */
+		vhdl << tab << declare("X0", sizeX) << " <= \"00\" & X & " << zg(sizeX - 2 - wIn) << ";" << endl;
 		/* Y_0 */
-		vhdl << tab << declare("Y0", sizeY) << " <= \"00\" & Y & " << zg(sizeY - wIn - 2) << ";" << endl;
+		vhdl << tab << declare("Y0", sizeY) << " <= \"00\" & Y & " << zg(sizeY - 2 - wIn) << ";" << endl;
 
 		
 		/* First iteration */
@@ -91,8 +89,11 @@ namespace flopoco {
 				    << join("Y", stage) << " - " << join("XShift", stage) << ";" << endl;			
 		}
 
-		vhdl << tab << declare("RK", sizeX) << " <= X" << stage <<  ";" << endl;
+		/* RK is an ufix(1, lsbIn - magic) */
+		vhdl << tab << declare("RK", 2 + wIn + magic) << " <= X" << stage << range(sizeX - 1, sizeX - wIn - 2 - magic) <<  ";" << endl;
 	}
+
+
 	
 	static inline int bits2digits (mpfr_prec_t b) {
 		const double log10_2 = log10(2);
@@ -114,7 +115,7 @@ namespace flopoco {
 		string args = "method=KCM"				\
 			      " signedIn=0"				\
 			      " msbIn=1"				\
-			      " lsbIn=" + to_string(lsbIn - guard + 2) +
+			      " lsbIn=" + to_string(lsbIn - magic) +
 			      " lsbOut=" + to_string(lsbOut) +
 			      " constant=" + kfactor_str;
 			      
@@ -129,7 +130,6 @@ namespace flopoco {
   
 	void Fix2DNorm::initKFactor () {
 		int wOut = getWOut();
-		int maxIterations = wOut - 1;
 		mpfr_t temp;
 		
 		mpfr_init2 (kfactor, 10*(wOut + getWIn()));
@@ -150,9 +150,18 @@ namespace flopoco {
 		mpfr_clear (temp);
 	}
 
-	// TODO: Compute guard bits exactly
 	void Fix2DNorm::computeGuardBits () {
-		guard = 6;
+		maxIterations = ceil(2 + log2(2 + 1/2) - lsbOut);
+
+		double delta = 0.5; // error in ulp
+		double shift = 0.5;
+		for (int i=1; i <= maxIterations; i++) {
+			delta = delta*(1 + shift) + 1;
+			shift *=0.5;
+		}
+		guard = 2 + floor(log2(delta));
+		
+		REPORT(DETAILED, "Guard bits used=" << guard);
 	}
   
 	Fix2DNorm::~Fix2DNorm () {
@@ -180,7 +189,7 @@ namespace flopoco {
 		
 		/* Euclidean norm */
 		mpfr_hypot(r, x, y, MPFR_RNDN);
-
+		
 		/* Convert r to fix point */
 		mpfr_add_d (r, r, 6.0, MPFR_RNDN);
 		mpfr_mul_2si (r, r, -lsbOut, MPFR_RNDN); // exact scaling

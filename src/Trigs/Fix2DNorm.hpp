@@ -39,22 +39,26 @@ namespace flopoco{
 
 
 	private:
-		int msbIn = -1;
-		int lsbIn;
+		/* TODO: Can it be computed from lsbIn and lsbOut ? */
+		const int magic = 4;
 		
-		int msbOut = 0;	
+		const int msbIn = -1;
+	        int lsbIn;
+		
+		const int msbOut = 0;	
 		int lsbOut;
 
 		mpfr_t kfactor;
 		void initKFactor();
 
 		int guard;
+		int maxIterations;
 		void computeGuardBits();
 	  
 		inline int getWOut() { return msbOut - lsbOut + 1; }
 		inline int getWIn() { return msbIn - lsbIn + 1; }
 
-		void buildCordic(int maxIterations);
+		void buildCordic();
 		void buildKDivider();
 	};
 }
