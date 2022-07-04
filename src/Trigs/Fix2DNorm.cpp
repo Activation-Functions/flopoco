@@ -38,7 +38,7 @@ namespace flopoco {
 		buildCordic ();
 		buildKDivider ();
 
-		vhdl << tab << "R <= RR" << range(wOut - 1, 0) << ";" << endl;
+		vhdl << tab << "R <= RR" << range(1 - lsbOut, 1) << ";" << endl;
 	}
 
 	/* Input  : X, Y
@@ -46,12 +46,13 @@ namespace flopoco {
 	void Fix2DNorm::buildCordic () {
 		int wOut = getWOut();
 		int wIn = getWIn();
-		int sizeX = 2 + wIn + magic + guard;
+		// TODO: Replace wIn by max(wIn, wOut) ?
+		int sizeX = 2 + wIn + guardDiv + guardCordic;
 		int sizeY = sizeX;
 
 		/* CORDIC initialisation */
 		/* X_0 */
-		/* Turning ufix(-1, lsbIn) X into ufix(1, lsbIn - magic - guard) */
+		/* Turning ufix(-1, lsbIn) X into ufix(1, lsbIn - guardDiv - guardCordic) */
 		vhdl << tab << declare("X0", sizeX) << " <= \"00\" & X & " << zg(sizeX - 2 - wIn) << ";" << endl;
 		/* Y_0 */
 		vhdl << tab << declare("Y0", sizeY) << " <= \"00\" & Y & " << zg(sizeY - 2 - wIn) << ";" << endl;
@@ -66,7 +67,7 @@ namespace flopoco {
 
 		
 	        int stage;
-		for (stage = 1; stage<=maxIterations; stage++) {
+		for (stage = 1; stage <= maxIterations; stage++) {
 			REPORT(DEBUG, "stage=" << stage);
 			vhdl << tab << "--- Iteration " << stage + 1 << " ---" << endl;
 
@@ -89,8 +90,8 @@ namespace flopoco {
 				    << join("Y", stage) << " - " << join("XShift", stage) << ";" << endl;			
 		}
 
-		/* RK is an ufix(1, lsbIn - magic) */
-		vhdl << tab << declare("RK", 2 + wIn + magic) << " <= X" << stage << range(sizeX - 1, sizeX - wIn - 2 - magic) <<  ";" << endl;
+		/* RK is an ufix(1, lsbIn - guardDiv) */
+		vhdl << tab << declare("RK", 2 + wIn + guardDiv) << " <= X" << stage << range(sizeX - 1, sizeX - wIn - 2 - guardDiv) <<  ";" << endl;
 	}
 
 
@@ -100,8 +101,8 @@ namespace flopoco {
 		return (int)(floor (b*log10_2));
 	}
 
-	/* Input  : RK
-	 * Output : RR */	 
+	/* Input  : ufix(1, lsbIn - guardDiv) RK
+	 * Output : ufix(1, lsbOut - 1) RR */	 
 	void Fix2DNorm::buildKDivider() {
 		mpfr_prec_t kfactor_prec = mpfr_get_prec (kfactor);
 		int digits = bits2digits (kfactor_prec);
@@ -115,9 +116,10 @@ namespace flopoco {
 		string args = "method=KCM"				\
 			      " signedIn=0"				\
 			      " msbIn=1"				\
-			      " lsbIn=" + to_string(lsbIn - magic) +
-			      " lsbOut=" + to_string(lsbOut) +
-			      " constant=" + kfactor_str;
+			      " lsbIn=" + to_string(lsbIn - guardDiv) +
+			      " lsbOut=" + to_string(lsbOut - 1) +
+			      " constant=" + kfactor_str +
+			      " targetUlpError=1";
 			      
 
 		newInstance("FixRealConstMult", "kfactorDivider",
@@ -151,17 +153,18 @@ namespace flopoco {
 	}
 
 	void Fix2DNorm::computeGuardBits () {
-		maxIterations = ceil(2 + log2(2 + 1/2) - lsbOut);
+		maxIterations = ceil(2 + log2(2 + 1/2) - lsbOut + guardDiv);
 
 		double delta = 0.5; // error in ulp
 		double shift = 0.5;
 		for (int i=1; i <= maxIterations; i++) {
 			delta = delta*(1 + shift) + 1;
-			shift *=0.5;
+			shift *= 0.5;
 		}
-		guard = 2 + floor(log2(delta));
-		
-		REPORT(DETAILED, "Guard bits used=" << guard);
+		guardCordic = 2 + floor(log2(delta));
+
+		REPORT(DETAILED, "Number of iterations=" << maxIterations);
+		REPORT(DETAILED, "Guard bits used for CORDIC=" << guardCordic);
 	}
   
 	Fix2DNorm::~Fix2DNorm () {

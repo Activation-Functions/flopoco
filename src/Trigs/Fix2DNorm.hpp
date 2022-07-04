@@ -38,10 +38,7 @@ namespace flopoco{
 		static void registerFactory();
 
 
-	private:
-		/* TODO: Can it be computed from lsbIn and lsbOut ? */
-		const int magic = 4;
-		
+	private:		
 		const int msbIn = -1;
 	        int lsbIn;
 		
@@ -51,7 +48,9 @@ namespace flopoco{
 		mpfr_t kfactor;
 		void initKFactor();
 
-		int guard;
+	  	/* TODO: Can it be computed from lsbIn and lsbOut ? */
+		const int guardDiv = 4;
+		int guardCordic;
 		int maxIterations;
 		void computeGuardBits();
 	  
