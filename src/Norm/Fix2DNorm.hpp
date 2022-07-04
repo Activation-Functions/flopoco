@@ -2,9 +2,6 @@
 #define Fix2DNorm_HPP
 
 #include "Operator.hpp"
-#include "utils.hpp"
-
-#include <vector>
 
 namespace flopoco{ 
 
@@ -17,12 +14,10 @@ namespace flopoco{
 		 * The MSB (Most significant bit) of both input is -1 whereas for the output it's 0.
 		 *
 		 * @param[in] target Target device
-		 * @param[in] lsb    Least significant bit of both input and output
+		 * @param[in] lsbIn  Least significant bit of input
+		 * @param[in] lsbOut Least significant bit of output
 		 */
 		Fix2DNorm(OperatorPtr parentOp, Target* target, int lsbIn, int lsbOut);
-
-		// destructor
-		~Fix2DNorm();
 
 		/**
 		 * The emulate function from Operator
@@ -38,27 +33,15 @@ namespace flopoco{
 		static void registerFactory();
 
 
-	private:		
+	protected:		
 		const int msbIn = -1;
 	        int lsbIn;
 		
 		const int msbOut = 0;	
-		int lsbOut;
-
-		mpfr_t kfactor;
-		void initKFactor();
-
-	  	/* TODO: Can it be computed from lsbIn and lsbOut ? */
-		const int guardDiv = 4;
-		int guardCordic;
-		int maxIterations;
-		void computeGuardBits();
+		int lsbOut;		
 	  
 		inline int getWOut() { return msbOut - lsbOut + 1; }
 		inline int getWIn() { return msbIn - lsbIn + 1; }
-
-		void buildCordic();
-		void buildKDivider();
 	};
 }
 

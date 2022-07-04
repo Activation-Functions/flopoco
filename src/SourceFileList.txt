@@ -139,6 +139,8 @@ FixFunctions/FixFunctionBySimplePoly
 FixFunctions/FixFunctionByPiecewisePoly
 FixFunctions/Multipartite
 FixFunctions/FixFunctionByMultipartiteTable
+Norm/Fix2DNorm
+Norm/Fix2DNormCORDIC
 Trigs/ConstDiv3ForSinPoly
 Trigs/FixSinPoly
 Trigs/FixSinCos
@@ -146,7 +148,6 @@ Trigs/FixSinCosPoly
 Trigs/FixSinCosCORDIC
 Trigs/FixAtan2
 Trigs/FixAtan2ByCORDIC
-Trigs/Fix2DNorm
 Trigs/FixAtan2ByRecipMultAtan
 PrimitiveComponents/BooleanEquation
 PrimitiveComponents/GenericLut

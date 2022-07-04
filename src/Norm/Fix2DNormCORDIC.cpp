@@ -4,7 +4,7 @@
 #include "gmp.h"
 #include "mpfr.h"
 
-#include "Fix2DNorm.hpp"
+#include "Fix2DNormCORDIC.hpp"
 
 //#include "FixFunctions/FixFunctionByTable.hpp"
 // #include "FixFunctions/BipartiteTable.hpp"
@@ -14,26 +14,21 @@
 using namespace std;
 namespace flopoco {
 
-	Fix2DNorm::Fix2DNorm(OperatorPtr parentOp, Target* target_, int lsbIn_, int lsbOut_) :
-		Operator(parentOp, target_), lsbIn(lsbIn_), lsbOut(lsbOut_)
+	Fix2DNormCORDIC::Fix2DNormCORDIC(OperatorPtr parentOp, Target* target_, int lsbIn_, int lsbOut_) :
+		Fix2DNorm(parentOp, target_, lsbIn_, lsbOut_)
 	{		
-		srcFileName = "Fix2DNorm";
+		srcFileName = "Fix2DNormCORDIC";
 		setCopyrightString("Romain Bouarah, Florent de Dinechin (2022-...)");
-		// useNumericStd_Unsigned();
 		
 		ostringstream name;
 		int wIn = getWIn();
 		int wOut = getWOut();				
 		
-		name << "Fix2DNorm_" << wIn << "_" << wOut << "_uid" << getNewUId();
+		name << "Fix2DNormCORDIC_" << wIn << "_" << wOut << "_uid" << getNewUId();
 		setNameWithFreqAndUID (name.str());
 
 		computeGuardBits ();
 		initKFactor();
-		
-		addInput  ("X", wIn);
-		addInput  ("Y", wIn);
-		addOutput ("R", wOut, 2);
 		
 		buildCordic ();
 		buildKDivider ();
@@ -43,7 +38,7 @@ namespace flopoco {
 
 	/* Input  : X, Y
 	 * Output : RK */
-	void Fix2DNorm::buildCordic () {
+	void Fix2DNormCORDIC::buildCordic () {
 		int wOut = getWOut();
 		int wIn = getWIn();
 		// TODO: Replace wIn by max(wIn, wOut) ?
@@ -103,7 +98,7 @@ namespace flopoco {
 
 	/* Input  : ufix(1, lsbIn - guardDiv) RK
 	 * Output : ufix(1, lsbOut - 1) RR */	 
-	void Fix2DNorm::buildKDivider() {
+	void Fix2DNormCORDIC::buildKDivider() {
 		mpfr_prec_t kfactor_prec = mpfr_get_prec (kfactor);
 		int digits = bits2digits (kfactor_prec);
 	        char *buffer = (char*)(malloc (digits + 3)); // "0." + #digits + '\0'
@@ -130,7 +125,7 @@ namespace flopoco {
 		free (buffer);
 	}
   
-	void Fix2DNorm::initKFactor () {
+	void Fix2DNormCORDIC::initKFactor () {
 		int wOut = getWOut();
 		mpfr_t temp;
 		
@@ -152,7 +147,7 @@ namespace flopoco {
 		mpfr_clear (temp);
 	}
 
-	void Fix2DNorm::computeGuardBits () {
+	void Fix2DNormCORDIC::computeGuardBits () {
 		maxIterations = ceil(2 + log2(2 + 1/2) - lsbOut + guardDiv);
 
 		double delta = 0.5; // error in ulp
@@ -167,110 +162,8 @@ namespace flopoco {
 		REPORT(DETAILED, "Guard bits used for CORDIC=" << guardCordic);
 	}
   
-	Fix2DNorm::~Fix2DNorm () {
+	Fix2DNormCORDIC::~Fix2DNormCORDIC () {
 		mpfr_clear (kfactor);
-	}
-
-	void Fix2DNorm::emulate (TestCase * tc) {
-	        int wIn = getWIn();
-		int wOut = getWOut();
-		mpfr_t x, y, r;
-		mpfr_init2 (x, 10*wIn);
-		mpfr_init2 (y, 10*wIn);
-		mpfr_init2 (r, 10*wOut);
-  
-		mpz_class rz;
-
-		/* Get I/O values */
-		mpz_class svX = tc->getInputValue ("X");
-		mpz_class svY = tc->getInputValue ("Y");
-		
-		mpfr_set_z (x, svX.get_mpz_t(), MPFR_RNDN); // exact
-		mpfr_mul_2si (x, x, lsbIn, MPFR_RNDN);      // exact
-		mpfr_set_z (y, svY.get_mpz_t(), MPFR_RNDN); // exact
-	        mpfr_mul_2si (y, y, lsbIn, MPFR_RNDN);      // exact
-		
-		/* Euclidean norm */
-		mpfr_hypot(r, x, y, MPFR_RNDN);
-		
-		/* Convert r to fix point */
-		mpfr_add_d (r, r, 6.0, MPFR_RNDN);
-		mpfr_mul_2si (r, r, -lsbOut, MPFR_RNDN); // exact scaling
-
-		mpz_class mask = (mpz_class(1) << wOut) - 1;
-		
-		/* Rounding down */
-		mpfr_get_z (rz.get_mpz_t(), r, MPFR_RNDD); // there can be a real rounding here
-		rz -= mpz_class(6) << -lsbOut;
-		rz &= mask;
-		tc->addExpectedOutput ("R", rz);
-
-		/* Rounding up */
-		mpfr_get_z (rz.get_mpz_t(), r, MPFR_RNDU); // there can be a real rounding here
-		rz -= mpz_class(6) << -lsbOut;
-		rz &= mask;
-		tc->addExpectedOutput ("R", rz);
-
-		/* clean up */
-		mpfr_clears (x, y, r, NULL);
-	}
-
-	void Fix2DNorm::buildStandardTestCases (TestCaseList * tcl) {
-		TestCase* tc;
-		
-		/* N(0, 0) = 0 */
-		tc = new TestCase (this);
-		tc -> addInput ("X", mpz_class(0));
-		tc -> addInput ("Y", mpz_class(0));
-		emulate(tc);
-		tcl->add(tc);
-
-		/* Define 0.999_ */
-		int wIn = msbIn - lsbIn + 1;
-		mpz_class max = (mpz_class(1) << wIn) - mpz_class(1);
-
-		/* N(0.999_, 0) = 0.999_ */
-		tc = new TestCase (this);
-		tc -> addInput ("X", max);
-		tc -> addInput ("Y", mpz_class(0));
-		emulate(tc);
-		tcl->add(tc);
-
-		/* N(0, 0.999_) = 0.999_ */
-		tc = new TestCase (this);
-		tc -> addInput ("X", mpz_class(0));
-		tc -> addInput ("Y", max);
-		emulate(tc);
-		tcl->add(tc);
-		
-		/* N(0.999_, 0.999_) ~ sqrt(2) */
-		tc = new TestCase (this);
-		tc -> addInput ("X", max);
-		tc -> addInput ("Y", max);
-		emulate(tc);
-		tcl->add(tc);
-	}
-	
-	OperatorPtr Fix2DNorm::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
-		int lsbIn, lsbOut, method;
-		UserInterface::parseInt(args, "lsbIn",  &lsbIn);
-		UserInterface::parseInt(args, "lsbOut", &lsbOut);
-		UserInterface::parseInt(args, "method", &method);
-		//select the method
-		return new Fix2DNorm(parentOp, target, lsbIn, lsbOut);
-			
-	}
-
-	void Fix2DNorm::registerFactory() {
-		UserInterface::add("Fix2DNorm", // name
-				     "Computes sqrt(x*x+y*y)",
-				     "CompositeFixPoint",
-				     "", // seeAlso
-				     "lsbIn(int): weight of the LSB of input;"   \
-				     "lsbOut(int): weight of the LSB of output;" \
-				     "method(int)=-1: technique to use, -1 selects a sensible default",
-				     "",
-				     Fix2DNorm::parseArguments);
 	}
 }
 
