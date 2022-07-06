@@ -141,6 +141,7 @@ FixFunctions/Multipartite
 FixFunctions/FixFunctionByMultipartiteTable
 Norm/Fix2DNorm
 Norm/Fix2DNormCORDIC
+Norm/Fix2DNormLUT
 Trigs/ConstDiv3ForSinPoly
 Trigs/FixSinPoly
 Trigs/FixSinCos

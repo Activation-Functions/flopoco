@@ -6,6 +6,7 @@
 
 #include "Fix2DNorm.hpp"
 #include "Fix2DNormCORDIC.hpp"
+#include "Fix2DNormLUT.hpp"
 
 using namespace std;
 namespace flopoco {
@@ -107,7 +108,12 @@ namespace flopoco {
 		UserInterface::parseInt(args, "lsbOut", &lsbOut);
 		UserInterface::parseInt(args, "method", &method);
 		//select the method
-		return new Fix2DNormCORDIC(parentOp, target, lsbIn, lsbOut);			
+		switch (method) {
+			case 1:
+			      return new Fix2DNormLUT(parentOp, target, lsbIn, lsbOut);
+		        default:
+			      return new Fix2DNormCORDIC(parentOp, target, lsbIn, lsbOut);
+		}
 	}
 
 	void Fix2DNorm::registerFactory() {
