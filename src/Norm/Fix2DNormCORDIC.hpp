@@ -28,9 +28,7 @@ namespace flopoco{
 		mpfr_t kfactor;
 		void initKFactor();
 
-	  	/* TODO: Can it be computed from lsbIn and lsbOut ? */
-		const int guardDiv = 4;
-		int guardCordic;
+		int guard;
 		int maxIterations;
 		void computeGuardBits();	  		
 
