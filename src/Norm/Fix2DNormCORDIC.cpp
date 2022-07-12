@@ -27,12 +27,16 @@ namespace flopoco {
 		name << "Fix2DNormCORDIC_" << wIn << "_" << wOut << "_uid" << getNewUId();
 		setNameWithFreqAndUID (name.str());
 
+		
+		computeMaxIterations ();
+		initKFactor ();
 		computeGuardBits ();
-		initKFactor();
+		
 		
 		buildCordic ();
 		buildKDivider ();
 
+		
 		vhdl << tab << "R <= RR" << range(-lsbOut, 0) << ";" << endl;
 	}
 
@@ -124,7 +128,12 @@ namespace flopoco {
 
 		free (buffer);
 	}
-  
+
+	inline void Fix2DNormCORDIC::computeMaxIterations () {
+		maxIterations = ceil(1 + (3 - lsbOut)/2);
+	}
+
+	
 	void Fix2DNormCORDIC::initKFactor () {
 		int wOut = getWOut();
 		mpfr_t temp;
@@ -148,16 +157,21 @@ namespace flopoco {
 	}
 
 	void Fix2DNormCORDIC::computeGuardBits () {
-		maxIterations = ceil(1 + (3 - lsbOut)/2);
-		
-		double delta = 0.5; // error in ulp
-		double shift = 0.5;
+		mpfr_t temp;
+		mpfr_init2 (temp, mpfr_get_prec(kfactor));
+		mpfr_set (temp, kfactor, MPFR_RNDN);
+		mpfr_log2 (temp, temp, MPFR_RNDN);
+
+		double log2_inv_kfactor = mpfr_get_d (temp, MPFR_RNDN);
+		double delta = 0; // error in ulp
+		double shift = 0.5;		
+
 		for (int i=1; i <= maxIterations; i++) {
 			delta = delta*(1 + shift) + 1;
 			shift *= 0.5;
 		}
-		
-		guard = ceil(log2(delta) + lsbIn - lsbOut + 3); // - log2(kfactor)
+
+		guard = ceil(log2(delta) + lsbIn - lsbOut + 3 + log2_inv_kfactor);
 
 		REPORT(DETAILED, "Number of iterations=" << maxIterations);
 		REPORT(DETAILED, "Guard bits=" << guard);

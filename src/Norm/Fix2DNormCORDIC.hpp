@@ -25,13 +25,16 @@ namespace flopoco{
 		~Fix2DNormCORDIC();
 
 	private:
+		int maxIterations;
+		void computeMaxIterations();
+
+		/* TODO: rename to inv_kfactor */
 		mpfr_t kfactor;
 		void initKFactor();
 
 		int guard;
-		int maxIterations;
-		void computeGuardBits();	  		
-
+		void computeGuardBits();	
+		
 		void buildCordic();
 		void buildKDivider();
 	};
