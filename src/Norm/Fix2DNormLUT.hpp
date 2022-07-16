@@ -17,6 +17,8 @@ namespace flopoco{
 		 */
 		Fix2DNormLUT(OperatorPtr parentOp, Target* target, int lsbIn, int lsbOut);
 	 private:
+		 int guard;
+		 void computeGuardBits();
 	};
 }
 
