@@ -16,27 +16,26 @@ namespace flopoco {
 
 	Fix2DNormCORDIC::Fix2DNormCORDIC(OperatorPtr parentOp, Target* target_, int lsbIn_, int lsbOut_) :
 		Fix2DNorm(parentOp, target_, lsbIn_, lsbOut_)
-	{		
+	{
 		srcFileName = "Fix2DNormCORDIC";
 		setCopyrightString("Romain Bouarah, Florent de Dinechin (2022-...)");
-		
+
 		ostringstream name;
 		int wIn = getWIn();
-		int wOut = getWOut();				
-		
+		int wOut = getWOut();
+
 		name << "Fix2DNormCORDIC_" << wIn << "_" << wOut << "_uid" << getNewUId();
 		setNameWithFreqAndUID (name.str());
 
-		
+
 		computeMaxIterations ();
 		initKFactor ();
 		computeGuardBits ();
-		
-		
+
 		buildCordic ();
 		buildKDivider ();
 
-		
+
 		vhdl << tab << "R <= RR" << range(-lsbOut, 0) << ";" << endl;
 	}
 
@@ -50,65 +49,84 @@ namespace flopoco {
 		int sizeY = sizeX;
 
 		/* CORDIC initialisation */
-		/* X_0 */
-		/* Turning ufix(-1, lsbIn) X into ufix(1, lsbIn - guard) */
+		/* X_0 : ufix(1, lsbIn - guard) */
 		vhdl << tab << declare("X0", sizeX) << " <= \"00\" & X & " << zg(sizeX - 2 - wIn) << ";" << endl;
-		/* Y_0 */
+		/* Y_0 : sfix */
 		vhdl << tab << declare("Y0", sizeY) << " <= \"00\" & Y & " << zg(sizeY - 2 - wIn) << ";" << endl;
 
 		
-		/* First iteration */
-		vhdl << tab << "--- Iteration 1 : sign is known positive ---" << endl;
+		/* Iteration 1 */
+		vhdl << tab << "--- Iteration 1 : Y0 is positive ---" << endl;
 		/* X_1 */
 		vhdl << tab << declare(getTarget()->adderDelay(sizeX), "X1", sizeX) << " <= X0 + Y0;" << endl;
 		/* Y_1 */
-		vhdl << tab << declare(getTarget()->adderDelay(sizeY), "Y1", sizeY) << " <= Y0 - X0;"  << endl;				
+		vhdl << tab << declare(getTarget()->adderDelay(sizeY), "Y1", sizeY) << " <= Y0 - X0;"  << endl;
 
+		/* TODO: REFACTOR ! ! ! */
+		/* Iteration 2 */
+		vhdl << tab << "--- Iteration 2 ---" << endl;
+		/* sign(Y_1) */
+		vhdl << tab << declare("sgnY1") << " <= Y1" << of(sizeY - 1) << ";" << endl;
+		/* X_2 */
+		vhdl << tab << declare("YShift1", sizeX) << " <= sgnY1 & Y1" << range(sizeY - 1, 1) << ";" << endl;
+		vhdl << tab << declare(getTarget()->fanoutDelay(sizeX+1) + getTarget()->adderDelay(sizeX), "X2", sizeX)
+			    << " <= X1 - YShift1 when sgnY1 = '1' else X1 + YShift1;" << endl;
+		/* Y_2 */
+		vhdl << tab << declare("XShift1", sizeY) << " <= '0' & X1" << range(sizeX - 1, 1) << ";" <<endl;
+		vhdl << tab << declare("Y2", sizeY)
+			    << " <= Y1 + XShift1 when sgnY1 = '1' else Y1 - XShift1;" << endl;
 		
-	        int stage;
-		for (stage = 1; stage <= maxIterations; stage++) {
-			REPORT(DEBUG, "stage=" << stage);
+		int stage;
+		for (stage = 2; stage <= maxIterations; stage++, sizeY--) {
 			vhdl << tab << "--- Iteration " << stage + 1 << " ---" << endl;
 
 			/* sign(Y_i) */
 			vhdl << tab << declare(join("sgnY", stage)) << " <= " << join("Y", stage) << of(sizeY - 1) << ";" << endl;
 
 			/* X_{i+1} */
-			vhdl << tab << declare(join("YShift", stage), sizeX) << " <= "
-				    << rangeAssign(sizeX - 1, sizeX - stage, join("sgnY", stage))   /* sign extension */
-				    << " & Y" << stage << range(sizeY - 1, stage) << ";" << endl;
+			if (sizeX - 1 >= sizeY - stage && sizeY - 1 >= stage) {			
+				vhdl << tab << declare(join("YShift", stage), sizeX) << " <= "
+					    << rangeAssign(sizeX - 1, sizeY - stage, join("sgnY", stage)) /* sign extension */
+					    << " & Y" << stage << range(sizeY - 1, stage) << ";" << endl;
 
-			vhdl << tab << declare(getTarget()->fanoutDelay(sizeX+1) + getTarget()->adderDelay(sizeX), join("X", stage+1), sizeX) << " <= "
-				    << join("X", stage) << " - " << join("YShift", stage) << " when " << join("sgnY", stage) << "=\'1\'     else "
-				    << join("X", stage) << " + " << join("YShift", stage) << ";" << endl;
+				vhdl << tab << declare(getTarget()->fanoutDelay(sizeX+1) + getTarget()->adderDelay(sizeX), join("X", stage+1), sizeX) << " <= "
+					    << join("X", stage) << " - " << join("YShift", stage) << " when " << join("sgnY", stage) << "='1' else "
+					    << join("X", stage) << " + " << join("YShift", stage) << ";" << endl;
+			} else {
+				vhdl << tab << declare(join("X", stage+1), sizeX) << " <= " << join("X", stage) << ";" << endl;
+			}
 
 			/* Y_{i+1} */
-			vhdl << tab << declare(join("XShift", stage), sizeY) << " <= " << zg(stage) << " & X" << stage << range(sizeX - 1, stage) << ";" <<endl;			
-			vhdl << tab << declare(join("Y", stage + 1), sizeY) << " <= "
-				    << join("Y", stage) << " + " << join("XShift", stage) << " when " << join("sgnY", stage) << "=\'1\'     else "
-				    << join("Y", stage) << " - " << join("XShift", stage) << ";" << endl;			
+			vhdl << tab << declare(join("XShift", stage), sizeY) << " <= \"00\" & X" << stage << range(sizeX - 1, stage) << ";" <<endl;
+
+			vhdl << tab << declare(join("YY", stage + 1), sizeY) << " <= "
+				    << join("Y", stage) << " + " << join("XShift", stage) << " when " << join("sgnY", stage) << "='1' else "
+				    << join("Y", stage) << " - " << join("XShift", stage) << ";" << endl;
+
+
+			vhdl << tab << declare(join("Y", stage+1), sizeY-1) << " <= " << join("YY", stage+1) << range(sizeY - 2, 0) << ";" <<endl;
 		}
 
-		/* RK is an ufix(1, lsbIn - guard) */
+		/* RK : ufix(1, lsbIn - guard) */
 		vhdl << tab << declare("RK", sizeX) << " <= X" << stage << ";" << endl;
 	}
 
 
-	
+
 	static inline int bits2digits (mpfr_prec_t b) {
 		const double log10_2 = log10(2);
 		return (int)(floor (b*log10_2));
 	}
 
 	/* Input  : ufix(1, lsbIn - guard) RK
-	 * Output : ufix(1, lsbOut - 1) RR */	 
+	 * Output : ufix(1, lsbOut - 1) RR */
 	void Fix2DNormCORDIC::buildKDivider() {
 		mpfr_prec_t kfactor_prec = mpfr_get_prec (kfactor);
 		int digits = bits2digits (kfactor_prec);
-	        char *buffer = (char*)(malloc (digits + 3)); // "0." + #digits + '\0'
+		char *buffer = (char*)(malloc (digits + 3)); // "0." + #digits + '\0'
 		string format = "%." + to_string(digits) + "RNf";
-		  
-	        mpfr_sprintf (buffer, format.c_str(), kfactor);
+
+		mpfr_sprintf (buffer, format.c_str(), kfactor);
 		
 		string kfactor_str = string(buffer);
 		
@@ -122,7 +140,7 @@ namespace flopoco {
 			      
 
 		newInstance("FixRealConstMult", "kfactorDivider",
-					        args,
+						args,
 						"X=>RK",
 						"R=>RR");
 
