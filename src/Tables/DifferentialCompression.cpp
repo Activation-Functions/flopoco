@@ -9,48 +9,56 @@ using std::make_pair;
 namespace flopoco {
 	using min_max_t = pair<mpz_class, mpz_class>;
 
-	auto groupSlices(vector<min_max_t> const & min_max_val)
+
+	// groupSlices computes the min and max of each slice.
+	// It is a recursive function 
+	// This is the base case
+	auto groupSlices(vector<mpz_class> const & values)
 	{
-		auto min_max_size = min_max_val.size();
-		auto ret_size = min_max_size / 2;
-		vector<min_max_t> ret_val(ret_size);
+		vector<min_max_t> minmax(values.size());
+		for (size_t i = 0 ; i < values.size() ; ++i) {
+			minmax[i] = std::make_pair(values[i], values[i]);
+		}
+		return make_pair(minmax, mpz_class{0});
+	}
+
+	// and this is the function that input a vector of minmax for slice parameter s
+	// and returns a vector (twice as small) for slice parameter s+1 
+	auto groupSlices(vector<min_max_t> const & in_minmax)
+	{
+		auto out_minmax_size = in_minmax.size() / 2;
+		vector<min_max_t> out_minmax(out_minmax_size);
 		mpz_class max_dist{0};
 
-		for (size_t i = 0 ; i < ret_size ; i++) {
-			auto& [min_sl1, max_sl1] = min_max_val[i<<1];
-			auto& [min_sl2, max_sl2] = min_max_val[(i<<1) + 1];
+		for (size_t i = 0 ; i < out_minmax_size ; i++) {
+			auto& [min_sl1, max_sl1] = in_minmax[i<<1];
+			auto& [min_sl2, max_sl2] = in_minmax[(i<<1) + 1];
 			auto minval = min(min_sl1, min_sl2);
 			auto maxval = max(max_sl1, max_sl2);
 			if ((maxval - minval) > max_dist)
 					max_dist = maxval - minval;
-			ret_val[i] = make_pair(minval, maxval);
+			out_minmax[i] = make_pair(minval, maxval);
 		}
-		return make_pair(ret_val, max_dist);
+		return make_pair(out_minmax, max_dist);
 	}
 
-	auto groupSlices(vector<mpz_class> const & values)
-	{
-		auto value_size = values.size();
-		vector<min_max_t> ret(value_size);
-		for (size_t i = 0 ; i < value_size ; ++i) {
-			ret[i] = std::make_pair(values[i], values[i]);
-		}
-		return make_pair(ret, mpz_class{0});
-	}
 
 	auto find_best_subconfig(vector<min_max_t> const & min_max, int const wIn, int const wOut, int const split, int const wL, mpz_class const best_cost, table_cost_function_t const cost_model, Target* const target)
 	{
-		auto wHNoOverlap = wOut - wL;
+		auto wH_noOverlap = wOut - wL;
 		auto costFunction = [&](int wH)->mpz_class {
 			auto cost_diff = cost_model(wIn, wL, target);
 			auto cost_ss = cost_model(wIn - split, wH, target);
 			return cost_diff + cost_ss;
 		};
-		auto bestWH = wHNoOverlap;
-		auto estimate = costFunction(wHNoOverlap);
+		auto bestWH = wH_noOverlap;
+		auto estimate = costFunction(wH_noOverlap);
 		bool overlapped = false;
 		mpz_class lowbit_mask{1};
-		lowbit_mask <<= wL;
+		// suspiscious line : was
+ 		// lowbit_mask <<= wL;
+		lowbit_mask = (mpz_class(1) << wL)-1; 
+		
 		mpz_class overflow_detect = lowbit_mask + 1;
 		for (auto const & [min, max] : min_max) {
 			mpz_class min_low_bits{min & lowbit_mask};
@@ -118,8 +126,10 @@ namespace flopoco {
 			mpz_class low_bits = min - high_bits;
 			subsamples_table[slice_idx] = high_bits >> shift_h;
 			mpz_class to_sub = min - low_bits;
+			// cerr << "subsamples_table["<<slice_idx<<"] = \t" <<  subsamples_table[slice_idx]   << " \t\t to_sub=" << to_sub <<endl; 
 			for (size_t cur_idx = val_idx ; cur_idx < val_idx + shift ; cur_idx++) {
 				diff_table[cur_idx] = values[cur_idx] - to_sub;
+				// cerr << "\t  values["<<cur_idx<<"] =  "<< values[cur_idx]<<"   \tdiff_table["<<cur_idx<<"] = \t" << diff_table[cur_idx]  <<endl; 
 				assert(diff_table[cur_idx] < L_mask);
 			}
 		}
@@ -145,7 +155,9 @@ namespace flopoco {
 		for (int s = 1 ; s < wIn ; s++) {
 			std::tie(min_max, max_dist) = groupSlices(min_max);
 			auto minWL = intlog2(max_dist);
-			for (auto wL = minWL ; minWL < wOut - 1 ; ++minWL) {
+			// Highly suspiscious line: was
+			//			for (auto wL = minWL ; minWL < wOut - 1 ; ++minWL) {
+			for (auto wL = minWL ; wL < wOut - 1 ; ++wL) {
 				auto [interestingSol, overlapped, costBestSol, bestLocalWH] = find_best_subconfig(
 						min_max,
 						wIn,
@@ -170,6 +182,7 @@ namespace flopoco {
 			}
 		}
 
+		cerr << "############## invoking buildCompressedTable " << endl;
 		auto [best_subsampling, best_diff] = buildCompressedTable(values, wOut, best_split, best_wh, best_wl);
 
 
