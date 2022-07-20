@@ -2657,7 +2657,7 @@ namespace flopoco{
 
 
 		// schedule from the root parent op
-    cout << "!!! parentOp_=" << parentOp_ << ", isShared=" << isShared() << endl;
+    //cout << "!!! parentOp_=" << parentOp_ << ", isShared=" << isShared() << endl;
 		if(parentOp_ != nullptr && !isShared()) {
 			REPORT(DEBUG, "schedule(): Not the root Operator, moving up to " << parentOp_->getName());
 			parentOp_ ->schedule();
@@ -2773,7 +2773,7 @@ namespace flopoco{
   {
     auto op=this;
     auto opName = op->getName();
-    cerr << "Operator::checkAllSignalsScheduled() for operator " << opName << endl;
+    //cerr << "Operator::checkAllSignalsScheduled() for operator " << opName << endl;
     auto ok = true;
     // check if all signals of this op are scheduled
     auto signals = op->signalList_;
@@ -2782,11 +2782,11 @@ namespace flopoco{
       auto name = signal->getName();
       auto isScheduled = signal->hasBeenScheduled();
       if(isScheduled) {
-        std::cout << "!!! Utility::checkAllSignalsScheduled: Signal '" << name << "' of operator '" << opName << "' is scheduled lexiographic time (" << signal->getCycle() << "," << signal->getCriticalPath() << ")" << std::endl;
+        //std::cout << "!!! Utility::checkAllSignalsScheduled: Signal '" << name << "' of operator '" << opName << "' is scheduled lexiographic time (" << signal->getCycle() << "," << signal->getCriticalPath() << ")" << std::endl;
       }
       else {
         ok = false;
-        std::cout << "!!! Utility::checkAllSignalsScheduled: Attention! Signal '" << name << "' of operator '" << opName << "' has not been scheduled!" << std::endl;
+        //std::cout << "!!! Utility::checkAllSignalsScheduled: Attention! Signal '" << name << "' of operator '" << opName << "' has not been scheduled!" << std::endl;
       }
     }
     // also check I/O ports
@@ -2798,11 +2798,11 @@ namespace flopoco{
       auto name = signal->getName();
       auto isScheduled = signal->hasBeenScheduled();
       if(isScheduled) {
-        std::cout << "!!! Utility::checkAllSignalsScheduled: Port '" << name << "' of operator '" << opName << "' is scheduled lexiographic time (" << signal->getCycle() << "," << signal->getCriticalPath() << ")" << std::endl;
+        //std::cout << "!!! Utility::checkAllSignalsScheduled: Port '" << name << "' of operator '" << opName << "' is scheduled lexiographic time (" << signal->getCycle() << "," << signal->getCriticalPath() << ")" << std::endl;
       }
       else {
         ok = false;
-        std::cout << "!!! Utility::checkAllSignalsScheduled: Attention! Port '" << name << "' of operator '" << opName << "' has not been scheduled!" << std::endl;
+        //std::cout << "!!! Utility::checkAllSignalsScheduled: Attention! Port '" << name << "' of operator '" << opName << "' has not been scheduled!" << std::endl;
       }
     }
 
