@@ -372,7 +372,7 @@ namespace flopoco
 		allRegistersWithAsyncReset=false;
 		unusedHardMultThreshold=0.7;
 		compression = "heuristicMaxEff";
-		tiling = "heuristicBasicTiling"; //should be heuristicBeamSearchTiling in future
+		tiling = "heuristicBeamSearchTiling";
 
 		ilpSolver = "Gurobi";
 		ilpTimeout = 0; //timeout disabled
