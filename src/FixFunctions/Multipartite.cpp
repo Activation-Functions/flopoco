@@ -203,9 +203,9 @@ namespace flopoco
 
 			vector<mpz_class> mptiv;
 			for (auto i=0; i<(1<<alpha); i++) {
-#if 1
+#if 0
 				mptiv.push_back(mpz_class(TIVFunction(i))); //!!! this used to not work, ambiguous for clang
-#else  // This does not work either, it involves a conversion to 32 bit ints. Plus it is ugly
+#else  // This does not work either, it involves a conversion to 32 bit ints. Plus it is ugly (but at least it compiles)
 				mpz_class m;
 				mpz_set_ui(m.get_mpz_t(), TIVFunction(i));
 				mptiv.push_back(m);

@@ -2768,48 +2768,47 @@ namespace flopoco{
 	}
 
 
+	bool Operator::checkAllSignalsScheduled()
+	{
+		auto op=this;
+		auto opName = op->getName();
+		REPORT(FULL,"Operator::checkAllSignalsScheduled() for operator " << opName);
+		auto ok = true;
+		// check if all signals of this op are scheduled
+		auto signals = op->signalList_;
+		for(auto signal : signals) {
+			// check info
+			auto name = signal->getName();
+			auto isScheduled = signal->hasBeenScheduled();
+			if(isScheduled) {
+				REPORT(FULL, "Utility::checkAllSignalsScheduled: Signal '" << name << "' of operator '" << opName << "' is scheduled lexiographic time (" << signal->getCycle() << "," << signal->getCriticalPath() << ")");
+			}
+			else {
+				ok = false;
+				REPORT(DETAILED, "Utility::checkAllSignalsScheduled: Attention! Signal '" << name << "' of operator '" << opName << "' has not been scheduled!");
+			}
+		}
+		// also check I/O ports
+		signals = op->ioList_;
+		for(auto signal : signals) {
+			// skip inputs because they are irrelevant
+			if(signal->type() == flopoco::Signal::SignalType::in) continue;
+			// check info
+			auto name = signal->getName();
+			auto isScheduled = signal->hasBeenScheduled();
+			if(isScheduled) {
+				REPORT(FULL, "Utility::checkAllSignalsScheduled: Port '" << name << "' of operator '" << opName << "' is scheduled lexiographic time (" << signal->getCycle() << "," << signal->getCriticalPath() << ")");
+			}
+			else {
+				ok = false;
+				REPORT(DETAILED, "Utility::checkAllSignalsScheduled: Attention! Port '" << name << "' of operator '" << opName << "' has not been scheduled!");
+			}
+		}
 
-  bool Operator::checkAllSignalsScheduled()
-  {
-    auto op=this;
-    auto opName = op->getName();
-    //cerr << "Operator::checkAllSignalsScheduled() for operator " << opName << endl;
-    auto ok = true;
-    // check if all signals of this op are scheduled
-    auto signals = op->signalList_;
-    for(auto signal : signals) {
-      // check info
-      auto name = signal->getName();
-      auto isScheduled = signal->hasBeenScheduled();
-      if(isScheduled) {
-        //std::cout << "!!! Utility::checkAllSignalsScheduled: Signal '" << name << "' of operator '" << opName << "' is scheduled lexiographic time (" << signal->getCycle() << "," << signal->getCriticalPath() << ")" << std::endl;
-      }
-      else {
-        ok = false;
-        //std::cout << "!!! Utility::checkAllSignalsScheduled: Attention! Signal '" << name << "' of operator '" << opName << "' has not been scheduled!" << std::endl;
-      }
-    }
-    // also check I/O ports
-    signals = op->ioList_;
-    for(auto signal : signals) {
-      // skip inputs because they are irrelevant
-      if(signal->type() == flopoco::Signal::SignalType::in) continue;
-      // check info
-      auto name = signal->getName();
-      auto isScheduled = signal->hasBeenScheduled();
-      if(isScheduled) {
-        //std::cout << "!!! Utility::checkAllSignalsScheduled: Port '" << name << "' of operator '" << opName << "' is scheduled lexiographic time (" << signal->getCycle() << "," << signal->getCriticalPath() << ")" << std::endl;
-      }
-      else {
-        ok = false;
-        //std::cout << "!!! Utility::checkAllSignalsScheduled: Attention! Port '" << name << "' of operator '" << opName << "' has not been scheduled!" << std::endl;
-      }
-    }
+		//    if(!ok) exit(-1); //!!!
 
-//    if(!ok) exit(-1); //!!!
-
-    return ok;
-  }
+		return ok;
+	}
 
 
 
