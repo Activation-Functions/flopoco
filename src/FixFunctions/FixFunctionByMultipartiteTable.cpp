@@ -233,7 +233,8 @@ namespace flopoco
 		filename << "mpt_"<<vhdlize(f->description) << ".dat";
 		fstream d;
 		d.open(filename.str().c_str(), ios::out);  // no precautions here, this is not prod code
-
+		int prevy;
+		
 		d << "i\t tiv" << " ";
 		for(int i = bestMP->toi.size()-1; i>=0;  --i)		{
 			d  << "\t "<< "to" << i;
@@ -243,7 +244,7 @@ namespace flopoco
 			int A = x>>(bestMP->inputSize-bestMP->alpha); 
 			d << x << "\t " << bestMP->tiv[A];
 			int y = bestMP->tiv[A];
-			// cerr << "x=" << x ;
+			//cerr << "x=" << x ;
 
 			for(int i = bestMP->toi.size()-1; i>=0;  --i)		{
 				int Ai = x>>(bestMP->inputSize-bestMP->gammai[i]);
@@ -251,20 +252,27 @@ namespace flopoco
 				int Bi = (x >> bestMP->pi[i]) & mask;
 				int Bsign = Bi >>(bestMP->betai[i]-1);
 				int Bmask =(1<< (bestMP->betai[i] -1)) -1;
-				// cerr << "    i=" << i << "  Ai=" << Ai << " Bi=" << Bi << " j=" <<j ;
-				if( Bsign==1) {
-					int j = (Bi&Bmask) + (Ai<<(bestMP->betai[i]-1)); // the index
-					d << "\t " << bestMP->toi[i][j] << " ";
-					y += bestMP->toi[i][j];
-				}
-				else {
-					int j = ((1-Bi)&Bmask) + (Ai<<(bestMP->betai[i]-1)); // the index
+				int j;
+				if( Bsign==0) {
+					j = (Bi&Bmask) ^ Bmask;
+					j += (Ai<<(bestMP->betai[i]-1)); // the index
 					d << "\t " << 1-bestMP->toi[i][j] << " ";
 					y += 1-bestMP->toi[i][j];
 				}
+				else {
+					j = (Bi&Bmask) + (Ai<<(bestMP->betai[i]-1)); // the index
+					d << "\t " << bestMP->toi[i][j] << " ";
+					y += bestMP->toi[i][j];
+				}
+				//cerr << "    i=" << i << "  Ai=" << Ai << " Bi=" << Bi << " Bsign=" << Bsign<< " Bmask=" << Bmask  << " j=" <<j ;
 			}
-			// cerr << endl;
-			d << "\t" << y << "\t" << (y>> bestMP->guardBits) << endl;
+			//			 cerr << endl;
+			int yfull = y;
+			y= y>> bestMP->guardBits;
+			d << "\t" << yfull << "\t" << y << endl;
+			if (y<prevy)
+				REPORT(0, "Non-monotonicity detected for x="<<x); 
+			prevy=y;
 		}
 
 		d.close();
