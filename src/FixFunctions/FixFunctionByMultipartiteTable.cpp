@@ -256,8 +256,9 @@ namespace flopoco
 				if( Bsign==0) {
 					j = (Bi&Bmask) ^ Bmask;
 					j += (Ai<<(bestMP->betai[i]-1)); // the index
-					d << "\t " << 1-bestMP->toi[i][j] << " ";
-					y += 1-bestMP->toi[i][j];
+					int toval = -1-bestMP->toi[i][j]; // not A +1 = -A
+					d << "\t " << toval  << " ";
+					y += toval;
 				}
 				else {
 					j = (Bi&Bmask) + (Ai<<(bestMP->betai[i]-1)); // the index
