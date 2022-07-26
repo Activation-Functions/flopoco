@@ -22,23 +22,21 @@ namespace flopoco {
 		computeGuardBits();
 		
 		/* X^2 and Y^2 : ufix(-1, 2*lsbIn) */
-		string squarer_args = "wIn=" + to_string(wIn) +
-				      " wOut=0"            \
-				      " method=schoolbook" \
-				      " maxDSP=0"          \
-				      " signedIn=false";
-		newInstance("IntSquarer", "squarerX", squarer_args, "X=>X", "R=>XX");
-		newInstance("IntSquarer", "squarerY", squarer_args, "X=>Y", "R=>YY");
+		/* Computed manually with synthesis */
+		string squareAdderXYArg;
+		if (-5 <= lsbIn && lsbIn <= -7) {
+			squareAdderXYArg = squarerByLUT();
+		} else {		
+			squareAdderXYArg = squarerByIntSquarer();
+		}
 
 		/* X^2 + Y^2 : ufix(0, 2*lsbIn) */
-		int wInAdder = -2*lsbIn + 1;		
+		int wInAdder = -2*lsbIn + 1;
 		
-		vhdl << tab << declare("XX_adder", wInAdder) << " <= '0' & XX;" << endl;
-		vhdl << tab << declare("YY_adder", wInAdder) << " <= '0' & YY;" << endl;
 		vhdl << tab << declare("square_adder_Cin") << " <= '0';" << endl;
-		
+
 		newInstance("IntAdder", "square_adder", "wIn=" + to_string(wInAdder),
-							"X=>XX_adder, Y=>YY_adder, Cin=>square_adder_Cin",
+							squareAdderXYArg + "Cin=>square_adder_Cin",
 							"R=>S");
 							
 		/* Converting Sum into floating-point format s.t. :
@@ -87,5 +85,37 @@ namespace flopoco {
 	void Fix2DNormLUT::computeGuardBits() {
 		guard = -2*lsbIn + lsbOut - 1;
 		REPORT(DETAILED, "Guard bits=" << guard);
+	}
+
+	string Fix2DNormLUT::squarerByLUT() {
+		string squarer_args = "tableCompression=1" \
+				      " f=x^2"             \
+				      " signedIn=false"    \
+				      " lsbIn=" + to_string(lsbIn) +
+				      " lsbOut=" + to_string(2*lsbIn);
+
+	        newInstance("FixFunctionByTable", "squarerX", squarer_args,
+							      " X=>X",
+							      " Y=>XX");
+
+		newInstance("FixFunctionByTable", "squarerY", squarer_args,
+							      " X=>Y",
+							      " Y=>YY");
+		return "X=>XX, Y=>YY, ";
+	}
+
+	string Fix2DNormLUT::squarerByIntSquarer() {
+		string squarer_args = "wIn=" + to_string(getWIn()) +
+				      " wOut=0"            \
+				      " method=schoolbook" \
+				      " maxDSP=0"          \
+				      " signedIn=false";
+	        newInstance("IntSquarer", "squarerX", squarer_args, "X=>X", "R=>XX");
+		newInstance("IntSquarer", "squarerY", squarer_args, "X=>Y", "R=>YY");
+
+		vhdl << tab << declare("XX_adder", -2*lsbIn + 1) << " <= '0' & XX;" << endl;
+		vhdl << tab << declare("YY_adder", -2*lsbIn + 1) << " <= '0' & YY;" << endl;
+
+		return "X=>XX_adder, Y=>YY_adder, ";
 	}
 }

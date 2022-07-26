@@ -19,6 +19,9 @@ namespace flopoco{
 	 private:
 		 int guard;
 		 void computeGuardBits();
+
+		 string squarerByLUT();
+		 string squarerByIntSquarer();
 	};
 }
 
