@@ -76,6 +76,7 @@ void BaseMultiplierBoothArrayXilinx::registerFactory()
                         "",
                        "wX(int): size of input X;\
                         wY(int): size of input Y;\
+                        wAcc(int)=0: size of the accumulate input;\
 						xIsSigned(bool)=0: input X is signed;\
 						yIsSigned(bool)=0: input Y is signed;",
                        "",
@@ -104,8 +105,6 @@ void BaseMultiplierBoothArrayXilinxOp::emulate(TestCase* tc)
             svX -= big1;
             //cerr << "X is neg. Interpreted value : " << svX.get_str(10) << endl;
         }
-
-
     }
     if(yIsSigned)
     {
@@ -118,7 +117,6 @@ void BaseMultiplierBoothArrayXilinxOp::emulate(TestCase* tc)
             //cerr << "Y is neg. Interpreted value : " << svY.get_str(10) << endl;
         }
     }
-
 
     //cerr << "Computed product : " << svR.get_str() << endl;
     mpz_class svR=0;
@@ -185,9 +183,7 @@ TestList BaseMultiplierBoothArrayXilinx::unitTest(int index)
 
         addInput("X", wX, true);
         addInput("Y", wY, true);
-	if (wAcc==0){
-		addInput("Tin", 1, true);
-	}else {
+	if (wAcc!=0){
 		addInput("Tin", wAcc, true);
 	}
         if (wAcc>width && wX >= wY) {
@@ -230,7 +226,7 @@ TestList BaseMultiplierBoothArrayXilinx::unitTest(int index)
 
                 //create the LUTs:
                 for (int i = 0; i < needed_luts; i++) {
-			if (j==stages-1 && i> needed_luts-2 ||j==stages-1 && i== needed_luts-2 &&!heightparity){//|| j==stages-2 && i == needed_luts){
+			if ((j==stages-1 && i> needed_luts-2) || (j==stages-1 && i== needed_luts-2 && !heightparity)){//|| j==stages-2 && i == needed_luts){
 				continue;
 			}
 
@@ -239,20 +235,20 @@ TestList BaseMultiplierBoothArrayXilinx::unitTest(int index)
                     lut_op z = ((~lut_in(0) & ~lut_in(1) & ~lut_in(2)) | (lut_in(0) & lut_in(1) & lut_in(2)));
                     lut_op c = ((lut_in(0)));
                     lut_op s = ((~lut_in(0) & lut_in(1) & lut_in(2)) | (lut_in(0) & ~lut_in(1) & ~lut_in(2)));
-                    lut_op e = (c ^lut_in(3)) & ~z ^(c & z);
-                    lut_op mux0 = (~s & lut_in(3) | s & lut_in(4));
-                    lut_op mux1 = (~c & mux0 | c & ~mux0);
+                    lut_op e = ((c ^lut_in(3)) & ~z) ^ (c & z);
+                    lut_op mux0 = ((~s & lut_in(3)) | (s & lut_in(4)));
+                    lut_op mux1 = ((~c & mux0) | (c & ~mux0));
                     lut_op mux2 = ~z & mux1;
                     lut_op czflip = mux2 ^ (c & z);
 
                     lut_op wz = (lut_in(4)& ~z);
-                    lut_op wc = (~c & wz | c & ~wz);
+                    lut_op wc = ((~c & wz) | (c & ~wz));
                     lut_op nwc = ~wc;
-                    lut_op w = (~lut_in(5)&nwc |lut_in(5)& (nwc ^ (~lut_in(3))));
+                    lut_op w = ((~lut_in(5)&nwc) | (lut_in(5)& (nwc ^ (~lut_in(3)))));
 
 
-                    lut_op test = (~s & ~c | s & (c & lut_in(4)) |s & (~c & ~lut_in(4)));
-                    lut_op test2 = (~lut_in(5) & (test&~(s&c)) |~lut_in(5)&s&~c | lut_in(5)& (test ^ (~lut_in(3))));
+                    lut_op test = ((~s & ~c) | (s & (c & lut_in(4))) | (s & (~c & ~lut_in(4))));
+                    lut_op test2 = ((~lut_in(5) & (test&~(s&c))) | (~lut_in(5)&s&~c) | (lut_in(5) & (test ^ (~lut_in(3)))));
 
 
 
@@ -302,7 +298,7 @@ TestList BaseMultiplierBoothArrayXilinx::unitTest(int index)
 
                     if (0 <= i && i <= width - 1 ) {
                         inPortMap("i3", in1 + of(i));
-                    } else if (i == width & j == 0) {
+                    } else if ((i == width) & (j == 0)) {
                         inPortMapCst("i3", "'0'");
                     } else if (i == width ) {
                         inPortMap("i3", join("t", j) + of(i-1));

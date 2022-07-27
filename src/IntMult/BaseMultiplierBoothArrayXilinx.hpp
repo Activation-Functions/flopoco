@@ -8,7 +8,6 @@
 #include <gmpxx.h>
 #include "Target.hpp"
 #include "Operator.hpp"
-#include "Table.hpp"
 #include "BaseMultiplierCategory.hpp"
 
 namespace flopoco {
@@ -50,8 +49,8 @@ namespace flopoco {
 
         void emulate(TestCase* tc);
     private:
-        int wX, wY, wAcc;
         bool xIsSigned, yIsSigned;
+        int wX, wY, wAcc;
     };
 
 }
