@@ -1,0 +1,12 @@
+add_flopocolib_src(
+	AtanPow.cpp
+	Cotran.cpp
+	CotranHybrid.cpp
+	CotranTables.cpp
+	LNSAdd.cpp
+	LNSAddSub.cpp
+	LNSDiv.cpp
+	LNSMul.cpp
+	LNSSqrt.cpp
+	LogSinCos.cpp
+)

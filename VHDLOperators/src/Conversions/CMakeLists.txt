@@ -1,0 +1,9 @@
+add_flopocolib_src(
+	Fix2FP.cpp
+	FP2Fix.cpp
+	InputIEEE.cpp
+	OutputIEEE.cpp
+	PIF2Posit.cpp
+	Posit2FP.cpp
+	Posit2PIF.cpp
+)

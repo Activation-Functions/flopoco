@@ -1,0 +1,9 @@
+add_flopocolib_src(
+	DSP.cpp
+	Kintex7.cpp
+	StratixV.cpp
+	Versal.cpp
+	Virtex6.cpp
+	VirtexUltrascalePlus.cpp
+	Zynq7000.cpp
+)

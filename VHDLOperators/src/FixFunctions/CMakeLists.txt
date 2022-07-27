@@ -1,0 +1,15 @@
+add_flopocolib_src(
+	BasicPolyApprox.cpp
+	FixFunctionByMultipartiteTable.cpp
+	FixFunctionByPiecewisePoly.cpp
+	FixFunctionBySimplePoly.cpp
+	FixFunctionByTable.cpp
+	#FixFunctionByVaryingPiecewisePoly.cpp
+	FixFunction.cpp
+	FixHornerEvaluator.cpp
+	FixPolyEval.cpp
+	#HOTBM.cpp
+	Multipartite.cpp
+	UniformPiecewisePolyApprox.cpp
+	VaryingPiecewisePolyApprox.cpp
+)

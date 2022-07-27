@@ -1,0 +1,23 @@
+add_flopocolib_src(
+	Xilinx_CARRY4.cpp
+	#Xilinx_CFGLUT5.cpp
+	#Xilinx_CFGLUTShadow.cpp
+	Xilinx_Comparator.cpp
+	Xilinx_FDCE.cpp
+	XilinxFourToTwoCompressor.cpp
+	Xilinx_GenericAddSub.cpp
+	Xilinx_GenericAddSub_slice.cpp
+	Xilinx_GenericMux.cpp
+	Xilinx_GenericMux_slice.cpp
+	XilinxGPC.cpp
+	Xilinx_LOOKAHEAD8.cpp
+	Xilinx_LUT5.cpp
+	Xilinx_LUT6.cpp
+	Xilinx_LUT_compute.cpp
+	Xilinx_MUXF7.cpp
+	Xilinx_MUXF8.cpp
+	Xilinx_n2m_Decoder.cpp
+	Xilinx_Primitive.cpp
+	Xilinx_TernaryAdd_2State.cpp
+	Xilinx_TernaryAdd_2State_slice.cpp
+)
