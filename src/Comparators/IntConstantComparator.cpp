@@ -99,7 +99,11 @@ namespace flopoco{
 				if(flags&1) vhdl << tab << declare(getTarget()->ltComparatorDelay(w), "XltCi") << " <= '1' when X<C else '0';"<<endl;
 				if(flags&2) vhdl << tab << declare(getTarget()->eqComparatorDelay(w), "XeqCi") << " <= '1' when X=C else '0';"<<endl;
 				if(flags&4) {
+<<<<<<< HEAD
 					if((method==0) || not(flags&1)) { // a third comparator 
+=======
+					if((method==0) || (0==flags&1)) { // a third comparator 
+>>>>>>> 9a0678e70569d6f1b6cbe567a3f8d41d7f42133d
 						vhdl << tab << declare(getTarget()->ltComparatorDelay(w), "XgtCi") << " <= '1' when X>C else '0';"<<endl;
 					}
 					else{ // compute gt out of lt and eq
@@ -159,7 +163,11 @@ namespace flopoco{
 				if(flags&2)
 					vhdl << tab << declare(getTarget()->eqComparatorDelay(chunkSizes.size()), "XeqCi") << " <= '1' when XXX=CCC else '0';"<<endl;
 				if(flags&4) {
+<<<<<<< HEAD
 					if((method==0) || not(flags&1)) { // a third comparator 
+=======
+					if((method==0) || (0==flags&1)) { // a third comparator 
+>>>>>>> 9a0678e70569d6f1b6cbe567a3f8d41d7f42133d
 						vhdl << tab << declare("XgtCi") << " <= '1' when XXX>CCC else '0';"<<endl;
 					}
 					else{ // compute gt out of lt and eq

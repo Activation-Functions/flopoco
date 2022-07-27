@@ -61,6 +61,7 @@ namespace flopoco{
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 		if (method==0 || method ==1 || method ==3) {
 			if(getTarget()->plainVHDL()) {
 				chunkSize=w;
@@ -75,6 +76,11 @@ namespace flopoco{
 			if(getTarget()->plainVHDL()) {
 				chunkSize=w;
 >>>>>>> improved autotest
+=======
+		if (method==0 || method ==1 || method ==3) {
+			if(getTarget()->plainVHDL()) {
+				chunkSize=w;
+>>>>>>> 9a0678e70569d6f1b6cbe567a3f8d41d7f42133d
 			}
 			else if (method == 3) {
 				chunkSize = (int) ceil(sqrt(w));
@@ -277,12 +283,17 @@ namespace flopoco{
 
 			for(int w=4; w<1000; w+=(w<10?1:300)) { // 4 is an exhaustive test. The others test the decomposition in chunks
 <<<<<<< HEAD
+<<<<<<< HEAD
 				for(int flags=1; flags<8; flags++) { // exhaustive test. 
 					for(int method=0; method<(w<100?3:2); method++) { // exhaustive for small sizes
 =======
 				for(int flags=1; flags<8; flags++) { // 5 is an exhaustive test. The others test the decomposition in chunks
 					for(int method=0; method<(w<100?3:2); method++) { // 5 is an exhaustive test. The others test the decomposition in chunks
 >>>>>>> improved autotest
+=======
+				for(int flags=1; flags<8; flags++) { // 5 is an exhaustive test. The others test the decomposition in chunks
+					for(int method=0; method<(w<100?3:2); method++) { // 5 is an exhaustive test. The others test the decomposition in chunks
+>>>>>>> 9a0678e70569d6f1b6cbe567a3f8d41d7f42133d
 						paramList.push_back(make_pair("w",to_string(w)));
 						paramList.push_back(make_pair("flags",to_string(flags)));
 						paramList.push_back(make_pair("method",to_string(method)));
