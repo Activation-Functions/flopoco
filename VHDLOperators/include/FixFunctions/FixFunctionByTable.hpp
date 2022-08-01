@@ -2,8 +2,8 @@
 #define FixFunctionByTable_HPP
 #include <vector>
 
-#include "../Tables/Table.hpp"
-#include "FixFunction.hpp"
+#include "Tables/Table.hpp"
+#include "FixFunctions/FixFunction.hpp"
 
 namespace flopoco{
 

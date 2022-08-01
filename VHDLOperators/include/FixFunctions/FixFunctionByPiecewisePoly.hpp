@@ -6,8 +6,8 @@
 #include <mpfr.h>
 #include <gmpxx.h>
 
-#include "../Operator.hpp"
-#include "FixFunction.hpp"
+#include "Operator.hpp"
+#include "FixFunctions/FixFunction.hpp"
 #include "UniformPiecewisePolyApprox.hpp"
 
 namespace flopoco{

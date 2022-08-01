@@ -50,6 +50,7 @@ OPTION(WCPG_BUILD_NOTFOUND "Attempt to build WCPG if not found" ON)
 OPTION(SCALP_BUILD_NOTFOUND "Attempt to build SCALP if not found" ON)
 OPTION(PAGSUITE_BUILD_NOTFOUND "Attempt to build PAGsuite if not found" ON)
 
+add_subdirectory(HighLevelCores)
 add_subdirectory(VHDLOperators)
 add_subdirectory(FloPoCoBin)
 

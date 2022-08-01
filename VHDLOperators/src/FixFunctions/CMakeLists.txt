@@ -5,7 +5,7 @@ add_flopocolib_src(
 	FixFunctionBySimplePoly.cpp
 	FixFunctionByTable.cpp
 	#FixFunctionByVaryingPiecewisePoly.cpp
-	FixFunction.cpp
+	FixFunctionEmulator.cpp
 	FixHornerEvaluator.cpp
 	FixPolyEval.cpp
 	#HOTBM.cpp

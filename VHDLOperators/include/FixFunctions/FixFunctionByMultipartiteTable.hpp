@@ -13,9 +13,9 @@ using namespace std;
 
 
 
-#include "FixFunction.hpp"
-#include "../Operator.hpp"
-#include "../Tables/DifferentialCompression.hpp"
+#include "FixFunctions/FixFunction.hpp"
+#include "Operator.hpp"
+#include "Tables/DifferentialCompression.hpp"
 
 
 namespace flopoco

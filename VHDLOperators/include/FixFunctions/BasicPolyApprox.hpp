@@ -7,9 +7,9 @@
 #include <sollya.h>
 #include <gmpxx.h>
 
-#include "../Operator.hpp" // mostly for reporting
-#include "../UserInterface.hpp"
-#include "FixFunction.hpp"
+#include "Operator.hpp" // mostly for reporting
+#include "UserInterface.hpp"
+#include "FixFunctions/FixFunction.hpp"
 #include "FixConstant.hpp"
 
 using namespace std;
@@ -57,7 +57,7 @@ namespace flopoco{
 				if >=0, add this number of bits to the LSB of each coeff
 				if -1, add to each coeff a number of LSB bits that corresponds to the bits needed for a faithful Horner evaluation based on faithful (truncated) multipliers
 		 */
-		BasicPolyApprox(FixFunction* f, double targetAccuracy, int addGuardBits=-1);
+		BasicPolyApprox(flopoco::FixFunction* f, double targetAccuracy, int addGuardBits=-1);
 
 		/** A minimal constructor that inputs a sollya_obj_t function and the target accuracy
 				@param fS: defines the function, as a sollya_obj_t

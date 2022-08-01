@@ -33,6 +33,7 @@
 #include "BitHeap/BitHeap.hpp"
 #include "Tables/Table.hpp"
 #include "Tables/DiffCompressedTable.hpp"
+#include "FixFunctions/FixFunctionEmulator.hpp"
 
 /*
 To replicate the functions used in the 2017 Hsiao paper
@@ -304,7 +305,7 @@ namespace flopoco
 
 	void FixFunctionByMultipartiteTable::emulate(TestCase* tc)
 	{
-		f->emulate(tc);
+		emulate_fixfunction(*f, tc);
 	}
 
 	//------------------------------------------------------------------------------------ Private classes

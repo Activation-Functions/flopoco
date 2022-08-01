@@ -34,6 +34,7 @@
 #include "Tables/DifferentialCompression.hpp"
 #include "FixFunctions/FixFunctionByTable.hpp"
 #include "FixFunctions/FixHornerEvaluator.hpp"
+#include "FixFunctions/FixFunctionEmulator.hpp"
 
 using namespace std;
 
@@ -247,7 +248,7 @@ namespace flopoco{
 
 
 	void FixFunctionByPiecewisePoly::emulate(TestCase* tc){
-		f->emulate(tc);
+		emulate_fixfunction(*f, tc);
 	}
 
 	void FixFunctionByPiecewisePoly::buildStandardTestCases(TestCaseList* tcl){

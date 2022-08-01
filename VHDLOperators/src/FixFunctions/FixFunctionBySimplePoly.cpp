@@ -35,6 +35,7 @@ Error analysis: see FixFunctionByPiecewisePoly.cpp
 
 #include "FixFunctions/FixFunctionBySimplePoly.hpp"
 #include "FixFunctions/FixHornerEvaluator.hpp"
+#include "FixFunctions/FixFunctionEmulator.hpp"
 
 using namespace std;
 
@@ -164,7 +165,7 @@ namespace flopoco{
 
 
 	void FixFunctionBySimplePoly::emulate(TestCase* tc){
-		f->emulate(tc);
+		emulate_fixfunction(*f, tc);
 	}
 
 	void FixFunctionBySimplePoly::buildStandardTestCases(TestCaseList* tcl){

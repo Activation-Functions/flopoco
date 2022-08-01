@@ -36,29 +36,31 @@ ADD_LIBRARY(FloPoCoLib STATIC ${PATH_ACTIVE_THINGS}
 target_include_directories(FloPoCoLib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 set_target_properties(FloPoCoLib PROPERTIES OUTPUT_NAME "FloPoCo")
 
+target_link_libraries(FloPoCoLib PUBLIC hileco)
+
 target_link_libraries(
-  FloPoCoLib
-  GMPXX::GMPXX MPFR::MPFR MPFI::MPFI #xml2 ??xml2 not necessary??
+  FloPoCoLib PRIVATE
+  GMPXX::GMPXX MPFR::MPFR MPFI::MPFI
   )
 
 if (Sollya_FOUND)
   target_link_libraries(
-	FloPoCoLib
+	FloPoCoLib PRIVATE
 	Sollya::Sollya
 	)
 endif (Sollya_FOUND)
 
 if (WCPG_FOUND)
   target_link_libraries(
-	FloPoCoLib
+	FloPoCoLib PRIVATE
 	WCPG::WCPG
 	)
 endif (WCPG_FOUND)
 
 if (ScaLP_FOUND)
 	target_link_libraries(
-			FloPoCoLib
-			ScaLP::ScaLP
+		FloPoCoLib PRIVATE 
+		ScaLP::ScaLP
 	)
 	target_compile_definitions(FloPoCoLib PUBLIC HAVE_SCALP)
 endif (ScaLP_FOUND)

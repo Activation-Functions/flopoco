@@ -15,7 +15,8 @@
 
 #include "utils.hpp"
 #include "FixFunctions/FixFunctionByTable.hpp"
-#include <Tables/DiffCompressedTable.hpp>
+#include "Tables/DiffCompressedTable.hpp"
+#include "FixFunctions/FixFunctionEmulator.hpp"
 
 using namespace std;
 
@@ -64,7 +65,7 @@ namespace flopoco{
 
 
 	void FixFunctionByTable::emulate(TestCase* tc){
-		f->emulate(tc, true /* correct rounding */);
+		emulate_fixfunction(*f, tc, true /* correct rounding */);
 	}
 
 	OperatorPtr FixFunctionByTable::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args)

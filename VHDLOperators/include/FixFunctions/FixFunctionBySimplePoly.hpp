@@ -2,8 +2,8 @@
 #define FixFunctionBySimplePoly_HPP
 #include <vector>
 
-#include "../Operator.hpp"
-#include "FixFunction.hpp"
+#include "Operator.hpp"
+#include "FixFunctions/FixFunction.hpp"
 #include "BasicPolyApprox.hpp"
 
 namespace flopoco{

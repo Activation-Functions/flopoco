@@ -4,7 +4,7 @@
 #include <vector>
 #include <map>
 
-#include "FixFunctions/FixFunction.hpp"
+#include "FixFunction.hpp"
 #include "Operator.hpp"
 #include "Tables/DifferentialCompression.hpp"
 

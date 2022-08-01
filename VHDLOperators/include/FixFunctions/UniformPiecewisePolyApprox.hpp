@@ -8,7 +8,7 @@
 #include <gmpxx.h>
 
 #include "Operator.hpp" // mostly for reporting
-#include "FixFunction.hpp"
+#include "FixFunctions/FixFunction.hpp"
 #include "FixConstant.hpp"
 #include "BasicPolyApprox.hpp"
 

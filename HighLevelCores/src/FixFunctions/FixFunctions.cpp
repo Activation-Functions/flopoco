@@ -197,18 +197,5 @@ void	FixFunction::initialize()
 		mpfr_clear(mpX);
 		mpfr_clear(mpR);
 	}
-
-
-
-
-
-	void FixFunction::emulate(TestCase * tc, bool correctlyRounded){
-			mpz_class x = tc->getInputValue("X");
-			mpz_class rNorD,ru;
-			eval(x,rNorD,ru,correctlyRounded);
-			//cerr << " x=" << x << " -> " << rNorD << " " << ru << endl; // for debugging
-			tc->addExpectedOutput("Y", rNorD);
-			if(!correctlyRounded)
-				tc->addExpectedOutput("Y", ru);
-	}
 } //namespace
+
