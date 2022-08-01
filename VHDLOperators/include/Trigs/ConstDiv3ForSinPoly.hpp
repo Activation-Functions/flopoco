@@ -20,7 +20,7 @@
 
 #include "Operator.hpp"
 #include "Target.hpp"
-#include "Tables/Table.hpp"
+#include "Tables/TableOperator.hpp"
 
 
 namespace flopoco{

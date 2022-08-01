@@ -30,7 +30,7 @@
 
 
 #include "FixFunctions/FixFunctionByPiecewisePoly.hpp"
-#include "Tables/Table.hpp"
+#include "Tables/TableOperator.hpp"
 #include "Tables/DifferentialCompression.hpp"
 #include "FixFunctions/FixFunctionByTable.hpp"
 #include "FixFunctions/FixHornerEvaluator.hpp"
@@ -131,7 +131,7 @@ namespace flopoco{
 			vhdl << tab << declare("Z", wX-alpha)  << " <= X" << range(wX-alpha-1, 0) << ";" << endl; // called Y in the book
 			vhdl << tab << declare("Zs", wX-alpha)  << " <= (not Z(" << wX-alpha-1 << ")) & Z" << range(wX-alpha-2, 0) << "; -- centering the interval" << endl;
 
-			Table::newUniqueInstance(this, "A", "Coeffs",
+			TableOperator::newUniqueInstance(this, "A", "Coeffs",
 															 coeffTableVector, "coeffTable", alpha, polyTableOutputSize );
 
 			addComment(" Split the table output into each coefficient, adding back the constant signs if any");

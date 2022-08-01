@@ -6,7 +6,7 @@
 #include <mpfr.h>
 #include <gmpxx.h>
 #include "ShiftAddOp.hpp"
-#include "../Operator.hpp"
+#include "Operator.hpp"
 
 
 namespace flopoco{

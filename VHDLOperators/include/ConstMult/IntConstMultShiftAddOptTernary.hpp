@@ -20,7 +20,7 @@
 #include <gmpxx.h>
 #include <cstdlib>
 
-#include "../Operator.hpp"
+#include "Operator.hpp"
 #include "IntAddSubCmp/IntAdder.hpp"
 #include "IntConstMultShiftAdd.hpp"
 

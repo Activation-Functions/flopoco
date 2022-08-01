@@ -154,6 +154,8 @@ namespace flopoco{
 
 	};
 
+	/** return the binary representation of a floating point number in the IEEE format */
+	std::string ieee2bin(mpfr_t x, int wE, int wF);
 }
 
 #endif

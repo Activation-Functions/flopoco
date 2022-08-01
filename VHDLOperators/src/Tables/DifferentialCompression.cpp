@@ -1,5 +1,5 @@
 #include "Tables/DifferentialCompression.hpp"
-#include "Tables/Table.hpp"
+#include "Tables/TableOperator.hpp"
 #include <iostream>
 #include <cassert>
 
@@ -277,11 +277,11 @@ namespace flopoco {
 		string subsamplingIn = actualInputName+"_"+name+"_subsampling";
 		// generate VHDL for subsampling table
 		op->vhdl << tab << op->declare(subsamplingIn, t.subsamplingIndexSize) << " <= " << actualInputName << range(wIn-1, wIn-t.subsamplingIndexSize) << ";" << endl;
-		Table::newUniqueInstance( op, subsamplingIn, subsamplingOutName,
+		TableOperator::newUniqueInstance( op, subsamplingIn, subsamplingOutName,
 															t.subsampling, name+"_subsampling",
 															t.subsamplingIndexSize, t.subsamplingWordSize, logicTable );
 		// generate VHDL for diff table
-		Table::newUniqueInstance( op, actualInputName, diffOutputName,
+		TableOperator::newUniqueInstance( op, actualInputName, diffOutputName,
 															t.diffs, name+"_diff",
 															wIn, t.diffWordSize );
 

@@ -1,6 +1,7 @@
 #include "IntMult/IntMultiplierLUT.hpp"
 #include "Tables/Table.hpp"
 #include "IntMult/IntMultiplier.hpp"
+#include "Tables/TableOperator.hpp"
 
 namespace flopoco
 {
@@ -55,7 +56,7 @@ IntMultiplierLUT::IntMultiplierLUT(Operator *parentOp, Target* target, int wX, i
 	{
 		val.push_back(function(yx));
 	}
-	Operator *op = new Table(this, target, val, "MultTable", wX+wY, wR);
+	Operator *op = new TableOperator(this, target, val, "MultTable", wX+wY, wR);
 	op->setShared();
 	UserInterface::addToGlobalOpList(op);
 

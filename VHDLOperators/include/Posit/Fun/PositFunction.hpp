@@ -6,8 +6,8 @@
 
 #include <sollya.h>
 #include <gmpxx.h>
-#include "../../TestBenches/TestCase.hpp"
-#include "../../TestBenches/PositNumber.hpp"
+#include "../TestBenches/TestCase.hpp"
+#include "../TestBenches/PositNumber.hpp"
 
 using namespace std;
 

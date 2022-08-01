@@ -119,7 +119,7 @@ namespace flopoco{
 		
 		if(expYTabulated) {
 			vector<mpz_class> expYTableContent = ExpYTable(width, wES); // e^A-1 has MSB weight 1
-			Table::newUniqueInstance(this, "X", "R",
+			TableOperator::newUniqueInstance(this, "X", "R",
 						 expYTableContent,
 						 "ExpYTable",
 						 sizeY, sizeExpY);

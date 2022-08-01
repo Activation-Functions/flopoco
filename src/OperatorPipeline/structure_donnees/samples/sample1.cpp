@@ -1,8 +1,8 @@
-#include "../OPVariable.hpp"
-#include "../OPOperation.hpp"
-#include "../OPFunction.hpp"
-#include "../OPExpression.hpp"
-#include "../File.hpp"
+#include "OPVariable.hpp"
+#include "OPOperation.hpp"
+#include "OPFunction.hpp"
+#include "OPExpression.hpp"
+#include "File.hpp"
 
 #include <vector>
 #include <map>

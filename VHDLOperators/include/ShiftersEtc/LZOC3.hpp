@@ -6,7 +6,7 @@
 #include <mpfr.h>
 #include <gmpxx.h>
 #include "Operator.hpp"
-#include "Tables/Table.hpp"
+#include "Tables/TableOperator.hpp"
 
 namespace flopoco{
 
@@ -50,14 +50,14 @@ namespace flopoco{
 		 * @param blocksize Table Input Size
 		 * @param precomputed number of bits to store the number of zeros
 		 */
-		Table* buildEncodingTable(int blockSize, int nbLowBits);
+		TableOperator* buildEncodingTable(int blockSize, int nbLowBits);
 
 		/**
 		 * Generate the cleaning tables which return zero for all strings which
 		 * contains more than one bit set
 		 * @param lutSize the entry size for the table
 		 */
-		Table* buildDecodingTable(int lutSize);
+		TableOperator* buildDecodingTable(int lutSize);
 
 		/** Take care of generating the XOR for finding the high weight bits of
 		 * the output

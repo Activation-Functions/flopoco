@@ -31,6 +31,7 @@
 #include <cstdlib>
 
 #include"utils.hpp"
+#include "TestBenches/IEEENumber.hpp"
 using namespace std;
 using namespace flopoco;
 

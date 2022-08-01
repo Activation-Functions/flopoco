@@ -8,8 +8,8 @@
 #include <cstdlib>
 #include <sollya.h>
 
-#include "../Operator.hpp"
-#include "../Tables/Table.hpp"
+#include "Operator.hpp"
+#include "Tables/Table.hpp"
 #include "PolynomialEvaluator.hpp"
 
 #include "Function.hpp"

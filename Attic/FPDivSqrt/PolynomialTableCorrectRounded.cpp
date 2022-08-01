@@ -1,7 +1,7 @@
 #include <iostream>
 #include <math.h>
 #include <cstdlib>
-#include "../utils.hpp"
+#include "utils.hpp"
 #include "PolynomialTableCorrectRounded.hpp"
 using namespace std;
 

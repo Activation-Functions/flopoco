@@ -21,7 +21,7 @@
 #include <cstdlib>
 #include <cstdint> //for int64_t
 
-#include "../Operator.hpp"
+#include "Operator.hpp"
 #include "IntConstMultShiftAdd.hpp"
 #include "pagsuite/rpag.h"
 

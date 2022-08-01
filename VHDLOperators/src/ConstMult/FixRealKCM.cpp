@@ -54,6 +54,7 @@ Then we have a working IntIntKCM, that even does useful optimizations for all so
 #include <mpfr.h>
 #include <gmpxx.h>
 #include <sollya.h>
+#include "Tables/TableOperator.hpp"
 #include "utils.hpp"
 #include "ConstMult/FixRealKCM.hpp"
 #include "IntAddSubCmp/IntAdder.hpp"
@@ -490,7 +491,7 @@ namespace flopoco{
 				thisOp->inPortMap ("X", sliceInName);
 				thisOp->outPortMap("Y", sliceOutName);
 
-				Table* t = new Table(thisOp->getParentOp(),
+				auto* t = new TableOperator(thisOp->getParentOp(),
 														 thisOp->getTarget(),
 														 tableContent,
 														 tablename, //name

@@ -4,10 +4,10 @@
 #include <sstream>
 #include <gmp.h>
 #include <gmpxx.h>
-#include "../Operator.hpp"
+#include "Operator.hpp"
 
-#include "../BitHeap/BitHeap.hpp"
-#include "../Signal.hpp"
+#include "BitHeap/BitHeap.hpp"
+#include "Signal.hpp"
 
 namespace flopoco{
 /** The IntIntKCM class.

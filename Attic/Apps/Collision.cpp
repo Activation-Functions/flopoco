@@ -41,8 +41,8 @@ This is mostly an example of a coarse-grain, nonstandard operator.
 #include <sstream>
 #include <math.h>	// for NaN
 #include "Collision.hpp"
-#include "../TestBenches/FPNumber.hpp"
-#include "../utils.hpp"
+#include "TestBenches/FPNumber.hpp"
+#include "utils.hpp"
 
 
 using namespace std;

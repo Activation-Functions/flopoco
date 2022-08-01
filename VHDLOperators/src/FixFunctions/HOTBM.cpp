@@ -17,7 +17,7 @@
 #include "HOTBM/Param.hh"
 #include "HOTBM/HOTBMInstance.hh"
 #include "HOTBM/Exhaustive.hh"
-#include "../utils.hpp"
+#include "utils.hpp"
 
 
 namespace flopoco{

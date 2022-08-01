@@ -7,8 +7,8 @@
 #include <gmp.h>
 #include <gmpxx.h>
 
-#include "../utils.hpp"
-#include "../Operator.hpp"
+#include "utils.hpp"
+#include "Operator.hpp"
 
 #define PLANE_BASED				0
 #define TAYLOR_ORDER1_BASED		1

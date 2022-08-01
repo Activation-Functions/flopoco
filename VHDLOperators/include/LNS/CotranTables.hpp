@@ -1,8 +1,8 @@
 #ifndef COTRAN_TABLES_HPP
 #define COTRAN_TABLES_HPP
 
-#include "../Tables/Table.hpp"
-#include "../Operator.hpp"
+#include "Tables/Table.hpp"
+#include "Operator.hpp"
 #include <cmath>
 #include <gmpxx.h>
 #include <memory>

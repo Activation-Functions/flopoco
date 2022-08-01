@@ -10,7 +10,6 @@ add_flopocolib_src(
     TargetModel.cpp
     TutorialOperator.cpp
     UserInterface.cpp
-    utils.cpp
 )
 
 add_subdirectory(AutoTest)

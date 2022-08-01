@@ -2,7 +2,7 @@
 #include <fstream>
 #include <sstream>
 #include "ComplexMultiplier.hpp"
-#include "../TestBenches/FPNumber.hpp"
+#include "TestBenches/FPNumber.hpp"
 
 
 using namespace std;

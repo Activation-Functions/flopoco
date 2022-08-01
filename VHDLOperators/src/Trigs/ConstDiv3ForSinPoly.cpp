@@ -22,6 +22,7 @@
 #include <fstream>
 #include <sstream>
 
+#include "Tables/TableOperator.hpp"
 #include "Trigs/ConstDiv3ForSinPoly.hpp"
 
 
@@ -190,7 +191,7 @@ namespace flopoco{
 			//outPortMap(table, "Y", outi);
 			//vhdl << instance(table, join("table",i));
 			vector<mpz_class> tableContent = buildEuclideanDiv3Table(nbZeros, false);
-			Table::newUniqueInstance(this, ini, outi, tableContent, join("table",i), alpha+gamma, alpha*(1+nbZeros) + gamma);
+			TableOperator::newUniqueInstance(this, ini, outi, tableContent, join("table",i), alpha+gamma, alpha*(1+nbZeros) + gamma);
 			//useSoftRAM(table);
 			
 			ri = join("r", i);
@@ -213,7 +214,7 @@ namespace flopoco{
 
 			outi = join("out", 0);
 
-			Table::newUniqueInstance(this, ini, outi, tableContent, join("table",0), alpha+gamma, (alpha-1)*(1+nbZeros)+1 + gamma);
+			TableOperator::newUniqueInstance(this, ini, outi, tableContent, join("table",0), alpha+gamma, (alpha-1)*(1+nbZeros)+1 + gamma);
 			//useSoftRAM(table);
 
 			ri = join("r", 0);

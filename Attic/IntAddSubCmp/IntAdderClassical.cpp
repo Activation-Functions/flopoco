@@ -23,7 +23,7 @@ Copyright © ENS-Lyon, INRIA, CNRS, UCBL,
 #include <gmp.h>
 #include <mpfr.h>
 #include <gmpxx.h>
-#include "../Operator.hpp"
+#include "Operator.hpp"
 #include "IntAdderClassical.hpp"
 
 using namespace std;

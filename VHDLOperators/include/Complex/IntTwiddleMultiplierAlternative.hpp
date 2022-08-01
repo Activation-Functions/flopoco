@@ -3,10 +3,10 @@
 #include <vector>
 #include <sstream>
 
-#include "../Operator.hpp"
-#include "../ConstMult/FixRealKCM.hpp"
-#include "../ConstMult/IntConstMult.hpp"
-#include "../IntAdder.hpp"
+#include "Operator.hpp"
+#include "ConstMult/FixRealKCM.hpp"
+#include "ConstMult/IntConstMult.hpp"
+#include "IntAdder.hpp"
 
 #define TWIDDLES 			0		/**< Constant representing the choice for sine(w) (denoted as s).*/
 #define TWIDDLEC 			1		/**< Constant representing the choice for cosine(w) (denoted as c).*/

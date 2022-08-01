@@ -23,7 +23,7 @@
 #include "TermROM.hh"
 #include "TermPowMult.hh"
 #include "HOTBMInstance.hh"
-#include "../HOTBM.hpp"
+#include "HOTBM.hpp"
 
 namespace flopoco{
 

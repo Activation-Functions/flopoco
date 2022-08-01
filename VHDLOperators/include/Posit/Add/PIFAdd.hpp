@@ -1,7 +1,7 @@
 #ifndef PIFADD_HPP
 #define PIFADD_HPP
-#include "../../Operator.hpp"
-#include "../../utils.hpp"
+#include "Operator.hpp"
+#include "utils.hpp"
 
 namespace flopoco{
   class PIFAdd : public Operator {

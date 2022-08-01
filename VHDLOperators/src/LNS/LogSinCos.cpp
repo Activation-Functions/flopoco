@@ -16,7 +16,7 @@
 #include <sstream>
 #include <vector>
 #include <cmath>
-#include "../utils.hpp"
+#include "utils.hpp"
 
 using namespace std;
 

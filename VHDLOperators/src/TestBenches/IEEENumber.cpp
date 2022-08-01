@@ -310,4 +310,11 @@ namespace flopoco{
 	}
 #endif
 	
+/** return the binary representation of a floating point number in the IEEE format */
+	string ieee2bin(mpfr_t x, int wE, int wF)
+	{
+		IEEENumber mpfx(wE, wF, x);
+		mpz_class mpzx = mpfx.getSignalValue();
+		return unsignedBinary(mpzx, wE + wF + 1);
+	}
 }

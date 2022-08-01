@@ -1,7 +1,7 @@
 #ifndef LNSADDSUB_HPP
 #define LNSADDSUB_HPP
 
-#include "../Operator.hpp"
+#include "Operator.hpp"
 #include "LNSAdd.hpp"
 #include "CotranHybrid.hpp"
 

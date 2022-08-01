@@ -1,7 +1,7 @@
 #ifndef PERMUTER_HPP
 #define PERMUTER_HPP
 
-#include "../Operator.hpp"
+#include "Operator.hpp"
 
 namespace flopoco{
 	/** 

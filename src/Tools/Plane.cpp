@@ -22,7 +22,7 @@
 #include <gmpxx.h>
 
 #include "utils.hpp"
-#include "../Operator.hpp"
+#include "Operator.hpp"
 #include "Plane.hpp"
 
 using namespace std;

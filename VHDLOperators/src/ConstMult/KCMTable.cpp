@@ -14,7 +14,7 @@
 #include <iostream>
 #include <math.h>
 #include <cstdlib>
-#include "../utils.hpp"
+#include "utils.hpp"
 #include "KCMTable.hpp"
 using namespace std;
 

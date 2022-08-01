@@ -6,8 +6,8 @@
 #include <mpfr.h>
 #include <gmpxx.h>
 
-#include "../Operator.hpp"
-#include "../IntAddSubCmp/IntAdder.hpp"
+#include "Operator.hpp"
+#include "IntAddSubCmp/IntAdder.hpp"
 
 
 namespace flopoco{

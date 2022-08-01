@@ -13,6 +13,7 @@
 
   */
 
+#include "Tables/TableOperator.hpp"
 #include "utils.hpp"
 #include "Posit/Fun/PositFunctionByTable.hpp"
 
@@ -24,7 +25,7 @@ using namespace std;
 namespace flopoco{
 
 	PositFunctionByTable::PositFunctionByTable(OperatorPtr parentOp_, Target* target_, string func_, int width_, int wES_):
-		Table(parentOp_, target_)
+		TableOperator(parentOp_, target_)
 	{
 		srcFileName="PositFunctionByTable";
 		ostringstream name;
@@ -34,8 +35,8 @@ namespace flopoco{
 
 		f = new PositFunction(func_, width_, wES_);
 		addHeaderComment("-- Evaluator for " +  f-> getDescription() + "\n");
-		wIn = f->wIn;
-		wOut = f->wOut;
+		auto wIn = f->wIn;
+		auto wOut = f->wOut;
 		if(wIn>32) {
 		  THROWERROR("width limited to 32 (a table with 1O^10 entries should be enough for anybody). Do you really want me to write a source file of "
 				   << wOut * (mpz_class(1) << wIn) << " bytes?");
@@ -47,8 +48,8 @@ namespace flopoco{
 			v.push_back(rn);
 			//REPORT(FULL, "f("<< i << ") = " << function(i) );
 		};
-		Table::init(v, join("f", getNewUId()), wIn, wOut);
-		Table::generateVHDL();
+		init(v, name.str(), wIn, wOut);
+		generateVHDL();
 	}
 
 

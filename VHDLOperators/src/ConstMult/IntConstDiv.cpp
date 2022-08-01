@@ -22,6 +22,7 @@
 
 #include "ConstMult/IntConstDiv.hpp"
 #include "ConstMult/IntConstMult.hpp"
+#include "Tables/TableOperator.hpp"
 
 
 using namespace std;
@@ -341,7 +342,7 @@ namespace flopoco{
 			//////////////////////////////////////// Linear architecture //////////////////////////////////:
 
 			vector<mpz_class> tableContent = euclideanDivTable(d, alpha, rSize);
-			Table* table = new Table(this, target, tableContent, "", alpha+rSize, alpha+rSize , true);
+			auto* table = new TableOperator(this, target, tableContent, "", alpha+rSize, alpha+rSize , true);
 			table->setNameWithFreqAndUID("EuclideanDivTable_d" + to_string(d) + "_alpha"+ to_string(alpha));
 			table->setShared();
 			string ri, xi, ini, outi, qi;
@@ -398,7 +399,7 @@ namespace flopoco{
 
 			/// First level table
 			vector<mpz_class> tableContent = firstLevelCBLKTable(d, alpha, rSize);
-			Table* table = new Table(this, target, tableContent, "", alpha, rho+rSize, true);
+			auto* table = new TableOperator(this, target, tableContent, "", alpha, rho+rSize, true);
 			table->setShared();
 			table->setNameWithFreqAndUID("CBLKTable_l0_d"+ to_string(d) + "_alpha"+ to_string(alpha));
 			//			double tableDelay=table->getOutputDelay("Y");
@@ -443,7 +444,7 @@ namespace flopoco{
 
 
 				vector<mpz_class> tableContent = otherLevelCBLKTable(level, d, alpha, rSize, rho);
-				Table* table = new Table(this, target, tableContent, "",
+				auto* table = new TableOperator(this, target, tableContent, "",
 																 2*rSize, /* wIn*/
 																 (1<<(level-1))*alpha+rSize /*wOut*/,
 																 true /*logicTable so that it is shared */);

@@ -19,7 +19,7 @@
 #include "AtanPow.hpp"
 #include <sstream>
 #include <vector>
-#include "../FixFunctions/HOTBM.hpp"
+#include "FixFunctions/HOTBM.hpp"
 
 using namespace std;
 

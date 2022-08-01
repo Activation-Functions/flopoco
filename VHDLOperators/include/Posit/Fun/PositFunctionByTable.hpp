@@ -2,13 +2,14 @@
 #define PositFunctionByTable_HPP
 #include <vector>
 
-#include "../../Tables/Table.hpp"
+#include "Tables/Table.hpp"
 #include "PositFunction.hpp"
+#include "Tables/TableOperator.hpp"
 
 namespace flopoco{
 
 	/** The PositFunctionByTable class */
-	class PositFunctionByTable : public Table
+	class PositFunctionByTable : public TableOperator
 	{
 	public:
 		/**

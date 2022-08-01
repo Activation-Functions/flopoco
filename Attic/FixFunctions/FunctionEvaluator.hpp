@@ -6,9 +6,9 @@
 #include <mpfr.h>
 #include <gmpxx.h>
 
-#include "../Operator.hpp"
+#include "Operator.hpp"
 #include "PolyCoeffTable.hpp"
-#include "../IntAdder.hpp"
+#include "IntAdder.hpp"
 
 namespace flopoco{
 

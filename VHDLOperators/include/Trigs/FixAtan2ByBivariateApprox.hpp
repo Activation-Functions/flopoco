@@ -7,20 +7,20 @@
 #include <gmp.h>
 #include <gmpxx.h>
 
-#include "../utils.hpp"
-#include "../Operator.hpp"
-#include "../BitHeap/BitHeap.hpp"
-#include "../IntMult/IntMultiplier.hpp"
-#include "../ShiftersEtc/LZOC.hpp"
-#include "../ShiftersEtc/Shifters.hpp"
+#include "utils.hpp"
+#include "Operator.hpp"
+#include "BitHeap/BitHeap.hpp"
+#include "IntMult/IntMultiplier.hpp"
+#include "ShiftersEtc/LZOC.hpp"
+#include "ShiftersEtc/Shifters.hpp"
 
-#include "../Tools/Point.hpp"
-#include "../Tools/Plane.hpp"
+#include "Tools/Point.hpp"
+#include "Tools/Plane.hpp"
 #include "FixAtan2.hpp"
 
 #include "./Atan2Table.hpp"
 
-#include "../FixFunctions/BipartiteTable.hpp"
+#include "FixFunctions/BipartiteTable.hpp"
 
 #define PLANE_BASED				0
 #define TAYLOR_ORDER1_BASED		1

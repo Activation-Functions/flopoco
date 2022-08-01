@@ -1,7 +1,7 @@
 #ifndef LNSMUL_HPP
 #define LNSMUL_HPP
 
-#include "../Operator.hpp"
+#include "Operator.hpp"
 
 namespace flopoco{
 	struct LNSMul : Operator

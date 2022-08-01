@@ -14,7 +14,7 @@
  */
 
 #include "LNSAddSub.hpp"
-#include "../utils.hpp"
+#include "utils.hpp"
 #include <cmath>
 
 using namespace std;

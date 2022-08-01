@@ -1,8 +1,8 @@
 #ifndef FIXREALKCM_HPP
 #define FIXREALKCM_HPP
 #include "FixRealConstMult.hpp"
-#include "../Tables/Table.hpp"
-#include "../BitHeap/BitHeap.hpp"
+#include "Tables/Table.hpp"
+#include "BitHeap/BitHeap.hpp"
 
 
 

@@ -22,7 +22,7 @@
 
 #ifndef VirtexUltrascalePlus_HPP
 #define VirtexUltrascalePlus_HPP
-#include "../Target.hpp"
+#include "Target.hpp"
 #include <iostream>
 #include <sstream>
 #include <vector>

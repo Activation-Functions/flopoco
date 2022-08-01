@@ -7,7 +7,7 @@
 #include <gmpxx.h>
 #include <mpfr.h>
 #include "utils.hpp"
-#include "../Operator.hpp"
+#include "Operator.hpp"
 #include "Point.hpp"
 
 

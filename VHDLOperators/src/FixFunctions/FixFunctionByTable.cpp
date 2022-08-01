@@ -13,6 +13,7 @@
 
   */
 
+#include "Tables/TableOperator.hpp"
 #include "utils.hpp"
 #include "FixFunctions/FixFunctionByTable.hpp"
 #include "Tables/DiffCompressedTable.hpp"
@@ -23,7 +24,7 @@ using namespace std;
 namespace flopoco{
 
 	FixFunctionByTable::FixFunctionByTable(OperatorPtr parentOp_, Target* target_, string func_, bool signedIn_, int lsbIn_, int lsbOut_):
-		Table(parentOp_, target_)
+		TableOperator(parentOp_, target_)
 	{
 		srcFileName="FixFunctionByTable";
 		ostringstream name;
@@ -33,8 +34,8 @@ namespace flopoco{
 
 		f = new FixFunction(func_, signedIn_, lsbIn_, lsbOut_);
 		addHeaderComment("Evaluator for " +  f-> getDescription() + "\n");
-		wIn = f->wIn;
-		wOut = f->wOut;
+		auto wIn = f->wIn;
+		auto wOut = f->wOut;
 		if(wIn>30) {
 			THROWERROR("lsbIn limited to -30 (a table with 1O^9 entries should be enough for anybody). Do you really want me to write a source file of "
 								 << wOut * (mpz_class(1) << wIn) << " bytes?");
@@ -47,12 +48,12 @@ namespace flopoco{
 			//cerr <<   f-> getDescription()<< " : f("<< i << ") = " << rn <<endl;
 		};
 
-		Table::init(v, join("f", getNewUId()), wIn, wOut);
+		init(v, name.str(), wIn, wOut);
 		if(target_->tableCompression()) {
 			DiffCompressedTable::newUniqueInstance(this,	"X", "Y", v , "compressedTable", wIn, wOut);
 		}
 		else {
-			Table::generateVHDL();
+			TableOperator::generateVHDL();
 		}
 	}
 

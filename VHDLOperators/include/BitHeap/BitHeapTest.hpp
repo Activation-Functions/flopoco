@@ -13,10 +13,10 @@
 #include "gmp.h"
 #include "mpfr.h"
 
-#include "../Operator.hpp"
+#include "Operator.hpp"
 #include "BitHeap.hpp"
 
-#include "../utils.hpp"
+#include "utils.hpp"
 
 namespace flopoco
 {

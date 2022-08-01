@@ -1,29 +1,30 @@
 #include "Tables/DiffCompressedTable.hpp"
 #include "Tables/Table.hpp"
+#include "Tables/TableOperator.hpp"
 #include <cassert>
 
 namespace flopoco {
 
 	DiffCompressedTable::DiffCompressedTable(OperatorPtr parentOp_, Target* target_, vector<mpz_class> _values, string _name, int _wIn, int _wOut, int _logicTable, int _minIn, int _maxIn) :
-		Table(parentOp_, target_)
+		TableOperator(parentOp_, target_)
 	{
 		srcFileName = "DiffCompressedTable";
 		setNameWithFreqAndUID(_name);
 		setCopyrightString("Florent de Dinechin, Luc Forget, Maxime Christ (2020)");
-		Table::init(_values, _name, _wIn, _wOut,  _logicTable,  _minIn,  _maxIn);
+		TableOperator::init(_values, _name, _wIn, _wOut,  _logicTable,  _minIn,  _maxIn);
 
-		diff_comp = DifferentialCompression::find_differential_compression(values, wIn, wOut, target_);
+		diff_comp = DifferentialCompression::find_differential_compression(_values, wIn, wOut, target_);
 		// generate VHDL for subsampling table
 		report_compression_gain();		
 		string subsamplingIn = "X_subsampling";
 		vhdl << tab << declare(subsamplingIn, diff_comp.subsamplingIndexSize) << " <= " << "X" << range(wIn-1, wIn-diff_comp.subsamplingIndexSize) << ";" << endl;
 		string subsamplingOut = "Y_subsampling";
 		string diffOut = "Y_diff";
-		Table::newUniqueInstance(this, subsamplingIn, subsamplingOut,
+		TableOperator::newUniqueInstance(this, subsamplingIn, subsamplingOut,
 														 diff_comp.subsampling, getName()+"_subsampling",
 														 diff_comp.subsamplingIndexSize, diff_comp.subsamplingWordSize, _logicTable );
 		// generate VHDL for diff table
-		Table::newUniqueInstance(this, "X", diffOut,
+		TableOperator::newUniqueInstance(this, "X", diffOut,
 														 diff_comp.diffs, getName()+"_diff",
 														 wIn, diff_comp.diffWordSize,
 														 _logicTable);

@@ -1,7 +1,7 @@
 #ifndef FIXREALCONSTMULT_HPP
 #define FIXREALCONSTMULT_HPP
 
-#include "../Operator.hpp"
+#include "Operator.hpp"
 
 namespace flopoco
 {

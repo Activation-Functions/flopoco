@@ -1,8 +1,9 @@
 #ifndef DIFF_COMPRESSED_TABLE_HPP
 #define DIFF_COMPRESSED_TABLE_HPP
 
-#include "Table.hpp"
+#include "Tables/Table.hpp"
 #include "DifferentialCompression.hpp"
+#include "Tables/TableOperator.hpp"
 
 
 namespace flopoco {
@@ -10,7 +11,7 @@ namespace flopoco {
 			It is an Operator that includes the two compressed tables and adds their output.
 			However it should rarely be used directly. In most case, the two tables can be more efficiently added in some pre-existing bit heap.
 	*/
-    class DiffCompressedTable  : public Table {
+    class DiffCompressedTable  : public TableOperator {
     public:
 		/**
 		 * The DiffCompressedTable constructor.

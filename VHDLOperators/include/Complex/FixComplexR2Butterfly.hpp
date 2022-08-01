@@ -3,14 +3,14 @@
 #include <vector>
 #include <sstream>
 
-#include "../Operator.hpp"
+#include "Operator.hpp"
 #include "FixComplexKCM.hpp" 
 #include "FixComplexAdder.hpp" 
-	//#include "../ComplexOperators/IntComplexAdder.hpp"
+	//#include "ComplexOperators/IntComplexAdder.hpp"
 
 //#include "ComplexTwiddleMult.hpp"  //A sub module to multiply complex input by complex twidlle factor
 
-	//#include "../ComplexOperators/IntTwiddleMultiplierAlternative.hpp"
+	//#include "ComplexOperators/IntTwiddleMultiplierAlternative.hpp"
 
 	//#define TWIDDLEIM 			0
 	//#define TWIDDLERE 			1

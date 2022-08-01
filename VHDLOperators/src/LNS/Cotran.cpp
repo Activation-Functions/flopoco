@@ -15,7 +15,7 @@
 // works only with sollya
 
 #include "Cotran.hpp"
-#include "../utils.hpp"
+#include "utils.hpp"
 #include <cmath>
 #include "LNSAdd.hpp"
 

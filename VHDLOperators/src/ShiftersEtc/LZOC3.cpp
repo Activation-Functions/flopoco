@@ -14,6 +14,7 @@
 #include <gmp.h>
 #include <mpfr.h>
 #include <gmpxx.h>
+#include "Tables/TableOperator.hpp"
 #include "utils.hpp"
 #include "Operator.hpp"
 #include "ShiftersEtc/LZOC3.hpp"
@@ -42,7 +43,7 @@ namespace flopoco{
 			tableValues[i] = mpz_class(currentCount);
 		}
 		
-		Table* table = new Table(this, getTarget(), tableValues, "LUT_LZC", wIn_, wOut_);
+		auto* table = new TableOperator(this, getTarget(), tableValues, "LUT_LZC", wIn_, wOut_);
 		table->setShared();
 
 		inPortMap("X", "pretreated_input");
@@ -96,7 +97,7 @@ namespace flopoco{
 			<< outConcat.str() << ";" << endl;
 	}
 
-	Table* LZOC3::buildDecodingTable(int nbLowBits) {
+	TableOperator* LZOC3::buildDecodingTable(int nbLowBits) {
 		vector<mpz_class> tableValues(1 << (nbLowBits + 2), mpz_class(0));	
 		
 		int offset = 3 << nbLowBits;
@@ -104,10 +105,10 @@ namespace flopoco{
 			tableValues[i + offset] = mpz_class(i);	
 		}
 
-		return new Table(this, getTarget(), tableValues, "cleanDecoder", nbLowBits+2, nbLowBits);
+		return new TableOperator(this, getTarget(), tableValues, "cleanDecoder", nbLowBits+2, nbLowBits);
 	}
 
-	Table* LZOC3::buildEncodingTable(int blockSize, int nbLowBits) {
+	TableOperator* LZOC3::buildEncodingTable(int blockSize, int nbLowBits) {
 		vector<mpz_class> tableValues(1 << blockSize, mpz_class(0));
 		
 		int value = blockSize;
@@ -136,7 +137,7 @@ namespace flopoco{
 		tableValues[0] += 1 << nbLowBits;
 		tableValues[(1 << blockSize) - 1] += 1 << nbLowBits;
 
-		return new Table(this, getTarget(), tableValues, "oneEncoding", blockSize, nbLowBits + 1);
+		return new TableOperator(this, getTarget(), tableValues, "oneEncoding", blockSize, nbLowBits + 1);
 	}
 
 	LZOC3::LZOC3(Operator* parentOp, Target* target, int wIn, bool useMaxLut) :

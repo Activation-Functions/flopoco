@@ -20,8 +20,8 @@
 #include <gmp.h>
 #include <mpfr.h>
 #include <gmpxx.h>
-#include "../utils.hpp"
-#include "../Operator.hpp"
+#include "utils.hpp"
+#include "Operator.hpp"
 #include "LongIntAdderCmpCmpAddGen2.hpp"
 #include "IntAdder.hpp"
 #include "IntComparator.hpp"

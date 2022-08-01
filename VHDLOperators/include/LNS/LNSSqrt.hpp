@@ -1,7 +1,7 @@
 #ifndef LNSSQRT_HPP
 #define LNSSQRT_HPP
 
-#include "../Operator.hpp"
+#include "Operator.hpp"
 
 namespace flopoco{
 

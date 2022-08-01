@@ -73,7 +73,7 @@
 #include "Operator.hpp"
 #include "IntMultiplier.hpp"
 #include "IntAddSubCmp/IntAdder.hpp"
-#include "../BitHeap/Plotter.hpp"
+#include "BitHeap/Plotter.hpp"
 
 using namespace std;
 

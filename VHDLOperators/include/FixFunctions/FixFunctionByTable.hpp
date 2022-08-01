@@ -4,11 +4,12 @@
 
 #include "Tables/Table.hpp"
 #include "FixFunctions/FixFunction.hpp"
+#include "Tables/TableOperator.hpp"
 
 namespace flopoco{
 
 	/** The FixFunctionByTable class */
-	class FixFunctionByTable : public Table
+	class FixFunctionByTable : public TableOperator
 	{
 	public:
 		/**

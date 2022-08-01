@@ -28,7 +28,7 @@ I don't really understand
 
 #include "pagsuite/types.h"
 
-#include "../Operator.hpp"
+#include "Operator.hpp"
 
 #include <iostream>
 #include <sstream>
@@ -37,8 +37,8 @@ I don't really understand
 #include <mpfr.h>
 #include <gmpxx.h>
 #include <sollya.h>
-#include "../utils.hpp"
-#include "../IntAddSubCmp/IntAdder.hpp"
+#include "utils.hpp"
+#include "IntAddSubCmp/IntAdder.hpp"
 
 #include "pagsuite/log2_64.h"
 #include "pagsuite/csd.h"

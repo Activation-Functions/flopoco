@@ -3,10 +3,10 @@
 #include <vector>
 #include <sstream>
 
-#include "../Operator.hpp"
-#include "../ConstMult/FixRealKCM.hpp"
-#include "../ConstMult/IntConstMult.hpp"
-#include "../IntAdder.hpp"
+#include "Operator.hpp"
+#include "ConstMult/FixRealKCM.hpp"
+#include "ConstMult/IntConstMult.hpp"
+#include "IntAdder.hpp"
 
 #define TWIDDLEIM 			0
 #define TWIDDLERE 			1

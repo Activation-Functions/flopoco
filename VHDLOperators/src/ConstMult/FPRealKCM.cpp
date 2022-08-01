@@ -20,8 +20,8 @@
 #include <mpfr.h>
 #include <gmpxx.h>
 #include <sollya.h>
-#include "../utils.hpp"
-#include "../Operator.hpp"
+#include "utils.hpp"
+#include "Operator.hpp"
 
 #include "FPRealKCM.hpp"
 #include "FixRealKCM.hpp"

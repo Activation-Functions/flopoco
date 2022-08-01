@@ -6,8 +6,8 @@
 #include <mpfr.h>
 #include <gmpxx.h>
 
-#include "../Operator.hpp"
-#include "../TestBenches/FPNumber.hpp"
+#include "Operator.hpp"
+#include "TestBenches/FPNumber.hpp"
 
 namespace flopoco{
 

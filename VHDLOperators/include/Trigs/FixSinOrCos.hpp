@@ -1,9 +1,9 @@
 #ifndef FIXEDPOINTSINORCOS_HPP
 #define FIXEDPOINTSINORCOS_HPP
 
-#include "../Operator.hpp"
-#include "../utils.hpp"
-#include "../FixFunctions/FunctionEvaluator.hpp"
+#include "Operator.hpp"
+#include "utils.hpp"
+#include "FixFunctions/FunctionEvaluator.hpp"
 
 namespace flopoco{ 
 

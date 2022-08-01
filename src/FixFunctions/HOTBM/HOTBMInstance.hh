@@ -3,13 +3,13 @@
 
 #include <list>
 
-#include "../Function.hpp"
+#include "Function.hpp"
 #include "Param.hh"
 #include "PWPolynomial.hh"
 #include "Term.hh"
 #include "Util.hh"
 #include "Operator.hpp"
-#include "../HOTBM.hpp"
+#include "HOTBM.hpp"
 
 #define HOTBM_DUMP_X           1
 #define HOTBM_DUMP_FUNCTION    2

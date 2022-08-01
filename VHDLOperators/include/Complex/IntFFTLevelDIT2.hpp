@@ -3,9 +3,9 @@
 #include <vector>
 #include <sstream>
 
-#include "../utils.hpp"
+#include "utils.hpp"
 
-#include "../Operator.hpp"
+#include "Operator.hpp"
 #include "./IntFFTButterfly.hpp"
 
 #define TWIDDLEIM 			0

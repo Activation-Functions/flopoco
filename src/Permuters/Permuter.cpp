@@ -16,7 +16,7 @@ Copyright © ENS-Lyon, INRIA, CNRS, UCBL,
 #include <sstream>
 #include <mpfr.h>
 
-#include "../utils.hpp"
+#include "utils.hpp"
 #include "Permuter.hpp"
 
 using namespace std;

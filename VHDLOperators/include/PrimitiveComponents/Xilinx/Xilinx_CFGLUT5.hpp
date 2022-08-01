@@ -2,7 +2,7 @@
 #define Xilinx_CFGLUT5_H
 
 #include "Xilinx_Primitive.hpp"
-#include "../Primitive.hpp"
+#include "Primitive.hpp"
 
 namespace flopoco {
 	// new operator class declaration

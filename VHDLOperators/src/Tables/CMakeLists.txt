@@ -3,5 +3,5 @@ add_flopocolib_src(
 	DifferentialCompression.cpp
 	DualTable.cpp
 	TableCostModel.cpp
-	Table.cpp
+	TableOperator.cpp
 )

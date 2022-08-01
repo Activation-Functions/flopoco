@@ -29,6 +29,7 @@
 #include "utils.hpp"
 #include "IntAddSubCmp/IntAdder.hpp"
 #include "Tables/DiffCompressedTable.hpp"
+#include "Tables/TableOperator.hpp"
 
 
 using namespace std;
@@ -568,7 +569,7 @@ namespace flopoco{
 
 #else
 			vector<mpz_class> expYTableContent = ExpATable(sizeY, sizeExpY);
-			Table::newUniqueInstance(this, "Y", "expY",
+			TableOperator::newUniqueInstance(this, "Y", "expY",
 															 expYTableContent,
 															 "ExpYTable",
 															 sizeY, sizeExpY);
@@ -581,12 +582,12 @@ namespace flopoco{
 
 			vector<mpz_class> expYTableContent = ExpATable(k, sizeExpA); // e^A-1 has MSB weight 1
 			if(getTarget()->tableCompression() == false) {
-				Table::newUniqueInstance(this, "A", "expA",
+				TableOperator::newUniqueInstance(this, "A", "expA",
 																 expYTableContent,
 																 "ExpATable",
 																 k, sizeExpA);
 			} else {
-				Table::newUniqueInstance(this, "A", "expARef",
+				TableOperator::newUniqueInstance(this, "A", "expARef",
 																 expYTableContent,
 																 "ExpATableRef",
 																 k, sizeExpA);
@@ -605,7 +606,7 @@ namespace flopoco{
 
 				if(useTableExpZm1){
 					vector<mpz_class> expZm1TableContent = tableExpZm1(k, -wF-g);
-					Table::newUniqueInstance(this, "Z", "expZm1",
+					TableOperator::newUniqueInstance(this, "Z", "expZm1",
 																	 expZm1TableContent,
 																	 "ExpZm1Table",
 																	 sizeZ,
@@ -615,7 +616,7 @@ namespace flopoco{
 				else if (useTableExpZmZm1)  {
 					vhdl << tab << declare("Ztrunc", sizeZtrunc) << " <= Z" << range(sizeZ-1, sizeZ-sizeZtrunc) << ";\n";
 					vector<mpz_class> expYTableContent = tableExpZmZm1(k, p, -wF-g);
-					Table::newUniqueInstance(this, "Ztrunc", "expZmZm1",
+					TableOperator::newUniqueInstance(this, "Ztrunc", "expZmZm1",
 																	 expYTableContent,
 																	 "ExpZmZm1Table",
 																	 -k-p,

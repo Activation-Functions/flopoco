@@ -26,7 +26,7 @@
 #include "ShiftersEtc/LZOC.hpp"
 #include "ShiftersEtc/Normalizer.hpp"
 #include "ShiftersEtc/Shifters.hpp"
-#include "Tables/Table.hpp"
+#include "Tables/TableOperator.hpp"
 #include "ConstMult/FixRealKCM.hpp"
 #include "utils.hpp"
 //#include "IntMult/IntSquarer.hpp"
@@ -371,7 +371,7 @@ namespace flopoco{
 		//cout << "FirstInvTable> x=" << x<< "  r=" <<r << "  error=" << ceil( ((double)(1<<(wOut-1))) / d)  - ( ((double)(1<<(wOut-1))) / d) << endl;
 			it0Content.push_back(r);
 		}
-		Table::newUniqueInstance(this, "A0", "InvA0",
+		TableOperator::newUniqueInstance(this, "A0", "InvA0",
 														 it0Content,
 														 "InvA0Table",
 														 a[0], a[0]+1);
@@ -577,7 +577,7 @@ namespace flopoco{
 			mpz_clear(r);
 			lt0Content.push_back(result);
 		}
-		Table::newUniqueInstance(this, "A0", "L0",
+		TableOperator::newUniqueInstance(this, "A0", "L0",
 														 lt0Content,
 														 "LogTable0",
 														 a[0], target_prec);
@@ -629,7 +629,7 @@ namespace flopoco{
 
 				ltiContent.push_back(result);
 			}
-		Table::newUniqueInstance(this, join("A",i), join("L",i),
+		TableOperator::newUniqueInstance(this, join("A",i), join("L",i),
 														 ltiContent,
 														 join("LogTable",i),
 														 a[i], target_prec - p[i]);

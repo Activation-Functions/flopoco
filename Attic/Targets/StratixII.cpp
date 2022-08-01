@@ -15,7 +15,7 @@
 #include "StratixII.hpp"
 #include <iostream>
 #include <sstream> 
-#include "../utils.hpp"
+#include "utils.hpp"
 
 
 namespace flopoco{

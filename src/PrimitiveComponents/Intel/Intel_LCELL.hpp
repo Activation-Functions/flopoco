@@ -1,7 +1,7 @@
 #ifndef Intel_LCELL_H
 #define Intel_LCELL_H
 
-#include "../Primitive.hpp"
+#include "Primitive.hpp"
 
 namespace flopoco {
 ///

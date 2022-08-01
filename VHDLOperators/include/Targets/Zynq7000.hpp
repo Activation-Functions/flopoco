@@ -1,6 +1,6 @@
 #ifndef Zynq7000_HPP
 #define Zynq7000_HPP
-#include "../Target.hpp"
+#include "Target.hpp"
 #include <iostream>
 #include <sstream>
 #include <vector>

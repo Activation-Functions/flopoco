@@ -1,7 +1,7 @@
 #ifndef POLYNOMIALTABLE_H
 #define POLYNOMIALTABLE_H
 
-#include "../Tables/Table.hpp"
+#include "Tables/Table.hpp"
 
 
 namespace flopoco{

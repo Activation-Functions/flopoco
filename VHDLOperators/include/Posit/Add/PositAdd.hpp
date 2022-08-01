@@ -1,7 +1,7 @@
 #ifndef POSITADD_HPP
 #define POSITADD_HPP
-#include "../../Operator.hpp"
-#include "../../utils.hpp"
+#include "Operator.hpp"
+#include "utils.hpp"
 
 namespace flopoco{
   class PositAdd : public Operator {

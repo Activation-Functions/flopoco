@@ -9,6 +9,7 @@
 // One optim for 24 bits would be to compute z² for free by a table using the second unused port of the blockram
 
 
+#include "Tables/TableOperator.hpp"
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -19,7 +20,6 @@
 #include "BitHeap/BitHeap.hpp"
 #include "Trigs/FixSinPoly.hpp"
 #include "Trigs/FixSinCosPoly.hpp"
-#include "Tables/Table.hpp"
 #include "Tables/DiffCompressedTable.hpp"
 
 #include <iostream>
@@ -234,7 +234,7 @@ namespace flopoco{
 															 w+1, w+1 );
 #else
 			vector<mpz_class> sincosvalues = mergeTables(tableContent, w+1);
-			Table::newUniqueInstance(this,
+			TableOperator::newUniqueInstance(this,
 															 "sinCosTabIn", "SinCos",
 															 sincosvalues, "SinCosTable",
 															 w+1, 2*(w+1) );
@@ -274,7 +274,7 @@ namespace flopoco{
 															 w-1, w );
 #else // Therefore, of course, we keep the following, but we also keep the comments
 			vector<mpz_class> sincosvalues = mergeTables(tableContent, w);
-			Table::newUniqueInstance(this,
+			TableOperator::newUniqueInstance(this,
 															 "sinCosTabIn", "SinCos",
 															 sincosvalues, "SinCosTable",
 															 w-1, 2*w );
@@ -362,7 +362,7 @@ namespace flopoco{
 			if(target->tableCompression()) {
 				addComment("This instance is there to show what the uncompressed table would be, but is not used");
 				vector<mpz_class> sincosvalues = mergeTables(tableContent, w+g);
-				Table::newUniqueInstance(this,
+				TableOperator::newUniqueInstance(this,
 																 "A", "SinCosA_unused",
 																 sincosvalues, "SinCosTableRef",
 																 wA, 2*(w+g));
@@ -374,7 +374,7 @@ namespace flopoco{
 				auto compressedSin = DifferentialCompression::find_differential_compression(sinTable, wA, w+g, target);
 				// For the diff table we know that we can merge the tables without check
 				auto mergedDiffTable = mergeTables(make_pair(compressedCos.diffs, compressedSin.diffs), compressedCos.diffWordSize);
-				Table::newUniqueInstance(this,
+				TableOperator::newUniqueInstance(this,
 																 "A", "SinCosPiADiffs",
 																 mergedDiffTable, "SinCosDiffsTable",
 																 wA,
@@ -386,7 +386,7 @@ namespace flopoco{
 				if(compressedCos.subsamplingIndexSize == compressedSin.subsamplingIndexSize) {
 					auto mergedSubsamplingTable = mergeTables(make_pair(compressedCos.subsampling, compressedSin.subsampling), compressedCos.subsamplingWordSize);
 					vhdl << tab << declare("A_topbits", compressedCos.subsamplingIndexSize) << " <= " << "A" << range(wA-1, wA-compressedCos.subsamplingIndexSize) << ";" << endl;
-					Table::newUniqueInstance(this,
+					TableOperator::newUniqueInstance(this,
 																	 "A_topbits", "SinCosPiASubsamplings",
 																	 mergedSubsamplingTable, "SinCosSubsamplingsTable",
 																	 compressedCos.subsamplingIndexSize,
@@ -405,7 +405,7 @@ namespace flopoco{
 			else {			// if(target->tableCompression()
 				// Simple merged table
 				vector<mpz_class> sincosvalues = mergeTables(tableContent, w+g);
-				Table::newUniqueInstance(this,
+				TableOperator::newUniqueInstance(this,
 																 "A", "SinCosA",
 																 sincosvalues, "SinCosTable",
 																 wA, 2*(w+g));

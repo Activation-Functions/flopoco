@@ -1,5 +1,5 @@
 #include "IntMult/BaseMultiplierIrregularLUTXilinx.hpp"
-#include "Tables/Table.hpp"
+#include "Tables/TableOperator.hpp"
 #include "IntMult/IntMultiplier.hpp"
 
 namespace flopoco
@@ -154,7 +154,7 @@ namespace flopoco
         {
             val.push_back(function(yx));
         }
-        Operator *op = new Table(this, target, val, "MultTable", wsx+wsy, wR);
+        Operator *op = new TableOperator(this, target, val, "MultTable", wsx+wsy, wR);
         op->setShared();
         UserInterface::addToGlobalOpList(op);
 

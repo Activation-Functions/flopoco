@@ -8,12 +8,12 @@
 #include <mpfr.h>
 #include <gmpxx.h>
 
-#include "../Operator.hpp"
+#include "Operator.hpp"
 
-#include "../BitHeap/BitHeap.hpp"
-#include "../Signal.hpp"
+#include "BitHeap/BitHeap.hpp"
+#include "Signal.hpp"
 
-#include "../utils.hpp"
+#include "utils.hpp"
 
 namespace flopoco{
 

@@ -31,7 +31,7 @@
 #include "FixFunctions/FixFunctionByMultipartiteTable.hpp"
 #include "FixFunctions/Multipartite.hpp"
 #include "BitHeap/BitHeap.hpp"
-#include "Tables/Table.hpp"
+#include "Tables/TableOperator.hpp"
 #include "Tables/DiffCompressedTable.hpp"
 #include "FixFunctions/FixFunctionEmulator.hpp"
 
@@ -197,7 +197,7 @@ namespace flopoco
 		if(!target->tableCompression()) { // uncompressed TIV
 			vhdl << tab << declare("inTIV", bestMP->alpha) << " <= X" << range(f->wIn-1, f->wIn-bestMP->alpha) << ";" << endl;
 
-			Table::newUniqueInstance(this, "inTIV", "outTIV",
+			TableOperator::newUniqueInstance(this, "inTIV", "outTIV",
 															 mpzTIV, "TIV", bestMP->alpha, f->wOut+bestMP->guardBits );
 				vhdl << endl;
 		}else
@@ -207,7 +207,7 @@ namespace flopoco
 				vector<mpz_class> mpzssTIV;
 				for (auto i : bestMP->ssTIV)
 					mpzssTIV.push_back(mpz_class((long) i));
-				Table::newUniqueInstance(this, "inSSTIV", "outSSTIV",
+				TableOperator::newUniqueInstance(this, "inSSTIV", "outSSTIV",
 																 mpzssTIV, "SSTIV", bestMP->dcTIV.subsamplingIndexSize, bestMP->dcTIV.subsamplingWordSize );
 				vhdl << endl;
 
@@ -219,7 +219,7 @@ namespace flopoco
 					//cerr  << " " <<mpz_class((long) i) << endl;
 				}
 				//cerr << "bestMP->dcTIV.diffWordSize=" <<bestMP->dcTIV.diffWordSize << endl;
-				Table::newUniqueInstance(this, "inDiffTIV", "outDiffTIV",
+				TableOperator::newUniqueInstance(this, "inDiffTIV", "outDiffTIV",
 																 mpzDiffTIV, "DiffTIV", bestMP->alpha, bestMP->dcTIV.diffWordSize );
 				// TODO need to sign-extend for 1/(1+x), but it makes an error for sin(x)
 				//  getSignalByName("outDiffTIV")->setIsSigned(); // so that it is sign-extended in the bit heap
@@ -244,7 +244,7 @@ namespace flopoco
 			vector<mpz_class> mpzTOi;
 			for (long i : bestMP->toi[i])
 				mpzTOi.push_back(mpz_class((long) i));
-			Table::newUniqueInstance(this, inTOi, outTOi,
+			TableOperator::newUniqueInstance(this, inTOi, outTOi,
 															 mpzTOi, nameTOi, bestMP->gammai[i]+bestMP->betai[i]-1, bestMP->outputSizeTOi[i]);
 			string trueSign = (bestMP->negativeTOi[i] ? "(not "+signi+")" : signi);
 			vhdl << tab << declare(deltai, bestMP->outputSizeTOi[i]+1) << " <= " << trueSign << " & (" <<  outTOi  << " xor " << rangeAssign(bestMP->outputSizeTOi[i]-1,0, trueSign)<< ");" << endl;

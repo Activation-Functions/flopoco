@@ -1,6 +1,6 @@
 #ifndef VIRTEX4_HPP
 #define VIRTEX4_HPP
-#include "../Target.hpp"
+#include "Target.hpp"
 #include <iostream>
 #include <sstream>
 #include <vector>

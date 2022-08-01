@@ -1,6 +1,6 @@
 #ifndef Spartan3_HPP
 #define Spartan3_HPP
-#include "../Target.hpp"
+#include "Target.hpp"
 #include <iostream>
 #include <sstream>
 #include <vector>

@@ -13,9 +13,9 @@
  */
 
 #include "LNSMul.hpp"
-#include "../utils.hpp"
+#include "utils.hpp"
 #include <cmath>
-#include "../IntAdder.hpp"
+#include "IntAdder.hpp"
 
 using namespace std;
 

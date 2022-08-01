@@ -21,11 +21,11 @@
 #include <mpfr.h>
 #include <gmpxx.h>
 #include <sollya.h>
-#include "../utils.hpp"
-#include "../Operator.hpp"
+#include "utils.hpp"
+#include "Operator.hpp"
 #include "FPConstMult.hpp"
 #include "CRFPConstMult.hpp"
-#include "../TestBenches/FPNumber.hpp"
+#include "TestBenches/FPNumber.hpp"
 
 using namespace std;
 

@@ -1,6 +1,6 @@
 #ifndef INTCOMPARATPOR_HPP
 #define INTCOMPARATPOR_HPP
-#include "../Operator.hpp"
+#include "Operator.hpp"
 
 
 namespace flopoco{

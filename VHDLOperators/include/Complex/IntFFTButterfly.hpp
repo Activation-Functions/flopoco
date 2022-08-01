@@ -3,10 +3,10 @@
 #include <vector>
 #include <sstream>
 
-#include "../Operator.hpp"
-#include "../ComplexOperators/IntComplexAdder.hpp"
-#include "../ComplexOperators/IntTwiddleMultiplier.hpp"
-#include "../ComplexOperators/IntTwiddleMultiplierAlternative.hpp"
+#include "Operator.hpp"
+#include "ComplexOperators/IntComplexAdder.hpp"
+#include "ComplexOperators/IntTwiddleMultiplier.hpp"
+#include "ComplexOperators/IntTwiddleMultiplierAlternative.hpp"
 
 #define TWIDDLEIM 			0
 #define TWIDDLERE 			1

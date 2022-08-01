@@ -2,6 +2,7 @@
 #include "Tables/Table.hpp"
 #include "PrimitiveComponents/Xilinx/Xilinx_LUT6.hpp"
 #include "PrimitiveComponents/Xilinx/Xilinx_LUT_compute.hpp"
+#include "Tables/TableOperator.hpp"
 
 namespace flopoco
 {
@@ -28,7 +29,7 @@ namespace flopoco
             {
                 tabH.push_back((function(yx)>>2)&((1<<(wR-2))-1));
             }
-            Operator *opH = new Table(this, target, tabH, "SquareTable", wIn, wR-2);
+            Operator *opH = new TableOperator(this, target, tabH, "SquareTable", wIn, wR-2);
             opH->setShared();
             UserInterface::addToGlobalOpList(opH);
             vhdl << declare(0.0,"XtableH",wIn) << " <= X;" << endl;
@@ -135,7 +136,7 @@ namespace flopoco
                 if(yx < 1<<(wIn-1))
                     tabM.push_back((temp>>2)&0x0F);
             }
-            Operator *opH = new Table(this, target, tabH, "SquareTable", wIn, 6-((isSigned)?1:0));
+            Operator *opH = new TableOperator(this, target, tabH, "SquareTable", wIn, 6-((isSigned)?1:0));
             opH->setShared();
             UserInterface::addToGlobalOpList(opH);
             vhdl << declare(0.0,"XtableH",wIn) << " <= X;" << endl;
@@ -144,7 +145,7 @@ namespace flopoco
             vhdl << instance(opH, "TableSquarerH");
 
 
-            Operator *opM = new Table(this, target, tabM, "SquareTable", 5, 4);
+            Operator *opM = new TableOperator(this, target, tabM, "SquareTable", 5, 4);
             opM->setShared();
             UserInterface::addToGlobalOpList(opM);
             vhdl << declare(0.0,"XtableM",5) << " <= X(4 downto 0);" << endl;
@@ -160,7 +161,7 @@ namespace flopoco
             {
                 val.push_back(function(yx));
             }
-            Operator *op = new Table(this, target, val, "SquareTable", wIn, wR);
+            Operator *op = new TableOperator(this, target, val, "SquareTable", wIn, wR);
             op->setShared();
             UserInterface::addToGlobalOpList(op);
 

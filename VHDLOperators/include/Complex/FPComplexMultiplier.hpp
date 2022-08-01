@@ -4,9 +4,9 @@
 #include <vector>
 #include <sstream>
 
-#include "../Operator.hpp"
-#include "../FPMult.hpp"
-#include "../FPAddSinglePath.hpp"
+#include "Operator.hpp"
+#include "FPMult.hpp"
+#include "FPAddSinglePath.hpp"
 
 namespace flopoco{
 

@@ -13,7 +13,7 @@
  */
 
 #include "LNSDiv.hpp"
-#include "../utils.hpp"
+#include "utils.hpp"
 #include <cmath>
 
 using namespace std;

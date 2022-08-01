@@ -1,6 +1,6 @@
 #ifndef VERSAL_HPP
 #define VERSAL_HPP
-#include "../Target.hpp"
+#include "Target.hpp"
 #include <iostream>
 #include <sstream>
 #include <vector>

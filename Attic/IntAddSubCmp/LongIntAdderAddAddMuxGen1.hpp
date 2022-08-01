@@ -4,9 +4,9 @@
 #include <sstream>
 #include <gmp.h>
 #include <gmpxx.h>
-#include "../Operator.hpp"
+#include "Operator.hpp"
 #include "IntAdder.hpp"
-#include "../utils.hpp"
+#include "utils.hpp"
 
 namespace flopoco{
 
