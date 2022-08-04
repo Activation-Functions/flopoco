@@ -69,6 +69,9 @@ namespace flopoco {
 	 */
 	typedef pair<int, int> fdim;
 
+	class Operator;
+	using OperatorPtr = Operator*;
+
 	/**
 	 * This is a top-level class representing an Operator.
 	 * This class is inherited by all classes which will output a VHDL entity.

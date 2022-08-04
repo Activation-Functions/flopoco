@@ -21,7 +21,6 @@ using namespace std;
 
 
 namespace flopoco{
- 	typedef Operator* OperatorPtr;
 
 	extern int verbose;
 

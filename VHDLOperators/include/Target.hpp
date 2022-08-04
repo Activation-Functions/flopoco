@@ -37,10 +37,6 @@ using namespace std;
 
 namespace flopoco{
 
-	class Operator;
- 	typedef Operator* OperatorPtr;
-
-
 	/** Abstract target Class. All classes which model real chips inherit from this class */
 	class Target
 	{
