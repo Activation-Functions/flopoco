@@ -6,7 +6,6 @@ add_flopocolib_src(
     Operator.cpp
     ShiftReg.cpp
     Signal.cpp
-    Target.cpp
     TargetModel.cpp
     TutorialOperator.cpp
     UserInterface.cpp
@@ -33,7 +32,6 @@ add_subdirectory(Posit)
 add_subdirectory(PrimitiveComponents)
 add_subdirectory(ShiftersEtc)
 add_subdirectory(Tables)
-add_subdirectory(Targets)
 add_subdirectory(TestBenches)
 add_subdirectory(Tools)
 add_subdirectory(Trigs)

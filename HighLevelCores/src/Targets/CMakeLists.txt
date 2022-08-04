@@ -1,4 +1,4 @@
-add_flopocolib_src(
+add_hileco_src(
 	DSP.cpp
 	Kintex7.cpp
 	StratixV.cpp

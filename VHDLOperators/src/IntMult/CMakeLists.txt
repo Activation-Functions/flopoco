@@ -20,7 +20,7 @@ add_flopocolib_src(
     IntMultiplierLUT.cpp
     #IntPower.cpp
     IntSquarer.cpp
-    MultiplierBlock.cpp
+    #MultiplierBlock.cpp
     MultiplierTileCollection.cpp
     NearestPointCursor.cpp
     TargetBaseMultSpecialisation.cpp

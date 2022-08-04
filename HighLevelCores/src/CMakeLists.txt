@@ -1,4 +1,8 @@
-add_hileco_src(utils.cpp)
+add_hileco_src(
+    Target.cpp
+    utils.cpp)
 
 add_subdirectory(FixFunctions)
+add_subdirectory(IntMult)
 add_subdirectory(Tables)
+add_subdirectory(Targets)
