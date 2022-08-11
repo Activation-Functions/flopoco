@@ -10,7 +10,7 @@
 #include "Operator.hpp" // mostly for reporting
 #include "FixFunctions/FixFunction.hpp"
 #include "FixConstant.hpp"
-#include "BasicPolyApprox.hpp"
+#include "FixFunctions/BasicPolyApprox.hpp"
 
 using namespace std;
 

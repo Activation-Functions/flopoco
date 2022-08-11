@@ -1,6 +1,9 @@
 add_hileco_src(
+    FixConstant.cpp
+    report.cpp
     Target.cpp
-    utils.cpp)
+    utils.cpp
+)
 
 add_subdirectory(FixFunctions)
 add_subdirectory(IntMult)

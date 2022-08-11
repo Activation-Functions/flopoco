@@ -6,9 +6,6 @@
 
 #include <sollya.h>
 #include <gmpxx.h>
-
-#include "Operator.hpp" // mostly for reporting
-#include "UserInterface.hpp"
 #include "FixFunctions/FixFunction.hpp"
 #include "FixConstant.hpp"
 
@@ -112,13 +109,6 @@ namespace flopoco{
 
 		/** retrieve the i-th coefficient  */ 
 		FixConstant* getCoeff(int i);
-		
-		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args);
-
-		static void registerFactory(); /**< For debug mostly */
-
-
-
 
 		/** A wrapper for Sollya guessdegree
 		 */

@@ -4,7 +4,7 @@
 
 #include "Operator.hpp"
 #include "FixFunctions/FixFunction.hpp"
-#include "BasicPolyApprox.hpp"
+#include "FixFunctions/BasicPolyApprox.hpp"
 
 namespace flopoco{
 

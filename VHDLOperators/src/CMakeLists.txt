@@ -1,5 +1,4 @@
 add_flopocolib_src(
-    FixConstant.cpp
     FlopocoStream.cpp
     Instance.cpp
     OperatorContext.cpp

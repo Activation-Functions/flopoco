@@ -1,5 +1,4 @@
 add_flopocolib_src(
-	BasicPolyApprox.cpp
 	FixFunctionByMultipartiteTable.cpp
 	FixFunctionByPiecewisePoly.cpp
 	FixFunctionBySimplePoly.cpp

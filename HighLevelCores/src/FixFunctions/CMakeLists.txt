@@ -1,1 +1,4 @@
-add_hileco_src(FixFunctions.cpp)
+add_hileco_src(
+    BasicPolyApprox.cpp
+    FixFunctions.cpp
+)
