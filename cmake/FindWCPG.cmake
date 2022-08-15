@@ -67,19 +67,22 @@ if (NOT WCPG_INCLUDE_DIR AND NOT WCPG_LIBRARY AND WCPG_BUILD_NOTFOUND)
   FetchContent_MakeAvailable(WCPG)
   if(${wcpg_POPULATED} AND NOT EXISTS "${wcpg_BINARY_DIR}/lib/libwcpg.a")
     execute_process(
-      COMMAND           bash autogen.sh
-      WORKING_DIRECTORY ${wcpg_SOURCE_DIR}
-      COMMAND_ECHO      STDOUT
+      COMMAND                bash autogen.sh
+      WORKING_DIRECTORY      ${wcpg_SOURCE_DIR}
+      COMMAND_ECHO           STDOUT
+      COMMAND_ERROR_IS_FATAL ANY
     )
     execute_process(
-      COMMAND           ./configure --prefix=${wcpg_BINARY_DIR}
-      WORKING_DIRECTORY ${wcpg_SOURCE_DIR}
-      COMMAND_ECHO      STDOUT
+      COMMAND                ./configure --prefix=${wcpg_BINARY_DIR}
+      WORKING_DIRECTORY      ${wcpg_SOURCE_DIR}
+      COMMAND_ECHO           STDOUT
+      COMMAND_ERROR_IS_FATAL ANY
     )
     execute_process(
-      COMMAND           make -j 4 install
-      WORKING_DIRECTORY ${wcpg_SOURCE_DIR}
-      COMMAND_ECHO      STDOUT
+      COMMAND                make -j 4 install
+      WORKING_DIRECTORY      ${wcpg_SOURCE_DIR}
+      COMMAND_ECHO           STDOUT
+      COMMAND_ERROR_IS_FATAL ANY
     )
   endif()
 
