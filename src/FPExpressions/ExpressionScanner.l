@@ -1,6 +1,6 @@
 %{
 #include <stdio.h>
-#include <string.h>
+#include <string>
 #include <ctype.h>
 #include <iostream>
 #include "ExpressionParser.h"

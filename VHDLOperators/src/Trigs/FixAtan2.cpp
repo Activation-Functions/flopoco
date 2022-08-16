@@ -11,24 +11,23 @@
 	All rights reserved.
 */
 
-
+#include <cmath>
 #include <cstdlib>
 #include <iostream>
 #include <sstream>
 #include <vector>
-#include <math.h>
-#include <gmp.h>
-#include <mpfr.h>
-#include <gmpxx.h>
 
-#include "utils.hpp"
-#include "Operator.hpp"
-#include "Trigs/FixAtan2.hpp"
-#include "ShiftersEtc/LZOC.hpp"
-#include "ShiftersEtc/Shifters.hpp"
-#include "Trigs/FixAtan2ByCORDIC.hpp"
-#include "Trigs/FixAtan2ByRecipMultAtan.hpp"
-//#include "FixAtan2ByBivariateApprox.hpp"
+#include <gmp.h>
+#include <gmpxx.h>
+#include <mpfr.h>
+
+#include "flopoco/Operator.hpp"
+#include "flopoco/ShiftersEtc/LZOC.hpp"
+#include "flopoco/ShiftersEtc/Shifters.hpp"
+#include "flopoco/Trigs/FixAtan2.hpp"
+#include "flopoco/Trigs/FixAtan2ByCORDIC.hpp"
+#include "flopoco/Trigs/FixAtan2ByRecipMultAtan.hpp"
+#include "flopoco/utils.hpp"
 
 using namespace std;
 

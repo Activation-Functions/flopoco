@@ -13,10 +13,9 @@
 
   */
 
-#include "Tables/TableOperator.hpp"
-#include "utils.hpp"
-#include "Posit/Fun/PositFunctionByTable.hpp"
-
+#include "flopoco/Posit/Fun/PositFunctionByTable.hpp"
+#include "flopoco/Tables/TableOperator.hpp"
+#include "flopoco/utils.hpp"
 
 #define LARGE_REC 1000
 

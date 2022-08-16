@@ -1,7 +1,7 @@
 #include <iostream>
 #include <sstream>
-#include "FixConstant.hpp"
-#include "utils.hpp"
+#include "flopoco/FixConstant.hpp"
+#include "flopoco/utils.hpp"
 
 using namespace std;
 

@@ -14,17 +14,18 @@
 
 */
 
+#include <cstdio>
 #include <iostream>
 #include <sstream>
 #include <vector>
-#include <gmp.h>
-#include <mpfr.h>
-#include <stdio.h>
-#include <gmpxx.h>
-#include "utils.hpp"
-#include "Operator.hpp"
 
-#include "ShiftersEtc/Shifters.hpp"
+#include <gmp.h>
+#include <gmpxx.h>
+#include <mpfr.h>
+
+#include "flopoco/Operator.hpp"
+#include "flopoco/ShiftersEtc/Shifters.hpp"
+#include "flopoco/utils.hpp"
 
 using namespace std;
 

@@ -16,7 +16,7 @@
 #define YYERROR_VERBOSE
 
 #include <stdio.h>
-#include <string.h>
+#include <string>
 #include <string>
 #include <sstream>
 

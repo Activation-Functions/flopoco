@@ -19,23 +19,20 @@ Error analysis: see FixFunctionByPiecewisePoly.cpp
 
 
 */
-
+#include <cmath>
 #include <iostream>
 #include <sstream>
+#include <string>
 #include <vector>
-#include <math.h>
-#include <string.h>
 
 #include <gmp.h>
+#include <gmpxx.h>
 #include <mpfr.h>
 
-#include <gmpxx.h>
-#include "utils.hpp"
-
-
-#include "FixFunctions/FixFunctionBySimplePoly.hpp"
-#include "FixFunctions/FixHornerEvaluator.hpp"
-#include "FixFunctions/FixFunctionEmulator.hpp"
+#include "flopoco/FixFunctions/FixFunctionBySimplePoly.hpp"
+#include "flopoco/FixFunctions/FixFunctionEmulator.hpp"
+#include "flopoco/FixFunctions/FixHornerEvaluator.hpp"
+#include "flopoco/utils.hpp"
 
 using namespace std;
 

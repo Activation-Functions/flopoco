@@ -19,8 +19,8 @@
 #include <fstream>
 #include <iomanip>
 #include <vector>
-#include <math.h>
-#include <string.h>
+#include <cmath>
+#include <string>
 #include <gmp.h>
 #include <mpfr.h>
 #include <cstdlib>

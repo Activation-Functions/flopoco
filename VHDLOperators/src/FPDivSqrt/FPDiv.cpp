@@ -36,22 +36,21 @@ In short when nDigits is not reduced we have a  mantissa comparison that is a st
 
  */
 
+#include <cmath>
 #include <iostream>
 #include <sstream>
+#include <string>
 #include <vector>
-#include <math.h>
-#include <string.h>
 
 #include <gmp.h>
+#include <gmpxx.h>
 #include <mpfr.h>
 
-#include <gmpxx.h>
-#include "Tables/TableOperator.hpp"
-#include "utils.hpp"
-#include "Operator.hpp"
-
-#include "FPDivSqrt/FPDiv.hpp"
-#include "Tables/Table.hpp"
+#include "flopoco/FPDivSqrt/FPDiv.hpp"
+#include "flopoco/Operator.hpp"
+#include "flopoco/Tables/Table.hpp"
+#include "flopoco/Tables/TableOperator.hpp"
+#include "flopoco/utils.hpp"
 
 using namespace std;
 

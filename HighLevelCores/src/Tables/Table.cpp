@@ -13,13 +13,14 @@
 
  */
 
-#include "Tables/Table.hpp"
-#include "utils.hpp"
 #include <algorithm>
 #include <cassert>
 #include <cstdlib>
 #include <iostream>
 #include <sstream>
+
+#include "flopoco/Tables/Table.hpp"
+#include "flopoco/utils.hpp"
 
 using namespace std;
 using std::begin;

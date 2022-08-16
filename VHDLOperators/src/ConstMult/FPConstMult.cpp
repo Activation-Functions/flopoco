@@ -17,18 +17,19 @@
 // TODO pipeline, 
 // TODO standard test vectors: 1, 0, various exn, xcut borders
 
-
 #include <iostream>
 #include <sstream>
 #include <vector>
+
 #include <gmp.h>
-#include <mpfr.h>
 #include <gmpxx.h>
-#include "utils.hpp"
+#include <mpfr.h>
 #include <sollya.h>
-#include "Operator.hpp"
-#include "ConstMult/FPConstMult.hpp"
-#include "TestBenches/FPNumber.hpp"
+
+#include "flopoco/ConstMult/FPConstMult.hpp"
+#include "flopoco/Operator.hpp"
+#include "flopoco/TestBenches/FPNumber.hpp"
+#include "flopoco/utils.hpp"
 
 using namespace std;
 

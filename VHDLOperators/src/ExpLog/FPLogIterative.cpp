@@ -17,22 +17,19 @@
 //  * test cases for boundary cases pfinal etc
 //  * finetune pipeline
 //  * Port back the Arith paper
+#include <cmath> // for NaN
 #include <fstream>
 #include <sstream>
-#include <math.h>	// for NaN
-#include "ExpLog/FPLogIterative.hpp"
-#include "ExpLog/FPLog.hpp"
-//#include "TestBenches/FPNumber.hpp"
-#include "ShiftersEtc/LZOC.hpp"
-#include "ShiftersEtc/Normalizer.hpp"
-#include "ShiftersEtc/Shifters.hpp"
-#include "Tables/TableOperator.hpp"
-#include "ConstMult/FixRealKCM.hpp"
-#include "utils.hpp"
-//#include "IntMult/IntSquarer.hpp"
-//#include "ConstMult/IntIntKCM.hpp"
-#include "UserInterface.hpp"
 
+#include "flopoco/ConstMult/FixRealKCM.hpp"
+#include "flopoco/ExpLog/FPLog.hpp"
+#include "flopoco/ExpLog/FPLogIterative.hpp"
+#include "flopoco/ShiftersEtc/LZOC.hpp"
+#include "flopoco/ShiftersEtc/Normalizer.hpp"
+#include "flopoco/ShiftersEtc/Shifters.hpp"
+#include "flopoco/Tables/TableOperator.hpp"
+#include "flopoco/UserInterface.hpp"
+#include "flopoco/utils.hpp"
 
 using namespace std;
 

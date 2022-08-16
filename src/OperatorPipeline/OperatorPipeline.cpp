@@ -8,8 +8,8 @@
 #include <fstream>
 #include <iomanip>
 #include <vector>
-#include <math.h>
-#include <string.h>
+#include <cmath>
+#include <string>
 #include <gmp.h>
 #include <mpfr.h>
 #include <cstdlib>
@@ -19,7 +19,7 @@
 //#ifdef HAVE_SOLLYA
 
 //*
-#include <string.h>
+#include <string>
 #include <stdio.h>
 #include <fcntl.h>
 #include <unistd.h>

@@ -19,13 +19,14 @@
 #include <fstream>
 #include <string>
 #include <vector>
-#include <mpfr.h>
-#include <sollya.h>
 #include <cstdlib>
 
-#include "UserInterface.hpp"
-#include "utils.hpp"
-#include "main.hpp"
+#include <mpfr.h>
+#include <sollya.h>
+
+#include "flopoco/UserInterface.hpp"
+#include "flopoco/utils.hpp"
+#include "flopoco/main.hpp"
 
 using namespace std;
 using namespace flopoco;

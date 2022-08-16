@@ -1,9 +1,9 @@
-#include "IntMult/TargetBaseMultSpecialisation.hpp"
-#include "Targets/Kintex7.hpp"
-#include "Targets/Virtex6.hpp"
-#include "IntMult/BaseMultiplierXilinx2xk.hpp"
-#include "IntMult/BaseMultiplierDSPSuperTilesXilinx.hpp"
-#include "IntMult/BaseMultiplierIrregularLUTXilinx.hpp"
+#include "flopoco/IntMult/TargetBaseMultSpecialisation.hpp"
+#include "flopoco/IntMult/BaseMultiplierDSPSuperTilesXilinx.hpp"
+#include "flopoco/IntMult/BaseMultiplierIrregularLUTXilinx.hpp"
+#include "flopoco/IntMult/BaseMultiplierXilinx2xk.hpp"
+#include "flopoco/Targets/Kintex7.hpp"
+#include "flopoco/Targets/Virtex6.hpp"
 
 using namespace std;
 

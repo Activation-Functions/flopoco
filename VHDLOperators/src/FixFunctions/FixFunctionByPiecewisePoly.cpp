@@ -15,28 +15,24 @@
 
   */
 
+#include <climits>
+#include <cmath>
 #include <iostream>
 #include <sstream>
+#include <string>
 #include <vector>
-#include <math.h>
-#include <limits.h>
-#include <string.h>
 
 #include <gmp.h>
+#include <gmpxx.h>
 #include <mpfr.h>
 
-#include <gmpxx.h>
-#include "utils.hpp"
-
-
-#include "FixFunctions/FixFunctionByPiecewisePoly.hpp"
-#include "Tables/TableOperator.hpp"
-#include "Tables/DifferentialCompression.hpp"
-#include "FixFunctions/FixFunctionByTable.hpp"
-#include "FixFunctions/FixHornerEvaluator.hpp"
-#include "FixFunctions/FixFunctionEmulator.hpp"
-
-using namespace std;
+#include "flopoco/FixFunctions/FixFunctionByPiecewisePoly.hpp"
+#include "flopoco/FixFunctions/FixFunctionByTable.hpp"
+#include "flopoco/FixFunctions/FixFunctionEmulator.hpp"
+#include "flopoco/FixFunctions/FixHornerEvaluator.hpp"
+#include "flopoco/Tables/DifferentialCompression.hpp"
+#include "flopoco/Tables/TableOperator.hpp"
+#include "flopoco/utils.hpp"
 
 namespace flopoco{
 

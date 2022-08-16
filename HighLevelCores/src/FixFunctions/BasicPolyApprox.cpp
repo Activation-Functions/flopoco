@@ -21,9 +21,9 @@
 #include <iomanip>
 #include <iostream>
 
-#include "FixFunctions/BasicPolyApprox.hpp"
-#include "report.hpp"
-#include "utils.hpp"
+#include "flopoco/FixFunctions/BasicPolyApprox.hpp"
+#include "flopoco/report.hpp"
+#include "flopoco/utils.hpp"
 
 using namespace std;
 

@@ -34,6 +34,9 @@ ADD_LIBRARY(FloPoCoLib STATIC ${PATH_ACTIVE_THINGS}
 )
 
 target_include_directories(FloPoCoLib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
+# TODO ugly workaround as of now, but will be problematic to ship the vhdl part of flopoco as a library
+target_include_directories(FloPoCoLib PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include/flopoco)
 set_target_properties(FloPoCoLib PROPERTIES OUTPUT_NAME "FloPoCo")
 
 target_link_libraries(FloPoCoLib PUBLIC hileco)

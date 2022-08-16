@@ -1,5 +1,5 @@
 #include <iostream>
-#include <math.h>
+#include <cmath>
 #include "math_lib.h"
 #include "signal.h"
 #include "gen_table.h"
@@ -44,12 +44,12 @@ void StdFragment::evalpos(int accuracy, int start, int& overlapping, bool& is_si
   reallength = length + overlapping;
   end = start + reallength;
 
-  // calcul des paramètres input_bits et output_bits de la table
+  // calcul des paramï¿½tres input_bits et output_bits de la table
   // (si output_bits <= 0, aucune table ne sera construite)
   input_bits = min(reallength, accuracy - 2 * start + 1);
-  output_bits = accuracy - 2 * start; // prévoit large pour stocker e^x-1-x ~ x^2/2 (x premier morceau)
-  exp_part1_start = start - 1;        // prévoit large pour stocker e^x-1 ~ x
-  exp_part2_start = end - 1;          // prévoit pour e^morceaux_suivants-1
+  output_bits = accuracy - 2 * start; // prï¿½voit large pour stocker e^x-1-x ~ x^2/2 (x premier morceau)
+  exp_part1_start = start - 1;        // prï¿½voit large pour stocker e^x-1 ~ x
+  exp_part2_start = end - 1;          // prï¿½voit pour e^morceaux_suivants-1
 
   // ajuste output_bits et exp_part1_start si on peut gagner un bit
   double max_input = negPowOf2(start) - negPowOf2(start + input_bits);
@@ -63,16 +63,16 @@ void StdFragment::evalpos(int accuracy, int start, int& overlapping, bool& is_si
   #endif
   if (accuracy - output_bits >= end) exp_part1_start++;
 
-  // paramètres du produit (n'ont un sens que s'il y a un morceau après !)
+  // paramï¿½tres du produit (n'ont un sens que s'il y a un morceau aprï¿½s !)
   // bits significatifs du produit (de valeur >= 2 ^ -accuracy)
   // (si product_obits <= 0, il est inutile de faire le produit)
   product_obits = accuracy - exp_part1_start - exp_part2_start;
-  // nombre de bits en entrée du produit
+  // nombre de bits en entrï¿½e du produit
   product_ibits1 = (accuracy - exp_part1_start - end) + 1;
   product_ibits2 = (accuracy - start - exp_part2_start) + 1;
 
   overlapping = 0;
-  // is_signed n'est pas modifié
+  // is_signed n'est pas modifiï¿½
 }
 
 void StdFragment::showinfo(int number)
@@ -91,11 +91,11 @@ void StdFragment::write_arch(std::string prefix, ostream& o)
     exit(1);
   }
 
-  /* Déclarations de signaux
+  /* Dï¿½clarations de signaux
      ======================= */
 
-  Signal x("x", accuracy, start);		  // entrée du composant
-  Signal part_1("part_1", accuracy, start, end);  // premier morceau de l'entrée
+  Signal x("x", accuracy, start);		  // entrï¿½e du composant
+  Signal part_1("part_1", accuracy, start, end);  // premier morceau de l'entrï¿½e
 
   // exponentielle du premier morceau
   Signal tbl_out("tbl_out", accuracy, accuracy - output_bits);
@@ -108,8 +108,8 @@ void StdFragment::write_arch(std::string prefix, ostream& o)
   o << "  -- exponentielle du morceau moins 1" << endl
     << exp_part1.declaration;
 
-  // exponentielle des morceaux suivants, calculée avec un autre composant
-  // (si c'est le dernier morceau, les signaux sont définis mais n'ont aucun sens !)
+  // exponentielle des morceaux suivants, calculï¿½e avec un autre composant
+  // (si c'est le dernier morceau, les signaux sont dï¿½finis mais n'ont aucun sens !)
   Signal exp_part2("exp_part2", accuracy, exp_part2_start);
   Signal product("product", product_ibits1 + product_ibits2, 0);
 
@@ -147,8 +147,8 @@ void StdFragment::write_arch(std::string prefix, ostream& o)
       << "              y => exp_part2);" << endl << endl
       << "  -- calcul du resultat" << endl;
     if (product_obits <= 0)
-      /* si on arrive là, il est probable que le découpage ne soit pas optimal
-         (la dernière partie est trop petite) */
+      /* si on arrive lï¿½, il est probable que le dï¿½coupage ne soit pas optimal
+         (la derniï¿½re partie est trop petite) */
       o << "  y <= " << exp_part1.getPart(start - 1) << " + " << exp_part2.getPart(start - 1) << ';' << endl;
     else
       o << "  product <= " << exp_part1.getPart(exp_part1_start, exp_part1_start + product_ibits1) << " * "
@@ -162,15 +162,15 @@ void StdFragment::write_arch(std::string prefix, ostream& o)
 
 void StdFragment::write_tbl_declaration(std::string prefix, ostream& o)
 {
-  /* fait l'appel récursif sur les morceaux suivants
-     (oui, mais en c++, on ne peut pas accéder aux membres protégés des
-      objets construits avec la classe mère qui ne sont pas aussi construits
-      avec la classe dérivée. on doit donc passer par la classe mère - ou
+  /* fait l'appel rï¿½cursif sur les morceaux suivants
+     (oui, mais en c++, on ne peut pas accï¿½der aux membres protï¿½gï¿½s des
+      objets construits avec la classe mï¿½re qui ne sont pas aussi construits
+      avec la classe dï¿½rivï¿½e. on doit donc passer par la classe mï¿½re - ou
       rendre tous les membres publics) */
   Fragment::write_tbl_declaration(prefix, o);
   int input_size = accuracy - start;
 
-  // table de x -> e ^ x - x - 1 avec la précision maximale
+  // table de x -> e ^ x - x - 1 avec la prï¿½cision maximale
   if (output_bits > 0)
     o << "  component " << prefix << "_exp_tbl_" << input_size << " is\n"
       << "    port (x : in  std_logic_vector(" << input_bits << " - 1 downto 0);" << endl
@@ -203,21 +203,21 @@ double StdFragment::max_error(double input_error)
   double result = Fragment::max_error(input_error);
   double fragment_error;
 
-  /* hypothèse : on suppose que le dernier morceau est assez
+  /* hypothï¿½se : on suppose que le dernier morceau est assez
      long pour que l'influence de l'erreur input_error sur
-     le terme quadratique soit négligeable */
+     le terme quadratique soit nï¿½gligeable */
 
   if (output_bits <= 0)
-    // approxime e^x par 1+x -> erreur en x^2/2 (termes suivants du DSE négligés)
+    // approxime e^x par 1+x -> erreur en x^2/2 (termes suivants du DSE nï¿½gligï¿½s)
     fragment_error = negPowOf2(2 * start - accuracy + 1);
   else {
-    // erreur sur la valeur tabulée de e^x-1-x
+    // erreur sur la valeur tabulï¿½e de e^x-1-x
     fragment_error = 0.5;
-    // éventuellement, erreur quand l'entrée est tronquée
+    // ï¿½ventuellement, erreur quand l'entrï¿½e est tronquï¿½e
     if (input_bits < reallength)
-      /* x tronqué à input_bits bits. on pose e = 2 ^ -(start + input_bits)
+      /* x tronquï¿½ ï¿½ input_bits bits. on pose e = 2 ^ -(start + input_bits)
 	 erreur max en sortie : (x + e) ^ 2 - x ^ 2 = 2ex + e ^ 2
-         input_bits choisi pour avoir 2ex <= 2 ^ -accuracy d'où */
+         input_bits choisi pour avoir 2ex <= 2 ^ -accuracy d'oï¿½ */
       fragment_error += 1.0 + negPowOf2((start + input_bits) * 2 - accuracy);
   }
 
@@ -231,11 +231,11 @@ double StdFragment::max_error(double input_error)
           /*  ErreurMax = ErreurMax + ErreurMorceau + 3 / 4 + 1 + _
                         ValeurMax * ErreurMax + _
                         (2 ^ -Morceaux(i + 1).Debut) * ErreurMorceau */
-    result = result + fragment_error // addition des erreurs précédentes
-             + 1.0                   // les entrées du produit sont tronquées
-	     + max_output * result   // erreurs précédentes, multipliées
+    result = result + fragment_error // addition des erreurs prï¿½cï¿½dentes
+             + 1.0                   // les entrï¿½es du produit sont tronquï¿½es
+	     + max_output * result   // erreurs prï¿½cï¿½dentes, multipliï¿½es
 	     + negPowOf2(next_part->getStart()) * fragment_error
-	     + 1.0;                  // résultat du produit tronqué
+	     + 1.0;                  // rï¿½sultat du produit tronquï¿½
   }
 
   return result;

@@ -18,9 +18,9 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
-#include <math.h>
+#include <cmath>
 #include <limits.h>
-#include <string.h>
+#include <string>
 
 #include <gmp.h>
 #include <mpfr.h>

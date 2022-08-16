@@ -1,7 +1,7 @@
 // general c++ library for manipulating streams
 #include <iostream>
 #include <sstream>
-#include <math.h>	// for NaN
+#include <cmath>	// for NaN
 #include <fstream>
 
 /* header of libraries to manipulate multiprecision numbers

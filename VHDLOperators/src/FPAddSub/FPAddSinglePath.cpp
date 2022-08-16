@@ -12,28 +12,24 @@
 
   */
 
-
-
-#include "FPAddSub/FPAddSinglePath.hpp"
-#include "FPAddSub/FPAdd.hpp"
-
+#include <cmath>
 #include <iostream>
 #include <sstream>
+#include <string>
 #include <vector>
-#include <math.h>
-#include <string.h>
 
 #include <gmp.h>
+#include <gmpxx.h>
 #include <mpfr.h>
 
-#include <gmpxx.h>
-#include <utils.hpp>
-#include <Operator.hpp>
-
-#include "ShiftersEtc/LZOC.hpp"
-#include "ShiftersEtc/Shifters.hpp"
-#include "ShiftersEtc/Normalizer.hpp"
-#include "IntAddSubCmp/IntAdder.hpp"
+#include "flopoco/FPAddSub/FPAdd.hpp"
+#include "flopoco/FPAddSub/FPAddSinglePath.hpp"
+#include "flopoco/IntAddSubCmp/IntAdder.hpp"
+#include "flopoco/Operator.hpp"
+#include "flopoco/ShiftersEtc/LZOC.hpp"
+#include "flopoco/ShiftersEtc/Normalizer.hpp"
+#include "flopoco/ShiftersEtc/Shifters.hpp"
+#include "flopoco/utils.hpp"
 
 using namespace std;
 

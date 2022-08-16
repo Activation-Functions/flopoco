@@ -18,14 +18,14 @@
 	 No big deal in principle.
 
 */
-
-#include "BitHeap/BitHeap.hpp"
-#include "BitHeap/FirstFittingCompressionStrategy.hpp"
-#include "BitHeap/ParandehAfsharCompressionStrategy.hpp"
-#include "BitHeap/MaxEfficiencyCompressionStrategy.hpp"
-#include "BitHeap/OptimalCompressionStrategy.hpp"
-#include "BitHeap/CompressionStrategyOptILP.hpp"
 #include <algorithm>
+
+#include "flopoco/BitHeap/BitHeap.hpp"
+#include "flopoco/BitHeap/FirstFittingCompressionStrategy.hpp"
+#include "flopoco/BitHeap/ParandehAfsharCompressionStrategy.hpp"
+#include "flopoco/BitHeap/MaxEfficiencyCompressionStrategy.hpp"
+#include "flopoco/BitHeap/OptimalCompressionStrategy.hpp"
+#include "flopoco/BitHeap/CompressionStrategyOptILP.hpp"
 namespace flopoco {
 
 	BitHeap::BitHeap(Operator* op_, unsigned width_, string name_) :

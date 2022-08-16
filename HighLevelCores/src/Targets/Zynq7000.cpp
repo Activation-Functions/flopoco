@@ -11,11 +11,13 @@
   All rights reserved.
 */
 
-#include "Targets/Zynq7000.hpp"
 #include <iostream>
 #include <sstream>
-#include "utils.hpp"
 
+#include "flopoco/utils.hpp"
+#include "flopoco/Targets/Zynq7000.hpp"
+
+using namespace std;
 
 namespace flopoco{
 

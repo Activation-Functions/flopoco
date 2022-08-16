@@ -12,7 +12,6 @@
   2008-2010.
   All rights reserved.
 */
-#include "utils.hpp"
 
 #include <iostream>
 #include <sstream>
@@ -25,6 +24,9 @@
 #include <gmp.h>
 #include <gmpxx.h>
 #include "math.h"
+
+#include "flopoco/utils.hpp"
+
 using namespace std;
 
 

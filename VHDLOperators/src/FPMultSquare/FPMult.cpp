@@ -13,18 +13,20 @@
 
  */
 
+#include <cmath>
 #include <iostream>
 #include <sstream>
+#include <string>
 #include <vector>
-#include <math.h>
-#include <string.h>
+
 #include <gmp.h>
-#include <mpfr.h>
 #include <gmpxx.h>
-#include "utils.hpp"
-#include "Operator.hpp"
-#include "FPMultSquare/FPMult.hpp"
-#include "TestBenches/FPNumber.hpp"
+#include <mpfr.h>
+
+#include "flopoco/FPMultSquare/FPMult.hpp"
+#include "flopoco/Operator.hpp"
+#include "flopoco/TestBenches/FPNumber.hpp"
+#include "flopoco/utils.hpp"
 
 using namespace std;
 

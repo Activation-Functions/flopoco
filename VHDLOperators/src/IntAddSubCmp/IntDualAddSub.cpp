@@ -13,17 +13,19 @@
 
 */
 
+#include <cmath>
 #include <iostream>
 #include <sstream>
 #include <vector>
-#include <math.h>
+
 #include <gmp.h>
-#include <mpfr.h>
 #include <gmpxx.h>
-#include "utils.hpp"
-#include "Operator.hpp"
-#include "IntAddSubCmp/IntDualAddSub.hpp"
-#include "IntAddSubCmp/IntAdder.hpp"
+#include <mpfr.h>
+
+#include "flopoco/IntAddSubCmp/IntAdder.hpp"
+#include "flopoco/IntAddSubCmp/IntDualAddSub.hpp"
+#include "flopoco/Operator.hpp"
+#include "flopoco/utils.hpp"
 
 using namespace std;
 

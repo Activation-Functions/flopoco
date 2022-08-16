@@ -15,7 +15,9 @@
 */
 #include <iostream>
 #include <sstream>
-#include "Targets/DSP.hpp"
+
+#include "flopoco/Targets/DSP.hpp"
+
 using namespace std;
 
 

@@ -11,21 +11,16 @@
   All rights reserved.
 */
 
-#include "FixFunctions/Multipartite.hpp"
-#include "FixFunctions/FixFunctionByMultipartiteTable.hpp"
-#include "FixFunctions/FixFunction.hpp"
-
-#include "utils.hpp"
-#include "BitHeap/BitHeap.hpp"
-//#include "QuineMcCluskey.h"
-
+#include <cmath> //for abs(double)
 #include <map>
 #include <sstream>
 #include <vector>
-#include <cmath> //for abs(double)
 
-using namespace std;
-using namespace flopoco;
+#include "flopoco/BitHeap/BitHeap.hpp"
+#include "flopoco/FixFunctions/FixFunction.hpp"
+#include "flopoco/FixFunctions/FixFunctionByMultipartiteTable.hpp"
+#include "flopoco/FixFunctions/Multipartite.hpp"
+#include "flopoco/utils.hpp"
 
 namespace flopoco
 {

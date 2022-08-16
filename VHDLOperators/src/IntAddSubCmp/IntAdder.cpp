@@ -4,7 +4,8 @@ An integer adder for FloPoCo
 It may be pipelined to arbitrary frequency.
 Also useful to derive the carry-propagate delays for the subclasses of Target
 
-This is also the canonical example of an operator that pipelines itself according to the schedule of its parentOp.
+This is also the canonical example of an operator that pipelines itself
+according to the schedule of its parentOp.
 
 Authors:  Bogdan Pasca, Florent de Dinechin, Matei Istoan
 
@@ -17,16 +18,18 @@ Copyright © ENS-Lyon, INRIA, CNRS, UCBL,
   All rights reserved.
 */
 
+#include <cmath>
 #include <cstdlib>
 #include <iostream>
 #include <sstream>
 #include <vector>
-#include <math.h>
+
 #include <gmp.h>
-#include <mpfr.h>
 #include <gmpxx.h>
-#include "utils.hpp"
-#include "IntAddSubCmp/IntAdder.hpp"
+#include <mpfr.h>
+
+#include "flopoco/IntAddSubCmp/IntAdder.hpp"
+#include "flopoco/utils.hpp"
 
 //#include "Attic/IntAdderClassical.hpp"
 //#include "Attic/IntAdderAlternative.hpp"

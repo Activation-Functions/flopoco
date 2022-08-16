@@ -13,13 +13,11 @@
 
   */
 
-#include "Tables/TableOperator.hpp"
-#include "utils.hpp"
-#include "FixFunctions/FixFunctionByTable.hpp"
-#include "Tables/DiffCompressedTable.hpp"
-#include "FixFunctions/FixFunctionEmulator.hpp"
-
-using namespace std;
+#include "flopoco/FixFunctions/FixFunctionByTable.hpp"
+#include "flopoco/FixFunctions/FixFunctionEmulator.hpp"
+#include "flopoco/Tables/DiffCompressedTable.hpp"
+#include "flopoco/Tables/TableOperator.hpp"
+#include "flopoco/utils.hpp"
 
 namespace flopoco{
 

@@ -10,16 +10,15 @@ Copyright © ENS-Lyon, INRIA, CNRS, UCBL,
 
 */
 
-
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <sstream>
 #include <cstdlib>
-#include "Operator.hpp"
-#include "utils.hpp"
-#include "Tools/FloorplanningHelper.hpp"
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <string>
 
+#include "flopoco/Operator.hpp"
+#include "flopoco/Tools/FloorplanningHelper.hpp"
+#include "flopoco/utils.hpp"
 
 namespace flopoco{
 

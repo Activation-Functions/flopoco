@@ -13,8 +13,8 @@
 
   */
 
-#include "TestBenches/IEEENumber.hpp"
-#include "utils.hpp"
+#include "flopoco/TestBenches/IEEENumber.hpp"
+#include "flopoco/utils.hpp"
 
 
 namespace flopoco{
@@ -311,7 +311,7 @@ namespace flopoco{
 #endif
 	
 /** return the binary representation of a floating point number in the IEEE format */
-	string ieee2bin(mpfr_t x, int wE, int wF)
+	std::string ieee2bin(mpfr_t x, int wE, int wF)
 	{
 		IEEENumber mpfx(wE, wF, x);
 		mpz_class mpzx = mpfx.getSignalValue();

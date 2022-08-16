@@ -11,16 +11,15 @@
   All rights reserved.
 */
 
-#include "Targets/Kintex7.hpp"
 #include <iostream>
 #include <sstream>
-#include "utils.hpp"
 
+#include "flopoco/Targets/Kintex7.hpp"
+#include "flopoco/utils.hpp"
 
-namespace flopoco{
+using namespace std;
 
-
-	
+namespace flopoco{	
 	Kintex7::Kintex7(): Target()	{
 			id_             		= "Kintex7";
 			vendor_         		= "Xilinx";

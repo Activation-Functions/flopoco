@@ -1,35 +1,29 @@
 /*
 */
 
-#include <iostream>
-#include <sstream>
-#include <vector>
-#include <math.h>
-#include <string.h>
-
-#include <gmp.h>
-
-#include <gmpxx.h>
-#include "utils.hpp"
-#include "Operator.hpp"
-
-#include "Conversions/FP2Fix.hpp"
-#include "IntAddSubCmp/IntAdder.hpp"
-#include "ShiftersEtc/Shifters.hpp"
-
+#include <cmath>
+#include <cstdio>
 #include <cstdlib>
-#include <iostream>
 #include <iomanip>
+#include <iostream>
+#include <list>
+#include <locale>
+#include <map>
 #include <sstream>
 #include <string>
-#include <list>
-#include <map>
 #include <vector>
-#include <math.h>
-#include <locale>
 
-#include <stdio.h>
+#include <gmp.h>
+#include <gmpxx.h>
 #include <mpfr.h>
+
+#include "flopoco/Conversions/FP2Fix.hpp"
+#include "flopoco/IntAddSubCmp/IntAdder.hpp"
+#include "flopoco/Operator.hpp"
+#include "flopoco/ShiftersEtc/Shifters.hpp"
+#include "flopoco/utils.hpp"
+
+
 
 
 using namespace std;

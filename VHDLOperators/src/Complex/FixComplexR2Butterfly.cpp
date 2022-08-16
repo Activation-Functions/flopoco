@@ -4,7 +4,7 @@
 
 
 #include <vector>
-#include <math.h>
+#include <cmath>
 #include <string>
 
 #include <gmp.h>
@@ -15,7 +15,7 @@
 //#include <utils.hpp>
 #include <Operator.hpp>
 
-//#include <string.h>
+//#include <string>
 //#include <utils.hpp>
 
 //#include "IntFFTButterfly.hpp"

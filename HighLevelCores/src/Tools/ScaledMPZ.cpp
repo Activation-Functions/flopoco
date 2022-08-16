@@ -1,4 +1,4 @@
-#include "Tools/ScaledMPZ.hpp"
+#include "flopoco/Tools/ScaledMPZ.hpp"
 #include <cassert>
 
 namespace flopoco {

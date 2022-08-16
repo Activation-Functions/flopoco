@@ -11,7 +11,7 @@
 #include <gmp.h>
 #include <mpfr.h>
 #include <gmpxx.h>
-#include <string.h>
+#include <string>
 
 #include "sollya.h"
 

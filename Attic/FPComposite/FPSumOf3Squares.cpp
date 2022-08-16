@@ -20,7 +20,7 @@
  */
 #include <fstream>
 #include <sstream>
-#include <math.h>	// for NaN
+#include <cmath>	// for NaN
 #include "FPSumOf3Squares.hpp"
 
 

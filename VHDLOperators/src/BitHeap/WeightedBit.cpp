@@ -13,15 +13,15 @@
 
 */
 
-#include "BitHeap/WeightedBit.hpp"
-#include <iostream>
+#include <cmath>
 #include <fstream>
-#include <sstream>
-#include <math.h>
-
-#include "utils.hpp"
-#include <vector>
+#include <iostream>
 #include <list>
+#include <sstream>
+#include <vector>
+
+#include "flopoco/BitHeap/WeightedBit.hpp"
+#include "flopoco/utils.hpp"
 
 using namespace std;
 

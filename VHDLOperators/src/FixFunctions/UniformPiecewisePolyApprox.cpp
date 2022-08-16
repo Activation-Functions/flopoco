@@ -24,15 +24,15 @@
 	 Stylistic remark: use index i for the subintervals, and j for the degree
 
 */
-#include "FixFunctions/UniformPiecewisePolyApprox.hpp"
-#include "Tables/Table.hpp"
-#include "Tables/DiffCompressedTable.hpp"
-
 #include <cassert>
-#include <sstream>
+#include <cfloat>
+#include <climits>
 #include <iomanip>
-#include <limits.h>
-#include <float.h>
+#include <sstream>
+
+#include "flopoco/FixFunctions/UniformPiecewisePolyApprox.hpp"
+#include "flopoco/Tables/DiffCompressedTable.hpp"
+#include "flopoco/Tables/Table.hpp"
 
 namespace flopoco{
 

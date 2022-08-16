@@ -11,37 +11,31 @@
  
 */
 
-#include <iostream>
-#include <sstream>
-#include <vector>
-#include <math.h>
-#include <string.h>
-
-#include <gmp.h>
-
-
-#include <gmpxx.h>
-#include "utils.hpp"
-#include "Operator.hpp"
-
-#include "Conversions/Fix2FP.hpp"
-#include "TestBenches/FPNumber.hpp"
-#include "ShiftersEtc/Normalizer.hpp"
-#include "ShiftersEtc/LZOC.hpp"
-#include "IntAddSubCmp/IntAdder.hpp"
-
+#include <cmath>
+#include <cstdio>
 #include <cstdlib>
-#include <iostream>
 #include <iomanip>
+#include <iostream>
+#include <list>
+#include <locale>
+#include <map>
 #include <sstream>
 #include <string>
-#include <list>
-#include <map>
 #include <vector>
-#include <math.h>
-#include <locale>
 
-#include <stdio.h>
+#include <gmp.h>
+#include <gmpxx.h>
+
+
+#include "flopoco/Conversions/Fix2FP.hpp"
+#include "flopoco/IntAddSubCmp/IntAdder.hpp"
+#include "flopoco/Operator.hpp"
+#include "flopoco/ShiftersEtc/Normalizer.hpp"
+#include "flopoco/ShiftersEtc/LZOC.hpp"
+#include "flopoco/TestBenches/FPNumber.hpp"
+#include "flopoco/utils.hpp"
+
+
 #include <mpfr.h>
 
 using namespace std;

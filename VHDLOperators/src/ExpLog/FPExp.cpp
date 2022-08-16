@@ -12,25 +12,22 @@
   All rights reserved.
 
 */
-#include <iostream>
+#include <cmath> // For NaN
 #include <fstream>
+#include <iostream>
 #include <sstream>
-#include <math.h>	// For NaN
 
-#include "ExpLog/FPExp.hpp"
-#include "TestBenches/FPNumber.hpp"
-//#include "ConstMult/IntIntKCM.hpp"
-#include "ConstMult/FixRealKCM.hpp"
-#include "ShiftersEtc/Shifters.hpp"
-#include "IntMult/IntMultiplier.hpp"
-#include "FixFunctions/FixFunctionByPiecewisePoly.hpp"
-//#include "FixFunctions/FixFunctionBySimplePoly.hpp"
-#include "FixFunctions/FixFunctionByTable.hpp"
-#include "utils.hpp"
-#include "IntAddSubCmp/IntAdder.hpp"
-#include "Tables/DiffCompressedTable.hpp"
-#include "Tables/TableOperator.hpp"
-
+#include "flopoco/ConstMult/FixRealKCM.hpp"
+#include "flopoco/ExpLog/FPExp.hpp"
+#include "flopoco/FixFunctions/FixFunctionByPiecewisePoly.hpp"
+#include "flopoco/FixFunctions/FixFunctionByTable.hpp"
+#include "flopoco/IntAddSubCmp/IntAdder.hpp"
+#include "flopoco/IntMult/IntMultiplier.hpp"
+#include "flopoco/ShiftersEtc/Shifters.hpp"
+#include "flopoco/Tables/DiffCompressedTable.hpp"
+#include "flopoco/Tables/TableOperator.hpp"
+#include "flopoco/TestBenches/FPNumber.hpp"
+#include "flopoco/utils.hpp"
 
 using namespace std;
 

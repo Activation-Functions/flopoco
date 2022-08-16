@@ -3,7 +3,7 @@
 
 #include <utility>
 #include <iterator>
-#include <math.h>
+#include <cmath>
 
 namespace flopoco
 {

@@ -17,17 +17,15 @@
 //  * test cases for boundary cases pfinal etc
 //  * finetune pipeline
 //  * Port back the Arith paper
+#include <cmath> // for NaN
 #include <fstream>
 #include <sstream>
-#include <math.h>	// for NaN
-#include "ExpLog/FPLog.hpp"
-#include "ExpLog/FPLogIterative.hpp"
-#include "TestBenches/FPNumber.hpp"
-#include "utils.hpp"
-//#include "IntMult/IntSquarer.hpp"
-//#include "ConstMult/IntIntKCM.hpp"
-#include "UserInterface.hpp"
 
+#include "flopoco/ExpLog/FPLog.hpp"
+#include "flopoco/ExpLog/FPLogIterative.hpp"
+#include "flopoco/TestBenches/FPNumber.hpp"
+#include "flopoco/UserInterface.hpp"
+#include "flopoco/utils.hpp"
 
 using namespace std;
 

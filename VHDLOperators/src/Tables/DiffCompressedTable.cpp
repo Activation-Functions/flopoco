@@ -1,7 +1,8 @@
-#include "Tables/DiffCompressedTable.hpp"
-#include "Tables/Table.hpp"
-#include "Tables/TableOperator.hpp"
 #include <cassert>
+
+#include "flopoco/Tables/DiffCompressedTable.hpp"
+#include "flopoco/Tables/Table.hpp"
+#include "flopoco/Tables/TableOperator.hpp"
 
 namespace flopoco {
 

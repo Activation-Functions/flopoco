@@ -18,10 +18,13 @@
   All rights reserved.
 */
 
-#include "Targets/VirtexUltrascalePlus.hpp"
 #include <iostream>
 #include <sstream>
-#include "utils.hpp"
+
+#include "flopoco/Targets/VirtexUltrascalePlus.hpp"
+#include "flopoco/utils.hpp"
+
+using namespace std;
 
 namespace flopoco{
 

@@ -13,26 +13,27 @@
 */
 
 #include <cassert>
+#include <cmath>
 #include <cstdlib>
 #include <iostream>
 #include <sstream>
 #include <vector>
-#include <math.h>
-#include <gmp.h>
-#include <mpfr.h>
-#include <gmpxx.h>
-#include "utils.hpp"
-#include "Operator.hpp"
-#include "IntMult/IntMultiplier.hpp"
-#include "IntAddSubCmp/IntAdder.hpp"
-#include "IntMult/BaseMultiplierCollection.hpp"
 
-#include "IntMult/TilingStrategyOptimalILP.hpp"
-#include "IntMult/TilingStrategyBasicTiling.hpp"
-#include "IntMult/TilingStrategyGreedy.hpp"
-#include "IntMult/TilingStrategyXGreedy.hpp"
-#include "IntMult/TilingStrategyBeamSearch.hpp"
-#include "IntMult/TilingAndCompressionOptILP.hpp"
+#include <gmp.h>
+#include <gmpxx.h>
+#include <mpfr.h>
+
+#include "flopoco/IntAddSubCmp/IntAdder.hpp"
+#include "flopoco/IntMult/BaseMultiplierCollection.hpp"
+#include "flopoco/IntMult/IntMultiplier.hpp"
+#include "flopoco/IntMult/TilingAndCompressionOptILP.hpp"
+#include "flopoco/IntMult/TilingStrategyBasicTiling.hpp"
+#include "flopoco/IntMult/TilingStrategyBeamSearch.hpp"
+#include "flopoco/IntMult/TilingStrategyGreedy.hpp"
+#include "flopoco/IntMult/TilingStrategyOptimalILP.hpp"
+#include "flopoco/IntMult/TilingStrategyXGreedy.hpp"
+#include "flopoco/Operator.hpp"
+#include "flopoco/utils.hpp"
 
 using namespace std;
 

@@ -12,18 +12,17 @@
  * All rights reserved.
  */
 
-
-
-#include "Operator.hpp"
-
 #include <iostream>
 #include <sstream>
 #include <vector>
+
 #include <gmp.h>
-#include <mpfr.h>
 #include <gmpxx.h>
-#include "utils.hpp"
-#include "IntAddSubCmp/IntMultiAdder.hpp"
+#include <mpfr.h>
+
+#include "flopoco/IntAddSubCmp/IntMultiAdder.hpp"
+#include "flopoco/Operator.hpp"
+#include "flopoco/utils.hpp"
 
 using namespace std;
 

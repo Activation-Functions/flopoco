@@ -16,23 +16,22 @@
 #include "IEEE/IEEEFloatFormat.hpp"
 
 #include <iostream>
+#include <cmath>
 #include <sstream>
+#include <string>
 #include <vector>
-#include <math.h>
-#include <string.h>
 
 #include <gmp.h>
+#include <gmpxx.h>
 #include <mpfr.h>
 
-#include <gmpxx.h>
-#include <utils.hpp>
-#include <Operator.hpp>
-#include <ShiftersEtc/LZOC.hpp>
-#include <ShiftersEtc/Shifters.hpp>
-#include <TestBenches/FPNumber.hpp>
-#include <TestBenches/IEEENumber.hpp>
-#include <IntAddSubCmp/IntAdder.hpp>
-
+#include <flopoco/IntAddSubCmp/IntAdder.hpp>
+#include <flopoco/Operator.hpp>
+#include <flopoco/ShiftersEtc/LZOC.hpp>
+#include <flopoco/ShiftersEtc/Shifters.hpp>
+#include <flopoco/TestBenches/FPNumber.hpp>
+#include <flopoco/TestBenches/IEEENumber.hpp>
+#include <flopoco/utils.hpp>
 
 using namespace std;
 

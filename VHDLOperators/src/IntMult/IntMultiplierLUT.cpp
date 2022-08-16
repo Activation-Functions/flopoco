@@ -1,7 +1,7 @@
-#include "IntMult/IntMultiplierLUT.hpp"
-#include "Tables/Table.hpp"
-#include "IntMult/IntMultiplier.hpp"
-#include "Tables/TableOperator.hpp"
+#include "flopoco/IntMult/IntMultiplierLUT.hpp"
+#include "flopoco/IntMult/IntMultiplier.hpp"
+#include "flopoco/Tables/Table.hpp"
+#include "flopoco/Tables/TableOperator.hpp"
 
 namespace flopoco
 {

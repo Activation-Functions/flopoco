@@ -9,8 +9,9 @@
    entries */
 #include "gmp.h"
 #include "mpfr.h"
-#include "PrimitiveComponents/Xilinx/Xilinx_Primitive.hpp"
-#include "Target.hpp"
+
+#include "flopoco/PrimitiveComponents/Xilinx/Xilinx_Primitive.hpp"
+#include "flopoco/Target.hpp"
 
 using namespace std;
 namespace flopoco {

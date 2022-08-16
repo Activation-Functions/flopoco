@@ -14,7 +14,7 @@
 
  */
 
-#include "Target.hpp"
+#include "flopoco/Target.hpp"
 
 
 using namespace std;

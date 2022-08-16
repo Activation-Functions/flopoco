@@ -1,4 +1,3 @@
-#include "PrimitiveComponents/Primitive.hpp"
 // general c++ library for manipulating streams
 #include <iostream>
 #include <sstream>
@@ -7,7 +6,9 @@
 
 #include "gmp.h"
 #include "mpfr.h"
-#include "Target.hpp"
+
+#include "flopoco/PrimitiveComponents/Primitive.hpp"
+#include "flopoco/Target.hpp"
 
 using namespace std;
 namespace flopoco

@@ -11,26 +11,25 @@
 	All rights reserved.
 */
 
-
-
 /* TODO before there is any hope that it works:
 	 - add to IntMultiplier the version that adds a multiplier to a bit heap
 	 - and then more
 */
 
+#include <cmath>
 #include <cstdlib>
 #include <iostream>
 #include <sstream>
 #include <vector>
-#include <math.h>
-#include <gmp.h>
-#include <mpfr.h>
-#include <gmpxx.h>
 
-#include "utils.hpp"
-#include "Operator.hpp"
-#include "IntMult/FixMultAdd.hpp"
-#include "IntMult/IntMultiplier.hpp"
+#include <gmp.h>
+#include <gmpxx.h>
+#include <mpfr.h>
+
+#include "flopoco/IntMult/FixMultAdd.hpp"
+#include "flopoco/IntMult/IntMultiplier.hpp"
+#include "flopoco/Operator.hpp"
+#include "flopoco/utils.hpp"
 
 using namespace std;
 

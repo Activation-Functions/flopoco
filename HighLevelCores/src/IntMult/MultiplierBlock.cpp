@@ -1,4 +1,4 @@
-#include "IntMult/MultiplierBlock.hpp"
+#include "flopoco/IntMult/MultiplierBlock.hpp"
 
 using namespace std;
 

@@ -11,22 +11,20 @@
 
 */
 
-
-
+#include <cmath>
 #include <iostream>
 #include <sstream>
+#include <string>
 #include <vector>
-#include <math.h>
-#include <string.h>
 
 #include <gmp.h>
+#include <gmpxx.h>
 #include <mpfr.h>
 
-#include <gmpxx.h>
-#include "utils.hpp"
-#include "Operator.hpp"
-#include "Conversions/OutputIEEE.hpp"
-#include "IEEE/IEEEFloatFormat.hpp"
+#include "flopoco/Conversions/OutputIEEE.hpp"
+#include "flopoco/IEEE/IEEEFloatFormat.hpp"
+#include "flopoco/Operator.hpp"
+#include "flopoco/utils.hpp"
 
 using namespace std;
 

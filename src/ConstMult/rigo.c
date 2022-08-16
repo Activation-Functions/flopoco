@@ -21,8 +21,8 @@ The steps are the following:
       application, the one provided here just displays the SAS string
       on the stdout and is not the best possible.
 
-    Code by Raphaël RIGO / 2003 / Licensed under the GPL
-    Minor modifications by Vincent Lefèvre, 2004, 2005
+    Code by Raphaï¿½l RIGO / 2003 / Licensed under the GPL
+    Minor modifications by Vincent Lefï¿½vre, 2004, 2005
     SPACES project, Loria / INRIA Lorraine.
 
 This program is free software; you can redistribute it and/or modify
@@ -78,7 +78,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 #include <limits.h>
 #include <errno.h>
 #include <time.h>
-#include <string.h>
+#include <string>
 #include <gmp.h>
 
 //Define it if you want to use GMP to verify that the algorithm generates
@@ -509,7 +509,7 @@ int Compute_Weights_Unique(char *number, weight_r *result, const long length)
             {
               StripLeadingZeros(pattern);
               StripEndingZeros(pattern);
-              printf("Motif associé : %s\nPoids réel : %d\n",
+              printf("Motif associï¿½ : %s\nPoids rï¿½el : %d\n",
                      pattern, realweight);
             }
         }
@@ -728,7 +728,7 @@ int Compute_Weights(char *number1, char *number2, weight_r *result,
           StripEndingZeros(pattern);
         }
       if (verbose > 0 && ABS(i) != length1)
-        printf("Décalage : %3d\tPos : %2d\tPoids : %d\tMotif : %s\n",
+        printf("Dï¿½calage : %3d\tPos : %2d\tPoids : %d\tMotif : %s\n",
                i, pos, realweight, pattern);
       if (realweight > 1)
         {

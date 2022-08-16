@@ -21,20 +21,20 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  
 */
-
+#include <cstdlib>
+#include <fstream>
 #include <iostream>
 #include <sstream>
-#include <fstream>
 #include <string>
 #include <vector>
-#include <mpfr.h>
-#include <cstdlib>
 
-#include"utils.hpp"
-#include "TestBenches/IEEENumber.hpp"
+#include <mpfr.h>
+
+#include "flopoco/TestBenches/IEEENumber.hpp"
+#include "flopoco/utils.hpp"
+
 using namespace std;
 using namespace flopoco;
-
 
 static void usage(char *name){
   cerr << "\nUsage: "<<name<<" wE wF x" <<endl ;
@@ -42,8 +42,6 @@ static void usage(char *name){
   cerr << "    and will be rounded to the nearest FP(wE,wF) number." <<endl ;
   exit (EXIT_FAILURE);
 }
-
-
 
 
 int check_strictly_positive(char* s, char* cmd) {
@@ -55,11 +53,8 @@ int check_strictly_positive(char* s, char* cmd) {
   return n;
 }
 
-
-
 int main(int argc, char* argv[] )
 {
-
   if(argc != 4) usage(argv[0]);
   int wE = check_strictly_positive(argv[1], argv[0]);
   int wF = check_strictly_positive(argv[2], argv[0]);

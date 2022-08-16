@@ -13,16 +13,15 @@
 
 */
 
+#include <cmath> // for NaN
 #include <fstream>
 #include <sstream>
-#include <math.h>	// for NaN
-#include "ExpLog/FPPow.hpp"
-#include "ExpLog/FPLog.hpp"
-#include "ExpLog/FPExp.hpp"
-#include "FPMultSquare/FPMult.hpp"
-//#include "TestBenches/FPNumber.hpp"
-#include "utils.hpp"
 
+#include "flopoco/ExpLog/FPExp.hpp"
+#include "flopoco/ExpLog/FPLog.hpp"
+#include "flopoco/ExpLog/FPPow.hpp"
+#include "flopoco/FPMultSquare/FPMult.hpp"
+#include "flopoco/utils.hpp"
 
 using namespace std;
 

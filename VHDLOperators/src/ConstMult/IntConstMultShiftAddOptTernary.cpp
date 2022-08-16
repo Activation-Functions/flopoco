@@ -10,21 +10,20 @@
 
 */
 
+#include <algorithm>
 #include <iostream>
 #include <sstream>
 #include <vector>
+
 #include <gmp.h>
-#include <mpfr.h>
 #include <gmpxx.h>
-#include "utils.hpp"
-#include "Operator.hpp"
+#include <mpfr.h>
 
-#include "ConstMult/IntConstMultShiftAddOptTernary.hpp"
-#include "ConstMult/IntConstMultShiftAdd.hpp"
-
-#include "ConstMult/tscm_solutions.hpp"
-
-#include <algorithm>
+#include "flopoco/ConstMult/IntConstMultShiftAdd.hpp"
+#include "flopoco/ConstMult/IntConstMultShiftAddOptTernary.hpp"
+#include "flopoco/ConstMult/tscm_solutions.hpp"
+#include "flopoco/Operator.hpp"
+#include "flopoco/utils.hpp"
 
 using namespace std;
 

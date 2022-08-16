@@ -9,7 +9,7 @@
 	#include "Operator.hpp"
 	#include <stdio.h>
 	#include <iostream>
-	#include <string.h>
+	#include <string>
 	#include <utility>
 	#include <vector>
 	#include <ctype.h>
@@ -225,9 +225,9 @@ label					  ({identifier}{space_character}*":")
 	{
 		triplet<string, string, int> tempTriplet;
 
-		tempTriplet.first = *yyextra->lhsName;
-		tempTriplet.second = (*yyextra->extraRhsNames)[i];
-		tempTriplet.third = 0;
+		tempTriplet.first() = *yyextra->lhsName;
+		tempTriplet.second() = (*yyextra->extraRhsNames)[i];
+		tempTriplet.third() = 0;
 
 		yyextra->dependenceTable->push_back(tempTriplet);
 	}
@@ -340,9 +340,9 @@ label					  ({identifier}{space_character}*":")
 		
 		triplet<string, string, int> tempTriplet;
 
-		tempTriplet.first = *yyextra->lhsName;
-		tempTriplet.second = yytext;
-		tempTriplet.third = 0;
+		tempTriplet.first() = *yyextra->lhsName;
+		tempTriplet.second() = yytext;
+		tempTriplet.third() = 0;
 
 		yyextra->dependenceTable->push_back(tempTriplet);
 	}else if(*yyextra->lexingMode == LexerContext::conditionalSignalAssignment)
@@ -352,9 +352,9 @@ label					  ({identifier}{space_character}*":")
 		
 		triplet<string, string, int> tempTriplet;
 
-		tempTriplet.first = *yyextra->lhsName;
-		tempTriplet.second = yytext;
-		tempTriplet.third = 0;
+		tempTriplet.first() = *yyextra->lhsName;
+		tempTriplet.second() = yytext;
+		tempTriplet.third() = 0;
 
 		yyextra->dependenceTable->push_back(tempTriplet);
 	}else if(*yyextra->lexingMode == LexerContext::selectedSignalAssignment)
@@ -392,9 +392,9 @@ label					  ({identifier}{space_character}*":")
 		
 		triplet<string, string, int> tempTriplet;
 
-		tempTriplet.first = *yyextra->lhsName;
-		tempTriplet.second = yytext;
-		tempTriplet.third = 0;
+		tempTriplet.first() = *yyextra->lhsName;
+		tempTriplet.second() = yytext;
+		tempTriplet.third() = 0;
 
 		yyextra->dependenceTable->push_back(tempTriplet);
 	}else if(*yyextra->lexingMode == LexerContext::variableAssignment)

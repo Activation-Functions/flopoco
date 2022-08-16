@@ -16,12 +16,14 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
+
 #include <gmp.h>
 #include <mpfr.h>
 #include <gmpxx.h>
-#include "utils.hpp"
-#include "Operator.hpp"
-#include "ShiftersEtc/Normalizer.hpp"
+
+#include "flopoco/utils.hpp"
+#include "flopoco/Operator.hpp"
+#include "flopoco/ShiftersEtc/Normalizer.hpp"
 
 using namespace std;
 

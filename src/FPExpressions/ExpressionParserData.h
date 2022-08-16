@@ -2,7 +2,7 @@
 #define ExpressionParserData_H
 
 #include <iostream>
-#include <string.h>
+#include <string>
 #include <stdio.h>
 #include <fcntl.h>
 #include <stdlib.h>

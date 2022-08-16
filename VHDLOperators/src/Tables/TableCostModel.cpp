@@ -3,6 +3,8 @@
 #include <iostream>
 
 using std::pow;
+using std::min;
+using std::max;
 
 namespace flopoco {
 
@@ -47,7 +49,7 @@ namespace flopoco {
 		return _globalTableCostModel;
 	}
 
-	bool setGlobalCostModel(string const & key) {
+	bool setGlobalCostModel(std::string const & key) {
 		for (auto& i : table_cost_models) {
 			if (std::get<0>(i) == key) {
 				_globalTableCostModel = std::get<2>(i);

@@ -13,9 +13,8 @@
 
  */
 
-#include "TestBenches/FPNumber.hpp"
-#include "utils.hpp"
-
+#include "flopoco/TestBenches/FPNumber.hpp"
+#include "flopoco/utils.hpp"
 
 namespace flopoco{
 

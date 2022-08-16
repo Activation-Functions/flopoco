@@ -19,7 +19,7 @@
 #include <iomanip>
 #include <sstream>
 #include <vector>
-#include <math.h>
+#include <cmath>
 #include <gmp.h>
 #include <mpfr.h>
 #include <gmpxx.h>

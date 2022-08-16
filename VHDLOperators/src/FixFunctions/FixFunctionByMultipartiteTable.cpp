@@ -11,29 +11,26 @@
   All rights reserved.
   */
 
-#include <iostream>
-#include <math.h>
-#include <string.h>
-#include <sstream>
-#include <vector>
 #include <cassert>
 #include <cmath> //for abs(double)
+#include <iostream>
+#include <cmath>
+#include <sstream>
+#include <string>
+#include <vector>
 
 #include <gmp.h>
 #include <gmpxx.h>
 #include <mpfr.h>
-
 #include <sollya.h>
 
-
-
-#include "utils.hpp"
-#include "FixFunctions/FixFunctionByMultipartiteTable.hpp"
-#include "FixFunctions/Multipartite.hpp"
-#include "BitHeap/BitHeap.hpp"
-#include "Tables/TableOperator.hpp"
-#include "Tables/DiffCompressedTable.hpp"
-#include "FixFunctions/FixFunctionEmulator.hpp"
+#include "flopoco/BitHeap/BitHeap.hpp"
+#include "flopoco/FixFunctions/FixFunctionByMultipartiteTable.hpp"
+#include "flopoco/FixFunctions/FixFunctionEmulator.hpp"
+#include "flopoco/FixFunctions/Multipartite.hpp"
+#include "flopoco/Tables/DiffCompressedTable.hpp"
+#include "flopoco/Tables/TableOperator.hpp"
+#include "flopoco/utils.hpp"
 
 /*
 To replicate the functions used in the 2017 Hsiao paper

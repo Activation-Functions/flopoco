@@ -1,4 +1,4 @@
-#include <math.h>
+#include <cmath>
 #include "fragment.h"
 #include "stdfragment.h"
 #include "logfragment.h"
@@ -11,30 +11,30 @@ struct FragDesc
 
 Fragment* explore(int explore_size)
 {
-  /* "cette fonction est là car potentiellement utile, mais SANS AUCUNE GARANTIE,
+  /* "cette fonction est lï¿½ car potentiellement utile, mais SANS AUCUNE GARANTIE,
      ni explicite ni implicite, y compris les garanties [...] d'adaptation dans
-     un but spécifique", de retour d'une quelconque valeur ou de non destruction
-     de l'ordinateur sur laquelle elle est exécutée */
+     un but spï¿½cifique", de retour d'une quelconque valeur ou de non destruction
+     de l'ordinateur sur laquelle elle est exï¿½cutï¿½e */
   // exception : il est garanti que la fonction plante quand explore_size est assez petit
-  /* cette fonction ne désalloue pas la grande quantité de mémoire qu'elle utilise !
-     (il faudrait compter les références sur les objets pour ça, ou ne pas allouer
-      de mémoire du tout et copier les objets au lieu d'utiliser des pointeurs) */
+  /* cette fonction ne dï¿½salloue pas la grande quantitï¿½ de mï¿½moire qu'elle utilise !
+     (il faudrait compter les rï¿½fï¿½rences sur les objets pour ï¿½a, ou ne pas allouer
+      de mï¿½moire du tout et copier les objets au lieu d'utiliser des pointeurs) */
 
-  // taille maximale d'un morceau (à part le dernier)
+  // taille maximale d'un morceau (ï¿½ part le dernier)
   const int max_frag_size = 10;
-  int accuracy;     // précision interne explorée
+  int accuracy;     // prï¿½cision interne explorï¿½e
   int min_length;   // accuracy / 2
   int length;       // longueur des morceaux pour laquelle on recherche l'optimum
   int i, j, k, length2;
   double max_error;
   int max_error_idx;
   int min_max_error_idx; // l'erreur maximale avec un seul morceau
-  int max_max_error_idx; // l'erreur maximale... maximale pour que la précision soit atteinte
+  int max_max_error_idx; // l'erreur maximale... maximale pour que la prï¿½cision soit atteinte
   FragDesc optimum;
   optimum.fragment = 0;
 
-  /* découpages d'aire minimale 
-     - de précision = 2ème argment
+  /* dï¿½coupages d'aire minimale 
+     - de prï¿½cision = 2ï¿½me argment
      - 1er argument = int(log2(erreur_max) * 10) */
   FragDesc* opt_fragment[100];
   max_max_error_idx = 10 - 1;
@@ -48,7 +48,7 @@ Fragment* explore(int explore_size)
 	opt_fragment[i][length].fragment = 0;
     }
 
-    /* initialise les tables d'optimaux avec les découpages ne contenant
+    /* initialise les tables d'optimaux avec les dï¿½coupages ne contenant
        qu'un seul morceau, de longueur de l'ordre de accuracy / 2 */
     {
       FragDesc min_fd;

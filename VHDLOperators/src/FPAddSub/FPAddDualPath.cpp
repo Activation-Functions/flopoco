@@ -16,27 +16,25 @@
 // TODO move close path prenormalization up to the Swap Difference box
 //   if it becomes a part of the critical path
 
+#include <cmath>
 #include <iostream>
 #include <sstream>
+#include <string>
 #include <vector>
-#include <math.h>
-#include <string.h>
 
 #include <gmp.h>
+#include <gmpxx.h>
 #include <mpfr.h>
 
-#include <gmpxx.h>
-#include <utils.hpp>
-
-#include "FPAddSub/FPAddDualPath.hpp"
-#include "FPAddSub/FPAdd.hpp"
-
-#include <ShiftersEtc/LZOC.hpp>
-#include <ShiftersEtc/Shifters.hpp>
-#include <ShiftersEtc/Normalizer.hpp>
-#include <IntAddSubCmp/IntAdder.hpp>
-#include <IntAddSubCmp/IntDualAddSub.hpp>
-#include <TestBenches/FPNumber.hpp>
+#include "flopoco/FPAddSub/FPAdd.hpp"
+#include "flopoco/FPAddSub/FPAddDualPath.hpp"
+#include "flopoco/IntAddSubCmp/IntAdder.hpp"
+#include "flopoco/IntAddSubCmp/IntDualAddSub.hpp"
+#include "flopoco/ShiftersEtc/LZOC.hpp"
+#include "flopoco/ShiftersEtc/Normalizer.hpp"
+#include "flopoco/ShiftersEtc/Shifters.hpp"
+#include "flopoco/TestBenches/FPNumber.hpp"
+#include "flopoco/utils.hpp"
 
 using namespace std;
 

@@ -19,16 +19,16 @@
 #include <fstream>
 #include <iomanip>
 #include <vector>
-#include <math.h>
-#include <string.h>
+#include <cmath>
+#include <string>
 #include <gmp.h>
 #include <mpfr.h>
 #include <cstdlib>
 #include <gmpxx.h>
-#include "utils.hpp"
+#include "flopoco/utils.hpp"
 
-#include "FlopocoStream.hpp"
-#include "Operator.hpp"
+#include "flopoco/FlopocoStream.hpp"
+#include "flopoco/Operator.hpp"
 
 
 using namespace std;
@@ -112,7 +112,7 @@ namespace flopoco{
 					//	this also empties the lexer's dependence table
 					vector<triplet<string, string, int>>::iterator iter;
 					for(iter=  lexer->dependenceTable->begin(); iter!=lexer->dependenceTable->end();  ++iter){
-						dependenceTable.push_back(make_triplet(iter->first, iter->second, iter->third));
+						dependenceTable.push_back(make_triplet(iter->first(), iter->second(), iter->third()));
 					}
 					lexer->dependenceTable -> clear();
 					// updateDependenceTable();
@@ -167,8 +167,8 @@ namespace flopoco{
 
 		for(int i=0; (unsigned)i<dependenceTable.size(); i++)
 		{
-			string lhsName = dependenceTable[i].first;
-			string rhsName = dependenceTable[i].second;
+			string lhsName = dependenceTable[i].first();
+			string rhsName = dependenceTable[i].second();
 			string newRhsName;
 			int rhsDelay = 0;
 			// cerr << "Dependency "<< lhsName << " " << rhsName << endl;

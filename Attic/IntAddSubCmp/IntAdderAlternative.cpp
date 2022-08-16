@@ -19,7 +19,7 @@ Copyright © ENS-Lyon, INRIA, CNRS, UCBL,
 #include <iostream>
 #include <sstream>
 #include <vector>
-#include <math.h>
+#include <cmath>
 #include <gmp.h>
 #include <mpfr.h>
 #include <gmpxx.h>

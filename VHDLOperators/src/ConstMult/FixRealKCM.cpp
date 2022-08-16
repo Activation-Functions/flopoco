@@ -43,21 +43,20 @@ Then we have a working IntIntKCM, that even does useful optimizations for all so
 
 */
 
-
-
-#include "Operator.hpp"
-
 #include <iostream>
 #include <sstream>
 #include <vector>
+
 #include <gmp.h>
-#include <mpfr.h>
 #include <gmpxx.h>
+#include <mpfr.h>
 #include <sollya.h>
-#include "Tables/TableOperator.hpp"
-#include "utils.hpp"
-#include "ConstMult/FixRealKCM.hpp"
-#include "IntAddSubCmp/IntAdder.hpp"
+
+#include "flopoco/ConstMult/FixRealKCM.hpp"
+#include "flopoco/IntAddSubCmp/IntAdder.hpp"
+#include "flopoco/Operator.hpp"
+#include "flopoco/Tables/TableOperator.hpp"
+#include "flopoco/utils.hpp"
 
 using namespace std;
 

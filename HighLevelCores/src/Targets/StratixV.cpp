@@ -12,11 +12,13 @@
   All rights reserved.
 
 */
-#include "Targets/StratixV.hpp"
 #include <iostream>
-#include <sstream> 
-#include "utils.hpp"
+#include <sstream>
 
+#include "flopoco/Targets/StratixV.hpp"
+#include "flopoco/utils.hpp"
+
+using namespace std;
 
 namespace flopoco{
 	StratixV::StratixV(): Target() {

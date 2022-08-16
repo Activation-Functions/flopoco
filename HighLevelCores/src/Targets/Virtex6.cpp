@@ -12,11 +12,13 @@
   All rights reserved.
 */
 
-#include "Targets/Virtex6.hpp"
 #include <iostream>
 #include <sstream>
-#include "utils.hpp"
 
+#include "flopoco/Targets/Virtex6.hpp"
+#include "flopoco/utils.hpp"
+
+using namespace std;
 
 namespace flopoco{
 

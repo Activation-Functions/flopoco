@@ -12,18 +12,20 @@
   All rights reserved.
  */
 
+#include <cmath>
+#include <cstdlib>
 #include <iostream>
 #include <sstream>
 #include <vector>
-#include <cstdlib>
-#include <math.h>
+
 #include <gmp.h>
-#include <mpfr.h>
 #include <gmpxx.h>
-#include "utils.hpp"
-#include "Operator.hpp"
-#include "IntMult/IntSquarer.hpp"
-#include "BitHeap/BitHeap.hpp"
+#include <mpfr.h>
+
+#include "flopoco/BitHeap/BitHeap.hpp"
+#include "flopoco/IntMult/IntSquarer.hpp"
+#include "flopoco/Operator.hpp"
+#include "flopoco/utils.hpp"
 
 using namespace std;
 

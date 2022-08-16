@@ -14,20 +14,20 @@
 
 */
 
-#include "FixFunctions/FixFunction.hpp"
+#include "flopoco/FixFunctions/FixFunction.hpp"
 #include <sstream>
 
 namespace flopoco{
 
 
-	FixFunction::FixFunction(string sollyaString_, bool signedIn_, int lsbIn_, int lsbOut_):
+	FixFunction::FixFunction(std::string sollyaString_, bool signedIn_, int lsbIn_, int lsbOut_):
 		sollyaString(sollyaString_), lsbIn(lsbIn_),  lsbOut(lsbOut_),  signedIn(signedIn_)
 	{
 		if(signedIn)
 			wIn=-lsbIn+1; // add the sign bit at position 0
 		else
 			wIn=-lsbIn;
-		ostringstream completeDescription;
+		std::ostringstream completeDescription;
 		completeDescription << sollyaString_;
 		if(signedIn)
 			completeDescription << " on [-1,1)";
@@ -39,7 +39,7 @@ namespace flopoco{
 		fS = sollya_lib_parse_string(sollyaString.c_str());
 		/* If  parse error throw an exception */
 		if (sollya_lib_obj_is_error(fS) || !sollya_lib_obj_is_function(fS))
-			throw(string("FixFunction: Unable to parse input function: ")+sollyaString);
+			throw(std::string("FixFunction: Unable to parse input function: ")+sollyaString);
 
 		initialize();
 
@@ -93,7 +93,7 @@ void	FixFunction::initialize()
 		else {
 			signedOut=true;
 		}
-		ostringstream t; // write it before we take the absolute value below
+		std::ostringstream t; // write it before we take the absolute value below
 		t << "Out interval: [" << mpfr_get_d(infMP,MPFR_RNDD) << "; "<< mpfr_get_d(supMP,MPFR_RNDU) << "]";
 		//				cerr << " " << t.str() << endl;
 		// Now recompute the MSB explicitely.
@@ -121,7 +121,7 @@ void	FixFunction::initialize()
 	  sollya_lib_clear_obj(inputRangeS);
 	}
 
-	string FixFunction::getDescription() const
+	std::string FixFunction::getDescription() const
 	{
 		return description;
 	}

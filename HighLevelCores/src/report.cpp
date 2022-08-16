@@ -1,7 +1,7 @@
 #include <iostream>
 #include <ostream>
 
-#include "report.hpp"
+#include "flopoco/report.hpp"
 
 namespace {
     flopoco::LogLevel loglevel{flopoco::MESSAGE};

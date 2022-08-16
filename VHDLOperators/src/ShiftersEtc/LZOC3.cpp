@@ -11,13 +11,15 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
+
 #include <gmp.h>
-#include <mpfr.h>
 #include <gmpxx.h>
-#include "Tables/TableOperator.hpp"
-#include "utils.hpp"
-#include "Operator.hpp"
-#include "ShiftersEtc/LZOC3.hpp"
+#include <mpfr.h>
+
+#include "flopoco/Operator.hpp"
+#include "flopoco/ShiftersEtc/LZOC3.hpp"
+#include "flopoco/Tables/TableOperator.hpp"
+#include "flopoco/utils.hpp"
 
 using namespace std;
 

@@ -36,22 +36,22 @@
 
 */
 
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <sstream>
+#include <cassert>
 #include <cstdlib>
+#include <fstream>
+#include <iostream>
 #include <set>
-#include "Operator.hpp"  // Useful only for reporting. TODO split out the REPORT and THROWERROR #defines from Operator to another include.
-#include "utils.hpp"
+#include <sstream>
+#include <string>
 #if 0 // these seem to be unused
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/variate_generator.hpp>
 #include <boost/random/normal_distribution.hpp>
 #include <boost/random/uniform_int.hpp>
 #endif
-#include <cassert>
 
+#include "flopoco/Operator.hpp"  // Useful only for reporting. TODO split out the REPORT and THROWERROR #defines from Operator to another include.
+#include "flopoco/utils.hpp"
 namespace flopoco{
 
 
@@ -2537,20 +2537,20 @@ namespace flopoco{
 				bool unknownLHSName = false, unknownRHSName = false;
 
 				try{
-					lhs = getSignalByName(it.first); // Was this signal declared since last time?
+					lhs = getSignalByName(it.first()); // Was this signal declared since last time?
 				}catch(string &e){
 					// REPORT(DEBUG, "Warning: signal name on the left-hand side of an assignment still unknown: " << it.first);
 					unknownLHSName = true;
 				}
 
 				try{
-					rhs = getSignalByName(it.second); // or this one
+					rhs = getSignalByName(it.second()); // or this one
 				}catch(string &e){
 					// REPORT(DEBUG, "Warning: signal name on the right-hand side of an assignment still unknown: " << it.second);
 					unknownRHSName = true;
 				}
 
-				delay = it.third;
+				delay = it.third();
 
 				// if both sides are now known, add the dependences to the signal graph:
 				//		erase the entry from unresolvedDependenceTable
@@ -2574,37 +2574,37 @@ namespace flopoco{
 				bool unknownLHSName = false, unknownRHSName = false;
 
 				try{
-				lhs = getSignalByName(it->first);
+				lhs = getSignalByName(it->first());
 				}catch(string &e){
-					if (allSignalsLowercased.find(toLower(it->first)) != allSignalsLowercased.end()) {
-						THROWERROR("Signal " << it->first << " undeclared, but a signal that differs only by capitalization has been declared" << endl
+					if (allSignalsLowercased.find(toLower(it->first())) != allSignalsLowercased.end()) {
+						THROWERROR("Signal " << it->first() << " undeclared, but a signal that differs only by capitalization has been declared" << endl
 											 << "Please fix it, as it will crash the scheduler: FloPoCo, contrary to VHDL, is case-sensitive");
 					}
 					else{
-						REPORT(DEBUG, "Warning: LHS signal name: " << it->first << " unknown so far" );
+						REPORT(DEBUG, "Warning: LHS signal name: " << it->first() << " unknown so far" );
 						unknownLHSName = true;
 					}
 				}
 
 				try {
-					rhs = getSignalByName(it->second);
+					rhs = getSignalByName(it->second());
 				} catch (string &e) {
-					if (allSignalsLowercased.find(toLower(it->second)) != allSignalsLowercased.end()) {
-						THROWERROR("Signal " << it->second << " undeclared, but a signal that differs only by capitalization has been declared");
+					if (allSignalsLowercased.find(toLower(it->second())) != allSignalsLowercased.end()) {
+						THROWERROR("Signal " << it->second() << " undeclared, but a signal that differs only by capitalization has been declared");
 					} else {
 						unknownRHSName = true;
-						std::string lower = toLower(it->second);
+						std::string lower = toLower(it->second());
 						if (lower == "unsigned" || lower == "signed" || lower == "conv_std_logic_vector") {
 							// this is a VHDL function
-						} else if (constants_.find(it->second) != constants_.end()) {
+						} else if (constants_.find(it->second()) != constants_.end()) {
 							// this is a constant
 						} else {
-							REPORT(DEBUG, endl << "Warning: RHS signal name: " << it->second << " unknown so far"  << endl);
+							REPORT(DEBUG, endl << "Warning: RHS signal name: " << it->second() << " unknown so far"  << endl);
 						}
 					}
 				}
 
-				delay = it->third;
+				delay = it->third();
 
 				// If both signals are known, we may move this dependency to the Signal graph.
 				//	if not, add a new entry to unknownDependenceTable, the list of unknown dependences
@@ -2613,7 +2613,7 @@ namespace flopoco{
 						lhs->addPredecessor(rhs, delay);
 						rhs->addSuccessor(lhs, delay);
 					}else{
-					triplet<string, string, int> newDep = make_triplet(it->first, it->second, it->third);
+					triplet<string, string, int> newDep = make_triplet(it->first(), it->second(), it->third());
 					unresolvedDependenceTable.push_back(newDep);
 				}
 			}

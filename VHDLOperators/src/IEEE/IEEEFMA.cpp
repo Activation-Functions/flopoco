@@ -19,28 +19,25 @@
 // TODO opt: rework negation of bigsum
 // TODO opt: clean up exptentative/expupdate
 
-#include "IEEE/IEEEFMA.hpp"
-#include "IEEE/IEEEFloatFormat.hpp"
-
+#include <cmath>
 #include <iostream>
 #include <sstream>
+#include <string>
 #include <vector>
-#include <math.h>
-#include <string.h>
 
 #include <gmp.h>
-#include <mpfr.h>
 #include <gmpxx.h>
+#include <mpfr.h>
 
-#include <utils.hpp>
-#include <Operator.hpp>
-#include <ShiftersEtc/LZOC.hpp>
-#include <ShiftersEtc/Shifters.hpp>
-#include <TestBenches/FPNumber.hpp>
-#include <TestBenches/IEEENumber.hpp>
-#include <IntAddSubCmp/IntAdder.hpp>
-
-
+#include "flopoco/IEEE/IEEEFMA.hpp"
+#include "flopoco/IEEE/IEEEFloatFormat.hpp"
+#include <flopoco/IntAddSubCmp/IntAdder.hpp>
+#include <flopoco/Operator.hpp>
+#include <flopoco/ShiftersEtc/LZOC.hpp>
+#include <flopoco/ShiftersEtc/Shifters.hpp>
+#include <flopoco/TestBenches/FPNumber.hpp>
+#include <flopoco/TestBenches/IEEENumber.hpp>
+#include <flopoco/utils.hpp>
 
 using namespace std;
 

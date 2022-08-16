@@ -1,13 +1,13 @@
-#include <sstream>
 #include <iostream>
-#include "Posit/Add/PositAdd.hpp"
-#include <Operator.hpp>
-#include <utils.hpp>
+#include <sstream>
 
-#include "Posit/Add/PIFAdd.hpp"
-#include "Conversions/Posit2PIF.hpp"
-#include "Conversions/PIF2Posit.hpp"
-#include "TestBenches/PositNumber.hpp"
+#include "flopoco/Conversions/PIF2Posit.hpp"
+#include "flopoco/Conversions/Posit2PIF.hpp"
+#include "flopoco/Operator.hpp"
+#include "flopoco/Posit/Add/PIFAdd.hpp"
+#include "flopoco/Posit/Add/PositAdd.hpp"
+#include "flopoco/TestBenches/PositNumber.hpp"
+#include "flopoco/utils.hpp"
 
 using namespace std;
 namespace flopoco{

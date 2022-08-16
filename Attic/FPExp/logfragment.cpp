@@ -1,5 +1,5 @@
 #include <iostream>
-#include <math.h>
+#include <cmath>
 #include "math_lib.h"
 #include "signal.h"
 #include "gen_table.h"
@@ -8,7 +8,7 @@
 using namespace std;
 using namespace FloPoCo::import::FPExp;
 
-/* Fonctions tabulées
+/* Fonctions tabulï¿½es
    ================== */
 
 // Table d'exponentielles arrondies
@@ -30,7 +30,7 @@ public:
       mpfr_set_d(value, x, GMP_RNDD);
       // arrondi vers moins l'infini
       mpfr_exp(result, value, GMP_RNDD);
-      // à partir de là tout est exact
+      // ï¿½ partir de lï¿½ tout est exact
       mpfr_set_d(value, 1.0 + x, GMP_RNDD);
       mpfr_sub(result, result, value, GMP_RNDD);
       mpfr_clear(value);
@@ -65,10 +65,10 @@ public:
       mpfr_set_d(value, x, GMP_RNDD);
       mpfr_set_d(num_6, 6.0, GMP_RNDD);
       mpfr_exp(exp_val, value, GMP_RNDD);            // arrondi vers moins l'infini
-      mpfr_log(log_val, exp_val, GMP_RNDN);          // calcul du log avec une "grande" précision (par rapport à accuracy)
+      mpfr_log(log_val, exp_val, GMP_RNDN);          // calcul du log avec une "grande" prï¿½cision (par rapport ï¿½ accuracy)
       mpfr_sub(result, num_6, log_val, GMP_RNDN);    // arrondi au plus proche
-      mpfr_add(result, result, value, GMP_RNDD);     // opération exacte
-      mpfr_sub(result, result, num_6, GMP_RNDD);     // opération exacte
+      mpfr_add(result, result, value, GMP_RNDD);     // opï¿½ration exacte
+      mpfr_sub(result, result, num_6, GMP_RNDD);     // opï¿½ration exacte
       mpfr_clear(value);
       mpfr_clear(exp_val);
       mpfr_clear(log_val);
@@ -83,7 +83,7 @@ private:
   double delta;
 };
 
-/* Opérations préliminaires sur le morceau
+/* Opï¿½rations prï¿½liminaires sur le morceau
    ======================================= */
 
 LogFragment::LogFragment(int length, Fragment* next_part) :
@@ -116,19 +116,19 @@ void LogFragment::evalpos(int accuracy, int start, int& overlapping, bool& is_si
   for (exp_bits = 0; max_output >= po2; exp_bits++)
     max_output /= 2;
   /* TODO: si max_input est petit, le minimum pourrait aussi
-     être atteint dans les négatifs puisqu'on arrondit l'exponentielle par
-     valeur inférieure et qu'elle est prise en une valeur -newPowOf2(start)
+     ï¿½tre atteint dans les nï¿½gatifs puisqu'on arrondit l'exponentielle par
+     valeur infï¿½rieure et qu'elle est prise en une valeur -newPowOf2(start)
      (et pas -newPowOf2(start) + newPowOf2(end)) au minimum */
 
   // calcule le nombre de bits en sortie de la table de logarithmes
-  // TODO: améliorer cette approximation (pour l'instant il n'y a
+  // TODO: amï¿½liorer cette approximation (pour l'instant il n'y a
   // pas de risque mais on perd de la place)
   log_bits = accuracy - end + is_signed;
 
   overlapping = 1 + is_signed;
   is_signed = false;
 
-  // nombre de bits en entrée du produit
+  // nombre de bits en entrï¿½e du produit
   product_ibits1 = reallength + (exp_bits > 0);
   product_ibits2 = accuracy - (end - overlapping - 1);
 }
@@ -142,11 +142,11 @@ void LogFragment::write_arch(std::string prefix, ostream& o)
 {
   Fragment::write_arch(prefix, o);
 
-  /* Déclarations de signaux
+  /* Dï¿½clarations de signaux
      ======================= */
   Signal x("x", accuracy, start);
 
-  // entree pour la table x -> exp(x)_arrondi-1-x (en valeur absolue si signé)
+  // entree pour la table x -> exp(x)_arrondi-1-x (en valeur absolue si signï¿½)
   Signal signed_input("signed_input", reallength + 1, 0);
   Signal exp_tbl_out("exp_tbl_out", accuracy, end - exp_bits, end);
   if (exp_bits > 0) {
@@ -154,12 +154,12 @@ void LogFragment::write_arch(std::string prefix, ostream& o)
     o << exp_tbl_out.declaration;
   }
 
-  // premier morceau de l'entrée
+  // premier morceau de l'entrï¿½e
   Signal part_1("part_1", accuracy, start, end);
   // exponentielle arrondie du premier morceau moins 1 (= sortie de la table plus x) (en valeur abs)
   Signal exp_part1("exp_part1", end, start - (exp_bits > 0));
-  /* sortie de la table x -> x - log(exp(x)_arrondi) (x : 1er morceau de l'entrée)
-     comme exp(x) est arrondi par valeur inférieur, le résultat est positif */
+  /* sortie de la table x -> x - log(exp(x)_arrondi) (x : 1er morceau de l'entrï¿½e)
+     comme exp(x) est arrondi par valeur infï¿½rieur, le rï¿½sultat est positif */
   Signal remainder_1("remainder_1", accuracy, accuracy - log_bits);
   // morceaux_suivants ou (2 ^ -end) - morceaux_suivants selon le signe de x
   Signal remainder_2("remainder_2", accuracy, end - is_signed);
@@ -170,7 +170,7 @@ void LogFragment::write_arch(std::string prefix, ostream& o)
   // produit des deux parties fractionnaires des exponentielles
   int product_start = exp_part1.start + exp_rmd.start;
   Signal product("product", accuracy, product_start, product_start + product_ibits1 + product_ibits2);
-  // total à ajouter ou soustraire au produit selon le signe
+  // total ï¿½ ajouter ou soustraire au produit selon le signe
   Signal signed_part("signed_part", accuracy, start - 1);
 
   o << part_1.declaration
@@ -246,14 +246,14 @@ void LogFragment::write_arch(std::string prefix, ostream& o)
   o << "end architecture;" << endl << endl;
 }
 
-// second fichier : tables utilisés dans le composant
+// second fichier : tables utilisï¿½s dans le composant
 
 void LogFragment::write_tbl_declaration(std::string prefix, ostream& o)
 {
-  Fragment::write_tbl_declaration(prefix, o); // fait l'appel récursif sur les morceaux suivants
+  Fragment::write_tbl_declaration(prefix, o); // fait l'appel rï¿½cursif sur les morceaux suivants
   int input_size = accuracy - start;
 
-  // table de x -> {e ^ x - 1 - x} arrondi à la précision de l'entrée
+  // table de x -> {e ^ x - 1 - x} arrondi ï¿½ la prï¿½cision de l'entrï¿½e
   if (exp_bits > 0) {
     o << "  -- tabule e ^ x - x - 1 avec " << reallength << " bits en entree, " << exp_bits << " en sortie" << endl
       << "  -- le dernier bit de l'entree est le " << end << "eme apres la virgule" << endl;

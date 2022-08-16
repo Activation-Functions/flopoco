@@ -39,7 +39,7 @@ This is mostly an example of a coarse-grain, nonstandard operator.
  */
 #include <fstream>
 #include <sstream>
-#include <math.h>	// for NaN
+#include <cmath>	// for NaN
 #include "Collision.hpp"
 #include "TestBenches/FPNumber.hpp"
 #include "utils.hpp"

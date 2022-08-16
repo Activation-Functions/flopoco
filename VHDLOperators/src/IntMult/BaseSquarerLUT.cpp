@@ -1,8 +1,8 @@
-#include "IntMult/BaseSquarerLUT.hpp"
-#include "Tables/Table.hpp"
-#include "PrimitiveComponents/Xilinx/Xilinx_LUT6.hpp"
-#include "PrimitiveComponents/Xilinx/Xilinx_LUT_compute.hpp"
-#include "Tables/TableOperator.hpp"
+#include "flopoco/IntMult/BaseSquarerLUT.hpp"
+#include "flopoco/PrimitiveComponents/Xilinx/Xilinx_LUT6.hpp"
+#include "flopoco/PrimitiveComponents/Xilinx/Xilinx_LUT_compute.hpp"
+#include "flopoco/Tables/Table.hpp"
+#include "flopoco/Tables/TableOperator.hpp"
 
 namespace flopoco
 {

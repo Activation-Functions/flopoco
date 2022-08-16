@@ -22,15 +22,17 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  
 */
 
+#include <cstdlib>
+#include <fstream>
 #include <iostream>
 #include <sstream>
-#include <fstream>
 #include <string>
 #include <vector>
-#include <mpfr.h>
-#include <cstdlib>
 
-#include"utils.hpp"
+#include <mpfr.h>
+
+#include "flopoco/utils.hpp"
+
 using namespace std;
 using namespace flopoco;
 

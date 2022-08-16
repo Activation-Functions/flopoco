@@ -1,5 +1,5 @@
 #include <iostream>
-#include <math.h>
+#include <cmath>
 #include <cstdlib>
 #include "utils.hpp"
 #include "PolynomialTable.hpp"

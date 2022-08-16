@@ -13,17 +13,19 @@
 
  */
 
-#include <iostream>
 #include <fstream>
+#include <iostream>
+#include <set>
 #include <sstream>
 #include <vector>
-#include <set>
+
 #include <gmp.h>
-#include <mpfr.h>
 #include <gmpxx.h>
-#include "utils.hpp"
-#include "Operator.hpp"
-#include "TestBenches/TestBench.hpp"
+#include <mpfr.h>
+
+#include "flopoco/Operator.hpp"
+#include "flopoco/TestBenches/TestBench.hpp"
+#include "flopoco/utils.hpp"
 
 using namespace std;
 

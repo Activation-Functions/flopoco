@@ -1,34 +1,31 @@
 /*
   An Posit exponential for FloPoCo
-  
+
   This file is part of the FloPoCo project
   developed by the Arenaire team at Ecole Normale Superieure de Lyon
-  
+
   Author : Oregane Desrentes, Oregane.Desrentes@ens-lyon.fr
 
   Initial software.
-  Copyright © ENS-Lyon, INRIA, CNRS, UCBL,  
+  Copyright © ENS-Lyon, INRIA, CNRS, UCBL,
   2008-2010.
   All rights reserved.
 
 */
-#include <iostream>
+#include <cmath> // For NaN
 #include <fstream>
+#include <iostream>
 #include <sstream>
-#include <math.h>	// For NaN
 
-#include "Posit/Exp/PositExp.hpp"
-#include "TestBenches/PositNumber.hpp"
-//#include "ConstMult/IntIntKCM.hpp"
-#include "ConstMult/FixRealKCM.hpp"
-#include "ShiftersEtc/Shifters.hpp"
-#include "IntMult/IntMultiplier.hpp"
-#include "FixFunctions/FixFunctionByPiecewisePoly.hpp"
-//#include "FixFunctions/FixFunctionBySimplePoly.hpp"
-#include "FixFunctions/FixFunctionByTable.hpp"
-#include "utils.hpp"
-#include "IntAddSubCmp/IntAdder.hpp"
-
+#include "flopoco/ConstMult/FixRealKCM.hpp"
+#include "flopoco/FixFunctions/FixFunctionByPiecewisePoly.hpp"
+#include "flopoco/FixFunctions/FixFunctionByTable.hpp"
+#include "flopoco/IntAddSubCmp/IntAdder.hpp"
+#include "flopoco/IntMult/IntMultiplier.hpp"
+#include "flopoco/Posit/Exp/PositExp.hpp"
+#include "flopoco/ShiftersEtc/Shifters.hpp"
+#include "flopoco/TestBenches/PositNumber.hpp"
+#include "flopoco/utils.hpp"
 
 using namespace std;
 

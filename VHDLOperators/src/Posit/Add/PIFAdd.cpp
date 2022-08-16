@@ -1,11 +1,11 @@
 #include <sstream>
 #include <iostream>
-#include "Posit/Add/PIFAdd.hpp"
-#include <Operator.hpp>
-#include <utils.hpp>
 
-#include "ShiftersEtc/Normalizer.hpp"
-#include "ShiftersEtc/Shifters.hpp"
+#include "flopoco/Operator.hpp"
+#include "flopoco/Posit/Add/PIFAdd.hpp"
+#include "flopoco/ShiftersEtc/Normalizer.hpp"
+#include "flopoco/ShiftersEtc/Shifters.hpp"
+#include "flopoco/utils.hpp"
 
 using namespace std;
 namespace flopoco{

@@ -11,11 +11,14 @@
   All rights reserved.
 */
 
-#include "Targets/Versal.hpp"
 #include <iostream>
 #include <sstream>
-#include "utils.hpp"
 
+#include "flopoco/Targets/Versal.hpp"
+#include "flopoco/utils.hpp"
+
+
+using namespace std;
 
 // TODO: all magic numbers and other stuff is atm still a 1:1 copy of xilinx zynq target, so it is necessary to evaluate for each of them if they must be adapted for versal hw
 namespace flopoco{

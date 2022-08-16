@@ -1,15 +1,14 @@
-#include "UserInterface.hpp"
-#include "Targets/AllTargetsHeaders.hpp"
-#include "TestBenches/TestBench.hpp"
-#include "Tables/TableCostModel.hpp"
-#include "AutoTest/AutoTest.hpp"
-
 #include <algorithm>
 #include <sys/stat.h>
 #include <iostream>
 #include <iomanip>
 #include <regex>
 
+#include "flopoco/UserInterface.hpp"
+#include "flopoco/Targets/AllTargetsHeaders.hpp"
+#include "flopoco/TestBenches/TestBench.hpp"
+#include "flopoco/Tables/TableCostModel.hpp"
+#include "flopoco/AutoTest/AutoTest.hpp"
 // TODO check the hard mult threshold
 
 namespace flopoco
