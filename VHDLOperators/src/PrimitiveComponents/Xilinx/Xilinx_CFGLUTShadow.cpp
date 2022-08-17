@@ -10,13 +10,13 @@
 #include "mpfr.h"
 
 // include the header of the Operator
-#include "PrimitiveComponents/Xilinx/Xilinx_CFGLUTShadow.hpp"
+#include "flopoco/PrimitiveComponents/Xilinx/Xilinx_CFGLUTShadow.hpp"
 
-#include "PrimitiveComponents/Primitive.hpp"
-#include "PrimitiveComponents/Xilinx/Xilinx_Primitive.hpp"
-#include "PrimitiveComponents/Xilinx/Xilinx_CFGLUT5.hpp"
-#include "PrimitiveComponents/Xilinx/Xilinx_LUT_compute.h"
-#include "PrimitiveComponents/Xilinx/Xilinx_LUT6.hpp"
+#include "flopoco/PrimitiveComponents/Primitive.hpp"
+#include "flopoco/PrimitiveComponents/Xilinx/Xilinx_Primitive.hpp"
+#include "flopoco/PrimitiveComponents/Xilinx/Xilinx_CFGLUT5.hpp"
+#include "flopoco/PrimitiveComponents/Xilinx/Xilinx_LUT_compute.h"
+#include "flopoco/PrimitiveComponents/Xilinx/Xilinx_LUT6.hpp"
 
 
 using namespace std;

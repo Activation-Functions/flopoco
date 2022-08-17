@@ -1,8 +1,8 @@
 #ifndef FIRSTFITTINGCOMPRESSIONSTRATEGY_HPP
 #define FIRSTFITTINGCOMPRESSIONSTRATEGY_HPP
 
-#include "BitHeap/CompressionStrategy.hpp"
-#include "BitHeap/BitHeap.hpp"
+#include "flopoco/BitHeap/CompressionStrategy.hpp"
+#include "flopoco/BitHeap/BitHeap.hpp"
 
 namespace flopoco
 {

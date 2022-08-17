@@ -13,7 +13,7 @@
   All rights reserved.
 
 */
-#include "UserInterface.hpp"
+#include "flopoco/UserInterface.hpp"
 
 namespace flopoco{
 #define FLOPOCO_OPERATOR(op)	\
@@ -21,14 +21,14 @@ class op {	\
 public:\
 	static void registerFactory();\
 };
-#include "Operators.def"
+#include "flopoco/Operators.def"
 #undef FLOPOCO_OPERATOR
 	
 void UserInterface::registerFactories()
 {
 	try {
         #define FLOPOCO_OPERATOR(op) op::registerFactory();
-        #include "Operators.def"
+        #include "flopoco/Operators.def"
         #undef FLOPOCO_OPERATOR
 		} catch (const std::exception &e) {
 			cerr << "Error while registering factories: " << e.what() <<endl;

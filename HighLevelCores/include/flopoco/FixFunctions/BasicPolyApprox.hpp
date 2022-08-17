@@ -134,13 +134,13 @@ namespace flopoco{
 
 		FixFunction *f;                   /**< The function to be approximated */
 		int degree;                       /**< degree of the polynomial approximation */
-		std::vector<FixConstant*> coeff;       /**< polynomial coefficients in a hardware-ready form */
+		std::vector<FixConstant*> coeff;  /**< polynomial coefficients in a hardware-ready form */
 		double approxErrorBound;          /**< guaranteed upper bound on the approx error of the approximation provided. Should be smaller than targetAccuracy */
 		int LSB;                          /**< weight of the LSB of the polynomial approximation. Also weight of the LSB of each constant, since x \in [0,1) */
 		sollya_obj_t polynomialS;         /**< The polynomial approximating it */
 
-		std::string srcFileName;               /**< useful only to enable same kind of reporting as for FloPoCo operators. */
-		std::string uniqueName_;               /**< useful only to enable same kind of reporting as for FloPoCo operators. */
+		std::string srcFileName;          /**< useful only to enable same kind of reporting as for FloPoCo operators. */
+		std::string uniqueName_;          /**< useful only to enable same kind of reporting as for FloPoCo operators. */
 		bool needToFreeF;                 /**< in an ideal world, this should not exist */
 
 		sollya_obj_t fixedS;              /**< a constant sollya_obj_t, which indicates that fixed-point formats should be used for fpminimax */

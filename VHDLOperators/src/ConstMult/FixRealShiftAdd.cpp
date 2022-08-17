@@ -21,7 +21,7 @@ It is the limit case of removing one table altogether because it contributes not
 I don't really understand
 
 */
-#include "ConstMult/FixRealShiftAdd.hpp"
+#include "flopoco/ConstMult/FixRealShiftAdd.hpp"
 
 #if defined(HAVE_PAGLIB) && defined(HAVE_RPAGLIB) && defined(HAVE_SCALP)
 

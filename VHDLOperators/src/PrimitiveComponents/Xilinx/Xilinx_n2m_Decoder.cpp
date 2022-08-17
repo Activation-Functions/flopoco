@@ -3,10 +3,10 @@
 #include <sstream>
 
 // include the header of the Operator
-#include "PrimitiveComponents/Xilinx/Xilinx_n2m_Decoder.hpp"
-#include "PrimitiveComponents/Xilinx/Xilinx_LUT5.hpp"
-#include "PrimitiveComponents/Xilinx/Xilinx_LUT6.hpp"
-#include "PrimitiveComponents/Xilinx/Xilinx_LUT_compute.hpp"
+#include "flopoco/PrimitiveComponents/Xilinx/Xilinx_n2m_Decoder.hpp"
+#include "flopoco/PrimitiveComponents/Xilinx/Xilinx_LUT5.hpp"
+#include "flopoco/PrimitiveComponents/Xilinx/Xilinx_LUT6.hpp"
+#include "flopoco/PrimitiveComponents/Xilinx/Xilinx_LUT_compute.hpp"
 
 using namespace std;
 

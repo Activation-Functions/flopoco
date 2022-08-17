@@ -13,10 +13,10 @@
  
  */
 
-#include "CotranHybrid.hpp"
-#include "utils.hpp"
+#include "flopoco/CotranHybrid.hpp"
+#include "flopoco/utils.hpp"
 #include <cmath>
-#include "LNSAdd.hpp"
+#include "flopoco/LNSAdd.hpp"
 
 using namespace std;
 

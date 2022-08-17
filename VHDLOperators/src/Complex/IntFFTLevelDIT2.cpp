@@ -1,6 +1,6 @@
 #include <fstream>
 #include <sstream>
-#include "IntFFTLevelDIT2.hpp"
+#include "flopoco/IntFFTLevelDIT2.hpp"
 
 using namespace std;
 

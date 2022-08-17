@@ -19,8 +19,8 @@
 
 #include <iostream>
 #include <sstream>
-#include "Operator.hpp"
-#include "TestBenches/Wrapper.hpp"
+#include "flopoco/Operator.hpp"
+#include "flopoco/TestBenches/Wrapper.hpp"
 
 namespace flopoco{
 

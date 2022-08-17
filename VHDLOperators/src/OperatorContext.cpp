@@ -13,7 +13,7 @@
  */
 
 
-#include "OperatorContext.hpp"
+#include "flopoco/OperatorContext.hpp"
 
 namespace flopoco{
 

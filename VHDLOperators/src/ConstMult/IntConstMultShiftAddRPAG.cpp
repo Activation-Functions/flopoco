@@ -167,7 +167,7 @@ namespace flopoco{
 }
 #else
 
-#include "ConstMult/IntConstMultShiftAddRPAG.hpp"
+#include "flopoco/ConstMult/IntConstMultShiftAddRPAG.hpp"
 namespace flopoco
 {
 	void IntConstMultShiftAddRPAG::registerFactory() { }

@@ -1,6 +1,6 @@
 #include <fstream>
 #include <sstream>
-#include "IntFFT.hpp"
+#include "flopoco/IntFFT.hpp"
 
 using namespace std;
 

@@ -1,6 +1,6 @@
 #ifndef CRFPCONSTMULT_HPP
 #define CRFPCONSTMULT_HPP
-#include "Operator.hpp"
+#include "flopoco/Operator.hpp"
 
 namespace flopoco{
 

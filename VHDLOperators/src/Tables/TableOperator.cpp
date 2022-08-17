@@ -1,4 +1,4 @@
-#include "Tables/TableOperator.hpp"
+#include "flopoco/Tables/TableOperator.hpp"
 #include <cassert>
 
 namespace flopoco

@@ -1,8 +1,8 @@
 #ifndef Xilinx_LUT5_H
 #define Xilinx_LUT5_H
 
-#include "PrimitiveComponents/Xilinx/Xilinx_Primitive.hpp"
-#include "PrimitiveComponents/Xilinx/Xilinx_LUT_compute.hpp"
+#include "flopoco/PrimitiveComponents/Xilinx/Xilinx_Primitive.hpp"
+#include "flopoco/PrimitiveComponents/Xilinx/Xilinx_LUT_compute.hpp"
 
 namespace flopoco {
     class Xilinx_LUT5_base : public Xilinx_Primitive {

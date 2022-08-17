@@ -20,9 +20,9 @@
 #include <sstream>
 #include <algorithm>
 
-#include "ConstMult/IntConstDiv.hpp"
-#include "ConstMult/IntConstMult.hpp"
-#include "Tables/TableOperator.hpp"
+#include "flopoco/ConstMult/IntConstDiv.hpp"
+#include "flopoco/ConstMult/IntConstMult.hpp"
+#include "flopoco/Tables/TableOperator.hpp"
 
 
 using namespace std;

@@ -1,4 +1,4 @@
-#include "Comparators/IntConstantComparator.hpp"
+#include "flopoco/Comparators/IntConstantComparator.hpp"
 
 // some Kintex7 experiments using vivado 2020.2
 // flopoco IntConstantComparator w=64 c=17979737894628297144

@@ -1,9 +1,9 @@
 #include <sstream>
 
-#include "Conversions/Posit2FP.hpp"
-#include "ShiftersEtc/Normalizer.hpp"
-#include "TestBenches/PositNumber.hpp"
-#include "TestBenches/IEEENumber.hpp"
+#include "flopoco/Conversions/Posit2FP.hpp"
+#include "flopoco/ShiftersEtc/Normalizer.hpp"
+#include "flopoco/TestBenches/PositNumber.hpp"
+#include "flopoco/TestBenches/IEEENumber.hpp"
 
 using namespace std;
 

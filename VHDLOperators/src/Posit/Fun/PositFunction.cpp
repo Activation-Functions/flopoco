@@ -14,8 +14,8 @@
 
 */
 
-#include "Posit/Fun/PositFunction.hpp"
-#include "TestBenches/PositNumber.hpp"
+#include "flopoco/Posit/Fun/PositFunction.hpp"
+#include "flopoco/TestBenches/PositNumber.hpp"
 #include <sstream>
 #define LARGE_PREC 1000
 namespace flopoco{

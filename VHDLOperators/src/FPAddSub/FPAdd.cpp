@@ -1,5 +1,5 @@
-#include "FPAddSub/FPAdd.hpp"
-#include <Operator.hpp>
+#include "flopoco/FPAddSub/FPAdd.hpp"
+#include "flopoco/Operator.hpp"
 
 
 using namespace std;

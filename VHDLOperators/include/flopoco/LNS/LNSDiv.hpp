@@ -1,7 +1,7 @@
 #ifndef LNSDIV_HPP
 #define LNSDIV_HPP
 
-#include "Operator.hpp"
+#include "flopoco/Operator.hpp"
 
 namespace flopoco{
 

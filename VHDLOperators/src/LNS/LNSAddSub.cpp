@@ -13,8 +13,8 @@
   All rights reserved.
  */
 
-#include "LNSAddSub.hpp"
-#include "utils.hpp"
+#include "flopoco/LNSAddSub.hpp"
+#include "flopoco/utils.hpp"
 #include <cmath>
 
 using namespace std;

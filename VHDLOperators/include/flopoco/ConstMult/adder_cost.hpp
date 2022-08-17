@@ -2,7 +2,7 @@
 #define ADDER_COST_HPP
 
 #include <vector>
-#include <pagsuite/adder_graph.h>
+#include "flopoco/pagsuite/adder_graph.h"
 #include "IntConstMultShiftAddTypes.hpp"
 
 namespace IntConstMultShiftAdd_TYPES {

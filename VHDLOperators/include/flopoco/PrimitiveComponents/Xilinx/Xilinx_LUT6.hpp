@@ -1,9 +1,9 @@
 #ifndef Xilinx_LUT6_H
 #define Xilinx_LUT6_H
 
-#include "PrimitiveComponents/Xilinx/Xilinx_Primitive.hpp"
+#include "flopoco/PrimitiveComponents/Xilinx/Xilinx_Primitive.hpp"
 
-#include "PrimitiveComponents/Xilinx/Xilinx_LUT_compute.hpp"
+#include "flopoco/PrimitiveComponents/Xilinx/Xilinx_LUT_compute.hpp"
 
 namespace flopoco
 {

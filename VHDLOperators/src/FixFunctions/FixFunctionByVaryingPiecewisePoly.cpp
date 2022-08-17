@@ -26,15 +26,15 @@
 #include <mpfr.h>
 
 #include <gmpxx.h>
-#include "utils.hpp"
+#include "flopoco/utils.hpp"
 
 
-#include "FixFunctions/FixFunctionByVaryingPiecewisePoly.hpp"
-#include "Tables/Table.hpp"
-#include "FixFunctions/FixFunctionByTable.hpp"
-#include "FixFunctions/FixHornerEvaluator.hpp"
-#include "ShiftersEtc/Shifters.hpp"
-#include "ShiftersEtc/LZOC.hpp"
+#include "flopoco/FixFunctions/FixFunctionByVaryingPiecewisePoly.hpp"
+#include "flopoco/Tables/Table.hpp"
+#include "flopoco/FixFunctions/FixFunctionByTable.hpp"
+#include "flopoco/FixFunctions/FixHornerEvaluator.hpp"
+#include "flopoco/ShiftersEtc/Shifters.hpp"
+#include "flopoco/ShiftersEtc/LZOC.hpp"
 
 using namespace std;
 

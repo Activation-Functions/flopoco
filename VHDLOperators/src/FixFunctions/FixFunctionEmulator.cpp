@@ -16,7 +16,7 @@
 
 #include <sstream>
 
-#include "FixFunctions/FixFunctionEmulator.hpp"
+#include "flopoco/FixFunctions/FixFunctionEmulator.hpp"
 
 namespace flopoco{
 void emulate_fixfunction(FixFunction const & fixfunc, TestCase * tc, bool correctlyRounded) {

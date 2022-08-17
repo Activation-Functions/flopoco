@@ -22,8 +22,8 @@
 #include <fstream>
 #include <sstream>
 
-#include "Tables/TableOperator.hpp"
-#include "Trigs/ConstDiv3ForSinPoly.hpp"
+#include "flopoco/Tables/TableOperator.hpp"
+#include "flopoco/Trigs/ConstDiv3ForSinPoly.hpp"
 
 
 using namespace std;

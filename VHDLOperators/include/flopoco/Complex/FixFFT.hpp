@@ -3,7 +3,7 @@
 #include <vector>
 #include <string>
 
-#include <Operator.hpp>
+#include "flopoco/Operator.hpp"
 
 using namespace std;
 

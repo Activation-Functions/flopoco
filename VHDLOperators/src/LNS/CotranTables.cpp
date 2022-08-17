@@ -13,7 +13,7 @@
 
 */
 
-#include "LNS/CotranTables.hpp"
+#include "flopoco/LNS/CotranTables.hpp"
 #include <cmath>
 #include <climits>
 

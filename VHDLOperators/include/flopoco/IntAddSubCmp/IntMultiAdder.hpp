@@ -1,7 +1,7 @@
 #ifndef INTMULTIADDER_HPP
 #define INTMULTIADDER_HPP
-#include "Operator.hpp"
-#include "BitHeap/BitHeap.hpp"
+#include "flopoco/Operator.hpp"
+#include "flopoco/BitHeap/BitHeap.hpp"
 
 
 

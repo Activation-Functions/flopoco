@@ -6,8 +6,8 @@
 #include <string>
 #include <vector>
 
-#include "FixFilters/FixFIR.hpp"
-#include "Operator.hpp"
+#include "flopoco/FixFilters/FixFIR.hpp"
+#include "flopoco/Operator.hpp"
 #include "flopoco/utils.hpp"
 
 namespace flopoco{

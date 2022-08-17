@@ -1,5 +1,5 @@
 
-#include "BitHeap/ParandehAfsharCompressionStrategy.hpp"
+#include "flopoco/BitHeap/ParandehAfsharCompressionStrategy.hpp"
 
 
 

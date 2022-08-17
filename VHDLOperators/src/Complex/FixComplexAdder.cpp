@@ -9,7 +9,7 @@
 #include "mpfr.h"
 
 // include the header of the Operator
-#include "Complex/FixComplexAdder.hpp"
+#include "flopoco/Complex/FixComplexAdder.hpp"
 
 using namespace std;
 namespace flopoco {

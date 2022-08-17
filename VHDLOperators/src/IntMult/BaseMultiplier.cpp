@@ -1,4 +1,4 @@
-#include "IntMult/BaseMultiplier.hpp"
+#include "flopoco/IntMult/BaseMultiplier.hpp"
 
 namespace flopoco {
 

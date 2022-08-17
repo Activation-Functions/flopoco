@@ -21,11 +21,11 @@
 #include <mpfr.h>
 #include <gmpxx.h>
 #include <sollya.h>
-#include "utils.hpp"
-#include "Operator.hpp"
-#include "FPConstMult.hpp"
-#include "CRFPConstMult.hpp"
-#include "TestBenches/FPNumber.hpp"
+#include "flopoco/utils.hpp"
+#include "flopoco/Operator.hpp"
+#include "flopoco/FPConstMult.hpp"
+#include "flopoco/CRFPConstMult.hpp"
+#include "flopoco/TestBenches/FPNumber.hpp"
 
 using namespace std;
 

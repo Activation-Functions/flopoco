@@ -1,4 +1,4 @@
-#include "Comparators/FPComparator.hpp"
+#include "flopoco/Comparators/FPComparator.hpp"
 
 
 using namespace std;

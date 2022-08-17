@@ -1,7 +1,7 @@
 
-#include "BitHeap/CompressionStrategy.hpp"
+#include "flopoco/BitHeap/CompressionStrategy.hpp"
 #include <climits>
-#include "PrimitiveComponents/Xilinx/XilinxGPC.hpp"
+#include "flopoco/PrimitiveComponents/Xilinx/XilinxGPC.hpp"
 #include "assert.h"
 
 using namespace std;

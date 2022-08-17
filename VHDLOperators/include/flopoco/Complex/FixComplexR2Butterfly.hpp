@@ -3,7 +3,7 @@
 #include <vector>
 #include <sstream>
 
-#include "Operator.hpp"
+#include "flopoco/Operator.hpp"
 #include "FixComplexKCM.hpp" 
 #include "FixComplexAdder.hpp" 
 	//#include "ComplexOperators/IntComplexAdder.hpp"

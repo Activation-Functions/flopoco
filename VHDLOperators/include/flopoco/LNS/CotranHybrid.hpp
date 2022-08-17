@@ -1,10 +1,10 @@
 #ifndef COTRAN_HYBRID_HPP
 #define COTRAN_HYBRID_HPP
 
-#include "Operator.hpp"
+#include "flopoco/Operator.hpp"
 #include <memory>
 #include "LNSAdd.hpp"
-#include "FixFunctions/HOTBM.hpp"
+#include "flopoco/FixFunctions/HOTBM.hpp"
 #include "Cotran.hpp"
 //#include <boost/shared_pointer>
 

@@ -1,6 +1,6 @@
 #include <fstream>
 #include <sstream>
-#include "OldFixedComplexMultiplier.hpp"
+#include "flopoco/OldFixedComplexMultiplier.hpp"
 
 using namespace std;
 

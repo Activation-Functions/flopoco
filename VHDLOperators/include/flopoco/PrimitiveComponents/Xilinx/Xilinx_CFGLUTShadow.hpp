@@ -1,7 +1,7 @@
 #ifndef Xilinx_CFGLUTShadow_H
 #define Xilinx_CFGLUTShadow_H
 
-#include "Operator.hpp"
+#include "flopoco/Operator.hpp"
 
 namespace flopoco {
 	// new operator class declaration

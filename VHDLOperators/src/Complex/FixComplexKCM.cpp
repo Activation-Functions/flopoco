@@ -3,8 +3,8 @@
 #include <sollya.h>
 
 
-#include "ConstMult/FixRealKCM.hpp"
-#include "Complex/FixComplexKCM.hpp"
+#include "flopoco/ConstMult/FixRealKCM.hpp"
+#include "flopoco/Complex/FixComplexKCM.hpp"
 
 // TODO bug when signedIn=false, not sure it is in the operator or in emulate.
 // Let's investigate only if there is a customer...

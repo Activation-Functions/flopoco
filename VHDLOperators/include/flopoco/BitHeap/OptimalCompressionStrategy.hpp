@@ -1,9 +1,9 @@
 #ifndef OPTIMALCOMPRESSIONSTRATEGY_HPP
 #define OPTIMALCOMPRESSIONSTRATEGY_HPP
 
-#include "BitHeap/CompressionStrategy.hpp"
-#include "BitHeap/BitHeap.hpp"
-#include "BitHeap/Compressor.hpp"
+#include "flopoco/BitHeap/CompressionStrategy.hpp"
+#include "flopoco/BitHeap/BitHeap.hpp"
+#include "flopoco/BitHeap/Compressor.hpp"
 
 #ifdef HAVE_SCALP
 #include <ScaLP/Solver.h>

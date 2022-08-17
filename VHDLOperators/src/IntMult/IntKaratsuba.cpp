@@ -23,9 +23,9 @@
 #include <mpfr.h>
 #include <gmpxx.h>
 
-#include "utils.hpp"
-#include "Operator.hpp"
-#include "IntKaratsuba.hpp"
+#include "flopoco/utils.hpp"
+#include "flopoco/Operator.hpp"
+#include "flopoco/IntKaratsuba.hpp"
 
 using namespace std;
 

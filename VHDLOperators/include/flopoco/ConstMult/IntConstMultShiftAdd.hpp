@@ -1,7 +1,7 @@
 #ifndef  IntConstMultShiftAdd_HPP
 #define IntConstMultShiftAdd_HPP
 
-#include "Operator.hpp"
+#include "flopoco/Operator.hpp"
 
 #if defined(HAVE_PAGLIB)
 //&& defined(HAVE_RPAGLIB) && defined(HAVE_SCALP)

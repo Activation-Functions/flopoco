@@ -5,8 +5,8 @@
 
 
 %{
-	#include "LexerContext.hpp"
-	#include "Operator.hpp"
+	#include "flopoco/LexerContext.hpp"
+	#include "flopoco/Operator.hpp"
 	#include <stdio.h>
 	#include <iostream>
 	#include <string>

@@ -7,9 +7,9 @@
 #include "gmp.h"
 #include "mpfr.h"
 
-#include "BitHeap/BitHeap.hpp"
-#include "IntMult/GenericBinaryPolynomial.hpp"
-#include "IntAddition/NewCompressorTree.hpp"
+#include "flopoco/BitHeap/BitHeap.hpp"
+#include "flopoco/IntMult/GenericBinaryPolynomial.hpp"
+#include "flopoco/IntAddition/NewCompressorTree.hpp"
 
 //std::string GenericBinaryPolynomial::operatorInfo = "UserDefinedInfo param0 param1 <options>";
 

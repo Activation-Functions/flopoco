@@ -7,20 +7,20 @@
 #include <gmp.h>
 #include <gmpxx.h>
 
-#include "utils.hpp"
-#include "Operator.hpp"
-#include "BitHeap/BitHeap.hpp"
-#include "IntMult/IntMultiplier.hpp"
-#include "ShiftersEtc/LZOC.hpp"
-#include "ShiftersEtc/Shifters.hpp"
+#include "flopoco/utils.hpp"
+#include "flopoco/Operator.hpp"
+#include "flopoco/BitHeap/BitHeap.hpp"
+#include "flopoco/IntMult/IntMultiplier.hpp"
+#include "flopoco/ShiftersEtc/LZOC.hpp"
+#include "flopoco/ShiftersEtc/Shifters.hpp"
 
-#include "Tools/Point.hpp"
-#include "Tools/Plane.hpp"
+#include "flopoco/Tools/Point.hpp"
+#include "flopoco/Tools/Plane.hpp"
 #include "FixAtan2.hpp"
 
 #include "./Atan2Table.hpp"
 
-#include "FixFunctions/BipartiteTable.hpp"
+#include "flopoco/FixFunctions/BipartiteTable.hpp"
 
 #define PLANE_BASED				0
 #define TAYLOR_ORDER1_BASED		1

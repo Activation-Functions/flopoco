@@ -14,11 +14,11 @@
 
  */
 
-#include "LNSAdd.hpp"
+#include "flopoco/LNSAdd.hpp"
 #include <sstream>
 #include <vector>
-#include "FixFunctions/HOTBM.hpp"
-#include "utils.hpp"
+#include "flopoco/FixFunctions/HOTBM.hpp"
+#include "flopoco/utils.hpp"
 
 using namespace std;
 

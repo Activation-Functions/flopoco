@@ -1,6 +1,6 @@
-#include "IntMult/TilingStrategyXGreedy.hpp"
-#include "IntMult/LineCursor.hpp"
-#include "IntMult/NearestPointCursor.hpp"
+#include "flopoco/IntMult/TilingStrategyXGreedy.hpp"
+#include "flopoco/IntMult/LineCursor.hpp"
+#include "flopoco/IntMult/NearestPointCursor.hpp"
 #include <cmath>
 
 namespace flopoco {

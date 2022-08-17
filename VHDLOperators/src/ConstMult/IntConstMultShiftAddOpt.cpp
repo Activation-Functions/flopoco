@@ -278,7 +278,7 @@ namespace flopoco{
 }
 #else
 
-#include "ConstMult/IntConstMultShiftAddOpt.hpp"
+#include "flopoco/ConstMult/IntConstMultShiftAddOpt.hpp"
 namespace flopoco
 {
 	void IntConstMultShiftAddOpt::registerFactory() { }

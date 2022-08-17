@@ -4,8 +4,8 @@
 #include "gmp.h"
 #include "mpfr.h"
 
-#include "IntPower.hpp"
-#include "FormalBinaryProduct.hpp"
+#include "flopoco/IntPower.hpp"
+#include "flopoco/FormalBinaryProduct.hpp"
 
 //std::string IntPower::operatorInfo = "UserDefinedInfo param0 param1 <options>";
 

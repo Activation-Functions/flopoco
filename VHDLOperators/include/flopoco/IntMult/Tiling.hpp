@@ -4,9 +4,9 @@
 #include <stdlib.h>
 #include <vector>
 
-#include "Target.hpp"
-#include "Operator.hpp"
-#include "./MultiplierBlock.hpp"
+#include "flopoco/Target.hpp"
+#include "flopoco/Operator.hpp"
+#include "flopoco/./MultiplierBlock.hpp"
 
 namespace flopoco {
 

@@ -1,7 +1,7 @@
 #include <iostream>
 
-#include "IntMult/IntKaratsubaRectangular.hpp"
-#include "IntMult/DSPBlock.hpp"
+#include "flopoco/IntMult/IntKaratsubaRectangular.hpp"
+#include "flopoco/IntMult/DSPBlock.hpp"
 #include "assert.h"
 
 using namespace std;

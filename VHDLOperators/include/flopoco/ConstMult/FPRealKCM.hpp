@@ -1,7 +1,7 @@
 #ifndef FPREALKCM_HPP
 #define FPREALKCM_HPP
-#include "Operator.hpp"
-#include "Tables/Table.hpp"
+#include "flopoco/Operator.hpp"
+#include "flopoco/Tables/Table.hpp"
 
 namespace flopoco{
 

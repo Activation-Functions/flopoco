@@ -1,6 +1,6 @@
 #include <fstream>
 #include <sstream>
-#include "IntTwiddleMultiplierAlternative.hpp"
+#include "flopoco/IntTwiddleMultiplierAlternative.hpp"
 
 using namespace std;
 

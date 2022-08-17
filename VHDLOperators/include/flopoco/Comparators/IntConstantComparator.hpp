@@ -1,6 +1,6 @@
 #ifndef INTCONSTANTCOMPARATOR_HPP
 #define INTCONSTANTCOMPARATOR_HPP
-#include "Operator.hpp"
+#include "flopoco/Operator.hpp"
 
 
 

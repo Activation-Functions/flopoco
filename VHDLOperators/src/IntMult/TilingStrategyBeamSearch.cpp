@@ -1,8 +1,8 @@
 #include <utility>
 
-#include "IntMult/TilingStrategyBeamSearch.hpp"
-#include "IntMult/LineCursor.hpp"
-#include "IntMult/NearestPointCursor.hpp"
+#include "flopoco/IntMult/TilingStrategyBeamSearch.hpp"
+#include "flopoco/IntMult/LineCursor.hpp"
+#include "flopoco/IntMult/NearestPointCursor.hpp"
 
 namespace flopoco {
     TilingStrategyBeamSearch::TilingStrategyBeamSearch(

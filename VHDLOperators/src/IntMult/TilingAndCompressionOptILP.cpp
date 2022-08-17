@@ -1,7 +1,7 @@
-#include "IntMult/TilingAndCompressionOptILP.hpp"
-#include "IntMult/IntMultiplier.hpp"
-#include "IntMult/BaseMultiplierLUT.hpp"
-#include "IntMult/MultiplierTileCollection.hpp"
+#include "flopoco/IntMult/TilingAndCompressionOptILP.hpp"
+#include "flopoco/IntMult/IntMultiplier.hpp"
+#include "flopoco/IntMult/BaseMultiplierLUT.hpp"
+#include "flopoco/IntMult/MultiplierTileCollection.hpp"
 
 using namespace std;
 namespace flopoco {

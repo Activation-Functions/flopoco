@@ -3,8 +3,8 @@
 
 #include "gmp.h"
 #include "mpfr.h"
-#include "PrimitiveComponents/GenericMult.hpp"
-#include "PrimitiveComponents/Primitive.hpp"
+#include "flopoco/PrimitiveComponents/GenericMult.hpp"
+#include "flopoco/PrimitiveComponents/Primitive.hpp"
 
 using namespace std;
 namespace flopoco {

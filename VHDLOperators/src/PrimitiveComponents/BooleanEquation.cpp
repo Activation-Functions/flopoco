@@ -1,4 +1,4 @@
-#include "PrimitiveComponents/BooleanEquation.hpp"
+#include "flopoco/PrimitiveComponents/BooleanEquation.hpp"
 #include <stdexcept>
 
 bool_eq_operators::bool_eq_op *bool_eq::getOpCopy() const {

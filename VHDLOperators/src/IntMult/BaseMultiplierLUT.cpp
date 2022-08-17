@@ -1,5 +1,5 @@
-#include "IntMult/BaseMultiplierLUT.hpp"
-#include "IntMult/IntMultiplierLUT.hpp"
+#include "flopoco/IntMult/BaseMultiplierLUT.hpp"
+#include "flopoco/IntMult/IntMultiplierLUT.hpp"
 
 namespace flopoco {
 

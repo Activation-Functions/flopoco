@@ -3,9 +3,9 @@
 #include <vector>
 #include <sstream>
 
-#include "utils.hpp"
+#include "flopoco/utils.hpp"
 
-#include "Operator.hpp"
+#include "flopoco/Operator.hpp"
 #include "./IntFFTLevelDIT2.hpp"
 
 

@@ -1,8 +1,8 @@
 #include <iostream>
 #include <sstream>
 
-#include "Signal.hpp"
-#include "Operator.hpp"
+#include "flopoco/Signal.hpp"
+#include "flopoco/Operator.hpp"
 
 using namespace std;
 

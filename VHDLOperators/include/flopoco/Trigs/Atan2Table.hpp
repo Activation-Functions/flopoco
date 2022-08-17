@@ -9,10 +9,10 @@
 #include <mpfr.h>
 #include <gmpxx.h>
 
-#include "Tables/Table.hpp"
-#include "Tools/Point.hpp"
-#include "Tools/Plane.hpp"
-#include "utils.hpp"
+#include "flopoco/Tables/Table.hpp"ble.hpp"
+#include "flopoco/Tools/Point.hpp"int.hpp"
+#include "flopoco/Tools/Plane.hpp"ane.hpp"
+#include "flopoco/utils.hpp"ils.hpp"
 
 namespace flopoco{
 

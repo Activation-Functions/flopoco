@@ -2,7 +2,7 @@
 This file is for debug purpose only
 */
 #include <iostream>
-#include "FixFFT.hpp"
+#include "flopoco/FixFFT.hpp"
 
 using namespace flopoco;
 using namespace std;

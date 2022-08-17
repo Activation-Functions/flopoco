@@ -12,8 +12,8 @@
 
   */
 
-#include "IEEE/IEEEAdd.hpp"
-#include "IEEE/IEEEFloatFormat.hpp"
+#include "flopoco/IEEE/IEEEAdd.hpp"
+#include "flopoco/IEEE/IEEEFloatFormat.hpp"
 
 #include <iostream>
 #include <cmath>

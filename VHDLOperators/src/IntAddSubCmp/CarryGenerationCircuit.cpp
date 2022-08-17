@@ -23,9 +23,9 @@
 #include <gmp.h>
 #include <mpfr.h>
 #include <gmpxx.h>
-#include "utils.hpp"
-#include "Operator.hpp"
-#include "CarryGenerationCircuit.hpp"
+#include "flopoco/utils.hpp"
+#include "flopoco/Operator.hpp"
+#include "flopoco/CarryGenerationCircuit.hpp"
 
 using namespace std;
 namespace flopoco{

@@ -38,7 +38,7 @@ namespace flopoco{
 		ShiftAddOpType op;
 		ShiftAddOp* i;
 		ShiftAddOp* j;
-		vector<ShiftAddOp*> parentList;
+		std::vector<ShiftAddOp*> parentList;
 
 		/** The shift on i*/
 		int s;
@@ -47,10 +47,10 @@ namespace flopoco{
 		mpz_class n;
 
 		/** string representation of the constant */
-		string name;
+		std::string name;
 
 		/** string representation of the constant */
-		string rpagdesc;
+		std::string rpagdesc;
 		int rpaglevel;
 
 		/** size of the constant */

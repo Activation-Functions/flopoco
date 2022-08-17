@@ -1,7 +1,7 @@
 #ifndef DIFFERENTIAL_COMPRESSION_HPP
 #define DIFFERENTIAL_COMPRESSION_HPP
 
-#include "Operator.hpp"
+#include "flopoco/Operator.hpp"
 #include "TableCostModel.hpp"
 
 namespace flopoco {

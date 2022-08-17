@@ -1,4 +1,4 @@
-#include "Operator.hpp"
+#include "flopoco/Operator.hpp"
 
 namespace flopoco
 {

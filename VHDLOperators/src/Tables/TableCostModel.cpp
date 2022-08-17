@@ -1,4 +1,4 @@
-#include "Tables/TableCostModel.hpp"
+#include "flopoco/Tables/TableCostModel.hpp"
 #include <cmath>
 #include <iostream>
 

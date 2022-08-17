@@ -1,4 +1,4 @@
-#include "ConstMult/IntConstMultShiftAdd.hpp"
+#include "flopoco/ConstMult/IntConstMultShiftAdd.hpp"
 
 #if defined(HAVE_PAGLIB)
 

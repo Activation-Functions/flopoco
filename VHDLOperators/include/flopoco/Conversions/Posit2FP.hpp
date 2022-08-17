@@ -1,7 +1,7 @@
 #ifndef POSIT2FP_HPP
 #define POSIT2FP_HPP
 
-#include "Operator.hpp"
+#include "flopoco/Operator.hpp"
 
 namespace flopoco {
 	class Posit2FP : public Operator

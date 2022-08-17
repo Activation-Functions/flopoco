@@ -5,7 +5,7 @@
 #include "gmp.h"
 #include "mpfr.h"
 
-#include "Trigs/FixAtan2ByCORDIC.hpp"
+#include "flopoco/Trigs/FixAtan2ByCORDIC.hpp"
 
 
 using namespace std;

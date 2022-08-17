@@ -19,8 +19,8 @@
 #include <mpfr.h>
 #include <gmpxx.h>
 
-#include "Operator.hpp"
-#include "TestBenches/FPNumber.hpp"
+#include "flopoco/Operator.hpp"
+#include "flopoco/TestBenches/FPNumber.hpp"
 
 namespace flopoco{
 

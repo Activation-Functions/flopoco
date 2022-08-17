@@ -1,7 +1,7 @@
 #include <algorithm>
 
-#include "IntMult/TilingStrategyBasicTiling.hpp"
-#include "IntMult/IntMultiplier.hpp"
+#include "flopoco/IntMult/TilingStrategyBasicTiling.hpp"
+#include "flopoco/IntMult/IntMultiplier.hpp"
 
 using namespace std;
 namespace flopoco {

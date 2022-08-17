@@ -1,6 +1,6 @@
-#include "IntMult/BaseMultiplierIrregularLUTXilinx.hpp"
-#include "Tables/TableOperator.hpp"
-#include "IntMult/IntMultiplier.hpp"
+#include "flopoco/IntMult/BaseMultiplierIrregularLUTXilinx.hpp"
+#include "flopoco/Tables/TableOperator.hpp"
+#include "flopoco/IntMult/IntMultiplier.hpp"
 
 namespace flopoco
 {

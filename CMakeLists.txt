@@ -20,18 +20,6 @@ cmake_policy(SET CMP0115 OLD) # Allow source file extension deduction
 # Add module to find custom dependencies
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
-
-#####################For packaging (source file distrib so far)#######
-# Use  make package_source to build a release
-# Currently it doesn't work at all
-
-SET(CPACK_SOURCE_GENERATOR "TGZ")
-SET(CPACK_PACKAGE_VERSION_MAJOR "0")
-SET(CPACK_PACKAGE_VERSION_MINOR "9")
-SET(CPACK_PACKAGE_VERSION_PATCH "0")
-
-INCLUDE(CPack)
-
 #Compilation flags
 string(APPEND CMAKE_CXX_FLAGS_DEBUG_INIT "-Wall")
 string(APPEND CMAKE_CXX_FLAGS_RELWITHDEBINFO_INIT "-Wall")
@@ -49,6 +37,8 @@ endif()
 OPTION(WCPG_BUILD_NOTFOUND "Attempt to build WCPG if not found" ON)
 OPTION(SCALP_BUILD_NOTFOUND "Attempt to build SCALP if not found" ON)
 OPTION(PAGSUITE_BUILD_NOTFOUND "Attempt to build PAGsuite if not found" ON)
+
+include(GNUInstallDirs)
 
 add_subdirectory(HighLevelCores)
 add_subdirectory(VHDLOperators)
@@ -110,3 +100,7 @@ if(BUILD_UNIT_TEST)
 		add_test(IntConstMultShiftAddCost IntConstMultShiftAddCostFunction_exe)
 	endif()
 endif()
+
+configure_file(${PROJECT_NAME}-config.cmake.in ${PROJECT_NAME}-config.cmake @ONLY)
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake"
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME})

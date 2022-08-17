@@ -6,9 +6,9 @@
 #include "mpfr.h"
 #include "sollya.h"
 
-#include "FixFilters/FixFIR.hpp"
+#include "flopoco/FixFilters/FixFIR.hpp"
 
-#include "ShiftReg.hpp"
+#include "flopoco/ShiftReg.hpp"
 
 using namespace std;
 

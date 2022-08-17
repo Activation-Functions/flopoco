@@ -1,6 +1,6 @@
-#include "BitHeap/CompressionStrategyOptILP.hpp"
-#include "PrimitiveComponents/RowAdder.hpp"
-#include "PrimitiveComponents/Xilinx/XilinxFourToTwoCompressor.hpp"
+#include "flopoco/BitHeap/CompressionStrategyOptILP.hpp"
+#include "flopoco/PrimitiveComponents/RowAdder.hpp"
+#include "flopoco/PrimitiveComponents/Xilinx/XilinxFourToTwoCompressor.hpp"
 
 using namespace std;
 namespace flopoco {

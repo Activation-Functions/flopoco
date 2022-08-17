@@ -7,12 +7,12 @@
 #include <gmpxx.h>
 #include <cstdlib>
 
-#include "Operator.hpp"
+#include "flopoco/Operator.hpp"
 #include "ShiftAddOp.hpp"
 #include "ShiftAddDag.hpp"
-#include "IntAddSubCmp/IntAdder.hpp"
+#include "flopoco/IntAddSubCmp/IntAdder.hpp"
 
-#include "BitHeap/BitHeap.hpp"
+#include "flopoco/BitHeap/BitHeap.hpp"
 
 /**
 	@brief Integer constant multiplication.

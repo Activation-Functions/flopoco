@@ -2,7 +2,7 @@
 #define Xilinx_PRIMITIVE_H
 
 #include <map>
-#include "PrimitiveComponents/Primitive.hpp"
+#include "flopoco/PrimitiveComponents/Primitive.hpp"
 
 namespace flopoco {
     class Xilinx_Primitive : public Primitive {

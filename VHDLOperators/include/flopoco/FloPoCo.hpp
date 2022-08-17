@@ -15,10 +15,10 @@
 
 //#include "Instance.hpp"
 
-#include "Tables/Table.hpp"
+#include "flopoco/Tables/Table.hpp"
 
 /* operator pipeline work* ------------------------------------ */
-#include "OperatorPipeline/OperatorPipeline.hpp"
+#include "flopoco/OperatorPipeline/OperatorPipeline.hpp"
 
 /* resource estimation ---------------------------------------- */
 // #include "Tools/ResourceEstimationHelper.hpp"
@@ -45,7 +45,7 @@
 #include "ShiftersEtc/Shifters.hpp"
 #include "ShiftersEtc/LZOC.hpp"
 #include "ShiftersEtc/LZOC3.hpp"
-#include "ShiftersEtc/LZOCShifterSticky.hpp"
+#include "flopoco/ShiftersEtc/LZOCShifterSticky.hpp"
 
 /* FixFilters ------------------------------------------------ */
 #include "FixFilters/FixSOPC.hpp"
@@ -90,7 +90,7 @@
 #include "FPAddSub/FPAdd.hpp"
 #include "FPAddSub/FPAddDualPath.hpp"
 #include "FPAddSub/FPAddSinglePath.hpp"
-#include "FPAddSub/FPAddSinglePathIEEE.hpp"
+#include "flopoco/FPAddSub/FPAddSinglePathIEEE.hpp"
 // #include "FPAddSub/FPAdd3Input.hpp"
 // #include "FPAddSub/FPAddSub.hpp"
 
@@ -124,27 +124,27 @@
 
 /* Fixed-point function generators ---------------------*/
 
-#include "FixFunctions/FixFunction.hpp"
-#include "FixFunctions/BasicPolyApprox.hpp"
+#include "flopoco/FixFunctions/FixFunction.hpp"
+#include "flopoco/FixFunctions/BasicPolyApprox.hpp"
 #include "FixFunctions/FixFunctionByTable.hpp"
 //#include "FixFunctions/PiecewisePolyApprox.hpp"
 //#include "FixFunctions/FixFunctionBySimplePoly.hpp"
 //#include "FixFunctions/FixFunctionByPiecewisePoly.hpp"
 
-#include "FixFunctions/GenericTable.hpp"
+#include "flopoco/FixFunctions/GenericTable.hpp"
 //#include "FixFunctions/BipartiteTable.hpp"
 // #include "FixFunctions/FixFunctionByMultipartiteTable.hpp"
 
 /*  Various elementary functions in fixed or floating point*/
 //#include "Trigs/FixSinCos.hpp"
-#include "Trigs/CordicSinCos.hpp"
+#include "flopoco/Trigs/CordicSinCos.hpp"
 // #include "Trigs/FixAtan2.hpp"
 // #include "Trigs/FixAtan2ByCORDIC.hpp"
 //#include "Trigs/FixAtan2ByRecipMultAtan.hpp"
 //#include "Trigs/FixAtan2ByBivariateApprox.hpp"
 //#include "Trigs/Fix2DNorm.hpp"
 // #include "Trigs/FixSinOrCos.hpp"  Replug when poly eval fixed
-#include "ExpLog/IterativeLog.hpp"
+#include "flopoco/ExpLog/IterativeLog.hpp"
 //#include "ExpLog/FPExp.hpp"
 //#include "ExpLog/FPPow.hpp"
 
@@ -229,10 +229,10 @@ use withing matrix-multiplication scenarios ------------------ */
 #include "PrimitiveComponents/Xilinx/XilinxGPC.hpp"
 #include "PrimitiveComponents/Xilinx/XilinxFourToTwoCompressor.hpp"
 
-#include "ConstMultPAG/ConstMultPAG.hpp"
+#include "flopoco/ConstMultPAG/ConstMultPAG.hpp"
 
 /*Internshiping shit making*/
-#include "Internshiping/MAC.hpp"
+#include "flopoco/Internshiping/MAC.hpp"
 
 
 #endif //FLOPOCO_HPP

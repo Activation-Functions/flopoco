@@ -12,12 +12,12 @@
   All rights reserved.
 
   */
-#include "HOTBM.hpp"
-#include "Function.hpp"
-#include "HOTBM/Param.hh"
-#include "HOTBM/HOTBMInstance.hh"
-#include "HOTBM/Exhaustive.hh"
-#include "utils.hpp"
+#include "flopoco/HOTBM.hpp"
+#include "flopoco/Function.hpp"
+#include "flopoco/HOTBM/Param.hh"
+#include "flopoco/HOTBM/HOTBMInstance.hh"
+#include "flopoco/HOTBM/Exhaustive.hh"
+#include "flopoco/utils.hpp"
 
 
 namespace flopoco{

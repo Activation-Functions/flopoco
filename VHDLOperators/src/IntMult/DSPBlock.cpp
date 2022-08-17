@@ -1,5 +1,5 @@
-#include "IntMult/DSPBlock.hpp"
-#include "IntMult/IntMultiplier.hpp"
+#include "flopoco/IntMult/DSPBlock.hpp"
+#include "flopoco/IntMult/IntMultiplier.hpp"
 
 namespace flopoco {
 

@@ -1,5 +1,5 @@
-#include "AutoTest/AutoTest.hpp"
-#include "UserInterface.hpp"
+#include "flopoco/AutoTest/AutoTest.hpp"
+#include "flopoco/UserInterface.hpp"
 
 #include <vector>
 #include <map>

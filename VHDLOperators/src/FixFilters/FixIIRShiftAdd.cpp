@@ -16,7 +16,7 @@
  *
  */
 
-#include "FixFilters/FixIIRShiftAdd.hpp"
+#include "flopoco/FixFilters/FixIIRShiftAdd.hpp"
 #include <iostream>
 #include <sstream>
 #include <iomanip>

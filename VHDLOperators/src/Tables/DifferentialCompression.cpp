@@ -1,5 +1,5 @@
-#include "Tables/DifferentialCompression.hpp"
-#include "Tables/TableOperator.hpp"
+#include "flopoco/Tables/DifferentialCompression.hpp"
+#include "flopoco/Tables/TableOperator.hpp"
 #include <iostream>
 #include <cassert>
 

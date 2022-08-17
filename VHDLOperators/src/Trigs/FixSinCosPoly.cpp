@@ -9,18 +9,18 @@
 // One optim for 24 bits would be to compute z² for free by a table using the second unused port of the blockram
 
 
-#include "Tables/TableOperator.hpp"
+#include "flopoco/Tables/TableOperator.hpp"
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
-#include "ConstMult/FixRealKCM.hpp"
-#include "IntMult/IntMultiplier.hpp"
-#include "FixFunctions/FixFunctionByTable.hpp"
-#include "BitHeap/BitHeap.hpp"
-#include "Trigs/FixSinPoly.hpp"
-#include "Trigs/FixSinCosPoly.hpp"
-#include "Tables/DiffCompressedTable.hpp"
+#include "flopoco/ConstMult/FixRealKCM.hpp"
+#include "flopoco/IntMult/IntMultiplier.hpp"
+#include "flopoco/FixFunctions/FixFunctionByTable.hpp"
+#include "flopoco/BitHeap/BitHeap.hpp"
+#include "flopoco/Trigs/FixSinPoly.hpp"
+#include "flopoco/Trigs/FixSinCosPoly.hpp"
+#include "flopoco/Tables/DiffCompressedTable.hpp"
 
 #include <iostream>
 #include <sstream>

@@ -16,10 +16,10 @@
 
 */
 
-#include "AtanPow.hpp"
+#include "flopoco/AtanPow.hpp"
 #include <sstream>
 #include <vector>
-#include "FixFunctions/HOTBM.hpp"
+#include "flopoco/FixFunctions/HOTBM.hpp"
 
 using namespace std;
 

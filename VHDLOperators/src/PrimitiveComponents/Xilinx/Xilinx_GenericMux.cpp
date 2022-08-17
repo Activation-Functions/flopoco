@@ -9,9 +9,9 @@
 #include "mpfr.h"
 
 // include the header of the Operator
-#include "PrimitiveComponents/Xilinx/Xilinx_GenericMux.hpp"
-#include "PrimitiveComponents/Xilinx/Xilinx_GenericMux_slice.hpp"
-#include "PrimitiveComponents/Xilinx/Xilinx_Primitive.hpp"
+#include "flopoco/PrimitiveComponents/Xilinx/Xilinx_GenericMux.hpp"
+#include "flopoco/PrimitiveComponents/Xilinx/Xilinx_GenericMux_slice.hpp"
+#include "flopoco/PrimitiveComponents/Xilinx/Xilinx_Primitive.hpp"
 
 using namespace std;
 namespace flopoco {

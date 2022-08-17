@@ -1,8 +1,8 @@
 
 #include <fstream>
 #include <sstream>
-#include "ComplexAdder.hpp"
-#include "TestBenches/FPNumber.hpp"
+#include "flopoco/ComplexAdder.hpp"
+#include "flopoco/TestBenches/FPNumber.hpp"
 
 
 using namespace std;

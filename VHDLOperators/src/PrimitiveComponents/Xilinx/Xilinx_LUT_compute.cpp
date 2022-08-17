@@ -1,4 +1,4 @@
-#include "PrimitiveComponents/Xilinx/Xilinx_LUT_compute.hpp"
+#include "flopoco/PrimitiveComponents/Xilinx/Xilinx_LUT_compute.hpp"
 
 lut_op lut_in( int id ) {
     lut_op in( id );

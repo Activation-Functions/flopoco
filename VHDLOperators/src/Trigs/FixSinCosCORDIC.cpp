@@ -4,11 +4,11 @@
 #include "gmp.h"
 #include "mpfr.h"
 
-#include "Trigs/FixSinCos.hpp"
-#include "Trigs/FixSinCosCORDIC.hpp"
-#include "IntMult/IntMultiplier.hpp"
-#include "IntAddSubCmp/IntAdder.hpp"
-#include "ConstMult/FixRealKCM.hpp"
+#include "flopoco/Trigs/FixSinCos.hpp"
+#include "flopoco/Trigs/FixSinCosCORDIC.hpp"
+#include "flopoco/IntMult/IntMultiplier.hpp"
+#include "flopoco/IntAddSubCmp/IntAdder.hpp"
+#include "flopoco/ConstMult/FixRealKCM.hpp"
 
 using namespace std;
 

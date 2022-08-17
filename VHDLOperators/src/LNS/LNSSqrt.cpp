@@ -12,8 +12,8 @@
   All rights reserved.
  */
 
-#include "LNSSqrt.hpp"
-#include "utils.hpp"
+#include "flopoco/LNSSqrt.hpp"
+#include "flopoco/utils.hpp"
 #include <cmath>
 
 using namespace std;

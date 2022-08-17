@@ -5,9 +5,9 @@
 
 #include "sollya.h"
 
-#include "FixFilters/FixSOPC.hpp"
+#include "flopoco/FixFilters/FixSOPC.hpp"
 
-#include "ConstMult/FixRealKCM.hpp"
+#include "flopoco/ConstMult/FixRealKCM.hpp"
 
 using namespace std;
 namespace flopoco{

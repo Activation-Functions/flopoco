@@ -1,7 +1,7 @@
 #ifndef KCMTable_HPP
 #define KCMTable_HPP
 
-#include "Tables/Table.hpp"
+#include "flopoco/Tables/Table.hpp"
 
 namespace flopoco{
 

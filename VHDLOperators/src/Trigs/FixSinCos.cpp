@@ -6,10 +6,10 @@
 #include "config.h"
 #endif
 
-#include "Operator.hpp"
-#include "Trigs/FixSinCosPoly.hpp"
-#include "Trigs/FixSinCosCORDIC.hpp"
-#include "Trigs/FixSinCos.hpp"
+#include "flopoco/Operator.hpp"
+#include "flopoco/Trigs/FixSinCosPoly.hpp"
+#include "flopoco/Trigs/FixSinCosCORDIC.hpp"
+#include "flopoco/Trigs/FixSinCos.hpp"
 
 #include <iostream>
 #include <sstream>

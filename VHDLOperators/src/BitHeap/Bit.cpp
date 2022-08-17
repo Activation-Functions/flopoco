@@ -1,6 +1,6 @@
 
-#include "BitHeap/Bit.hpp"
-#include "BitHeap/BitHeap.hpp"
+#include "flopoco/BitHeap/Bit.hpp"
+#include "flopoco/BitHeap/BitHeap.hpp"
 
 using namespace std;
 

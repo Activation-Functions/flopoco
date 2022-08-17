@@ -5,8 +5,8 @@
 #include <gmp.h>
 #include <mpfr.h>
 #include <gmpxx.h>
-#include "Operator.hpp"
-#include "Tables/TableOperator.hpp"
+#include "flopoco/Operator.hpp"
+#include "flopoco/Tables/TableOperator.hpp"
 
 namespace flopoco{
 

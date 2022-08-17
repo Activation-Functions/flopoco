@@ -8,7 +8,7 @@
  *      Author: mistoan
  */
 
-#include "IntConstMCM.hpp"
+#include "flopoco/IntConstMCM.hpp"
 
 namespace flopoco {
 

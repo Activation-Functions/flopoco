@@ -8,7 +8,7 @@
 #include "gmp.h"
 #include "mpfr.h"
 
-#include "FixSinOrCos.hpp"
+#include "flopoco/FixSinOrCos.hpp"
 
 using namespace std;
 

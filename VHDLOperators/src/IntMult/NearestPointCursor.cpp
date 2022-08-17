@@ -1,4 +1,4 @@
-#include "IntMult/NearestPointCursor.hpp"
+#include "flopoco/IntMult/NearestPointCursor.hpp"
 #include <cmath>
 
 namespace flopoco {

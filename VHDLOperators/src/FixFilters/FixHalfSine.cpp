@@ -3,7 +3,7 @@
 #endif
 
 
-#include "FixFilters/FixHalfSine.hpp"
+#include "flopoco/FixFilters/FixHalfSine.hpp"
 
 using namespace std;
 

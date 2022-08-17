@@ -10,7 +10,7 @@
 #include "mpfr.h"
 
 // include the header of the Operator
-#include "PrimitiveComponents/Xilinx/Xilinx_FDCE.hpp"
+#include "flopoco/PrimitiveComponents/Xilinx/Xilinx_FDCE.hpp"
 
 using namespace std;
 namespace flopoco {

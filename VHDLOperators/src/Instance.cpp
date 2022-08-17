@@ -1,4 +1,4 @@
-#include "Instance.hpp"
+#include "flopoco/Instance.hpp"
 
 using namespace std;
 

@@ -14,8 +14,8 @@
 #include <iostream>
 #include <cmath>
 #include <cstdlib>
-#include "utils.hpp"
-#include "KCMTable.hpp"
+#include "flopoco/utils.hpp"
+#include "flopoco/KCMTable.hpp"
 using namespace std;
 
 

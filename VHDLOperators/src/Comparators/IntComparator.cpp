@@ -1,4 +1,4 @@
-#include "Comparators/IntComparator.hpp"
+#include "flopoco/Comparators/IntComparator.hpp"
 
 
 using namespace std;

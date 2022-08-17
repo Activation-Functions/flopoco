@@ -5,12 +5,12 @@
 #include "gmp.h"
 #include "mpfr.h"
 
-#include "Trigs/FixAtan2ByRecipMultAtan.hpp"
-#include "IntMult/IntMultiplier.hpp"
-#include "IntAddSubCmp/IntAdder.hpp"
-#include "ConstMult/FixRealKCM.hpp"
-#include "FixFunctions/FixFunctionByPiecewisePoly.hpp"
-#include "FixFunctions/FixFunctionByMultipartiteTable.hpp"
+#include "flopoco/Trigs/FixAtan2ByRecipMultAtan.hpp"
+#include "flopoco/IntMult/IntMultiplier.hpp"
+#include "flopoco/IntAddSubCmp/IntAdder.hpp"
+#include "flopoco/ConstMult/FixRealKCM.hpp"
+#include "flopoco/FixFunctions/FixFunctionByPiecewisePoly.hpp"
+#include "flopoco/FixFunctions/FixFunctionByMultipartiteTable.hpp"
 
 
 using namespace std;

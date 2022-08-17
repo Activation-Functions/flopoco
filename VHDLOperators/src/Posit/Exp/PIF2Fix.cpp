@@ -9,11 +9,11 @@
 #include "mpfr.h"
 
 // include the header of the Operator
-#include "Posit/Exp/PIF2Fix.hpp"
+#include "flopoco/Posit/Exp/PIF2Fix.hpp"
 
-#include "ShiftersEtc/Shifters.hpp"
-#include "TestBenches/PositNumber.hpp"
-#include "TestBenches/IEEENumber.hpp"
+#include "flopoco/ShiftersEtc/Shifters.hpp"
+#include "flopoco/TestBenches/PositNumber.hpp"
+#include "flopoco/TestBenches/IEEENumber.hpp"
 
 using namespace std;
 namespace flopoco {

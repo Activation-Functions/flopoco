@@ -1,8 +1,8 @@
 #ifndef GENERICADDSUB_H
 #define GENERICADDSUB_H
 
-#include "Operator.hpp"
-#include "utils.hpp"
+#include "flopoco/Operator.hpp"
+#include "flopoco/utils.hpp"
 
 namespace flopoco {
 ///

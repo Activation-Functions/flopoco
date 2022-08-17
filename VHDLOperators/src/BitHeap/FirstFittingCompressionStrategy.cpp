@@ -1,5 +1,5 @@
 
-#include "BitHeap/FirstFittingCompressionStrategy.hpp"
+#include "flopoco/BitHeap/FirstFittingCompressionStrategy.hpp"
 
 
 using namespace std;

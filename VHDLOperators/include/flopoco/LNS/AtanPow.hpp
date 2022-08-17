@@ -1,8 +1,8 @@
 #ifndef ATANPOW_HPP
 #define ATANPOW_HPP
 
-#include "Operator.hpp"
-#include "FixFunctions/GenericEvaluator.hpp"
+#include "flopoco/Operator.hpp"
+#include "flopoco/FixFunctions/GenericEvaluator.hpp"
 
 namespace flopoco{
 

@@ -1,7 +1,7 @@
-#include "IntMult/BaseMultiplierDSPSuperTilesXilinx.hpp"
-#include "PrimitiveComponents/Xilinx/Xilinx_LUT6.hpp"
-#include "PrimitiveComponents/Xilinx/Xilinx_CARRY4.hpp"
-#include "PrimitiveComponents/Xilinx/Xilinx_LUT_compute.hpp"
+#include "flopoco/IntMult/BaseMultiplierDSPSuperTilesXilinx.hpp"
+#include "flopoco/PrimitiveComponents/Xilinx/Xilinx_LUT6.hpp"
+#include "flopoco/PrimitiveComponents/Xilinx/Xilinx_CARRY4.hpp"
+#include "flopoco/PrimitiveComponents/Xilinx/Xilinx_LUT_compute.hpp"
 
 namespace flopoco {
 

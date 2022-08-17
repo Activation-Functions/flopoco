@@ -1,6 +1,6 @@
 #ifndef FPADD_HPP
 #define FPADD_HPP
-#include "Operator.hpp"
+#include "flopoco/Operator.hpp"
 #include "FPAddSinglePath.hpp"
 #include "FPAddDualPath.hpp"
 

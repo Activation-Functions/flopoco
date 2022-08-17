@@ -12,7 +12,7 @@ Copyright © ENS-Lyon, INRIA, CNRS, UCBL,
 All rights reserved.
 */
 #include <cassert>
-#include "TestBenches/PositNumber.hpp"
+#include "flopoco/TestBenches/PositNumber.hpp"
 
 #ifndef DEBUGPOSIT
 #define DEBUG_OUT(status) {}

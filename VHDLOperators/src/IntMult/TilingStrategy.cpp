@@ -1,5 +1,5 @@
-#include "IntMult/TilingStrategy.hpp"
-#include "IntMult/IntMultiplier.hpp"
+#include "flopoco/IntMult/TilingStrategy.hpp"
+#include "flopoco/IntMult/IntMultiplier.hpp"
 
 namespace flopoco {
 

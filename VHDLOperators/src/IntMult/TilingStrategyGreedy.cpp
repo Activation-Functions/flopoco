@@ -1,9 +1,9 @@
-#include "IntMult/TilingStrategyGreedy.hpp"
-#include "IntMult/BaseMultiplierIrregularLUTXilinx.hpp"
-#include "IntMult/BaseMultiplierXilinx2xk.hpp"
-#include "IntMult/LineCursor.hpp"
-#include "IntMult/NearestPointCursor.hpp"
-#include "IntMult/IntMultiplier.hpp"
+#include "flopoco/IntMult/TilingStrategyGreedy.hpp"
+#include "flopoco/IntMult/BaseMultiplierIrregularLUTXilinx.hpp"
+#include "flopoco/IntMult/BaseMultiplierXilinx2xk.hpp"
+#include "flopoco/IntMult/LineCursor.hpp"
+#include "flopoco/IntMult/NearestPointCursor.hpp"
+#include "flopoco/IntMult/IntMultiplier.hpp"
 
 #include <cstdlib>
 #include <ctime>

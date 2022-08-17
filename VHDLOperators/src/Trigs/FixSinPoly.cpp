@@ -14,8 +14,8 @@
   All rights reserved.
 */
 
-#include "Trigs/FixSinPoly.hpp"
-#include "Trigs/ConstDiv3ForSinPoly.hpp"
+#include "flopoco/Trigs/FixSinPoly.hpp"
+#include "flopoco/Trigs/ConstDiv3ForSinPoly.hpp"
 
 
 using namespace std;

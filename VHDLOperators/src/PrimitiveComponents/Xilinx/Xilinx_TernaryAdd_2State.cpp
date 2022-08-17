@@ -9,10 +9,10 @@
 #include "mpfr.h"
 
 // include the header of the Operator
-#include "PrimitiveComponents/Xilinx/Xilinx_TernaryAdd_2State.hpp"
-#include "PrimitiveComponents/Xilinx/Xilinx_TernaryAdd_2State_slice.hpp"
-#include "PrimitiveComponents/Xilinx/Xilinx_Primitive.hpp"
-#include "PrimitiveComponents/Xilinx/Xilinx_LUT_compute.hpp"
+#include "flopoco/PrimitiveComponents/Xilinx/Xilinx_TernaryAdd_2State.hpp"
+#include "flopoco/PrimitiveComponents/Xilinx/Xilinx_TernaryAdd_2State_slice.hpp"
+#include "flopoco/PrimitiveComponents/Xilinx/Xilinx_Primitive.hpp"
+#include "flopoco/PrimitiveComponents/Xilinx/Xilinx_LUT_compute.hpp"
 
 using namespace std;
 namespace flopoco {

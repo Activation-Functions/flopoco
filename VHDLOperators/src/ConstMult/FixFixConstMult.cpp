@@ -13,7 +13,7 @@
  * All rights reserved.
  */
 
-#include "ConstMult/FixFixConstMult.hpp"
+#include "flopoco/ConstMult/FixFixConstMult.hpp"
 
 using namespace std;
 

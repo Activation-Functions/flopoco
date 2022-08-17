@@ -6,8 +6,8 @@
 #include <mpfr.h>
 #include <gmpxx.h>
 
-#include "Operator.hpp"
-#include "IntMult//IntMultiplier.hpp"
+#include "flopoco/Operator.hpp"
+#include "flopoco/IntMult//IntMultiplier.hpp"
 
 namespace flopoco{
 

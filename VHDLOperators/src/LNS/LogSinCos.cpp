@@ -12,11 +12,11 @@
   All rights reserved.
 */
 
-#include "LogSinCos.hpp"
+#include "flopoco/LogSinCos.hpp"
 #include <sstream>
 #include <vector>
 #include <cmath>
-#include "utils.hpp"
+#include "flopoco/utils.hpp"
 
 using namespace std;
 

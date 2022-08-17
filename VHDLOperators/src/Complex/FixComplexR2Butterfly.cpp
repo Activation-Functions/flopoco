@@ -13,13 +13,13 @@
 #include <gmpxx.h>
 #include "sollya.h"
 //#include <utils.hpp>
-#include <Operator.hpp>
+#include "flopoco/Operator.hpp"
 
 //#include <string>
 //#include <utils.hpp>
 
 //#include "IntFFTButterfly.hpp"
-#include "Complex/FixComplexR2Butterfly.hpp"
+#include "flopoco/Complex/FixComplexR2Butterfly.hpp"
 
 using namespace std;
 

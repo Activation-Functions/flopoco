@@ -7,10 +7,10 @@
 #include <gmpxx.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "PrimitiveComponents/Xilinx/XilinxFourToTwoCompressor.hpp"
-#include "PrimitiveComponents/Xilinx/Xilinx_LUT6.hpp"
-#include "PrimitiveComponents/Xilinx/Xilinx_CARRY4.hpp"
-#include "PrimitiveComponents/Xilinx/Xilinx_LUT_compute.hpp"
+#include "flopoco/PrimitiveComponents/Xilinx/XilinxFourToTwoCompressor.hpp"
+#include "flopoco/PrimitiveComponents/Xilinx/Xilinx_LUT6.hpp"
+#include "flopoco/PrimitiveComponents/Xilinx/Xilinx_CARRY4.hpp"
+#include "flopoco/PrimitiveComponents/Xilinx/Xilinx_LUT_compute.hpp"
 
 using namespace std;
 namespace flopoco{

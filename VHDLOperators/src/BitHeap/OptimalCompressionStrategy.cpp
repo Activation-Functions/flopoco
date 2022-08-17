@@ -1,5 +1,5 @@
 
-#include "BitHeap/OptimalCompressionStrategy.hpp"
+#include "flopoco/BitHeap/OptimalCompressionStrategy.hpp"
 
 
 

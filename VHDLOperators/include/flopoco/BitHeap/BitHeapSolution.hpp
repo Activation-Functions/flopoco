@@ -1,8 +1,10 @@
 #ifndef SOLUTION_HPP
 #define SOLUTION_HPP
 
-#include "BitHeap/Compressor.hpp"
 #include <string>
+
+#include "flopoco/BitHeap/Compressor.hpp"
+
 namespace flopoco
 {
 

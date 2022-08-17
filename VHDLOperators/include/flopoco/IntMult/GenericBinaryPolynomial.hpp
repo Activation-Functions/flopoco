@@ -1,9 +1,9 @@
 #ifndef _GENERIC_BINARY_POLYNOMIAL
 #define _GENERIC_BINARY_POLYNOMIAL
 
-#include "Operator.hpp"
-#include "utils.hpp"
-#include "IntAddSubCmp/IntMultiAdder.hpp"
+#include "flopoco/Operator.hpp"
+#include "flopoco/utils.hpp"
+#include "flopoco/IntAddSubCmp/IntMultiAdder.hpp"
 #include <tr1/memory>
 #include "FormalBinaryProduct.hpp"
 

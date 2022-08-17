@@ -3,9 +3,9 @@
 #include <vector>
 #include <sstream>
 
-#include "Operator.hpp"
-#include "IntMultiplier.hpp"
-#include "IntAdder.hpp"
+#include "flopoco/Operator.hpp"
+#include "flopoco/IntMultiplier.hpp"
+#include "flopoco/IntAdder.hpp"
 
 namespace flopoco{
 

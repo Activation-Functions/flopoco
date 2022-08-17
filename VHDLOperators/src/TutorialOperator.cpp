@@ -9,7 +9,7 @@
 #include "mpfr.h"
 
 // include the header of the Operator
-#include "TutorialOperator.hpp"
+#include "flopoco/TutorialOperator.hpp"
 
 using namespace std;
 namespace flopoco {

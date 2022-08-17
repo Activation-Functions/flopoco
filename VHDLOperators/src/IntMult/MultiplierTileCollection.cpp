@@ -1,11 +1,11 @@
-#include "IntMult/MultiplierTileCollection.hpp"
-#include "IntMult/BaseMultiplierDSP.hpp"
-#include "IntMult/BaseMultiplierLUT.hpp"
-#include "IntMult/BaseMultiplierXilinx2xk.hpp"
-#include "IntMult/BaseMultiplierIrregularLUTXilinx.hpp"
-#include "IntMult/BaseMultiplierDSPSuperTilesXilinx.hpp"
-#include "IntMult/BaseMultiplierDSPKaratsuba.hpp"
-#include "IntMult/BaseSquarerLUT.hpp"
+#include "flopoco/IntMult/MultiplierTileCollection.hpp"
+#include "flopoco/IntMult/BaseMultiplierDSP.hpp"
+#include "flopoco/IntMult/BaseMultiplierLUT.hpp"
+#include "flopoco/IntMult/BaseMultiplierXilinx2xk.hpp"
+#include "flopoco/IntMult/BaseMultiplierIrregularLUTXilinx.hpp"
+#include "flopoco/IntMult/BaseMultiplierDSPSuperTilesXilinx.hpp"
+#include "flopoco/IntMult/BaseMultiplierDSPKaratsuba.hpp"
+#include "flopoco/IntMult/BaseSquarerLUT.hpp"
 
 using namespace std;
 namespace flopoco {

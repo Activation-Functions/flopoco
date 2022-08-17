@@ -3,10 +3,10 @@
 #include <vector>
 #include <sstream>
 
-#include "Operator.hpp"
-#include "ShiftersEtc/LZOC.hpp"
-#include "ShiftersEtc/Normalizer.hpp"
-#include "ShiftersEtc/Shifters.hpp"
+#include "flopoco/Operator.hpp"
+#include "flopoco/ShiftersEtc/LZOC.hpp"
+#include "flopoco/ShiftersEtc/Normalizer.hpp"
+#include "flopoco/ShiftersEtc/Shifters.hpp"
 
 
 namespace flopoco{

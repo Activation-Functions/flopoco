@@ -1,8 +1,8 @@
 #ifndef LNSADD_HPP
 #define LNSADD_HPP
 
-#include "Operator.hpp"
-#include "FixFunctions/GenericEvaluator.hpp"
+#include "flopoco/Operator.hpp"
+#include "flopoco/flopoco/FixFunctions/GenericEvaluator.hpp"
 
 
 namespace flopoco{

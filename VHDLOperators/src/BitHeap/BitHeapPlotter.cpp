@@ -12,7 +12,7 @@ All rights reserved.
 
 */
 
-#include "BitHeap/BitHeapPlotter.hpp"
+#include "flopoco/BitHeap/BitHeapPlotter.hpp"
 
 
 using namespace std;

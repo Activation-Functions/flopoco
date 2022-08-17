@@ -21,10 +21,10 @@
 #include <gmp.h>
 #include <mpfr.h>
 #include <gmpxx.h>
-#include "utils.hpp"
-#include "Operator.hpp"
-#include "FPConstDiv.hpp"
-#include "TestBenches/FPNumber.hpp"
+#include "flopoco/utils.hpp"
+#include "flopoco/Operator.hpp"
+#include "flopoco/FPConstDiv.hpp"
+#include "flopoco/TestBenches/FPNumber.hpp"
 
 using namespace std;
 

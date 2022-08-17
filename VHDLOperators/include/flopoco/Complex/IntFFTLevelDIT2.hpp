@@ -3,9 +3,9 @@
 #include <vector>
 #include <sstream>
 
-#include "utils.hpp"
+#include "flopoco/utils.hpp"ils.hpp"
 
-#include "Operator.hpp"
+#include "flopoco/Operator.hpp"tor.hpp"
 #include "./IntFFTButterfly.hpp"
 
 #define TWIDDLEIM 			0

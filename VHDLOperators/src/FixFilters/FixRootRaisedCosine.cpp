@@ -3,7 +3,7 @@
 #endif
 
 
-#include "FixFilters/FixRootRaisedCosine.hpp"
+#include "flopoco/FixFilters/FixRootRaisedCosine.hpp"
 
 using namespace std;
 

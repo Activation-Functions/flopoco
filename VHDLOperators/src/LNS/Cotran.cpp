@@ -14,10 +14,10 @@
 
 // works only with sollya
 
-#include "Cotran.hpp"
-#include "utils.hpp"
+#include "flopoco/Cotran.hpp"
+#include "flopoco/utils.hpp"
 #include <cmath>
-#include "LNSAdd.hpp"
+#include "flopoco/LNSAdd.hpp"
 
 using namespace std;
 

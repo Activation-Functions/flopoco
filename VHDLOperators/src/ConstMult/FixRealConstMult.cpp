@@ -13,7 +13,7 @@
  * All rights reserved.
  */
 
-#include "ConstMult/FixRealConstMult.hpp"
+#include "flopoco/ConstMult/FixRealConstMult.hpp"
 #include <cassert>
 
 using namespace std;

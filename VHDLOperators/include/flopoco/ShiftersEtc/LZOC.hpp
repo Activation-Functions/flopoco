@@ -5,7 +5,7 @@
 #include <gmp.h>
 #include <mpfr.h>
 #include <gmpxx.h>
-#include "Operator.hpp"
+#include "flopoco/Operator.hpp"
 
 
 namespace flopoco{

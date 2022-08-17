@@ -11,7 +11,7 @@
 */
 
 
-#include "Atan2Table.hpp"
+#include "flopoco/Atan2Table.hpp"
 using namespace std;
 
 

@@ -1,7 +1,7 @@
 #ifndef COTRAN_HPP
 #define COTRAN_HPP
 
-#include "Operator.hpp"
+#include "flopoco/Operator.hpp"
 #include <memory>
 #include "CotranTables.hpp"
 #include "LNSAdd.hpp"

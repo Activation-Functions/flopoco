@@ -6,12 +6,12 @@
 #include <mpfr.h>
 #include <gmpxx.h>
 
-#include "Operator.hpp"
-#include "TestBenches/FPNumber.hpp"
-#include "FixedPointFunctions/PolyCoeffTable.hpp"
-#include "FixedPointFunctions/PolynomialEvaluator.hpp"
-#include "squareroot/PolynomialTableCorrectRounded.hpp"
-#include "squareroot/PolynomialTable.hpp"
+#include "flopoco/Operator.hpp"
+#include "flopoco/TestBenches/FPNumber.hpp"
+#include "flopoco/FixedPointFunctions/PolyCoeffTable.hpp"
+#include "flopoco/FixedPointFunctions/PolynomialEvaluator.hpp"
+#include "flopoco/squareroot/PolynomialTableCorrectRounded.hpp"
+#include "flopoco/squareroot/PolynomialTable.hpp"
 
 namespace flopoco{
 	/** The FPSqrtPoly class */

@@ -1,6 +1,6 @@
 #include <fstream>
 #include <sstream>
-#include "IntFFTButterfly.hpp"
+#include "flopoco/IntFFTButterfly.hpp"
 
 using namespace std;
 

@@ -4,7 +4,7 @@
 #include "gmp.h"
 #include "mpfr.h"
 
-#include "ShiftReg.hpp"
+#include "flopoco/ShiftReg.hpp"
 
 using namespace std;
 

@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 #include <string>
-#include "UserInterface.hpp"
+#include "flopoco/UserInterface.hpp"
 
 using namespace std;
 

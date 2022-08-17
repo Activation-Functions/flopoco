@@ -4,9 +4,9 @@
 #include "gmp.h"
 #include "mpfr.h"
 
-#include "Posit/Posit2Posit.hpp"
-#include "Conversions/Posit2PIF.hpp"
-#include "Conversions/PIF2Posit.hpp"
+#include "flopoco/Posit/Posit2Posit.hpp"
+#include "flopoco/Conversions/Posit2PIF.hpp"
+#include "flopoco/Conversions/PIF2Posit.hpp"
 
 using namespace std;
 namespace flopoco {

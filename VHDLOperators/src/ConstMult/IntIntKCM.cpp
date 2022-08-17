@@ -22,11 +22,11 @@
 #include <gmp.h>
 #include <mpfr.h>
 #include <gmpxx.h>
-#include "utils.hpp"
-#include "Operator.hpp"
-#include "IntAddSubCmp/IntAdder.hpp"
-#include "IntIntKCM.hpp"
-#include "KCMTable.hpp"
+#include "flopoco/utils.hpp"
+#include "flopoco/Operator.hpp"
+#include "flopoco/IntAddSubCmp/IntAdder.hpp"
+#include "flopoco/IntIntKCM.hpp"
+#include "flopoco/KCMTable.hpp"
 
 using namespace std;
 

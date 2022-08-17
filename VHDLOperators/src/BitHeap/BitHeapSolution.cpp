@@ -1,5 +1,5 @@
 
-#include "BitHeap/BitHeapSolution.hpp"
+#include "flopoco/BitHeap/BitHeapSolution.hpp"
 
 
 using namespace std;

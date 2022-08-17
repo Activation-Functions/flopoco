@@ -7,14 +7,14 @@
 #include <gmpxx.h>
 #include <cstdlib>
 
-#include "Operator.hpp"
+#include "flopoco/Operator.hpp"
 #include "ShiftAddOp.hpp"
 #include "ShiftAddDag.hpp"
-#include "IntAddSubCmp/IntAdder.hpp"
+#include "flopoco/IntAddSubCmp/IntAdder.hpp"
 
-#include "ConstMult/IntConstMult.hpp"
+#include "flopoco/ConstMult/IntConstMult.hpp"
 
-#include "BitHeap/BitHeap.hpp"
+#include "flopoco/BitHeap/BitHeap.hpp"
 
 /**
 	@brief Integer multiple (parallel) constant multiplication

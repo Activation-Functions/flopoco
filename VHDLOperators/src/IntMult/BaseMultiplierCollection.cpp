@@ -1,12 +1,12 @@
 #include <algorithm>
 #include <numeric>
 
-#include "IntMult/BaseMultiplierCollection.hpp"
-#include "IntMult/BaseMultiplierLUT.hpp"
-#include "IntMult/BaseMultiplierXilinx2xk.hpp"
-#include "IntMult/BaseMultiplierDSP.hpp"
-#include "IntMult/BaseMultiplierDSPSuperTilesXilinx.hpp"
-#include "IntMult/TargetBaseMultSpecialisation.hpp"
+#include "flopoco/IntMult/BaseMultiplierCollection.hpp"
+#include "flopoco/IntMult/BaseMultiplierLUT.hpp"
+#include "flopoco/IntMult/BaseMultiplierXilinx2xk.hpp"
+#include "flopoco/IntMult/BaseMultiplierDSP.hpp"
+#include "flopoco/IntMult/BaseMultiplierDSPSuperTilesXilinx.hpp"
+#include "flopoco/IntMult/TargetBaseMultSpecialisation.hpp"
 
 using namespace std;
 

@@ -4,9 +4,9 @@
 #include <sstream>
 #include <gmp.h>
 #include <gmpxx.h>
-#include "Operator.hpp"
-#include "IntAddSubCmp/IntAdder.hpp"
-#include "IntMult//IntMultiplier.hpp"
+#include "flopoco/Operator.hpp"
+#include "flopoco/IntAddSubCmp/IntAdder.hpp"
+#include "flopoco/IntMult//IntMultiplier.hpp"
 
 namespace flopoco{
 

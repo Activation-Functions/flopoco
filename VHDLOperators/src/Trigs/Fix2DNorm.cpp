@@ -5,7 +5,7 @@
 #include "gmp.h"
 #include "mpfr.h"
 
-#include "Trigs/Fix2DNorm.hpp"
+#include "flopoco/Trigs/Fix2DNorm.hpp"
 //#include "FixFunctions/FixFunctionByTable.hpp"
 // #include "FixFunctions/BipartiteTable.hpp"
 // #include "FixFunctions/FixFunctionByPiecewisePoly.hpp"

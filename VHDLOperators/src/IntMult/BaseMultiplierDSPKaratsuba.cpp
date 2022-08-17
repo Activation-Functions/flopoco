@@ -1,5 +1,5 @@
-#include "IntMult/BaseMultiplierDSPKaratsuba.hpp"
-#include "IntMult/IntMultiplier.hpp"
+#include "flopoco/IntMult/BaseMultiplierDSPKaratsuba.hpp"
+#include "flopoco/IntMult/IntMultiplier.hpp"
 
 namespace flopoco {
 

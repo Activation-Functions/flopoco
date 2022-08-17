@@ -12,8 +12,8 @@
   All rights reserved.
  */
 
-#include "LNSDiv.hpp"
-#include "utils.hpp"
+#include "flopoco/LNSDiv.hpp"
+#include "flopoco/utils.hpp"
 #include <cmath>
 
 using namespace std;

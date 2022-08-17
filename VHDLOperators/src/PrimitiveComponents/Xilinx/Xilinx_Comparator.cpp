@@ -1,5 +1,5 @@
-#include "PrimitiveComponents/Xilinx/Xilinx_Comparator.hpp"
-#include "PrimitiveComponents/Xilinx/Xilinx_CARRY4.hpp"
+#include "flopoco/PrimitiveComponents/Xilinx/Xilinx_Comparator.hpp"
+#include "flopoco/PrimitiveComponents/Xilinx/Xilinx_CARRY4.hpp"
 
 namespace flopoco {
 	Xilinx_Comparator::Xilinx_Comparator(Operator *parentOp, Target *target, int wIn, ComparatorType type ) : Operator( parentOp,target ) , m_type( type ) {

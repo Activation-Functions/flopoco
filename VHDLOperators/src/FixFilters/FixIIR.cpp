@@ -11,12 +11,12 @@ extern "C"
 }
 #endif
 
-#include "FixFilters/FixIIR.hpp"
+#include "flopoco/FixFilters/FixIIR.hpp"
 
 #include "sollya.h"
 
-#include "ShiftReg.hpp"
-#include "FixFilters/FixSOPC.hpp"
+#include "flopoco/ShiftReg.hpp"
+#include "flopoco/FixFilters/FixSOPC.hpp"
 
 
 /* Test with 

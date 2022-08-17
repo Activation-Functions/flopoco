@@ -12,10 +12,10 @@
   All rights reserved.
  */
 
-#include "LNSMul.hpp"
-#include "utils.hpp"
+#include "flopoco/LNSMul.hpp"
+#include "flopoco/utils.hpp"
 #include <cmath>
-#include "IntAdder.hpp"
+#include "flopoco/IntAdder.hpp"
 
 using namespace std;
 

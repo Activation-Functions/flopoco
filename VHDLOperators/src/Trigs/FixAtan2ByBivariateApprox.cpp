@@ -21,9 +21,9 @@
 #include <mpfr.h>
 #include <gmpxx.h>
 
-#include "utils.hpp"
-#include "Operator.hpp"
-#include "FixAtan2ByBivariateApprox.hpp"
+#include "flopoco/utils.hpp"
+#include "flopoco/Operator.hpp"
+#include "flopoco/FixAtan2ByBivariateApprox.hpp"
 
 using namespace std;
 

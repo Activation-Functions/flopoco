@@ -1,5 +1,5 @@
-#include "TestBenches/TestCase.hpp"
-#include "Operator.hpp"
+#include "flopoco/TestBenches/TestCase.hpp"
+#include "flopoco/Operator.hpp"
 
 namespace flopoco{
 

@@ -14,7 +14,7 @@
 */
 #include <iostream>
 
-#include "FixFunctions/FixPolyEval.hpp"
+#include "flopoco/FixFunctions/FixPolyEval.hpp"
 
 using namespace std;
 

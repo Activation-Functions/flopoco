@@ -6,12 +6,12 @@
 #include <mpfr.h>
 #include <gmpxx.h>
 
-#include "ShiftersEtc/LZOC.hpp"
-#include "ShiftersEtc/Shifters.hpp"
-#include "ShiftersEtc/LZOCShifterSticky.hpp"
-#include "TestBenches/FPNumber.hpp"
-#include "IntAddSubCmp/IntAdder.hpp"
-#include "IntAddSubCmp/IntDualAddSub.hpp"
+#include "flopoco/ShiftersEtc/LZOC.hpp"
+#include "flopoco/ShiftersEtc/Shifters.hpp"
+#include "flopoco/ShiftersEtc/LZOCShifterSticky.hpp"
+#include "flopoco/TestBenches/FPNumber.hpp"
+#include "flopoco/IntAddSubCmp/IntAdder.hpp"
+#include "flopoco/IntAddSubCmp/IntDualAddSub.hpp"
 
 namespace flopoco{
 

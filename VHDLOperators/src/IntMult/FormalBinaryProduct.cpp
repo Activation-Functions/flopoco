@@ -1,4 +1,4 @@
-#include "FormalBinaryProduct.hpp"
+#include "flopoco/FormalBinaryProduct.hpp"
 #include <iostream>
 
 using namespace flopoco;

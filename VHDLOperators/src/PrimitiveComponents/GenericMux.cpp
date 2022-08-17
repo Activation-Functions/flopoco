@@ -3,10 +3,10 @@
 
 #include "gmp.h"
 #include "mpfr.h"
-#include "PrimitiveComponents/GenericMux.hpp"
-#include "PrimitiveComponents/Primitive.hpp"
+#include "flopoco/PrimitiveComponents/GenericMux.hpp"
+#include "flopoco/PrimitiveComponents/Primitive.hpp"
 
-#include "PrimitiveComponents/Xilinx/Xilinx_GenericMux.hpp"
+#include "flopoco/PrimitiveComponents/Xilinx/Xilinx_GenericMux.hpp"
 
 using namespace std;
 namespace flopoco {

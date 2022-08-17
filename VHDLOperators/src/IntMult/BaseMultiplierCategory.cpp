@@ -1,5 +1,5 @@
-#include "IntMult/BaseMultiplierCategory.hpp"
-#include "IntMult/IntMultiplier.hpp"
+#include "flopoco/IntMult/BaseMultiplierCategory.hpp"
+#include "flopoco/IntMult/IntMultiplier.hpp"
 
 namespace flopoco {
 

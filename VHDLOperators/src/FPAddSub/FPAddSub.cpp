@@ -21,10 +21,10 @@
 #include <mpfr.h>
 
 #include <gmpxx.h>
-#include "utils.hpp"
-#include "Operator.hpp"
+#include "flopoco/utils.hpp"
+#include "flopoco/Operator.hpp"
 
-#include "FPAddSub.hpp"
+#include "flopoco/FPAddSub.hpp"
 
 using namespace std;
 

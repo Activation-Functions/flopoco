@@ -1,5 +1,5 @@
 
-#include "BitHeap/Compressor.hpp"
+#include "flopoco/BitHeap/Compressor.hpp"
 #include <string>
 
 using namespace std;

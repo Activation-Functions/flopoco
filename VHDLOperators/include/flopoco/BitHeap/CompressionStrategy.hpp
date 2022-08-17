@@ -5,15 +5,15 @@
 #include <vector>
 #include <sstream>
 
-#include "Operator.hpp"
+#include "flopoco/Operator.hpp"
 
-#include "BitHeap/Bit.hpp"
-#include "BitHeap/Compressor.hpp"
-#include "BitHeap/BitHeap.hpp"
-#include "BitHeap/BitHeapPlotter.hpp"
-#include "BitHeap/BitHeapSolution.hpp"
+#include "flopoco/BitHeap/Bit.hpp"
+#include "flopoco/BitHeap/Compressor.hpp"
+#include "flopoco/BitHeap/BitHeap.hpp"
+#include "flopoco/BitHeap/BitHeapPlotter.hpp"
+#include "flopoco/BitHeap/BitHeapSolution.hpp"
 
-#include "IntAddSubCmp/IntAdder.hpp"
+#include "flopoco/IntAddSubCmp/IntAdder.hpp"
 
 namespace flopoco
 {

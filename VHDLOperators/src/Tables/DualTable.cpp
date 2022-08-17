@@ -26,7 +26,7 @@
    extended by a concrete class which will implement the "function"
    method. It is very similar to the Table class.  */
 
-#include "Tables/DualTable.hpp"
+#include "flopoco/Tables/DualTable.hpp"
 
 
 using namespace std;

@@ -22,14 +22,14 @@
 #include <mpfr.h>
 
 #include <gmpxx.h>
-#include "utils.hpp"
-#include "Operator.hpp"
+#include "flopoco/utils.hpp"
+#include "flopoco/Operator.hpp"
 
-#include "FPAddSub/FPAdd3Input.hpp"
+#include "flopoco/FPAddSub/FPAdd3Input.hpp"
 #if 0
 #include "IntMultiAdder.hpp"
 #else
-#include "BitHeap/BitHeap.hpp"
+#include "flopoco/BitHeap/BitHeap.hpp"
 #endif
 using namespace std;
 namespace flopoco{

@@ -20,11 +20,11 @@
 #include <mpfr.h>
 #include <gmpxx.h>
 #include <sollya.h>
-#include "utils.hpp"
-#include "Operator.hpp"
+#include "flopoco/utils.hpp"
+#include "flopoco/Operator.hpp"
 
-#include "FPRealKCM.hpp"
-#include "FixRealKCM.hpp"
+#include "flopoco/FPRealKCM.hpp"
+#include "flopoco/FixRealKCM.hpp"
 
 using namespace std;
 

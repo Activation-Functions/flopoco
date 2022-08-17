@@ -20,8 +20,8 @@
 #include <gmpxx.h>
 #include <cstdlib>
 
-#include "Operator.hpp"
-#include "IntAddSubCmp/IntAdder.hpp"
+#include "flopoco/Operator.hpp"
+#include "flopoco/IntAddSubCmp/IntAdder.hpp"
 #include "IntConstMultShiftAdd.hpp"
 
 namespace flopoco{

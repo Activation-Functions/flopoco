@@ -3,8 +3,8 @@
 #include <sstream>
 
 // include the header of the Operator
-#include "PrimitiveComponents/GenericLut.hpp"
-#include "PrimitiveComponents/Xilinx/Xilinx_Primitive.hpp"
+#include "flopoco/PrimitiveComponents/GenericLut.hpp"
+#include "flopoco/PrimitiveComponents/Xilinx/Xilinx_Primitive.hpp"
 
 using namespace std;
 

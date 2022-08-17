@@ -15,8 +15,8 @@
 #include <iostream>
 #include <iomanip>
 
-#include "FixFunctions/FixHornerEvaluator.hpp"
-#include "IntMult/FixMultAdd.hpp"
+#include "flopoco/FixFunctions/FixHornerEvaluator.hpp"
+#include "flopoco/IntMult/FixMultAdd.hpp"
 
 using namespace std;
 

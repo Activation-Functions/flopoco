@@ -23,7 +23,7 @@
 	 Stylistic remark: use index i for the subintervals, and j for the degree
 
 */
-#include "FixFunctions/VaryingPiecewisePolyApprox.hpp"
+#include "flopoco/FixFunctions/VaryingPiecewisePolyApprox.hpp"
 #include <sstream>
 #include <limits.h>
 #include <float.h>

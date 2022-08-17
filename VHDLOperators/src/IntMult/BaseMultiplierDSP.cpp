@@ -1,8 +1,8 @@
-#include "IntMult/BaseMultiplierDSP.hpp"
-#include "PrimitiveComponents/Xilinx/Xilinx_LUT6.hpp"
-#include "PrimitiveComponents/Xilinx/Xilinx_CARRY4.hpp"
-#include "PrimitiveComponents/Xilinx/Xilinx_LUT_compute.hpp"
-#include "IntMult/DSPBlock.hpp"
+#include "flopoco/IntMult/BaseMultiplierDSP.hpp"
+#include "flopoco/PrimitiveComponents/Xilinx/Xilinx_LUT6.hpp"
+#include "flopoco/PrimitiveComponents/Xilinx/Xilinx_CARRY4.hpp"
+#include "flopoco/PrimitiveComponents/Xilinx/Xilinx_LUT_compute.hpp"
+#include "flopoco/IntMult/DSPBlock.hpp"
 
 namespace flopoco {
 
