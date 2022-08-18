@@ -21,9 +21,8 @@
 #include <mpfr.h>
 #include <gmpxx.h>
 
-#include "utils.hpp"
-#include "Operator.hpp"
-#include "Plane.hpp"
+#include "flopoco/utils.hpp"
+#include "flopoco/Tools/Plane.hpp"
 
 using namespace std;
 

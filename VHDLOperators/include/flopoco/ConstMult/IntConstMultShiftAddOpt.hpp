@@ -10,9 +10,9 @@
 #include <gmpxx.h>
 #include <cstdlib>
 
-#include "Operator.hpp"
-#include "IntAddSubCmp/IntAdder.hpp"
-#include "IntConstMultShiftAdd.hpp"
+#include "flopoco/Operator.hpp"
+#include "flopoco/IntAddSubCmp/IntAdder.hpp"
+#include "flopoco/ConstMult/IntConstMultShiftAdd.hpp"
 
 /**
 	Integer constant multiplication using minimum number of adders due to

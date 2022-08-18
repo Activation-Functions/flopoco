@@ -6,7 +6,7 @@
 #if defined(HAVE_PAGLIB)
 //&& defined(HAVE_RPAGLIB) && defined(HAVE_SCALP)
 
-#include "utils.hpp"
+#include "flopoco/utils.hpp"
 #include "pagsuite/adder_graph.h"
 #include "IntConstMultShiftAddTypes.hpp"
 

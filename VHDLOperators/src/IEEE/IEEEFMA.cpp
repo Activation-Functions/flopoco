@@ -271,7 +271,6 @@ namespace flopoco{
 		vhdl << tab << declare("BigSumAbs", 3*p+4) << " <= BigSum" << range(3*p+3,0) << " when BigSum" << of(3*p+4) << "='0'  " << endl 
 				 << tab << tab <<	"else (" << rangeAssign(3*p+3, 0, "'0'") << " - BigSum" << range(3*p+3,0) << ") ;  -- TODO Opt: This could probably be a (faster) complementation, with later injection of the carry bit"<< endl;
 
-#elseif 0
 		vhdl << tab << declare("BigSum1", 3*p+5) << " <= CsigShiftedT - ('0' & Paligned) when effectiveSub ='1'     else CsigShiftedT + ('0' & Paligned);" << endl;
 			
 		vhdl << tab << declare("BigSum2", 3*p+5) << " <=  ('0' & Paligned) - CsigShiftedT;" << endl;

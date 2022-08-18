@@ -87,7 +87,7 @@ namespace flopoco {
                     if(greedySolution(tempState, nullptr, &tempPath, tempCost, tempArea, tempUsedDSPBlocks, bestCost, &localDSPBlocks)) {
                         bestCost = tempCost;
                         bestArea = tempArea;
-                        path = move(tempPath);
+                        path = std::move(tempPath);
                         tile = t;
                     }
                 }

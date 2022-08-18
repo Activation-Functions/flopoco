@@ -8,10 +8,10 @@
 #ifdef HAVE_PAGLIB
 
 #include "pagsuite/adder_graph.h"
-#include "utils.hpp"
-#include "Target.hpp"
-#include "Operator.hpp"
-#include "PrimitiveComponents/GenericAddSub.hpp"
+#include "flopoco/utils.hpp"
+#include "flopoco/Target.hpp"
+#include "flopoco/Operator.hpp"
+#include "flopoco/PrimitiveComponents/GenericAddSub.hpp"
 
 #include <string>
 #include <sstream>

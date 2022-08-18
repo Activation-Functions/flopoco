@@ -4,8 +4,8 @@
 #if defined(HAVE_PAGLIB) && defined(HAVE_RPAGLIB) && defined(HAVE_SCALP)
 
 #include "FixRealConstMult.hpp"
-#include "Tables/Table.hpp"
-#include "BitHeap/BitHeap.hpp"
+#include "flopoco/Tables/Table.hpp"
+#include "flopoco/BitHeap/BitHeap.hpp"
 
 #include "pagsuite/types.h"
 #include "pagsuite/adder_graph.h"

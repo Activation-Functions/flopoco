@@ -1,15 +1,15 @@
 #ifndef PLANE_HPP
 #define PLANE_HPP
 
-#include <vector>
 #include <sstream>
+#include <vector>
+
 #include <gmp.h>
 #include <gmpxx.h>
 #include <mpfr.h>
-#include "utils.hpp"
-#include "Operator.hpp"
-#include "Point.hpp"
 
+#include "Point.hpp"
+#include "flopoco/utils.hpp"
 
 namespace flopoco {
 

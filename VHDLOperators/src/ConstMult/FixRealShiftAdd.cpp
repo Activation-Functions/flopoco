@@ -28,7 +28,7 @@ I don't really understand
 
 #include "pagsuite/types.h"
 
-#include "Operator.hpp"
+#include "flopoco/Operator.hpp"
 
 #include <iostream>
 #include <sstream>
@@ -37,18 +37,18 @@ I don't really understand
 #include <mpfr.h>
 #include <gmpxx.h>
 #include <sollya.h>
-#include "utils.hpp"
-#include "IntAddSubCmp/IntAdder.hpp"
+#include "flopoco/utils.hpp"
+#include "flopoco/IntAddSubCmp/IntAdder.hpp"
 
 #include "pagsuite/log2_64.h"
 #include "pagsuite/csd.h"
 #include "pagsuite/rpag.h"
 
-#include "adder_cost.hpp"
-#include "error_comp_graph.hpp"
-#include "WordLengthCalculator.hpp"
-#include "IntConstMultShiftAddTypes.hpp"
-#include "error_comp_graph.hpp"
+#include "flopoco/ConstMult/adder_cost.hpp"
+#include "flopoco/ConstMult/error_comp_graph.hpp"
+#include "flopoco/ConstMult/WordLengthCalculator.hpp"
+#include "flopoco/ConstMult/IntConstMultShiftAddTypes.hpp"
+#include "flopoco/ConstMult/error_comp_graph.hpp"
 
 using namespace std;
 

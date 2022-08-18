@@ -1,12 +1,12 @@
 #ifndef POINT_HPP
 #define POINT_HPP
-#include <vector>
 #include <sstream>
+#include <vector>
+
 #include <gmp.h>
 #include <gmpxx.h>
-#include "utils.hpp"
-#include "Operator.hpp"
 
+#include "flopoco/utils.hpp"
 
 namespace flopoco {
 

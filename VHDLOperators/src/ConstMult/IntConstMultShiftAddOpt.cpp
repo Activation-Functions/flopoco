@@ -19,10 +19,10 @@
 #include <gmp.h>
 #include <mpfr.h>
 #include <gmpxx.h>
-#include "utils.hpp"
-#include "Operator.hpp"
+#include "flopoco/utils.hpp"
+#include "flopoco/Operator.hpp"
 
-#include "IntConstMultShiftAddOpt.hpp"
+#include "flopoco/ConstMult/IntConstMultShiftAddOpt.hpp"
 
 #include "pagsuite/scm_solutions.hpp"
 #include "pagsuite/pagexponents.hpp"

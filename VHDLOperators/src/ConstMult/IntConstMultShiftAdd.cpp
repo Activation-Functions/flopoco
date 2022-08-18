@@ -17,7 +17,7 @@
 #include <vector>
 #include <set>
 
-#include "adder_cost.hpp"
+#include "flopoco/ConstMult/adder_cost.hpp"
 
 /* header of libraries to manipulate multiprecision numbers
    There will be used in the emulate function to manipulate arbitraly large
@@ -26,10 +26,10 @@
 #include "mpfr.h"
 
 // include the header of the Operator
-#include "PrimitiveComponents/Primitive.hpp"
+#include "flopoco/PrimitiveComponents/Primitive.hpp"
 //#include "rpag/rpag.h"
 
-#include "ConstMult/WordLengthCalculator.hpp"
+#include "flopoco/ConstMult/WordLengthCalculator.hpp"
 
 using namespace std;
 using namespace PAGSuite;

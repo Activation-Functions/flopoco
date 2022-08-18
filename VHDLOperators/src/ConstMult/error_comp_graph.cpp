@@ -1,10 +1,11 @@
 #ifdef HAVE_PAGLIB
 
-#include "error_comp_graph.hpp"
-
-#include<set>
-#include <gmpxx.h>
 #include <numeric>
+#include<set>
+
+#include <gmpxx.h>
+
+#include "flopoco/ConstMult/error_comp_graph.hpp"
 
 using namespace PAGSuite;
 

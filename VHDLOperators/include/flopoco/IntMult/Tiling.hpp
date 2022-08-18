@@ -6,7 +6,7 @@
 
 #include "flopoco/Target.hpp"
 #include "flopoco/Operator.hpp"
-#include "flopoco/./MultiplierBlock.hpp"
+#include "flopoco/IntMult/MultiplierBlock.hpp"
 
 namespace flopoco {
 

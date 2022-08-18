@@ -2,7 +2,7 @@
 
 #include <algorithm>
 #include <iostream>
-#include "adder_cost.hpp"
+#include "flopoco/ConstMult/adder_cost.hpp"
 
 namespace IntConstMultShiftAdd_TYPES {
 int getNodeCost(

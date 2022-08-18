@@ -5,7 +5,7 @@
 
 #include "pagsuite/adder_graph.h"
 #include <gmpxx.h>
-#include "Target.hpp"
+#include "flopoco/Target.hpp"
 
 #endif // HAVE_PAGLIB
 

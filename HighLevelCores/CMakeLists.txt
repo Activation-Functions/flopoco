@@ -1,14 +1,18 @@
 # Detect GMP / GMPXX
 find_package(GMPXX REQUIRED)
 
+# Detect MPFR
+find_package(MPFR REQUIRED)
+
+
 # Detect Sollya
 find_package(Sollya)
 
 add_library(hileco SHARED)
 target_include_directories(hileco PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
-target_link_libraries(hileco PUBLIC GMPXX::GMPXX)
+target_link_libraries(hileco PUBLIC GMPXX::GMPXX MPFR::MPFR)
 
-if (Sollya_FOUND)
+if (${Sollya_FOUND})
   target_link_libraries(hileco PUBLIC Sollya::Sollya)
 endif()
 
@@ -22,10 +26,9 @@ install(TARGETS hileco EXPORT hileco-config
         LIBRARY 
           DESTINATION ${CMAKE_INSTALL_LIBDIR}
           COMPONENT hileco
-        PUBLIC_HEADER
-          DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-          COMPONENT hileco 
   )
+
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/flopoco DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 install(
   EXPORT hileco-config

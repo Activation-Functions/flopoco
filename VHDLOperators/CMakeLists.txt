@@ -29,14 +29,12 @@ find_package(ScaLP)
 #detect PAG suite
 include(PAGSuite)
 
-ADD_LIBRARY(FloPoCoLib STATIC ${PATH_ACTIVE_THINGS}
+ADD_LIBRARY(FloPoCoLib STATIC
 ${CMAKE_CURRENT_BINARY_DIR}/VHDLLexer.cpp
 )
 
 target_include_directories(FloPoCoLib PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 
-# TODO ugly workaround as of now, but will be problematic to ship the vhdl part of flopoco as a library
-#target_include_directories(FloPoCoLib PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include/flopoco)
 set_target_properties(FloPoCoLib PROPERTIES OUTPUT_NAME "FloPoCo")
 
 target_link_libraries(FloPoCoLib PUBLIC hileco)
@@ -70,7 +68,7 @@ endif (ScaLP_FOUND)
 
 if (RPAG_FOUND)
 	target_link_libraries(
-			FloPoCoLib
+			FloPoCoLib PRIVATE
       PAGSuite::RPAG
 	)
 	target_compile_definitions(FloPoCoLib PUBLIC HAVE_RPAGLIB)
@@ -78,7 +76,7 @@ endif (RPAG_FOUND)
 
 if (PAG_FOUND)
 	target_link_libraries(
-			FloPoCoLib
+			FloPoCoLib PRIVATE
 			PAGSuite::PAG
 	)
 	target_compile_definitions(FloPoCoLib PUBLIC HAVE_PAGLIB)
@@ -86,7 +84,7 @@ endif (PAG_FOUND)
 
 if (OSCM_FOUND)
 	target_link_libraries(
-			FloPoCoLib
+			FloPoCoLib PRIVATE
 			PAGSuite::OSCM
 	)
 	target_compile_definitions(FloPoCoLib PUBLIC HAVE_OSCM)
@@ -103,11 +101,10 @@ add_subdirectory(src)
 install(TARGETS FloPoCoLib EXPORT flopocolib-config
         LIBRARY 
           DESTINATION ${CMAKE_INSTALL_LIBDIR}
-          COMPONENT flopocolib
-        PUBLIC_HEADER
-          DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-          COMPONENT flopocolib 
+          COMPONENT flopocolib		
   )
+
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/flopoco DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 install(
     EXPORT flopocolib-config

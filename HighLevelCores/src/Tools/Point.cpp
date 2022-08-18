@@ -21,9 +21,8 @@
 #include <mpfr.h>
 #include <gmpxx.h>
 
-#include "utils.hpp"
-#include "Operator.hpp"
-#include "Point.hpp"
+#include "flopoco/utils.hpp"
+#include "flopoco/Tools/Point.hpp"
 
 using namespace std;
 

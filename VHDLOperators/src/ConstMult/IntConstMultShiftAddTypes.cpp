@@ -3,17 +3,17 @@
  *  Datum: 20.11.2014
  */
 #ifdef HAVE_PAGLIB
-#include "IntConstMultShiftAddTypes.hpp"
+#include "flopoco/ConstMult/IntConstMultShiftAddTypes.hpp"
 
 #include <algorithm>
 #include <sstream>
 #include <cassert>
 
 //#include "FloPoCo.hpp"
-#include "PrimitiveComponents/GenericLut.hpp"
-#include "PrimitiveComponents/GenericMux.hpp"
-#include "PrimitiveComponents/Xilinx/Xilinx_TernaryAdd_2State.hpp"
-#include "utils.hpp"
+#include "flopoco/PrimitiveComponents/GenericLut.hpp"
+#include "flopoco/PrimitiveComponents/GenericMux.hpp"
+#include "flopoco/PrimitiveComponents/Xilinx/Xilinx_TernaryAdd_2State.hpp"
+#include "flopoco/utils.hpp"
 //#include "PrimitiveComponents/Altera/Altera_TernaryAdd.hpp"
 
 using namespace PAGSuite;

@@ -11,7 +11,7 @@ TODO
 #include <sstream>
 #include <cmath>
 
-#include "WordLengthCalculator.hpp"
+#include "flopoco/ConstMult/WordLengthCalculator.hpp"
 
 using namespace std;
 using namespace PAGSuite;
