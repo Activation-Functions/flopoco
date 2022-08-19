@@ -4,7 +4,6 @@ find_package(GMPXX REQUIRED)
 # Detect MPFR
 find_package(MPFR REQUIRED)
 
-
 # Detect Sollya
 find_package(Sollya)
 

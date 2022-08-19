@@ -147,7 +147,6 @@ namespace flopoco{
 		sollya_obj_t absoluteS;           /**< a constant sollya_obj_t, which indicates that fpminimax must try to minimize the absolute error */
 
 	};
-
 }
 #endif // _POLYAPPROX_HH_
 
