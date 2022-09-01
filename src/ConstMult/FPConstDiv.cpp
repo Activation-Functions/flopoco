@@ -34,10 +34,13 @@ namespace flopoco{
 
 	// The expert version 
 
-	FPConstDiv::FPConstDiv(OperatorPtr parentOp, Target* target, int wEIn_, int wFIn_, int wEOut_, int wFOut_, int d_, int dExp_, int alpha_, int arch):
+	FPConstDiv::FPConstDiv(OperatorPtr parentOp, Target* target, int wEIn_, int wFIn_, int wEOut_, int wFOut_, vector<int> divisors_, int dExp_, int alpha_, int arch):
 		Operator(parentOp, target), 
-		wEIn(wEIn_), wFIn(wFIn_), wEOut(wEOut_), wFOut(wFOut_), d(d_), dExp(dExp_), alpha(alpha_)
+		wEIn(wEIn_), wFIn(wFIn_), wEOut(wEOut_), d(1), divisors(divisors_), wFOut(wFOut_), dExp(dExp_), alpha(alpha_)
 	{
+		for(auto factor: divisors){
+			d *= factor;
+		}
 		if(wEOut==0)
 			wEOut=wEIn;
 		if(wFOut==0)
@@ -152,9 +155,17 @@ namespace flopoco{
 			outPortMap (icd, "R","remainder");
 			vhdl << instance(icd, "sig_div");
 #else
+			// I feel silly rebuilding a string for the divisor list
+			string divisorsString="";
+			string colon="";
+			for(auto factor: divisors){
+				divisorsString+=  colon + to_string(factor) ;
+				colon=":";
+			}
+			cerr << "***** " << divisorsString;
 			newInstance("IntConstDiv",
 									"intconstdiv",
-									"wIn=" + to_string(intDivSize) + " d="+ to_string(d)
+									"wIn=" + to_string(intDivSize) + " d="+ divisorsString
 									+ " arch="+ to_string(arch) + " alpha="+ to_string(alpha) ,
 									"X=>divIn",
 									"Q=>quotient, R=>remainder");
@@ -234,14 +245,15 @@ namespace flopoco{
 	}
 
 	OperatorPtr FPConstDiv::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
-		int wE,wF, d, dExp, alpha, arch;
+		int wE,wF, dExp, alpha, arch;
+		vector<int> divisors;
 		UserInterface::parseStrictlyPositiveInt(args, "wE", &wE); 
 		UserInterface::parseStrictlyPositiveInt(args, "wF", &wF);
-		UserInterface::parseStrictlyPositiveInt(args, "d", &d);
+		UserInterface::parseColonSeparatedIntList(args, "d", &divisors);
 		UserInterface::parseInt(args, "dExp", &dExp);
 		UserInterface::parsePositiveInt(args, "arch", &arch);
 		UserInterface::parseInt(args, "alpha", &alpha);
-		return new FPConstDiv(parentOp, target, wE, wF,  wE,  wF, d,  dExp, alpha, arch);
+		return new FPConstDiv(parentOp, target, wE, wF,  wE,  wF, divisors,  dExp, alpha, arch);
 	}
 
 	void FPConstDiv::registerFactory(){
