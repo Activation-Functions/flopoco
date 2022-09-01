@@ -15,6 +15,7 @@ IntMultiAdder
 IntConstMult
 FPConstMult
 IntConstDiv
+FPConstDiv
 DSPBlock
 IntMultiplier
 IntMultiplierLUT

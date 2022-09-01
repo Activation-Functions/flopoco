@@ -34,8 +34,8 @@ namespace flopoco{
 
 	// The expert version 
 
-	FPConstDiv::FPConstDiv(Target* target, int wEIn_, int wFIn_, int wEOut_, int wFOut_, int d_, int dExp_, int alpha_, int arch):
-		Operator(target), 
+	FPConstDiv::FPConstDiv(OperatorPtr parentOp, Target* target, int wEIn_, int wFIn_, int wEOut_, int wFOut_, int d_, int dExp_, int alpha_, int arch):
+		Operator(parentOp, target), 
 		wEIn(wEIn_), wFIn(wFIn_), wEOut(wEOut_), wFOut(wFOut_), d(d_), dExp(dExp_), alpha(alpha_)
 	{
 		if(wEOut==0)
@@ -144,12 +144,23 @@ namespace flopoco{
 			vhdl << tab << declare("divIn1", intDivSize) << " <= x_sig & '0' & CONV_STD_LOGIC_VECTOR(" << h << ", " << s <<");" << endl;
 			vhdl << tab << declare(getTarget()->lutDelay(), "divIn", intDivSize) << " <= divIn1 when mltd='1' else divIn0;" << endl;
 			
-			icd = new IntConstDiv(target, intDivSize, d, alpha, arch);
+#if 0
+			icd = new IntConstDiv(parentOp,target, intDivSize, d, alpha, arch);
 			
 			inPortMap  (icd, "X", "divIn");
 			outPortMap (icd, "Q","quotient");
 			outPortMap (icd, "R","remainder");
 			vhdl << instance(icd, "sig_div");
+#else
+			newInstance("IntConstDiv",
+									"intconstdiv",
+									"wIn=" + to_string(intDivSize) + " d="+ to_string(d)
+									+ " arch="+ to_string(arch) + " alpha="+ to_string(alpha) ,
+									"X=>divIn",
+									"Q=>quotient, R=>remainder");
+
+#endif
+			
 			
 			vhdl << tab << declare("r_frac", wFOut) << " <= quotient" << range(wFOut-1, 0) << ";"<<endl;
 			
@@ -230,7 +241,7 @@ namespace flopoco{
 		UserInterface::parseInt(args, "dExp", &dExp);
 		UserInterface::parsePositiveInt(args, "arch", &arch);
 		UserInterface::parseInt(args, "alpha", &alpha);
-		return new FPConstDiv(target, wE, wF,  wE,  wF, d,  dExp, alpha, arch);
+		return new FPConstDiv(parentOp, target, wE, wF,  wE,  wF, d,  dExp, alpha, arch);
 	}
 
 	void FPConstDiv::registerFactory(){

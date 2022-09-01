@@ -59,6 +59,7 @@ ConstMult/FixFixConstMult
 ConstMult/IntConstMult
 ConstMult/FPConstMult
 ConstMult/IntConstDiv
+ConstMult/FPConstDiv
 ConstMult/IntConstMultShiftAdd
 ConstMult/IntConstMultShiftAddTypes
 ConstMult/IntConstMultShiftAddOpt
