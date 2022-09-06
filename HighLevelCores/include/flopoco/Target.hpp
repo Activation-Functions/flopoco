@@ -407,6 +407,8 @@ namespace flopoco{
 		/** Returns true if it is worth using hard multipliers for implementing a multiplier of size wX times wY */
 		bool worthUsingDSP(int wX, int wY);
 
+		bool hasFaithfullProducts() { return false; }
+
 
 
 #if 0

@@ -15,6 +15,7 @@
 #include <iostream>
 #include <iomanip>
 
+#include "flopoco/FixFunctions/FixHorner.hpp"
 #include "flopoco/FixFunctions/FixHornerEvaluator.hpp"
 #include "flopoco/IntMult/FixMultAdd.hpp"
 
@@ -82,241 +83,65 @@ namespace flopoco{
 																				 int lsbOut_,
 																				 vector<BasicPolyApprox*> poly_,
 																				 bool finalRounding):
-		FixPolyEval(parentOp, target, lsbIn_, msbOut_, lsbOut_, poly_, finalRounding)
+		Operator(parentOp, target),
+		Arch{target, lsbIn_, msbOut_, lsbOut_, poly_, finalRounding}
 	{
 		initialize();
-		computeArchitecturalParameters();
 		generateVHDL();
 	}
-
-
-
-
 
 	void FixHornerEvaluator::initialize(){
 		setNameWithFreqAndUID("FixHornerEvaluator");		
 		setCopyrightString("F. de Dinechin (2014-2020)");
 		srcFileName="FixHornerEvaluator";
 	}
-
-
-
-	void FixHornerEvaluator::computeArchitecturalParameters(){
-		// initialize the worst case parameters so that we can use array notation. All dummy values
-		wcSumSign = vector<int>(degree+1, 17);
-		wcMaxAbsSum = vector<double>(degree+1, -1);	
-		wcSumMSB = vector<int>(degree+1,INT_MIN);
-		wcSumLSB = vector<int>(degree+1,INT_MAX);
-		wcYLSB = vector<int>(degree,INT_MAX);
-		isZero = vector<bool>(degree+1, true) ;
-		//wcProductMSB = vector<int>(degree,0);
-		//wcProductLSB = vector<int>(degree,0);
-
-		sollya_obj_t yS = sollya_lib_build_function_free_variable();		
-		sollya_obj_t rangeS = sollya_lib_parse_string("[-1;1]");		
-
-		REPORT(DEBUG, "Entering computeArchitecturalParameters, for " << poly.size() << " intervals" );
-	
-		// iterate over all the polynomials to implement the error analysis on each interval
-		for (size_t k=0; k<poly.size(); k++) {
-			REPORT(DETAILED, "Error analysis on interval " << k  << " of " << poly.size()-1 );
-			// detecting zero coefficients
-			for(int i=0; i<=degree; i++) {
-				if(!poly[k] ->  getCoeff(i) -> isZero())
-					isZero[i]=false;
-			}
-			//for(int i=0; i<=degree; i++) {	REPORT(0, "isZero["<< i << "] = " << isZero[i]);  }
-
-			// First, compute the max abs value of the d intermediate sums
-			vector<double> maxAbsSum(degree+1, -1);
-			vector<int> sumMSB(degree+1, INT_MIN);
-			// S_d=C_d in the ASA book
-			sollya_obj_t sS =	sollya_lib_constant(poly[k] -> getCoeff(degree) -> fpValue);
-			maxAbsSum[degree] = abs(mpfr_get_d(poly[k] -> getCoeff(degree) -> fpValue, MPFR_RNDN)); // should be round away from 0 but nobody will notice
-			sumMSB[degree] = poly[k] ->  getCoeff(degree) -> MSB;
-			wcSumMSB[degree]     = max(wcSumMSB[degree],     sumMSB[degree]); // this one is probably useless
-
-			for(int i=degree-1; i>=0; i--) {
-				int sumSign;
-				sollya_obj_t cS = sollya_lib_constant(poly[k] -> getCoeff(i) -> fpValue);
-				sollya_obj_t pS = sollya_lib_mul(yS, sS);
-				sollya_lib_clear_obj(sS); // it has been used
-				sS = sollya_lib_add(cS, pS);
-				sollya_lib_clear_obj(pS); // it has been used
-				sollya_lib_clear_obj(cS); // it has been used
-				// REPORT(0, "interval " << k << ": expression of S_"<<i);
-				// sollya_lib_printf("%b\n", sS);
-
-				sollya_obj_t sIntervalS = sollya_lib_evaluate(sS,rangeS);
-				sollya_obj_t supS = sollya_lib_sup(sIntervalS);
-				sollya_obj_t infS = sollya_lib_inf(sIntervalS);
-				mpfr_t supMP, infMP, tmp;
-				mpfr_init2(supMP, 1000); // no big deal if we are not accurate here 
-				mpfr_init2(infMP, 1000); // no big deal if we are not accurate here 
-				mpfr_init2(tmp, 1000); // no big deal if we are not accurate here 
-				sollya_lib_get_constant(supMP, supS);
-				sollya_lib_get_constant(infMP, infS);
-
-				if(mpfr_sgn(infMP) >=0 )
-					sumSign = 1;
-				else if(mpfr_sgn(supMP) <0 )
-					sumSign = -1;
-				else 
-					sumSign = 0;
-				
-				// Now recompute the MSB explicitely.
-				mpfr_abs(supMP, supMP, GMP_RNDU);
-				mpfr_abs(infMP, infMP, GMP_RNDU);
-				mpfr_max(supMP, infMP, supMP, GMP_RNDU); // now we have the supnorm
-				maxAbsSum[i] = mpfr_get_d(supMP, GMP_RNDU);
-				mpfr_log2(tmp, supMP, GMP_RNDU);
-				mpfr_floor(tmp, tmp);
-				sumMSB[i] = 1+ mpfr_get_si(tmp, GMP_RNDU); // 1+ because we assume signed arithmetic for s
-
-				REPORT(DETAILED, "interval " << k <<":  maxAbsSum[" << i << "] = " << maxAbsSum[i] << "  sumMSB[" << i << "] = " << sumMSB[i]);
-				
-				sollya_lib_clear_obj(sIntervalS);
-				sollya_lib_clear_obj(supS);
-				sollya_lib_clear_obj(infS);
-				mpfr_clears(supMP,infMP,tmp, NULL);
-
-				if(wcSumSign[i]==17)
-					wcSumSign[i]=sumSign;
-				else {
-					if(sumSign!=wcSumSign[i])
-						wcSumSign[i]=0; // otherwise leave it as it is
-				} 
-		
-				// Finally update the worst-case values 
-				wcSumMSB[i]     = max(wcSumMSB[i],     sumMSB[i]);
-				//				wcSumLSB[i]     = min(wcSumLSB[i],     sumLSB);
-				//wcProductMSB[i] = max(wcProductMSB[i], pMSB[i]);
-				//wcProductLSB[i] = min(wcProductLSB[i], pLSB[i]);
-			} // end loop on degree 
-			// and free remaining memory
-			sollya_lib_clear_obj(sS);
-
-			
-			REPORT(DEBUG, "OK, now we have the max Si, we may implement the error analysis, for approxErrorBound="<< poly[k]->getApproxErrorBound());
-			// initialization
-			double evalErrorBudget = exp2(lsbOut-1) - poly[k]->getApproxErrorBound();
-			int lsb = lsbOut;
-			vector<int> lsbY(degree,0);
-
-			bool evalErrorNotOK=true;
-			while(evalErrorNotOK) {
-				// we have delta_Y=2^lsbY, and we want to balance the error term maxS[i]deltaY
-				// with delta_multadd = 2^(lsb-1) if plainVHDL, 2^lsb otherwise    
-				for(int i=degree-1; i>=0; i--) {
-					lsbY[i] = max(lsb - sumMSB[i+1], lsbIn); 
-				}
-				double evalerror = 0;
-				for(int i=degree-1; i>=0; i--) {
-					double multaddError, yTruncationError;
-					if(getTarget()->plainVHDL()) {
-						multaddError=exp2(lsb-1); // full multipliers => correct rounding
-					}
-					else {
-						multaddError=exp2(lsb); // faithful truncated multipliers
-					}
-					if(lsbY[i]==lsbIn) {
-						yTruncationError = 0.0; // no truncation, no error
-					}
-					else {
-						yTruncationError = exp2(lsbY[i])*maxAbsSum[i+1];
-					}
-					evalerror += multaddError + yTruncationError;
-				}
-				if(evalerror < evalErrorBudget)
-					evalErrorNotOK=false;
-					
-				REPORT(DETAILED, "Interval " << k  << "  evalErrorBudget=" << evalErrorBudget  << "   lsb=" << lsb
-							 << " => evalError=" << evalerror << (evalErrorNotOK?":  increasing lsb... " : ":  OK!"));
-				if(evalErrorNotOK) {
-					lsb--;
-				}
-			}
-
-#if 0 // this is just to check that the error computation is tight
-			// If I plug this code the autotest fails 12% of the cases
-			REPORT(0,"******************** Sabotage ! ********************************");
-			lsb++;
-			for(int i=degree-1; i>=0; i--) {
-				lsbY[i] =  max(lsb - sumMSB[i+1], lsbIn);
-			}	
-#endif
-			
-			// OK, we have the lsbY and lsb for this polynomial, now update the worst-case
-			for(int i=degree-1; i>=0; i--) {
-				wcYLSB[i] = min(wcYLSB[i], lsbY[i]);
-			}	
-			for(int i=degree; i>=0; i--) {
-				wcSumLSB[i] = min(wcSumLSB[i], lsb);
-			}	
-			
-		} // closes the for loop on k (the intervals)
- 
-		// Final reporting
-		REPORT(INFO, "Architecture parameters:")
-		for(int i=degree-1; i>=0; i--) {
-			REPORT(INFO,"  Horner step " << i << ": YLSB=" << setw(3) << wcYLSB[i]
-						 << "   SSgn=" << setw(2) << wcSumSign[i] << " SMSB=" << setw(3) << wcSumMSB[i] << " SLSB=" << setw(3) << wcSumLSB[i]
-						 << "\t Mult size " << 1-wcYLSB[i] << "x" << wcSumMSB[i+1]-wcSumLSB[i+1]+1)
-			}	
-		
-
-		sollya_lib_clear_obj(yS); 
-		sollya_lib_clear_obj(rangeS);
-	} 
-
-
-
-	
-
-	
-	void FixHornerEvaluator::generateVHDL(){
+	void FixHornerEvaluator::generateVHDL() {
+		auto const & lsbIn = Arch.lsbIn;
+		auto const & lsbOut = Arch.lsbOut;
+		auto const & msbOut = Arch.msbOut;
+		auto const & degree = Arch.degree; 
 		addInput("Y", -lsbIn+1);
 		vhdl << tab << declareFixPoint("Ys", true, 0, lsbIn) << " <= signed(Y);" << endl;
 		for (int j=0; j<=degree; j++) {
-			addInput(join("A",j), coeffMSB[j]-coeffLSB[j] +1);
+			addInput(join("A",j), Arch.coeffMSB[j]-Arch.coeffLSB[j] +1);
 		}
 
 		// declaring outputs
-		addOutput("R", msbOut-lsbOut+1);
+		addOutput("R", Arch.msbOut-Arch.lsbOut+1);
 
 
 		// convert the coefficients to signed. Remark: constant signs have been inserted by the caller
 		for(int i=0; i<=degree; i++) {
-			vhdl << tab << declareFixPoint(join("As", i), true, coeffMSB[i], coeffLSB[i])
+			vhdl << tab << declareFixPoint(join("As", i), true, Arch.coeffMSB[i], Arch.coeffLSB[i])
 					 << " <= " << "signed(" << join("A",i) << ");" <<endl;
 		}
 
 		// Initialize the Horner recurrence
-		resizeFixPoint(join("S", degree), join("As", degree), wcSumMSB[degree], wcSumLSB[degree]);
+		resizeFixPoint(join("S", degree), join("As", degree), Arch.wcSumMSB[degree], Arch.wcSumLSB[degree]);
 
 		// Main loop of the Horner recurrence
 		for(int i=degree-1; i>=0; i--) {
-			resizeFixPoint(join("YsTrunc", i), "Ys", 0, wcYLSB[i]);
+			resizeFixPoint(join("YsTrunc", i), "Ys", 0, Arch.wcYLSB[i]);
 
 			//  assemble faithful operators (either FixMultAdd, or truncated mult)
 
 			if(getTarget()->plainVHDL()) {	// no pipelining here
-				int pMSB = 0 + wcSumMSB[i+1] + 1; // not attempting to save the MSB bit that could be saved.
-				int pLSB = wcYLSB[i] + wcSumLSB[i+1];	
+				int pMSB = 0 + Arch.wcSumMSB[i+1] + 1; // not attempting to save the MSB bit that could be saved.
+				int pLSB = Arch.wcYLSB[i] + Arch.wcSumLSB[i+1];	
 				vhdl << tab << declareFixPoint(join("P", i), true, pMSB,  pLSB)
 						 <<  " <= "<< join("YsTrunc", i) <<" * S" << i+1 << ";" << endl;
 				// Align before addition
-				resizeFixPoint(join("Ptrunc", i), join("P", i), wcSumMSB[i], wcSumLSB[i]-1);
-				if(isZero[i]) {
-					vhdl << tab <<	declareFixPoint(join("Aext", i), true, wcSumMSB[i], wcSumLSB[i]) << " <= " <<  zg( wcSumMSB[i] -  wcSumLSB[i] +1) << ";" << endl; 
+				resizeFixPoint(join("Ptrunc", i), join("P", i), Arch.wcSumMSB[i], Arch.wcSumLSB[i]-1);
+				if(Arch.isZero[i]) {
+					vhdl << tab <<	declareFixPoint(join("Aext", i), true, Arch.wcSumMSB[i], Arch.wcSumLSB[i]) << " <= " <<  zg( Arch.wcSumMSB[i] -  Arch.wcSumLSB[i] +1) << ";" << endl; 
 					}
 				else {
-					resizeFixPoint(join("Aext", i), join("As", i), wcSumMSB[i], wcSumLSB[i]-1); // -1 to make space for the round bit
+					resizeFixPoint(join("Aext", i), join("As", i), Arch.wcSumMSB[i], Arch.wcSumLSB[i]-1); // -1 to make space for the round bit
 				}
 
-				vhdl << tab << declareFixPoint(join("SBeforeRound", i), true, wcSumMSB[i], wcSumLSB[i]-1)
+				vhdl << tab << declareFixPoint(join("SBeforeRound", i), true, Arch.wcSumMSB[i], Arch.wcSumLSB[i]-1)
 						 << " <= " << join("Aext", i) << " + " << join("Ptrunc", i) << "+'1';" << endl;
-				resizeFixPoint(join("S", i), join("SBeforeRound", i), wcSumMSB[i], wcSumLSB[i]);
+				resizeFixPoint(join("S", i), join("SBeforeRound", i), Arch.wcSumMSB[i], Arch.wcSumLSB[i]);
 			}
 
 			else { // using FixMultAdd
@@ -334,17 +159,9 @@ namespace flopoco{
 #endif
 			}
 		}
-		if(finalRounding)
+		if(Arch.finalRounding)
 			resizeFixPoint("Rs", "S0",  msbOut, lsbOut);
 
 		vhdl << tab << "R <= " << "std_logic_vector(Rs);" << endl;
-
 	}
-
-
-
-	
-	FixHornerEvaluator::~FixHornerEvaluator(){}
-
-
 }

@@ -7,7 +7,7 @@
 #include <mpfr.h>
 
 namespace flopoco {
-  class MPFRHandler {
+class MPFRHandler {
 private:
   mpfr_t managed;
 
@@ -16,7 +16,8 @@ public:
   MPFRHandler(MPFRHandler const &) = delete;
   MPFRHandler(MPFRHandler &&) = delete;
   ~MPFRHandler();
-  operator mpfr_t& () { return managed; };
+  operator mpfr_t& () { return managed; }
+  mpfr_ptr operator->(){ return managed; }
 };
 }
 

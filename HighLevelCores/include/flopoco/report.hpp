@@ -15,7 +15,8 @@ namespace flopoco {
     MESSAGE = 0,
     DETAIL = 1,
     VERBOSE = 2,
-    DEBUG = 3
+    DEBUG = 3,
+    FULL = 4
   };
 
   bool is_log_lvl_enabled(LogLevel lvl);

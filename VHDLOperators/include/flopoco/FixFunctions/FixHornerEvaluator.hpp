@@ -18,7 +18,7 @@
 
 #include "flopoco/Operator.hpp"
 #include "flopoco/FixFunctions/FixPolyEval.hpp"
-
+#include "flopoco/FixFunctions/FixHorner.hpp"
 
 namespace flopoco{
 
@@ -26,7 +26,7 @@ namespace flopoco{
 	 It assumes the input X is an signed number in [-1, 1[ so msbX=-wX.
 	*/
 
-  class FixHornerEvaluator : public FixPolyEval
+  class FixHornerEvaluator : public Operator
   {
   public:
 
@@ -49,23 +49,11 @@ namespace flopoco{
 											 vector<BasicPolyApprox*> p,
 											 bool finalRounding=true);
 
-		
-    ~FixHornerEvaluator();
-		
+  private:
+		FixHornerArchitecture Arch;
 
-  private: // we also inherit attribute of FixPolyEval
-		// internal architectural parameters; 
-		vector<double> wcMaxAbsSum; /**< from 0 to degree */
-		vector <int> wcSumSign; /**< 1: always positive; -1: always negative; 0: can be both  */  
-		vector<int> wcSumMSB; /**< from 0 to degree */
-		vector<int> wcSumLSB; /**< from 0 to degree */
-		vector<int> wcYLSB; /**< from 0 to degree-1*/
-		vector<bool> isZero; /*< a vector of size degree, true if all the coeffs of this degree are 0, avoids cornercase bugs*/
-		//		vector <int>  wcProductMSB; /**< from 0 to degree */
-		//		vector <int>  wcProductLSB; /**< from 0 to degree-1 */
 
 		void initialize(); /**< initialization factored out between various constructors */ 
-		void computeArchitecturalParameters(); /**< error analysis that ensures the rounding budget is met */ 
 		void generateVHDL(); /**< generation of the VHDL once all the parameters have been computed */ 
   };
 
