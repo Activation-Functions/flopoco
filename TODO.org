@@ -13,52 +13,23 @@ THIS INCLUDES WRITING ITS AUTOTEST
 	1/ add the delays 
 	2/ fix the bug that duplicates the tables
 
-		Fix2FP
-		FP2Fix
-		InputIEEE
-		OutputIEEE
 
 		//FOR TEST PURPOSES ONLY
 		Table
 
-		IntComparator
-		IntDualSub
 		IntSquarer
 
-		FPConstMult
 		FPRealKCM
-		FPConstDiv
-		FixFunctionByTable
-		FixFunctionBySimplePoly
-		FixFunctionByPiecewisePoly
-		BasicPolyApprox
-		PiecewisePolyApprox
-		FixRealKCM
-		TestBench
-		Wrapper
-		FPAdd
 		FPAddSub
-		FPAddDualPath
 		FPAdd3Input
-		FPAddSinglePath
 		FPMult
 		//FPMultKaratsuba
 		FPSquare
-		FPDiv
-		NbBitsMinRegisterFactory();
-		FPSqrt
 
 		FPLargeAcc
 		LargeAccToFP
 		FPDotProduct
 
-		FPExp
-		IterativeLog
-		FPPow
-		FixSinCos
-		CordicSinCos
-		FixAtan2
-		//FixedComplexAdder
 
 		FixRootRaisedCosine
 		add FixSinc? 
@@ -66,6 +37,11 @@ THIS INCLUDES WRITING ITS AUTOTEST
 		Complex/* (lots of cleanup)
 
 		UserDefinedOperator
+** ported but without autotest
+		Fix2FP
+		FP2Fix
+		FPConstMult
+		FPConstDiv
 		
 * Version 5 versus ASA book
 ** TODO before we submitt the book because of flopocoboxes
