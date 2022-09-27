@@ -56,8 +56,6 @@ namespace flopoco{
 	int lsbIn;                  /** LSB of input. Input is assumed in [0,1], so unsigned and MSB=-1 */
 	int msbOut;                 /** MSB of output  */
 	int lsbOut;                 /** LSB of output */
-   	std::vector<int> coeffMSB;  /**< vector of size degree: MSB weight for the coefficients of degree i; extracted by te constructor */
-   	std::vector<int> coeffLSB;  /**< vector of MSB weights for each coefficient, extracted by te constructor */
 	bool finalRounding;         /** If true, the operator returns a rounded result (i.e. add the half-ulp then truncate)
 								    if false, the operator returns the full, unrounded results including guard bits */
 	// internal architectural parameters;

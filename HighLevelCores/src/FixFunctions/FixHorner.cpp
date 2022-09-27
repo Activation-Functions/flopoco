@@ -12,6 +12,7 @@
   All rights reserved.
 
 */
+#include <cassert>
 #include <iomanip>
 #include <iostream>
 
@@ -76,6 +77,8 @@ namespace flopoco{
 	    : target(*target), poly(poly_), lsbIn(lsbIn_), msbOut(msbOut_), lsbOut(lsbOut_),
 	      finalRounding(finalRounding)
 	{
+		assert(poly.size());
+		degree = poly[0]->getDegree();
 		computeArchitecturalParameters();
 	}
 
@@ -117,7 +120,7 @@ namespace flopoco{
 			SollyaHandler sS{sollya_lib_constant(
 			    poly[k]->getCoeff(degree)->fpValue)};
 
-			maxAbsSum[degree] = abs(
+			maxAbsSum[degree] = std::abs(
 			    mpfr_get_d(poly[k]->getCoeff(degree)->fpValue,
 				       MPFR_RNDN)); // should be round away from
 						    // 0 but nobody will notice
@@ -131,7 +134,7 @@ namespace flopoco{
 				SollyaHandler cS{sollya_lib_constant(
 				    poly[k]->getCoeff(i)->fpValue)};
 				flopoco::SollyaHandler pS{sollya_lib_mul(yS, sS)};
-				SollyaHandler sS{sollya_lib_add(cS, pS)};
+				sS = sollya_lib_add(cS, pS);
 				
 				SollyaHandler sIntervalS{sollya_lib_evaluate(sS, rangeS)};
 				SollyaHandler supS{sollya_lib_sup(sIntervalS)};

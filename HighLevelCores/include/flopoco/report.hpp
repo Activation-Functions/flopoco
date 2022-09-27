@@ -35,14 +35,18 @@ namespace flopoco {
     }
   }
 
-  void report(LogLevel lvl, std::string_view message, std::source_location location);
+  void report(LogLevel lvl, std::string_view message, auto filename, auto line, auto funcname) {
+    if (is_log_lvl_enabled(lvl)) {
+        std::ostream& out = (lvl < 0) ? std::cerr : std::cout;
+        out << "> (" << filename << ":" << line <<" (" << funcname << ")): " << message << std::endl;
+    }
+  }
 }
 
 #define REPORT(level, stream) { \
     std::stringstream s; \
-    auto sl = std::source_location::current();\
     s << stream; \
-    flopoco::report(level, s.str(), sl); \
+    flopoco::report(level, s.str(), __FILE__, __LINE__, __func__); \
 }
 
 #endif

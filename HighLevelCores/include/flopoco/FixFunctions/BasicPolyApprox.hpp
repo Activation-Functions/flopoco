@@ -3,6 +3,7 @@
 
 #include <string>
 #include <iostream>
+#include <vector>
 
 #include <sollya.h>
 #include <gmpxx.h>

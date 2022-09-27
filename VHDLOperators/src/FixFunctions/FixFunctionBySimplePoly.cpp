@@ -58,7 +58,7 @@ namespace flopoco{
 		}
 
 		ostringstream name;
-		name<<"FixFunctionBySimplePoly_";
+		name<<"FixFunctionBySimplePoly";
 		setNameWithFreqAndUID(name.str());
 
 		setCopyrightString("Florent de Dinechin (2014-2020)");

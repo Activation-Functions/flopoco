@@ -103,18 +103,16 @@ namespace flopoco{
 		addInput("Y", -lsbIn+1);
 		vhdl << tab << declareFixPoint("Ys", true, 0, lsbIn) << " <= signed(Y);" << endl;
 		for (int j=0; j<=degree; j++) {
-			addInput(join("A",j), Arch.coeffMSB[j]-Arch.coeffLSB[j] +1);
+			auto coeffPlaceholder = Arch.poly[0]->getCoeff(j);
+			addInput(join("A",j), coeffPlaceholder->MSB-coeffPlaceholder->LSB +1);
+		//TODO
+		// convert the coefficients to signed. Remark: constant signs have been inserted by the caller
+			vhdl << tab << declareFixPoint(join("As", j), true, coeffPlaceholder->MSB, coeffPlaceholder->LSB)
+					 << " <= " << "signed(" << join("A",j) << ");" <<endl;
 		}
 
 		// declaring outputs
 		addOutput("R", Arch.msbOut-Arch.lsbOut+1);
-
-
-		// convert the coefficients to signed. Remark: constant signs have been inserted by the caller
-		for(int i=0; i<=degree; i++) {
-			vhdl << tab << declareFixPoint(join("As", i), true, Arch.coeffMSB[i], Arch.coeffLSB[i])
-					 << " <= " << "signed(" << join("A",i) << ");" <<endl;
-		}
 
 		// Initialize the Horner recurrence
 		resizeFixPoint(join("S", degree), join("As", degree), Arch.wcSumMSB[degree], Arch.wcSumLSB[degree]);
