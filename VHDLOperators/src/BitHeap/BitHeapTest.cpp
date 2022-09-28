@@ -43,7 +43,7 @@ namespace flopoco{
 
 			addInput(join("X", i), currentWidth, (currentWidth > 1));
 
-			REPORT(DEBUG, "Added an input of size=" << currentWidth << " at weight=" << currentWeight);
+			REPORT(LogLevel::DEBUG, "Added an input of size=" << currentWidth << " at weight=" << currentWeight);
 		}
 		addOutput("R", size);
 

@@ -45,10 +45,10 @@ namespace flopoco{
 		uniqueName_ = name.str();
 
 		if(method==0) {
-			REPORT(0, "Floating-point square root using plain restoring algorithm");
+			REPORT(LogLevel::MESSAGE, "Floating-point square root using plain restoring algorithm");
 		}
 		else if(method==1) {
-			REPORT(0, "Floating-point square root using binary nonrestoring algorithm");
+			REPORT(LogLevel::MESSAGE, "Floating-point square root using binary nonrestoring algorithm");
 		}
 		else  {
 			THROWERROR("Wrong value passed to parameter: method=" << method);
@@ -155,7 +155,7 @@ namespace flopoco{
 			int maxstep=wF+2;
 			for(int i=3; i<=maxstep; i++) {
 				double stageDelay= getTarget()->adderDelay(i);
-				REPORT(2, "estimated delay for stage "<< i << " is " << stageDelay << "s");
+				REPORT(LogLevel::VERBOSE, "estimated delay for stage "<< i << " is " << stageDelay << "s");
 				// was: int i = wF+3-step; // to have the same indices as FPLibrary
 				vhdl << tab << "-- Step " << i-1 << endl;
 				string di = join("d", i-2);

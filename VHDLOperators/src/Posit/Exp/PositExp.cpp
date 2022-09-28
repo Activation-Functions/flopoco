@@ -101,13 +101,13 @@ namespace flopoco{
 		sizeY=width;
 		sizeExpY = width;
 		mpz_class sizeExpYTable= (mpz_class(1)<<sizeY) * sizeExpY;
-		REPORT(3, "Tabulating e^Y would consume " << sizeExpYTable << " bits   (RAM block size is " << blockRAMSize << " bits");
+		REPORT(LogLevel::DEBUG, "Tabulating e^Y would consume " << sizeExpYTable << " bits   (RAM block size is " << blockRAMSize << " bits");
 		//if( sizeExpYTable <= mpz_class(blockRAMSize)) {
-			REPORT(DETAILED, "Tabulating e^Y in a blockRAM, using " << sizeExpYTable << " bits");
+			REPORT(LogLevel::VERBOSE, "Tabulating e^Y in a blockRAM, using " << sizeExpYTable << " bits");
 			expYTabulated=true;
-			REPORT(DETAILED, "g=" << g );
-			REPORT(DETAILED, "sizeY=" << sizeY);		
-			REPORT(DETAILED, "sizeExpY=" << sizeExpY);		
+			REPORT(LogLevel::VERBOSE, "g=" << g );
+			REPORT(LogLevel::VERBOSE, "sizeY=" << sizeY);		
+			REPORT(LogLevel::VERBOSE, "sizeExpY=" << sizeExpY);		
 			//}
 
 		addInput("X", width);

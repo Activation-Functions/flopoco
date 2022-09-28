@@ -115,7 +115,7 @@ namespace flopoco{
 		mpfr_set_d(roundbit, 1.0, GMP_RNDN);
 		mpfr_div_2si(roundbit, roundbit, wOut, GMP_RNDN); // roundbit is in position 2^-wOut
 		
-		REPORT(DEBUG, "stage=" << stage << "  atancst=" << printMPFR(zatan));
+		REPORT(LogLevel::DEBUG, "stage=" << stage << "  atancst=" << printMPFR(zatan));
 		
 		mpfr_add(zatan, zatan, roundbit, GMP_RNDN);
 		vhdl << tab << declare("Z2", sizeZ) << " <= " << unsignedFixPointNumber(zatan, zMSB, zLSB) << "; -- initial atan, plus round bit" <<endl;
@@ -153,7 +153,7 @@ namespace flopoco{
 			mpfr_div_2si(zatan, zatan, stage, GMP_RNDN);
 			mpfr_atan(zatan, zatan, GMP_RNDN);
 			mpfr_div(zatan, zatan, constPi, GMP_RNDN);
-			REPORT(DEBUG, "stage=" << stage << "  atancst=" << printMPFR(zatan));		
+			REPORT(LogLevel::DEBUG, "stage=" << stage << "  atancst=" << printMPFR(zatan));		
 			// rounding here in unsignedFixPointNumber()
 			vhdl << tab << declare(join("atan2PowStage", stage), sizeZ) << " <= " << unsignedFixPointNumber(zatan, zMSB, zLSB) << ";" <<endl;
 			vhdl << tab << declare(join("Z", stage+1), sizeZ) << " <= " 
@@ -182,7 +182,7 @@ namespace flopoco{
 #define ROUNDED_ROTATION 0 // 0:trunc 
 	
 #if ROUNDED_ROTATION
-			REPORT(DEBUG, "Using rounded rotation trick");
+			REPORT(LogLevel::DEBUG, "Using rounded rotation trick");
 #endif
 
 			// ulp = weight of the LSB of the result is 2^(-wOut+1)
@@ -218,8 +218,8 @@ namespace flopoco{
 			gA+=2; // experimental
 #endif
 			
-			REPORT(DETAILED, "Error analysis computes eps=" << eps << " ulps on the XY datapath, hence  gXY=" << gXY);
-			REPORT(DETAILED, "Error analysis computes eps=" << eps <<  " ulps on the A datapath, hence  gA=" << gA );
+			REPORT(LogLevel::VERBOSE, "Error analysis computes eps=" << eps << " ulps on the XY datapath, hence  gXY=" << gXY);
+			REPORT(LogLevel::VERBOSE, "Error analysis computes eps=" << eps <<  " ulps on the A datapath, hence  gA=" << gA );
 	} 
 
 

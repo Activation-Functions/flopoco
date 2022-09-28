@@ -65,7 +65,7 @@ namespace flopoco{
 		int maxCycle = 0;
 		double maxCP = 0.0;
 		for(auto i: ioList_) {
-			REPORT(DEBUG, "signal " << i->getName() <<  "  Cycle=" << i->getCycle() <<  "  criticalPath=" << i->getCriticalPath() );
+			REPORT(LogLevel::DEBUG, "signal " << i->getName() <<  "  Cycle=" << i->getCycle() <<  "  criticalPath=" << i->getCriticalPath() );
 			if((i->getCycle() > maxCycle)
 					|| ((i->getCycle() == maxCycle) && (i->getCriticalPath() > maxCP)))	{
 				maxCycle = i->getCycle();
@@ -74,7 +74,7 @@ namespace flopoco{
 		}
 		double totalPeriod = maxCP + getTarget()->adderDelay(wIn);
 
-		REPORT(DETAILED, "maxCycle=" << maxCycle <<  "  maxCP=" << maxCP <<  "  totalPeriod=" << totalPeriod <<  "  targetPeriod=" << targetPeriod );
+		REPORT(LogLevel::VERBOSE, "maxCycle=" << maxCycle <<  "  maxCP=" << maxCP <<  "  totalPeriod=" << totalPeriod <<  "  targetPeriod=" << targetPeriod );
 
 		if(totalPeriod <= targetPeriod)		{
 			vhdl << tab << declare(getTarget()->adderDelay(wIn), "tempRxMy", wIn)
@@ -111,7 +111,7 @@ namespace flopoco{
 			string r2 = "t_"+son+"_";
 				
 			while(loop) {
-				REPORT(DETAILED, "Sub-adder " << i << " : first bit=" << subAdderFirstBit << ",  size=" <<  subAdderSize);
+				REPORT(LogLevel::VERBOSE, "Sub-adder " << i << " : first bit=" << subAdderFirstBit << ",  size=" <<  subAdderSize);
                 if(0 < subAdderSize){
                     // Cin
                     if(subAdderFirstBit == 0)	{
@@ -169,7 +169,7 @@ namespace flopoco{
 			}
 			vhdl << ";" << endl;
 		}
-		//REPORT(DEBUG, "Exiting");
+		//REPORT(LogLevel::DEBUG, "Exiting");
 	}
 
 

@@ -120,12 +120,12 @@ namespace flopoco{
 
 			if (alpha<1)
 			{
-				REPORT(LIST, "WARNING: This value of d is too large for the LUTs of this FPGA (alpha=" << alpha << ").");
-				REPORT(LIST, " Building an architecture nevertheless, but it may be very large and inefficient.");
+				REPORT(LogLevel::MESSAGE, "WARNING: This value of d is too large for the LUTs of this FPGA (alpha=" << alpha << ").");
+				REPORT(LogLevel::MESSAGE, " Building an architecture nevertheless, but it may be very large and inefficient.");
 				alpha=1;
 			}
 		}
-		REPORT(INFO, "alpha=" << alpha);
+		REPORT(LogLevel::DETAIL, "alpha=" << alpha);
 
 		//generate a unique name
 		std::ostringstream o;
@@ -157,8 +157,8 @@ namespace flopoco{
 		if (rem!=0)
 			k++;
 
-		REPORT(INFO, "Architecture consists of k=" << k  <<  " levels.");
-		REPORT(DEBUG, "  d=" << d << "  wIn=" << wIn << "  alpha=" << alpha << "  gamma=" << gamma <<  "  k=" << k  <<  "  qSize=" << qSize);
+		REPORT(LogLevel::DETAIL, "Architecture consists of k=" << k  <<  " levels.");
+		REPORT(LogLevel::DEBUG, "  d=" << d << "  wIn=" << wIn << "  alpha=" << alpha << "  gamma=" << gamma <<  "  k=" << k  <<  "  qSize=" << qSize);
 
 		// EuclideanDiv3Table* table;
 		// table = new EuclideanDiv3Table(target, d, alpha, gamma, nbZeros, false);

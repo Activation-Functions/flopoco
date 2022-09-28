@@ -167,7 +167,7 @@ void	FixFunction::initialize()
 
 		/* Compute the function */
 		eval(mpR, mpX);
-		//		REPORT(FULL,"function() input is:"<<sPrintBinary(mpX));
+		//		REPORT(LogLevel::FULL,"function() input is:"<<sPrintBinary(mpX));
 		//cerr << 100*(wIn+wOut) <<" function("<<mpfr_get_d(mpX, GMP_RNDN)<<") output before rounding is:"<<mpfr_get_d(mpR, GMP_RNDN) << " " ;
 		/* Compute the signal value */
 		mpfr_mul_2si(mpR, mpR, -lsbOut, GMP_RNDN);
@@ -193,7 +193,7 @@ void	FixFunction::initialize()
 			}
 		}
 
-		//		REPORT(FULL,"function() output r = ["<<rd<<", " << ru << "]");
+		//		REPORT(LogLevel::FULL,"function() output r = ["<<rd<<", " << ru << "]");
 		mpfr_clear(mpX);
 		mpfr_clear(mpR);
 	}

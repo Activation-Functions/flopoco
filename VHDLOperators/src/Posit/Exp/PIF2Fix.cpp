@@ -52,13 +52,13 @@ namespace flopoco {
 
 
 		// basic message
-		REPORT(INFO,"Declaration of PIF2Fix \n");
+		REPORT(LogLevel::DETAIL,"Declaration of PIF2Fix \n");
 
 		// more detailed message
-		REPORT(DETAILED, "this operator has received two parameters " << widthP << " and " << wES);
+		REPORT(LogLevel::VERBOSE, "this operator has received two parameters " << widthP << " and " << wES);
   
 		// debug message for developper
-		REPORT(DEBUG,"debug of PIF2Fix");
+		REPORT(LogLevel::DEBUG,"debug of PIF2Fix");
 
 
 		

@@ -2040,7 +2040,7 @@ int main(int argc, char* argv[] )
 
 	cerr << endl<<"Final report:"<<endl;
 	for(i=0; i<oplist.size(); i++) {
-		oplist[i]->outputFinalReport(0);
+		oplist[i]->outputFinalREPORT(LogLevel::MESSAGE);
 	}
 	
 	cerr<< "Output file: " << filename <<endl;

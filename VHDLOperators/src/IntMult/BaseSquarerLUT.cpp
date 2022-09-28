@@ -24,7 +24,7 @@ namespace flopoco
             vhdl << tab << "R <= X;" << endl;
         } else if (target->getVendor() != "Xilinx" && 1 < wIn && wIn < 6){
             vector<mpz_class> tabH;
-            REPORT(DEBUG, "Filling table for a LUT squarer of size " << wIn << "x" << wIn << " (out put size is " << wR << ")")
+            REPORT(LogLevel::DEBUG, "Filling table for a LUT squarer of size " << wIn << "x" << wIn << " (out put size is " << wR << ")")
             for (int yx=0; yx < 1<<(wIn); yx++)
             {
                 tabH.push_back((function(yx)>>2)&((1<<(wR-2))-1));
@@ -128,7 +128,7 @@ namespace flopoco
 
         } else if(target->getVendor() != "Xilinx" && wIn == 6){    //In the 6x6-case 4 LUTs can be saved, because only bits 11-6 need to be mapped in 6LUTs, 5-2 fit in 5LUTs using subdivision of the 6LUTs, hence (8 6-LUTs total)
             vector<mpz_class> tabH, tabM;
-            REPORT(DEBUG, "Filling table for a LUT squarer of size " << wIn << "x" << wIn << " (out put size is " << wR << ")")
+            REPORT(LogLevel::DEBUG, "Filling table for a LUT squarer of size " << wIn << "x" << wIn << " (out put size is " << wR << ")")
             for (int yx=0; yx < 1<<(wIn); yx++)
             {
                 mpz_class temp = function(yx);
@@ -156,7 +156,7 @@ namespace flopoco
             vhdl << tab << "R <= Y1H & Y1M & \"0\" & X(0);" << endl;
         } else {    //Squarers larger then 6x6 are realized with a table
             vector<mpz_class> val;
-            REPORT(DEBUG, "Filling table for a LUT squarer of size " << wIn << "x" << wIn << " (out put size is " << wR << ")")
+            REPORT(LogLevel::DEBUG, "Filling table for a LUT squarer of size " << wIn << "x" << wIn << " (out put size is " << wR << ")")
             for (int yx=0; yx < 1<<(wIn); yx++)
             {
                 val.push_back(function(yx));
@@ -182,7 +182,7 @@ namespace flopoco
             yx -= (1 << wIn);
         }
         r = yx * yx;
-        REPORT(DEBUG, "Value for x=" << yx << ", x=" << yx << " : " << r.get_str(2))
+        REPORT(LogLevel::DEBUG, "Value for x=" << yx << ", x=" << yx << " : " << r.get_str(2))
         return r;
     }
 

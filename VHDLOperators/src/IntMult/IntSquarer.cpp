@@ -125,7 +125,7 @@ returns: an integer pext that defines the position of the last column
 		        l=2*wIn-wOut;
 		        compute_truncation_params(bhc,  l, lext,  t);
 		        guardBits=l-lext;
-		        REPORT(INFO, "Truncation parameters: lext=" << lext << " (g=" << guardBits << ")  t=" << t);
+		        REPORT(LogLevel::DETAIL, "Truncation parameters: lext=" << lext << " (g=" << guardBits << ")  t=" << t);
 		        faithfulOnly=true;
 		    } else {
 		        lext=0;
@@ -162,7 +162,7 @@ returns: an integer pext that defines the position of the last column
 		    // the correction constant + round bit
 		    if(wOut!=2*wIn) {
 		        for (int i=lext; i<l; i++) {
-		            REPORT(0, "constant bit at pos " << i);
+		            REPORT(LogLevel::MESSAGE, "constant bit at pos " << i);
 		            bh.addConstantOneBit(i);
 		        }
 		    }

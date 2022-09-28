@@ -83,9 +83,9 @@ vector<BaseMultiplierCategory const *> const BaseMultiplierCollection::getView()
 
 void BaseMultiplierCollection::print()
 {
-	if (UserInterface::verbose >= DETAILED)
+	if(is_log_lvl_enabled(LogLevel::VERBOSE))
 	{
-		REPORT(DETAILED, "Available base multipliers:");
+		REPORT(LogLevel::VERBOSE, "Available base multipliers:");
 		for(BaseMultiplierCategory *bmc : baseMultiplierCategories)
 		{
 			cerr << "  base multiplier " << bmc->getMaxWordSizeSmallInputUnsigned() << "x" << bmc->getMaxWordSizeLargeInputUnsigned()

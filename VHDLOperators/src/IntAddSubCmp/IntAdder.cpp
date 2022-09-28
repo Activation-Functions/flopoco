@@ -61,14 +61,14 @@ namespace flopoco {
 
 		double totalPeriod = maxCP + getTarget()->adderDelay(wIn);
 
-		REPORT(DETAILED, "maxCycle=" << maxCycle <<  "  maxCP=" << maxCP <<  "  totalPeriod=" << totalPeriod <<  "  targetPeriod=" << targetPeriod );
+		REPORT(LogLevel::VERBOSE, "maxCycle=" << maxCycle <<  "  maxCP=" << maxCP <<  "  totalPeriod=" << totalPeriod <<  "  targetPeriod=" << targetPeriod );
 
 		if(totalPeriod <= targetPeriod)		{
-			//REPORT(DEBUG, "1 " << getTarget()->adderDelay(wIn));
+			//REPORT(LogLevel::DEBUG, "1 " << getTarget()->adderDelay(wIn));
 			vhdl << tab << declare(getTarget()->adderDelay(wIn),"Rtmp", wIn); // just to use declare()
-			//REPORT(DEBUG, "2");
+			//REPORT(LogLevel::DEBUG, "2");
 			vhdl << " <= X + Y + Cin;" << endl; 
-			//REPORT(DEBUG, "3");
+			//REPORT(LogLevel::DEBUG, "3");
 			vhdl << tab << "R <= Rtmp;" << endl;
 
 		}
@@ -87,7 +87,7 @@ namespace flopoco {
 			int i=0;                                                                                                    //cycle counter
 			int skip_R0 = 0;                                                                                            //skip the result form the first cycle if there was not enough time to do an addition of at leased size one
 			while(loop) {
-				REPORT(DETAILED, "Sub-adder " << i << " : first bit=" << subAdderFirstBit << ",  size=" <<  subAdderSize);
+				REPORT(LogLevel::VERBOSE, "Sub-adder " << i << " : first bit=" << subAdderFirstBit << ",  size=" <<  subAdderSize);
 				if(0 < subAdderSize){                                                                                   //there is time to do at least an addition of bit-width one in current cycle
                     // Cin
                     if(subAdderFirstBit == 0)	{                                                                       //handle carry-in in first cycle
@@ -126,7 +126,7 @@ namespace flopoco {
 			}
 			vhdl << ";" << endl;
 		}
-		//REPORT(DEBUG, "Exiting");
+		//REPORT(LogLevel::DEBUG, "Exiting");
 
 	}
 

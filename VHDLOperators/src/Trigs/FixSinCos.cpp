@@ -38,7 +38,7 @@ namespace flopoco{
 		mpfr_set_d(scale, -1.0, GMP_RNDN);           // exact
 		mpfr_mul_2si(scale, scale, lsb, GMP_RNDN); // exact
 		mpfr_add_d(scale, scale, 1.0, GMP_RNDN);     // exact
-		//REPORT(DEBUG, "scale=" << printMPFR(scale, 15));
+		//REPORT(LogLevel::DEBUG, "scale=" << printMPFR(scale, 15));
 
 		// everybody needs many digits of Pi
 		mpfr_init2(constPi, -10*lsb);

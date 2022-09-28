@@ -45,7 +45,7 @@ namespace flopoco{
 			mpz_class rn;
 			f->eval(mpz_class(i), rn);
 			v.push_back(rn);
-			//REPORT(FULL, "f("<< i << ") = " << function(i) );
+			//REPORT(LogLevel::FULL, "f("<< i << ") = " << function(i) );
 		};
 		init(v, name.str(), wIn, wOut);
 		generateVHDL();

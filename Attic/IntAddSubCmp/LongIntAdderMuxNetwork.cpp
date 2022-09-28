@@ -47,11 +47,11 @@ namespace flopoco{
 					// 	cout << "The maximum input delay is "<<	maxInputDelay<<endl;
 
 					cSize = new int[2000];
-					REPORT(3, "-- The new version: direct mapping without 0/1 padding, IntAdders instantiated");
+					REPORT(LogLevel::DEBUG, "-- The new version: direct mapping without 0/1 padding, IntAdders instantiated");
 					double	objectivePeriod = double(1) / getTarget()->frequency();
-					REPORT(2, "Objective period is "<< objectivePeriod <<" at an objective frequency of "<<getTarget()->frequency());
+					REPORT(LogLevel::VERBOSE, "Objective period is "<< objectivePeriod <<" at an objective frequency of "<<getTarget()->frequency());
 					getTarget()->suggestSubaddSize(chunkSize_ ,wIn_);
-					REPORT(2, "The chunkSize for first two chunks is: " << chunkSize_ );
+					REPORT(LogLevel::VERBOSE, "The chunkSize for first two chunks is: " << chunkSize_ );
 
 					if (2*chunkSize_ >= wIn_){
 						cerr << "ERROR FOR NOW -- instantiate int adder, dimmension too small for LongIntAdderMuxNetwork" << endl;
@@ -70,24 +70,24 @@ namespace flopoco{
 					bool invalid = false; /* the result of the first phase of the algo */
 
 					/* FIRST PHASE */
-					REPORT(3, "FIRST PHASE chunk splitting");
+					REPORT(LogLevel::DEBUG, "FIRST PHASE chunk splitting");
 					while (not (finished))	 {
-						REPORT(2, "The width is " << width);
+						REPORT(LogLevel::VERBOSE, "The width is " << width);
 						propagationSize+=2;
 						double delay = objectivePeriod - getTarget()->adderDelay(width)- getTarget()->adderDelay(propagationSize); //2*getTarget()->localWireDelay()  -
-						REPORT(2, "The value of the delay at step " << chunkIndex << " is " << delay);
+						REPORT(LogLevel::VERBOSE, "The value of the delay at step " << chunkIndex << " is " << delay);
 						if ((delay > 0) || (width < 4)) {
-							REPORT(2, "finished -> found last chunk of size: " << width);
+							REPORT(LogLevel::VERBOSE, "finished -> found last chunk of size: " << width);
 							cSize[chunkIndex] = width;
 							finished = true;
 						}else{
-							REPORT(2, "Found regular chunk ");
+							REPORT(LogLevel::VERBOSE, "Found regular chunk ");
 							int cs;
 							double slack =  getTarget()->adderDelay(propagationSize) ; //+ 2*getTarget()->localWireDelay()
-							REPORT(2, "slack is: " << slack);
-							REPORT(2, "adderDelay of " << propagationSize << " is " << getTarget()->adderDelay(propagationSize) );
+							REPORT(LogLevel::VERBOSE, "slack is: " << slack);
+							REPORT(LogLevel::VERBOSE, "adderDelay of " << propagationSize << " is " << getTarget()->adderDelay(propagationSize) );
 							getTarget()->suggestSlackSubaddSize( cs, width, slack);
-							REPORT(2, "size of the regular chunk is : " << cs);
+							REPORT(LogLevel::VERBOSE, "size of the regular chunk is : " << cs);
 							width = width - cs;
 							cSize[chunkIndex] = cs;
 
@@ -99,13 +99,13 @@ namespace flopoco{
 							pass to the next pair */
 						}
 					}
-					REPORT(2, "First phase return valid result: " << invalid);
+					REPORT(LogLevel::VERBOSE, "First phase return valid result: " << invalid);
 
 					/* SECOND PHASE:
 					only if first phase is cannot return a valid chunk size
 					decomposition */
 					if (invalid){
-						REPORT(2,"SECOND PHASE chunk splitting ...");
+						REPORT(LogLevel::VERBOSE,"SECOND PHASE chunk splitting ...");
 						getTarget()->suggestSubaddSize(chunkSize_ ,wIn_);
 						lastChunkSize_ = (wIn_% chunkSize_ ==0 ? chunkSize_ :wIn_% chunkSize_);
 
@@ -118,7 +118,7 @@ namespace flopoco{
 					}
 
 					/* VERIFICATION PHASE: check if decomposition is correct */
-					REPORT(2, "found " << chunkIndex + 1  << " chunks ");
+					REPORT(LogLevel::VERBOSE, "found " << chunkIndex + 1  << " chunks ");
 					nbOfChunks = chunkIndex + 1;
 					int sum = 0;
 					ostringstream chunks;
@@ -127,8 +127,8 @@ namespace flopoco{
 						sum+=cSize[i];
 					}
 					chunks << endl;
-					REPORT(2, "Chunks are: " << chunks.str());
-					REPORT(2, "The chunk size sum is " << sum << " and initial width was " << wIn_);
+					REPORT(LogLevel::VERBOSE, "Chunks are: " << chunks.str());
+					REPORT(LogLevel::VERBOSE, "The chunk size sum is " << sum << " and initial width was " << wIn_);
 					if (sum != wIn_){
 						cerr << "ERROR: check the algo" << endl; /*should never get here ... */
 						exit(0);
@@ -211,14 +211,14 @@ double t = 1.0 / getTarget()->frequency();
 #endif
 				/*nogo = nogo | (!*/getTarget()->suggestSlackSubaddSize(l0, wIn, t - (2*getTarget()->lutDelay()+ muxcystooOut/* xordelay*/)); //);
 
-				REPORT(INFO, "l0="<<l0);
+				REPORT(LogLevel::DETAIL, "l0="<<l0);
 
 
 				int maxAdderSize = lkm1 + ll*(ll+1)/2 + l0;
 				if (nogo)
 					maxAdderSize = -1;
-				REPORT(INFO, "ll="<<ll);
-				REPORT(INFO, "max adder size is="<< maxAdderSize);
+				REPORT(LogLevel::DETAIL, "ll="<<ll);
+				REPORT(LogLevel::DETAIL, "max adder size is="<< maxAdderSize);
 
 
 #ifdef MAXSIZE
@@ -254,11 +254,11 @@ exit(1);
 						int nc = cSize[nbOfChunks-1] + 1;
 						int nnc = lkm1;
 
-						REPORT(INFO,"nc="<<nc);
-						REPORT(INFO,"nnc="<<nnc);
+						REPORT(LogLevel::DETAIL,"nc="<<nc);
+						REPORT(LogLevel::DETAIL,"nnc="<<nnc);
 
 						if (nc + nnc >= td){
-							REPORT(INFO, "Finish");
+							REPORT(LogLevel::DETAIL, "Finish");
 							//we can finish it now;
 							if (nc>=td)
 								nc = td-1;
@@ -269,7 +269,7 @@ exit(1);
 							nbOfChunks++;
 							td=0;
 						}else{
-							REPORT(INFO, "run");
+							REPORT(LogLevel::DETAIL, "run");
 							//not possible to finish chunk splitting now
 							cSize[nbOfChunks] = nc;
 							nbOfChunks++;
@@ -279,7 +279,7 @@ exit(1);
 				}
 
 				for (int i=0; i<nbOfChunks; i++)
-					REPORT(INFO, "cSize["<<i<<"]="<<cSize[i]);
+					REPORT(LogLevel::DETAIL, "cSize["<<i<<"]="<<cSize[i]);
 
 //#define test512
 #ifdef test512

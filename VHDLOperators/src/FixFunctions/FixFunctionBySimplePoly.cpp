@@ -63,7 +63,7 @@ namespace flopoco{
 
 		setCopyrightString("Florent de Dinechin (2014-2020)");
 		addHeaderComment("-- Evaluator for " +  f-> getDescription() + "\n");
-		REPORT(DETAILED, "Entering constructor, FixFunction description: " << f-> getDescription());
+		REPORT(LogLevel::VERBOSE, "Entering constructor, FixFunction description: " << f-> getDescription());
 
 		addInput("X"  , -lsbIn + (signedIn?1:0));
 		int outputSize = f->msbOut-lsbOut+1;
@@ -80,8 +80,8 @@ namespace flopoco{
 		poly = new BasicPolyApprox(f, targetApproxError, -1);
 		double approxErrorBound = poly->getApproxErrorBound();
 
-		REPORT(INFO, "Found polynomial of degree " << poly->getDegree());
-		REPORT(INFO, "Overall error budget = " << exp2(lsbOut) << "  of which approximation error = " << approxErrorBound
+		REPORT(LogLevel::DETAIL, "Found polynomial of degree " << poly->getDegree());
+		REPORT(LogLevel::DETAIL, "Overall error budget = " << exp2(lsbOut) << "  of which approximation error = " << approxErrorBound
 					 << " hence rounding error budget = "<< exp2(lsbOut-1) - approxErrorBound);
 
 
@@ -99,9 +99,9 @@ namespace flopoco{
 		// In this case recompute the poly, it would give better approx error 
 		if(oldLSB0 != poly->getCoeff(0)->LSB) {
 			// deliberately at info level, I want to see if it happens
-			REPORT(INFO, "   addRoundBit has changed the LSB to " << poly->getCoeff(0)->LSB << ", recomputing the coefficients");
+			REPORT(LogLevel::DETAIL, "   addRoundBit has changed the LSB to " << poly->getCoeff(0)->LSB << ", recomputing the coefficients");
 			for(int i=0; i<=degree; i++) {
-				REPORT(DEBUG, poly->getCoeff(i)->report());
+				REPORT(LogLevel::DEBUG, poly->getCoeff(i)->report());
 			}
 			poly = new BasicPolyApprox(f->fS, degree, poly->getCoeff(0)->LSB, signedIn);
 			poly->getCoeff(0)->addRoundBit(lsbOut-1);
@@ -114,11 +114,11 @@ namespace flopoco{
 			coeffSize.push_back(poly->getCoeff(i)->MSB - poly->getCoeff(i)->LSB +1);
 		}
 
-		REPORT(INFO, poly->report());
+		REPORT(LogLevel::DETAIL, poly->report());
 
 		for(int i=degree; i>=0; i--) {
 			FixConstant* ai = poly->getCoeff(i);
-			//REPORT(INFO, " C" << i << " = " << string(12) <<ai->getBitVector() << "  " << printMPFR(ai->fpValue)  );
+			//REPORT(LogLevel::DETAIL, " C" << i << " = " << string(12) <<ai->getBitVector() << "  " << printMPFR(ai->fpValue)  );
 			//vhdl << tab << "-- " << join("A",i) <<  ": " << ai->report() << endl;
 			vhdl << tab << declareFixPoint(join("A",i), true, coeffMSB[i], coeffLSB[i])
 					 << " <= " << ai->getBitVector(0 /*both quotes*/)
@@ -130,7 +130,7 @@ namespace flopoco{
 
 
 		// In principle we should compute the rounding error budget and pass it to FixHornerEval
-		// REPORT(INFO, "Now building the Horner evaluator for rounding error budget "<< roundingErrorBudget);
+		// REPORT(LogLevel::DETAIL, "Now building the Horner evaluator for rounding error budget "<< roundingErrorBudget);
 		
 		
 		// This is the same order as newwInstance() would do, but does not require to write a factory for this Operator

@@ -39,12 +39,12 @@ namespace flopoco{
 		// along with a setPlainVHDL near the end
 		bool wasPlainVHDL=true;
 		if(!getTarget()->plainVHDL()) {
-			REPORT(0, "setting plainVHDL to true while we debug it");
+			REPORT(LogLevel::MESSAGE, "setting plainVHDL to true while we debug it");
 			getTarget()->setPlainVHDL(true);
 			wasPlainVHDL=false;
 		}
 #endif
-		REPORT(DEBUG, "  degree=" << degree);
+		REPORT(LogLevel::DEBUG, "  degree=" << degree);
 
 		ostringstream name;
 		name << "FixAtan2ByRecipMultAtan_" << wIn_ << "_" << wOut_ << "_uid" << getNewUId();

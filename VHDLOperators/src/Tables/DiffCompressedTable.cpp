@@ -50,16 +50,16 @@ namespace flopoco {
 	void DiffCompressedTable::report_compression_gain()
 	{
 #if 0
-		REPORT(INFO, "  Initial cost is:          " << diff_comp.originalWout << "x2^" << diff_comp.diffIndexSize << "=" << (diff_comp.originalWout << diff_comp.diffIndexSize));
+		REPORT(LogLevel::DETAIL, "  Initial cost is:          " << diff_comp.originalWout << "x2^" << diff_comp.diffIndexSize << "=" << (diff_comp.originalWout << diff_comp.diffIndexSize));
 		auto subsamplingCost = diff_comp.subsamplingWordSize << diff_comp.subsamplingIndexSize;
-		REPORT(INFO, "  Best subsampling cost is: " << diff_comp.subsamplingWordSize <<   "x2^" << diff_comp.subsamplingIndexSize << "=" << subsamplingCost);
+		REPORT(LogLevel::DETAIL, "  Best subsampling cost is: " << diff_comp.subsamplingWordSize <<   "x2^" << diff_comp.subsamplingIndexSize << "=" << subsamplingCost);
 		auto diffCost = diff_comp.diffWordSize << diff_comp.diffIndexSize;
-		REPORT(INFO, "  Best diff cost is:        " << diff_comp.diffWordSize << "x2^" << diff_comp.diffIndexSize << "=" << diffCost);
-		REPORT(INFO, "  Overlap cost is  :        " << (diff_comp.subsamplingWordSize + diff_comp.diffWordSize - diff_comp.originalWout));
-		REPORT(INFO, "  Total compressed cost is: " << (diffCost + subsamplingCost) << "/" << 100 * (1.0 -
+		REPORT(LogLevel::DETAIL, "  Best diff cost is:        " << diff_comp.diffWordSize << "x2^" << diff_comp.diffIndexSize << "=" << diffCost);
+		REPORT(LogLevel::DETAIL, "  Overlap cost is  :        " << (diff_comp.subsamplingWordSize + diff_comp.diffWordSize - diff_comp.originalWout));
+		REPORT(LogLevel::DETAIL, "  Total compressed cost is: " << (diffCost + subsamplingCost) << "/" << 100 * (1.0 -
 			(float)(diffCost + subsamplingCost)/(diff_comp.originalWout << diff_comp.diffIndexSize)));
 #else
-		REPORT(INFO, endl << diff_comp.report());
+		REPORT(LogLevel::DETAIL, endl << diff_comp.report());
 #endif
 		
 		auto lutinputs = getTarget()->lutInputs();

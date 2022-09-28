@@ -108,7 +108,7 @@ namespace flopoco {
 			msbout_im++;
 		}
 
-		REPORT(INFO, "Computed MSBout for real and im parts: " << msbout_re);	
+		REPORT(LogLevel::DETAIL, "Computed MSBout for real and im parts: " << msbout_re);	
 		
 		outputre_width = msbout_re - lsb_out + 1;
 		outputim_width = msbout_im - lsb_out + 1;

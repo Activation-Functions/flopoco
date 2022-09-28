@@ -63,7 +63,7 @@ namespace flopoco {
 			for(int i=k-1; i>=0; i--)
 				verb << " " << cSize[i];
 
-			REPORT(DETAILED, verb.str());
+			REPORT(LogLevel::VERBOSE, verb.str());
 
 			//split	 the inputs
 			for(int i=0; i<2; i++)

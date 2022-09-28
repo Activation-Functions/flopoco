@@ -60,11 +60,11 @@ namespace flopoco {
             lut_init lut_content( op_o5, op_o6 );
             lut5_init lut_dbg5( op_o5 );
             lut5_init lut_dbg6( op_o6 );
-            REPORT( INFO, "LUT_o5: " + lut_dbg5.get_hex() );
+            REPORT(LogLevel::DETAIL, "LUT_o5: " + lut_dbg5.get_hex() );
             REPORT( DEBUG, "LUT_TABLE" + lut_dbg5.truth_table() );
-            REPORT( INFO, "LUT_o6: " + lut_dbg6.get_hex() );
+            REPORT(LogLevel::DETAIL, "LUT_o6: " + lut_dbg6.get_hex() );
             REPORT( DEBUG, "LUT_TABLE" + lut_dbg6.truth_table() );
-            REPORT( INFO, "LUT_CONTENT: " + lut_content.get_hex() );
+            REPORT(LogLevel::DETAIL, "LUT_CONTENT: " + lut_content.get_hex() );
             REPORT( DEBUG, "LUT_TABLE" + lut_content.truth_table() );
             addConstant( "current_lut_init", "bit_vector", lut_content.get_hex() );
             addInput( "m_in", wIn * 2 );
@@ -105,7 +105,7 @@ namespace flopoco {
                           | ( lut_in( 5 ) & lut_in( 4 ) & lut_in( 3 ) )
                         );
             lut_init lut_content( op );
-            REPORT( INFO, "LUT_CONTENT: " + lut_content.get_hex() );
+            REPORT(LogLevel::DETAIL, "LUT_CONTENT: " + lut_content.get_hex() );
             REPORT( DEBUG, "LUT_TABLE" + lut_content.truth_table() );
             addConstant( "current_lut_init", "bit_vector", lut_content.get_hex() );
 

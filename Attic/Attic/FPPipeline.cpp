@@ -278,33 +278,33 @@ namespace flopoco{
 		close(fp);
 		dup2(0, my_stdin);
 	
-		REPORT(DEBUG, "-----------------------------------");
+		REPORT(LogLevel::DEBUG, "-----------------------------------");
 		nodeList* head = p->assignList;
 		while (head!=NULL){
 			printExpression(head->n); 	
-			REPORT(DEBUG,endl);			
+			REPORT(LogLevel::DEBUG,endl);			
 			head = head->next;
 		}
-		REPORT(DEBUG, "-----------------------------------");
+		REPORT(LogLevel::DEBUG, "-----------------------------------");
 		varList* headv = p->outVariableList;
 		while (headv != NULL){
-			REPORT(DEBUG, "out: variable " << headv->name	<< ";");
+			REPORT(LogLevel::DEBUG, "out: variable " << headv->name	<< ";");
 			headv = headv->next;
 		}
-		REPORT(DEBUG, "-----------------------------------");	
+		REPORT(LogLevel::DEBUG, "-----------------------------------");	
 		head = p->assignList;
 		/* creates the computational tree our of the assignment list, by linking 
 		   all variables already declared to their use */
 		makeComputationalTree(NULL, head, head); 
 
-		REPORT(DEBUG, "NEW NODES: ------------------------");
+		REPORT(LogLevel::DEBUG, "NEW NODES: ------------------------");
 		head = p->assignList;
 		while (head!=NULL){
 			printExpression(head->n); 	
-			REPORT(DEBUG,endl);			
+			REPORT(LogLevel::DEBUG,endl);			
 			head = head->next;
 		}
-		REPORT(DEBUG, "-----------------------------------");	
+		REPORT(LogLevel::DEBUG, "-----------------------------------");	
 	
 		/* create a node output list, where each node is a computational datapath.
 		   if in the user-provided outputList, some of the variables are part of 
@@ -313,13 +313,13 @@ namespace flopoco{
 
 		nodeList* outList = createOuputList(p->assignList, p->outVariableList);
 
-		REPORT(DEBUG, "PROPER OUT LIST: ------------------");
+		REPORT(LogLevel::DEBUG, "PROPER OUT LIST: ------------------");
 		nodeList* outListHead = outList;
 		while (outListHead != NULL){
 			printExpression( outListHead->n);
 			outListHead = outListHead->next;
 		} 
-		REPORT(DEBUG,endl);			
+		REPORT(LogLevel::DEBUG,endl);			
 	
 		nodeList* oh = outList;
 	
@@ -333,7 +333,7 @@ namespace flopoco{
 	}
 
 	void FPPipeline::generateVHDL_c(node* n, bool top){
-		REPORT(DETAILED, "Generating VHDL ... ");
+		REPORT(LogLevel::VERBOSE, "Generating VHDL ... ");
 				
 		if (n->type == 0){
 			//we start at cycle 0, for now
@@ -341,7 +341,7 @@ namespace flopoco{
 			//check if inputs are already declared. if not declare the inputs
 			if (n->name!=NULL){
 				if (!isSignalDeclared(n->name)){
-					REPORT(DETAILED, "signal " << n->name << "   declared");
+					REPORT(LogLevel::VERBOSE, "signal " << n->name << "   declared");
 					addFPInput(n->name, wE, wF);
 				}
 			}else{
@@ -360,7 +360,7 @@ namespace flopoco{
 					syncCycleFromSignal(lh->n->name);
 				lh=lh->next;
 			}
-			REPORT(DETAILED, "finished with node");
+			REPORT(LogLevel::VERBOSE, "finished with node");
 		}
 				
 		bool hadNoName = (n->name==NULL);
@@ -373,9 +373,9 @@ namespace flopoco{
 			char *c  = new char[t.str().length()+1];
 			c = strncpy(c, t.str().c_str(), t.str().length() );
 			c[t.str().length()]=0;
-			REPORT(DETAILED, " new temporary variable created "<< c <<" size="<<t.str().length());
+			REPORT(LogLevel::VERBOSE, " new temporary variable created "<< c <<" size="<<t.str().length());
 			n->name = c;
-			REPORT(DETAILED, " the value was created for the constant " << n->value);
+			REPORT(LogLevel::VERBOSE, " the value was created for the constant " << n->value);
 		}
 				
 		if ((hadNoName)&&(n->type == 0)){
@@ -403,7 +403,7 @@ namespace flopoco{
 		}
 					
 		case 1:{ //adder 
-			REPORT(DETAILED, " instance adder");
+			REPORT(LogLevel::VERBOSE, " instance adder");
 						
 			op1 = new FPAddSinglePath(target_, wE, wF, wE, wF, wE, wF);
 			oplist.push_back(op1);
@@ -419,7 +419,7 @@ namespace flopoco{
 		}
 
 		case 2:{ //subtracter 
-			REPORT(DETAILED, " instance subtracter");
+			REPORT(LogLevel::VERBOSE, " instance subtracter");
 						
 			op1 = new FPAddSinglePath(target_, wE, wF, wE, wF, wE, wF);
 			oplist.push_back(op1);
@@ -441,10 +441,10 @@ namespace flopoco{
 		}
 
 		case 3:{ //multiplier
-			REPORT(DETAILED, " instance multiplier");
+			REPORT(LogLevel::VERBOSE, " instance multiplier");
 			if (((n->nodeArray->n->type==0)&&(n->nodeArray->n->s_value!=NULL)) || 
 			    ((n->nodeArray->next->n->type==0)&&(n->nodeArray->next->n->s_value!=NULL))){
-				REPORT(INFO, "constant node detected");
+				REPORT(LogLevel::DETAIL, "constant node detected");
 				ostringstream constant_expr, operand_name;
 				if ((n->nodeArray->n->type==0)&&(n->nodeArray->n->s_value!=NULL)){
 					//the first one is the constant
@@ -455,7 +455,7 @@ namespace flopoco{
 					operand_name << n->nodeArray->n->name;		
 				}
 							
-				REPORT(INFO, "Constant is "<< constant_expr.str());
+				REPORT(LogLevel::DETAIL, "Constant is "<< constant_expr.str());
 
 #if 0 // Not that it is bad, but it poorly handles special cases such as mult by 2
 				op1 = new FPRealKCM(target_, wE, wF, constant_expr.str());
@@ -493,7 +493,7 @@ namespace flopoco{
 		}
 
 		case 4:{ //divider 
-			REPORT(DETAILED, " instance divider");
+			REPORT(LogLevel::VERBOSE, " instance divider");
 						
 			op1 = new FPDiv(target_, wE, wF);
 			oplist.push_back(op1);
@@ -509,7 +509,7 @@ namespace flopoco{
 		}
 
 		case 5:{ //squarer
-			REPORT(DETAILED, " instance squarer");
+			REPORT(LogLevel::VERBOSE, " instance squarer");
 						
 			op1 = new FPSquare(target_, wE, wF, wF);
 			oplist.push_back(op1);
@@ -523,7 +523,7 @@ namespace flopoco{
 			break;
 		}
 		case 6:{ //sqrt
-			REPORT(DETAILED, " instance sqrt");
+			REPORT(LogLevel::VERBOSE, " instance sqrt");
 #ifdef ha
 			int degree = int ( floor ( double(wF) / 10.0) );
 			op1 = new FPSqrtPoly(target_, wE, wF, 0, degree);
@@ -541,7 +541,7 @@ namespace flopoco{
 			break;
 		}
 		case 7:{ //exponential
-			REPORT(DETAILED, " instance exp");
+			REPORT(LogLevel::VERBOSE, " instance exp");
 						
 			op1 = new FPExp(target_, wE, wF, 0, 0);
 			oplist.push_back(op1);
@@ -555,7 +555,7 @@ namespace flopoco{
 			break;
 		}
 		case 8:{ //logarithm
-			REPORT(DETAILED, " instance log");
+			REPORT(LogLevel::VERBOSE, " instance log");
 						
 			op1 = new FPLog(target_, wE, wF, 9);
 			oplist.push_back(op1);

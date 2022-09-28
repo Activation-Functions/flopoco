@@ -76,7 +76,7 @@ namespace flopoco {
 		s << op->getName() << "_BitHeap_"<< name << "_" << guid;
 		uniqueName_ = s.str();
 
-		REPORT(DEBUG, "Creating BitHeap of width " << width);
+		REPORT(LogLevel::DEBUG, "Creating BitHeap of width " << width);
 
 		//set up the vector of lists of weighted bits, and the vector of bit uids
 		for(unsigned i=0; i<width; i++)
@@ -106,11 +106,11 @@ namespace flopoco {
 
 	Bit * BitHeap::addBit(string name, int weight)
 	{
-		REPORT(FULL, "adding a bit at weight " << weight << " with rhs=" << name);
+		REPORT(LogLevel::FULL, "adding a bit at weight " << weight << " with rhs=" << name);
 
 		if((weight < lsb) || (weight>msb))
 		{
-			REPORT(INFO, "WARNING: in addBit, weight=" << weight
+			REPORT(LogLevel::DETAIL, "WARNING: in addBit, weight=" << weight
 					<< " out of the bit heap range ("<< msb << ", " << lsb << ")... ignoring it");
 			return nullptr;
 		}
@@ -122,7 +122,7 @@ namespace flopoco {
 		//insert the new bit so that the vector is sorted by bit (cycle, delay)
 		insertBitInColumn(bit, weight - lsb);
 
-		REPORT(DEBUG, "added bit named "  << bit->getName() << " on column " << weight - lsb
+		REPORT(LogLevel::DEBUG, "added bit named "  << bit->getName() << " on column " << weight - lsb
 				<< " at cycle=" << bit->signal->getCycle() << " cp=" << bit->signal->getCriticalPath());
 
 		printColumnInfo(weight);
@@ -222,7 +222,7 @@ namespace flopoco {
 		else
 			THROWERROR("Invalid direction for removeBit: direction=" << direction);
 
-		REPORT(DEBUG,"removed a bit from column " << weight);
+		REPORT(LogLevel::DEBUG,"removed a bit from column " << weight);
 
 		isCompressed = false;
 	}
@@ -253,7 +253,7 @@ namespace flopoco {
 			THROWERROR("Bit " << bit->getName() << " with uid=" << bit->getUid()
 					<< " not found in column with weight=" << weight);
 
-		REPORT(DEBUG,"removed bit " << bit->getName() << " from column " << weight);
+		REPORT(LogLevel::DEBUG,"removed bit " << bit->getName() << " from column " << weight);
 
 		isCompressed = false;
 	}
@@ -269,7 +269,7 @@ namespace flopoco {
 
 		if(count > bitsColumn.size())
 		{
-			REPORT(DEBUG, "WARNING: column with weight=" << weight << " only contains "
+			REPORT(LogLevel::DEBUG, "WARNING: column with weight=" << weight << " only contains "
 					<< bitsColumn.size() << " bits, but " << count << " are to be removed");
 			count = bitsColumn.size();
 		}
@@ -377,7 +377,7 @@ namespace flopoco {
 
 			if(number >= bits[i].size())
 			{
-				REPORT(DEBUG, "Column with weight=" << currentWeight << " only contains "
+				REPORT(LogLevel::DEBUG, "Column with weight=" << currentWeight << " only contains "
 						<< bits[i].size() << " bits, but number=" << number << " bits are to be marked");
 				currentNumber = bits[i].size();
 			}
@@ -511,7 +511,7 @@ namespace flopoco {
 	void BitHeap::addSignal(string name, int shift)
 	{
 
-		REPORT(DEBUG, "addSignal    " << name << " shift=" << shift);
+		REPORT(LogLevel::DEBUG, "addSignal    " << name << " shift=" << shift);
 		Signal* s = op->getSignalByName(name);
 		int sMSB = s->MSB();
 		int sLSB = s->LSB();
@@ -519,10 +519,10 @@ namespace flopoco {
 		// No error reporting here: the current situation is that addBit will ignore bits thrown out of the bit heap (with a warning)
 
 		if( (sLSB+shift < lsb) || (sMSB+shift > msb) )
-			REPORT(0,"WARNING: addSignal(): " << name << " shifted by " << shift << " has bits out of the bitheap range ("<< this->msb << ", " << this->lsb << ")");
+			REPORT(LogLevel::MESSAGE,"WARNING: addSignal(): " << name << " shifted by " << shift << " has bits out of the bitheap range ("<< this->msb << ", " << this->lsb << ")");
 
 		if(s->isSigned()) { // We must sign-extend it, using the constant trick
-			REPORT(DEBUG, "addSignal: this is a signed signal   ");
+			REPORT(LogLevel::DEBUG, "addSignal: this is a signed signal   ");
 
 			if(!op->getSignalByName(name)->isBus()) {
 				// getting here doesn't make much sense
@@ -543,12 +543,12 @@ namespace flopoco {
 				for(int w=sMSB; w<=this->msb-shift; w++) {
 					addConstantOneBit(w+shift);
 				}
-				REPORT(FULL, "addSignal: constant string now " << hex << constantBits);
+				REPORT(LogLevel::FULL, "addSignal: constant string now " << hex << constantBits);
 			}
 		}
 
 		else{ // unsigned
-			REPORT(DEBUG, "addSignal: this is an unsigned signal    ");
+			REPORT(LogLevel::DEBUG, "addSignal: this is an unsigned signal    ");
 			if(!op->getSignalByName(name)->isBus())
 				addBit(name, shift);
 			else {// isBus: this is a bit vector
@@ -564,7 +564,7 @@ namespace flopoco {
 
 	void BitHeap::subtractSignal(string name, int shift)
 	{
-		REPORT(DEBUG, "subtractSignal  " << name << " shift=" << shift);
+		REPORT(LogLevel::DEBUG, "subtractSignal  " << name << " shift=" << shift);
 		Signal* s = op->getSignalByName(name);
 		int sMSB = s->MSB();
 		int sLSB = s->LSB();
@@ -572,7 +572,7 @@ namespace flopoco {
 		// No error reporting here: the current situation is that addBit will ignore bits thrown out of the bit heap (with a warning)
 
 		if( (sLSB+shift < lsb) || (sMSB+shift > msb) )
-			REPORT(0,"WARNING: subtractSignal(): " << name << " shifted by " << shift << " has bits out of the bitheap range ("<< this->msb << ", " << this->lsb << ")");
+			REPORT(LogLevel::MESSAGE,"WARNING: subtractSignal(): " << name << " shifted by " << shift << " has bits out of the bitheap range ("<< this->msb << ", " << this->lsb << ")");
 
 
 		if(s->isSigned()) {
@@ -585,7 +585,7 @@ namespace flopoco {
 			//                                                    +1
 			// with the sign extension trick:         000000sXXXXXXX
 			//                                      + 1111111      1
-			REPORT(DEBUG, "subtractSignal: this is a signed signal  ");
+			REPORT(LogLevel::DEBUG, "subtractSignal: this is a signed signal  ");
 
 			// If the bit vector is of width 1, the following loop is empty.
 			for(int w=sLSB; w<=sMSB; w++) {
@@ -602,7 +602,7 @@ namespace flopoco {
 			//
 			// so we must add to the bit heap         111111XXXXXXXX
 			//                                                    +1
-			REPORT(DEBUG, "subtractSignal: this is an unsigned signal   ");
+			REPORT(LogLevel::DEBUG, "subtractSignal: this is an unsigned signal   ");
 			for(int w=sLSB; w<=sMSB; w++) {
 				addBit("not " + name + of(w - sLSB), w + shift);
 			}
@@ -624,12 +624,12 @@ namespace flopoco {
 			THROWERROR("Invalid direction in resizeBitheap: direction=" << direction);
 		if(newWidth < width)
 		{
-			REPORT(DEBUG, "WARNING: resizing the bitheap from width="
+			REPORT(LogLevel::DEBUG, "WARNING: resizing the bitheap from width="
 					<< width << " to width=" << newWidth);
 			if(direction == 0){
-				REPORT(DEBUG, "\t will loose the information in the lsb columns");
+				REPORT(LogLevel::DEBUG, "\t will loose the information in the lsb columns");
 			}else{
-				REPORT(DEBUG, "\t will loose the information in the msb columns");
+				REPORT(LogLevel::DEBUG, "\t will loose the information in the msb columns");
 			}
 		}
 
@@ -687,13 +687,13 @@ namespace flopoco {
 			THROWERROR("Invalid arguments in resizeBitheap: newMsb=" << newMsb << " newLsb=" << newLsb);
 		if(newMsb<msb || newLsb>lsb)
 		{
-			REPORT(DEBUG, "WARNING: resizing the bitheap from msb="
+			REPORT(LogLevel::DEBUG, "WARNING: resizing the bitheap from msb="
 					<< msb << " lsb=" << lsb << " to newMsb=" << newMsb << " newLsb=" << newLsb);
 			if(newMsb < msb){
-				REPORT(DEBUG, "\t will loose the information in the msb columns");
+				REPORT(LogLevel::DEBUG, "\t will loose the information in the msb columns");
 			}
 			if(newLsb>lsb){
-				REPORT(DEBUG, "\t will loose the information in the lsb columns");
+				REPORT(LogLevel::DEBUG, "\t will loose the information in the lsb columns");
 			}
 		}
 
@@ -803,7 +803,7 @@ namespace flopoco {
 			THROWERROR("compression " << op->getTarget()->getCompressionMethod() << " unknown!");
 		}
 
-		REPORT(DETAILED,"Using compression method " << op->getTarget()->getCompressionMethod());
+		REPORT(LogLevel::VERBOSE,"Using compression method " << op->getTarget()->getCompressionMethod());
 		//create a new compression strategy, if one isn't present already
 		//if(compressionStrategy == nullptr)
 		//start the compression
@@ -819,7 +819,7 @@ namespace flopoco {
 
 		compressionStrategy->startCompression();
 
-		REPORT(DETAILED,"Using solution for the compressor tree generated combined with tiling");
+		REPORT(LogLevel::VERBOSE,"Using solution for the compressor tree generated combined with tiling");
 		//mark the bitheap compressed
 		isCompressed = true;
 	}
@@ -917,7 +917,7 @@ namespace flopoco {
 
 		for(unsigned i=0; i<bits[position-lsb].size(); i++)
 		{
-			REPORT(FULL, "\t column position=" << position << " name=" << bits[position-lsb][i]->getName()
+			REPORT(LogLevel::FULL, "\t column position=" << position << " name=" << bits[position-lsb][i]->getName()
 					<< " cycle=" << bits[position-lsb][i]->signal->getCycle()
 					<< " criticaPath=" << bits[position-lsb][i]->signal->getCriticalPath());
 		}
@@ -926,10 +926,10 @@ namespace flopoco {
 
 	void BitHeap::printBitHeapStatus()
 	{
-		REPORT(DEBUG, "Bitheap status:");
+		REPORT(LogLevel::DEBUG, "Bitheap status:");
 		for(unsigned w=0; w<bits.size(); w++)
 		{
-			REPORT(DEBUG, "Column position=" << w+lsb << ":\t height=" << bits[w].size());
+			REPORT(LogLevel::DEBUG, "Column position=" << w+lsb << ":\t height=" << bits[w].size());
 			printColumnInfo(w+lsb);
 		}
 	}

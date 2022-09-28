@@ -60,7 +60,7 @@ namespace flopoco{
 		setCopyrightString("Florent de Dinechin, Bogdan Pasca (2010-2017)");
 
 		sizeRightShift = intlog2(wF+3 );
-		REPORT(DEBUG, "sizeRightShift = " <<  sizeRightShift);
+		REPORT(LogLevel::DEBUG, "sizeRightShift = " <<  sizeRightShift);
 		/* Set up the IO signals */
 		/* Inputs: 2b(Exception) + 1b(Sign) + wE bits (Exponent) + wF bits(Fraction) */
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -85,7 +85,7 @@ namespace flopoco{
 		vhdl << tab << declare("addCmpOp1",wE+wF+3) << " <= '0'  & excExpFracX;"<<endl;
 		vhdl << tab << declare("addCmpOp2",wE+wF+3) << " <= '1'  & not excExpFracY;"<<endl;
 		{Signal* i=getSignalByName("addCmpOp1");
-			REPORT(DEBUG, "signal " << i->getName() <<  "  Cycle=" << i->getCycle() <<  "  criticalPath=" << i->getCriticalPath() );
+			REPORT(LogLevel::DEBUG, "signal " << i->getName() <<  "  Cycle=" << i->getCycle() <<  "  criticalPath=" << i->getCriticalPath() );
 	}
 		vhdl << tab << declare("addCmpCin") << " <= '1';"<<endl;
 		newInstance("IntAdder", "cmpAdder", join("wIn=", (wE+wF+3)), "X=>addCmpOp1,Y=>addCmpOp2,Cin=>addCmpCin", "R=>cmpRes");
@@ -113,7 +113,7 @@ namespace flopoco{
 
 		// depending on the value of swap, assign the corresponding values to the newX and newY signals
 
-		// REPORT(INFO, "Fan-out delay = " << getTarget()->localWireDelay(wE+wF+3));
+		// REPORT(LogLevel::DETAIL, "Fan-out delay = " << getTarget()->localWireDelay(wE+wF+3));
 		addComment("input swap so that |X|>|Y|");
 		vhdl<<tab<<declare( getTarget()->logicDelay(3),
 											 "newX",wE+wF+3) << " <= X when swap = '0' else "<< pmY << ";"<<endl;
@@ -165,7 +165,7 @@ namespace flopoco{
 		}
 
 		// shift right the significand of new Y with as many positions as the exponent difference suggests (alignment)
-		REPORT(DETAILED, "Building right shifter");
+		REPORT(LogLevel::VERBOSE, "Building right shifter");
 
 
 /* The following #if allows the following experiment with vivado 2016.4 on Kintex

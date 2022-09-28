@@ -84,7 +84,7 @@ namespace flopoco {
             coeffb_d[i] = mpfr_get_d(coeffb_mp_f[i], GMP_RNDN);
             coeffb_si[i] = mpfr_get_si(coeffb_mp_f[i], GMP_RNDN);
 
-            REPORT(DETAILED, "b[" << i << "]=" << setprecision(15) << scientific << coeffb_d[i]);
+            REPORT(LogLevel::VERBOSE, "b[" << i << "]=" << setprecision(15) << scientific << coeffb_d[i]);
         }
 
         for (uint32_t i = 0; i < m; i++) {
@@ -100,7 +100,7 @@ namespace flopoco {
             sollya_lib_get_constant(coeffa_mp_f[i], node);
             coeffa_d[i] = mpfr_get_d(coeffa_mp_f[i], GMP_RNDN);
             coeffa_si[i] = mpfr_get_si(coeffa_mp_f[i], GMP_RNDN);
-            REPORT(DETAILED, "a[" << i << "]=" << scientific << setprecision(15) << coeffa_d[i]);
+            REPORT(LogLevel::VERBOSE, "a[" << i << "]=" << scientific << setprecision(15) << coeffa_d[i]);
         }
 
         // check if FIR or IIR, if coeffa is -1 or shifta is -1 its detected as FIR
@@ -116,10 +116,10 @@ namespace flopoco {
             coeffb_d_wcpg = (double *) malloc(n * sizeof(double));
             if(H == 0) // H not set by argument
             {
-                REPORT(INFO, "Computing worst-case peak gain");
+                REPORT(LogLevel::DETAIL, "Computing worst-case peak gain");
                 for (uint32_t i = 0; i < m; i++) {
                     coeffa_d_wcpg[i] = coeffa_d[i] * (1 / (pow(2, shifta)));
-                    REPORT(DETAILED,
+                    REPORT(LogLevel::VERBOSE,
                            "coeffa_d_wcpg: " << coeffa_d_wcpg[i] << ", coeffa: " << coeffa_d[i] << ", shifta: "
                                              << shifta)
                 }
@@ -127,30 +127,30 @@ namespace flopoco {
                     coeffb_d_wcpg[i] = coeffb_d[i] * (1 / (pow(2, shiftb)));
 
                 if (!WCPG_tf(&H, coeffb_d_wcpg, coeffa_d_wcpg, n, m, (int) 0)) THROWERROR("Could not compute H");
-                REPORT(INFO, "Computed filter worst-case peak gain: H=" << H)
+                REPORT(LogLevel::DETAIL, "Computed filter worst-case peak gain: H=" << H)
             }
             else // H set by argument -> overwrite
             {
-                REPORT(LIST, "H=" << H);
+                REPORT(LogLevel::MESSAGE, "H=" << H);
             }
 
             wcpgBitGain = intlog2(H);
-            REPORT(INFO, "wcpg bit gain: " << wcpgBitGain);
+            REPORT(LogLevel::DETAIL, "wcpg bit gain: " << wcpgBitGain);
 
             // ################# COMPUTE GUARD BITS AND HEPS #########################################
             if(guardBits < 0)
             {
                 if (Heps == 0) // if guard bits not set by argument then overwrite
                 {
-                    REPORT(DETAILED, "computing guard bits");
+                    REPORT(LogLevel::VERBOSE, "computing guard bits");
                     double one_d[1] = {1.0};
                     if (!WCPG_tf(&Heps, one_d, coeffa_d_wcpg, 1, m, (int) 0)) THROWERROR("Could not compute Heps");
 
-                    REPORT(LIST, "Computed error amplification worst-case peak gain: Heps=" << Heps);
+                    REPORT(LogLevel::MESSAGE, "Computed error amplification worst-case peak gain: Heps=" << Heps);
                 }
                 else
                 {
-                    REPORT(LIST, "Heps=" << Heps);
+                    REPORT(LogLevel::MESSAGE, "Heps=" << Heps);
                 }
                 guardBits = intlog2(Heps) + 1; // +1 for last bit accuracy
             }
@@ -159,15 +159,15 @@ namespace flopoco {
                 THROWERROR("WCPG was not found (see cmake output), cannot compute worst-case peak gain H. Compile FloPoCo with WCPG");
     #endif
 
-            REPORT(INFO, "No of guard bits=" << guardBits);
+            REPORT(LogLevel::DETAIL, "No of guard bits=" << guardBits);
         }
         wIn = msbIn - lsbIn + 1;
         msbInt = ceil(msbIn + wcpgBitGain);
         msbOutIIR = msbInt;
         lsbInt = lsbOut - guardBits;
         //int wInt = wOut + guardBits; // not needed yet
-        REPORT(INFO, "msbIn: \t\t\t\t" << msbIn << ", lsbIn: \t\t\t\t " << lsbIn)
-        REPORT(INFO, "msbInt: \t\t\t\t" << msbInt << ", lsbInt: \t\t\t\t" << lsbInt)
+        REPORT(LogLevel::DETAIL, "msbIn: \t\t\t\t" << msbIn << ", lsbIn: \t\t\t\t " << lsbIn)
+        REPORT(LogLevel::DETAIL, "msbInt: \t\t\t\t" << msbInt << ", lsbInt: \t\t\t\t" << lsbInt)
 
         // ################################### WORD SIZES FORWARD PATH ############################################
 
@@ -192,7 +192,7 @@ namespace flopoco {
                     msbMultiplicationsForwardOut[i] = msbIn + ceil(log2(abs(coeffb_si[i])+1));
                 else
                     msbMultiplicationsForwardOut[i] = msbIn + ceil(log2(abs(coeffb_si[i])));
-            REPORT(DEBUG, "msbMultiplicationsForwardOut["<<i<<"]: " << msbMultiplicationsForwardOut[i])
+            REPORT(LogLevel::DEBUG, "msbMultiplicationsForwardOut["<<i<<"]: " << msbMultiplicationsForwardOut[i])
         }
 
         // registers (only word size is needed for vhdl code generation, but it can be derived from msb and lsb)
@@ -210,7 +210,7 @@ namespace flopoco {
                 msbRegisterForwardOut[i] = msbIn;
             else
                 msbRegisterForwardOut[i] = msbIn + ceil(log2((abs(bitGainForRegister))));
-            REPORT(DEBUG, "msbRegisterForwardOut["<<i<<"]: " << msbRegisterForwardOut[i])
+            REPORT(LogLevel::DEBUG, "msbRegisterForwardOut["<<i<<"]: " << msbRegisterForwardOut[i])
         }
 
         // additions, last addition (addN-1) is special case since it has two inputs
@@ -222,7 +222,7 @@ namespace flopoco {
             msbAdditionsForwardOut[n - 1] = msbIn + 0;
         else
             msbAdditionsForwardOut[n - 1] = msbIn + ceil(log2((abs(coeffb_si[n - 1]) + abs(coeffb_si[n - 2]))));
-        REPORT(DEBUG, "msbAdditionsForwardOut["<<n - 1<<"]: " << msbAdditionsForwardOut[n-1])
+        REPORT(LogLevel::DEBUG, "msbAdditionsForwardOut["<<n - 1<<"]: " << msbAdditionsForwardOut[n-1])
         bitGainForAdditons = 0;
         for (int i = n - 2; i >= 0; i--) // for additions except addN-1
         {
@@ -232,18 +232,18 @@ namespace flopoco {
                     bitGainForAdditons += abs(coeffb_si[j])+1;
                 else
                     bitGainForAdditons += abs(coeffb_si[j]);
-            REPORT(INFO, "bitGainForAdditons: " << ceil(log2((abs(bitGainForAdditons)))));
+            REPORT(LogLevel::DETAIL, "bitGainForAdditons: " << ceil(log2((abs(bitGainForAdditons)))));
             if(bitGainForAdditons == 0)
                 msbAdditionsForwardOut[i] = msbIn;
             else
                 msbAdditionsForwardOut[i] = msbIn + ceil(log2((abs(bitGainForAdditons))));
-            REPORT(DEBUG, "msbAdditionsForwardOut["<<i<<"]: " << msbAdditionsForwardOut[i])
+            REPORT(LogLevel::DEBUG, "msbAdditionsForwardOut["<<i<<"]: " << msbAdditionsForwardOut[i])
         }
 
         // scaleb
         msbScaleBOut = msbAdditionsForwardOut[0] - abs(shiftb);
         lsbScaleBOut = lsbForwardPath - abs(shiftb);
-        REPORT(INFO, "msbScaleBOut: \t\t\t" << msbScaleBOut << ", lsbScaleBOut: \t\t\t" << lsbScaleBOut)
+        REPORT(LogLevel::DETAIL, "msbScaleBOut: \t\t\t" << msbScaleBOut << ", lsbScaleBOut: \t\t\t" << lsbScaleBOut)
 
         // msbOut is computed different for FIR and IIR since the output is at different position
         msbOutFIR = msbScaleBOut;
@@ -260,7 +260,7 @@ namespace flopoco {
             for (uint32_t i = 0; i < m; i++)
                 wordsizeGainFeedback += (abs(coeffa_si[i]));
             wordsizeGainFeedback = ceil(log2(wordsizeGainFeedback));
-            REPORT(INFO, "wordsizeGainFeedback: " << wordsizeGainFeedback);
+            REPORT(LogLevel::DETAIL, "wordsizeGainFeedback: " << wordsizeGainFeedback);
 
             msbRegisterFeedbackOut = (int *) malloc(m * sizeof(int));
             lsbRegisterFeedbackOut = (int *) malloc(m * sizeof(int));
@@ -281,7 +281,7 @@ namespace flopoco {
                 else
                     msbMultiplicationsFeedbackOut[i] = msbInt - shifta + ceil(log2(abs(coeffa_si[i])));
                 lsbMultiplicationsFeedbackOut[i] = lsbInt - shifta;
-                REPORT(INFO, "msbMultiplicationsFeedbackOut[" << i << "]: \t" << msbMultiplicationsFeedbackOut[i]
+                REPORT(LogLevel::DETAIL, "msbMultiplicationsFeedbackOut[" << i << "]: \t" << msbMultiplicationsFeedbackOut[i]
                                                               << ", lsbMultiplicationsFeedbackOut[" << i << "] \t"
                                                               << lsbMultiplicationsFeedbackOut[i])
             }
@@ -304,7 +304,7 @@ namespace flopoco {
                     msbRegisterFeedbackOut[i] = msbInt - shifta + ceil(log2((abs(tmp))));
 
                 lsbRegisterFeedbackOut[i] = lsbInt - shifta;
-                REPORT(INFO,
+                REPORT(LogLevel::DETAIL,
                        "msbRegisterFeedbackOut[" << i << "]: \t" << msbRegisterFeedbackOut[i]
                                                  << ", lsbRegisterFeedbackOut["
                                                  << i << "]: \t\t" << lsbRegisterFeedbackOut[i])
@@ -317,7 +317,7 @@ namespace flopoco {
                 msbAdditionsFeedbackOut[i] = msbRegisterFeedbackOut[i -
                                                                     1]; // no need for special case handling power of two since register msb is used
                 lsbAdditionsFeedbackOut[i] = lsbInt - shifta;
-                REPORT(INFO,
+                REPORT(LogLevel::DETAIL,
                        "msbAdditionsFeedbackOut[" << i << "]: \t" << msbAdditionsFeedbackOut[i]
                                                   << ", lsbAdditionsFeedbackOut["
                                                   << i << "]: \t" << lsbAdditionsFeedbackOut[i])
@@ -334,27 +334,27 @@ namespace flopoco {
 
             msbAdditionsFeedbackOut[0] = msbIn + wcpgBitGain;
             lsbAdditionsFeedbackOut[0] = min(lsbInt - shifta, lsbScaleBOut);
-            REPORT(INFO,
+            REPORT(LogLevel::DETAIL,
                    "msbAdditionsFeedbackOut[0]: \t" << msbAdditionsFeedbackOut[0] << ", lsbAdditionsFeedbackOut[0]: \t"
                                                     << lsbAdditionsFeedbackOut[0])
 
             // truncationAfterScaleA
             msbTruncationIntOut = msbInt;
             lsbTruncationIntOut = lsbInt;
-            REPORT(INFO,
+            REPORT(LogLevel::DETAIL,
                    "msbTruncationIntOut: \t\t" << msbTruncationIntOut << ", lsbTruncationIntOut: \t\t"
                                                << lsbTruncationIntOut)
 
             // ScaleA, only shift fixed point, no code generation
             msbScaleAOut = msbTruncationIntOut - (int) shifta;
             lsbScaleAOut = lsbTruncationIntOut - (int) shifta;
-            REPORT(INFO, "msbScaleAOut: \t\t\t" << msbScaleAOut << ", lsbScaleAOut: \t\t\t" << lsbScaleAOut)
+            REPORT(LogLevel::DETAIL, "msbScaleAOut: \t\t\t" << msbScaleAOut << ", lsbScaleAOut: \t\t\t" << lsbScaleAOut)
         }
             addInput("X", wIn, true);
             addOutput("Result", wOut);
-            REPORT(INFO, "input size (wIn): " << wIn)
-            REPORT(INFO, "wordsize size scaleb: " << msbScaleBOut-lsbScaleBOut+1)
-            REPORT(INFO, "output size (wOut): " << wOut)
+            REPORT(LogLevel::DETAIL, "input size (wIn): " << wIn)
+            REPORT(LogLevel::DETAIL, "wordsize size scaleb: " << msbScaleBOut-lsbScaleBOut+1)
+            REPORT(LogLevel::DETAIL, "output size (wOut): " << wOut)
 
         // ################################# Sign computation for adders #########################################
         vector<adderSigns> adderFeedbackpPath;
@@ -388,7 +388,7 @@ namespace flopoco {
                 adderFeedbackpPath.at(m - 1).signLeft = "-";
 
             for(uint32_t i = 0; i < m; i++)
-                REPORT(LIST, "feedback add" << i << " left: " << adderFeedbackpPath.at(i).signLeft << " right: " << adderFeedbackpPath.at(i).signRight)
+                REPORT(LogLevel::MESSAGE, "feedback add" << i << " left: " << adderFeedbackpPath.at(i).signLeft << " right: " << adderFeedbackpPath.at(i).signRight)
 
             /*
              * Forward path
@@ -412,7 +412,7 @@ namespace flopoco {
             preventDoubleNegativeInputsAdder(n, &adderForwardPath);
 
             for(uint32_t i = 0; i < m; i++)
-                REPORT(LIST, "feedback add" << i << " left: " << adderFeedbackpPath.at(i).signLeft << " right: " << adderFeedbackpPath.at(i).signRight)
+                REPORT(LogLevel::MESSAGE, "feedback add" << i << " left: " << adderFeedbackpPath.at(i).signLeft << " right: " << adderFeedbackpPath.at(i).signRight)
 
         }
 
@@ -497,7 +497,7 @@ namespace flopoco {
                 }
                 else // duplicate detected, set the duplicate to the signal where it was first found, so if coeff_b[0] and coeff_b[2] are equal, forMul2 is set to forMul0
                 {
-                    REPORT(LIST, "duplicate detected (" << coeffb_si[i] << ")")
+                    REPORT(LogLevel::MESSAGE, "duplicate detected (" << coeffb_si[i] << ")")
                     vhdl << declare(join("forMul", i), msbMultiplicationsForwardOut[i] - lsbForwardPath + 1) << "<= std_logic_vector(forMul" << FixIIRShiftAdd::getIndexCoeff(coeffb_si, n, coeffb_si[i]) << ");" <<  endl;
                 }
             }
@@ -517,12 +517,12 @@ namespace flopoco {
             stringstream parameters;
             parameters << "wIn=" << wIn << " graph=" << graphb;
             string inPortMaps = "X0=>X";
-            REPORT(LIST, "outPortMaps (forward): " << outPortMaps.str())
+            REPORT(LogLevel::MESSAGE, "outPortMaps (forward): " << outPortMaps.str())
             cout << "parameters: " << parameters.str() << endl;
             newInstance("IntConstMultShiftAdd", "IntConstMultShiftAddComponentForward", parameters.str(), inPortMaps,
                         outPortMaps.str());
 
-            REPORT(LIST, "IntConstMultShiftAdd for forward path created")
+            REPORT(LogLevel::MESSAGE, "IntConstMultShiftAdd for forward path created")
         }
 
         vhdl << endl;
@@ -593,7 +593,7 @@ namespace flopoco {
                             outportmapsBuilder.push_back(join("R_c", abs(coeffa_si[i]), "=>feedbackMul", i));
                     } else // duplicate detected, set the duplicate to the signal where it was first found, so if coeff_b[0] and coeff_b[2] are equal, feedbackMul is set to feedbackMul
                     {
-                        REPORT(LIST, "duplicate detected (" << coeffa_si[i] << ")")
+                        REPORT(LogLevel::MESSAGE, "duplicate detected (" << coeffa_si[i] << ")")
                         vhdl << declare(join("feedbackMul", i),
                                         msbMultiplicationsFeedbackOut[i] - lsbMultiplicationsFeedbackOut[i] + 1)
                              << "<= std_logic_vector(feedbackMul"
@@ -607,7 +607,7 @@ namespace flopoco {
 
                 // add comma between signals in port map. Must be done separatly since leading coefficients can be 0 what doesnt result in a signal
                 for (uint32_t i = 0; i < outportmapsBuilder.size(); i++) {
-                    REPORT(LIST, "outputmapsbuilder: " << outportmapsBuilder.at(i))
+                    REPORT(LogLevel::MESSAGE, "outputmapsbuilder: " << outportmapsBuilder.at(i))
                     outPortMaps << outportmapsBuilder.at(i);
                     if (i != outportmapsBuilder.size() - 1)
                         outPortMaps << ",";
@@ -616,12 +616,12 @@ namespace flopoco {
                 stringstream parameters;
                 parameters << "wIn=" << msbScaleAOut - lsbScaleAOut + 1 << " graph=" << grapha;
                 string inPortMaps = "X0=>truncationAfterScaleA";
-                REPORT(LIST, "outPortMaps (feedback): " << outPortMaps.str())
+                REPORT(LogLevel::MESSAGE, "outPortMaps (feedback): " << outPortMaps.str())
                 newInstance("IntConstMultShiftAdd", "IntConstMultShiftAddComponentFeedback", parameters.str(),
                             inPortMaps,
                             outPortMaps.str());
 
-                REPORT(DETAILED, "IntConstMultShiftAdd for feedback path created")
+                REPORT(LogLevel::VERBOSE, "IntConstMultShiftAdd for feedback path created")
             }
 
             /*
@@ -641,7 +641,7 @@ namespace flopoco {
 
             int64_t numLsbBitsDifference = abs(
                     lsbRegisterFeedbackOut[0] - lsbScaleBOut); // determine how often to shift
-            REPORT(DEBUG, "numLsbBitsDifference: " << numLsbBitsDifference)
+            REPORT(LogLevel::DEBUG, "numLsbBitsDifference: " << numLsbBitsDifference)
             if (lsbScaleBOut < lsbRegisterFeedbackOut[0]) {
                 /* lsbScaleBOut has more lsb bits, so add lsb-bits to regOut0
                  * resize and shifting (to the left), scale this value to the size of the output of feedbackAdd0, since this value cannot be larger
@@ -761,7 +761,7 @@ namespace flopoco {
         {
             if(lsbOut - lsbScaleBOut > 0) // if there are more lsbScaleBOut bits than lsbOut,
             {
-                REPORT(DEBUG, "cut " << lsbOut - lsbScaleBOut << " bit. Range from " << msbScaleBOut-lsbScaleBOut+1-1 << " to: " << lsbOut - lsbScaleBOut-1 << endl);
+                REPORT(LogLevel::DEBUG, "cut " << lsbOut - lsbScaleBOut << " bit. Range from " << msbScaleBOut-lsbScaleBOut+1-1 << " to: " << lsbOut - lsbScaleBOut-1 << endl);
                 uint16_t bitPositionRoundingBit = msbScaleBOut-lsbScaleBOut-1;
                 vhdl << declare("faithfulRoundingBitValue", 1) << " <= forAdd0(" << bitPositionRoundingBit << " downto " << bitPositionRoundingBit << " ); " << endl;
                 // no +1 in lsbOut - lsbScaleBOut and the  other since for downto 1 must be suctracted again
@@ -770,12 +770,12 @@ namespace flopoco {
             }
             else if(lsbOut - lsbScaleBOut < 0)
             {
-                REPORT(DEBUG, "pad " << abs(lsbOut - lsbScaleBOut) << "bit on right side")
+                REPORT(LogLevel::DEBUG, "pad " << abs(lsbOut - lsbScaleBOut) << "bit on right side")
                 vhdl << "Result <= std_logic_vector(shift_left(resize(signed(forAdd0), " << wOut << "), " << abs(lsbOut - lsbScaleBOut) << ")); " << endl;
             }
             else
             {
-                REPORT(DEBUG, "proper alignment");
+                REPORT(LogLevel::DEBUG, "proper alignment");
                 vhdl << "Result <= std_logic_vector(forAdd0);" << endl;
             }
         }
@@ -852,7 +852,7 @@ namespace flopoco {
         // input from forward path is affected by scaleb, input from feedbackpath is affected by scalea and guard bits
 
         int numLsbBitsDifferenceTB = abs(lsbRegisterFeedbackOut[0] - lsbScaleBOut);
-        REPORT(DEBUG, "numLsbBitsDifferenceTB: " << numLsbBitsDifferenceTB)
+        REPORT(LogLevel::DEBUG, "numLsbBitsDifferenceTB: " << numLsbBitsDifferenceTB)
         if (lsbScaleBOut < lsbRegisterFeedbackOut[0]) {
             // lsbScaleBOut has more lsb bits, so add lsb-bits to regOut0
             mpz_mul_2exp(registerFeedbackTB_mpz[0], registerFeedbackTB_mpz[0], numLsbBitsDifferenceTB);
@@ -863,7 +863,7 @@ namespace flopoco {
 
         // add 0
         mpz_add(feedbackAdd0, registerFeedbackTB_mpz[0], resultForwardPathTB_mpz);
-        REPORT(DEBUG,
+        REPORT(LogLevel::DEBUG,
                "feedbackAdd0: " << feedbackAdd0 << ", registerFeedbackTB_mpz[0]: " << registerFeedbackTB_mpz[0]
                                 << ", resultForwardPathTB_mpz: " << resultForwardPathTB_mpz)
 
@@ -879,8 +879,8 @@ namespace flopoco {
          * if 1, add to result
          */
         // determine most-left truncated bit position and value
-        //REPORT(LIST, "msb: " << msbAdditionsFeedbackOut[0] << ", lsb: " << lsbAdditionsFeedbackOut[0])
-        //REPORT(LIST, "most-left truncated bit position: " << abs(lsbAdditionsFeedbackOut[0]-lsbInt) + guardBits-1) // if there are 9 truncated bits, bit 8..0 are truncated, so add bit 8
+        //REPORT(LogLevel::MESSAGE, "msb: " << msbAdditionsFeedbackOut[0] << ", lsb: " << lsbAdditionsFeedbackOut[0])
+        //REPORT(LogLevel::MESSAGE, "most-left truncated bit position: " << abs(lsbAdditionsFeedbackOut[0]-lsbInt) + guardBits-1) // if there are 9 truncated bits, bit 8..0 are truncated, so add bit 8
 
         mpz_t resultTempForFaithfulRounding;
         mpz_init_set(resultTempForFaithfulRounding, feedbackAdd0);
@@ -890,12 +890,12 @@ namespace flopoco {
         mpz_fdiv_q_2exp(resultTempForFaithfulRounding, resultTempForFaithfulRounding,
                         abs(lsbAdditionsFeedbackOut[0] - lsbInt) + guardBits - 1);
         mpz_mod_ui(faithfulRoundingBitValue, resultTempForFaithfulRounding, 2); // use mod2 to determine if 0 or 1
-        //REPORT(LIST, "this value must be added: " << mpz_get_si(faithfulRoundingBitValue))
+        //REPORT(LogLevel::MESSAGE, "this value must be added: " << mpz_get_si(faithfulRoundingBitValue))
 
         mpz_fdiv_q_2exp(result_mpz, result_mpz,
                         abs(lsbAdditionsFeedbackOut[0] - lsbInt)); // realign result, truncation to wout
         mpz_fdiv_q_2exp(result_mpz, result_mpz, guardBits); // shift back bc of guard bits
-        REPORT(DEBUG,
+        REPORT(LogLevel::DEBUG,
                "RESULT: " << result_mpz << ", shifted: " << (mpz_get_si(result_mpz)) / (int) pow(2, abs(lsbOut)))
         mpz_class result_class(result_mpz);
         //tc->addExpectedOutput("Result", result_class);
@@ -905,7 +905,7 @@ namespace flopoco {
         mpz_class result_class_fathfully(result_mpz);
         tc->addExpectedOutput("Result", result_class_fathfully); // use this for faithful rounded result
 
-        REPORT(DEBUG, "")
+        REPORT(LogLevel::DEBUG, "")
 
         // scaling (only in code, msb and lsb is altered)
         // truncation
@@ -913,22 +913,22 @@ namespace flopoco {
         mpz_init(truncated);
         // current lsb is lsb from feedbackAdd0
 
-        REPORT(DEBUG, "lsbAdditionsFeedbackOut: " << lsbAdditionsFeedbackOut[0] << ", scaleAOut: " << lsbScaleAOut
+        REPORT(LogLevel::DEBUG, "lsbAdditionsFeedbackOut: " << lsbAdditionsFeedbackOut[0] << ", scaleAOut: " << lsbScaleAOut
                                                   << ", lsbInt: " << lsbInt);
         // truncate to lsbInt
-        REPORT(DEBUG, "truncate " << feedbackAdd0 << " by " << abs(lsbScaleAOut - lsbInt) << " bits")
+        REPORT(LogLevel::DEBUG, "truncate " << feedbackAdd0 << " by " << abs(lsbScaleAOut - lsbInt) << " bits")
         mpz_fdiv_q_2exp(truncated, feedbackAdd0, abs(lsbScaleAOut - lsbInt)); // dont use tdiv, use fdiv!
 
-        REPORT(DEBUG, "truncated: " << truncated)
-        REPORT(DEBUG, "add0: " << feedbackAdd0)
-        for (int i = 0; i < m; i++) REPORT(DEBUG, "register" << i << ": " << registerFeedbackTB_mpz[i])
+        REPORT(LogLevel::DEBUG, "truncated: " << truncated)
+        REPORT(LogLevel::DEBUG, "add0: " << feedbackAdd0)
+        for (int i = 0; i < m; i++) REPORT(LogLevel::DEBUG, "register" << i << ": " << registerFeedbackTB_mpz[i])
 
         for (int i = 0; i < m; i++) {
             mpz_t coeffR;
             mpz_init(coeffR);
             mpz_mul_si(coeffR, truncated, coeffa_si[i]);
             // mpz_mul_si(coeffR, coeffR, -1);
-            REPORT(DEBUG, "coeffr mul" << i << ": " << mpz_get_si(coeffR))
+            REPORT(LogLevel::DEBUG, "coeffr mul" << i << ": " << mpz_get_si(coeffR))
             mpz_sub(registerFeedbackTB_mpz[i], registerFeedbackTB_mpz[i + 1], coeffR);
         }
 #endif
@@ -945,18 +945,18 @@ namespace flopoco {
             sx = tc->getInputValue("X");        // get the input bit vector as an integer
             //sx = bitVectorToSigned(sx, 1 - lsbIn);                        // convert it to a signed mpz_class
             sx = bitVectorToSigned(sx, msbIn - lsbIn +1);                        // convert it to a signed mpz_class
-            //REPORT(LIST, "input: " << sx)
+            //REPORT(LogLevel::MESSAGE, "input: " << sx)
             mpfr_set_z(x, sx.get_mpz_t(), GMP_RNDD);                // convert this integer to an MPFR; this rounding is exact
             mpfr_div_2si(x, x, -lsbIn, GMP_RNDD);                        // multiply this integer by 2^-p to obtain a fixed-point value; this rounding is again exact
-            //REPORT(LIST, "x incl. lsb bits: " << mpfr_get_d(x, GMP_RNDN))
+            //REPORT(LogLevel::MESSAGE, "x incl. lsb bits: " << mpfr_get_d(x, GMP_RNDN))
             mpfr_set(xHistory[currentIndex % n], x, GMP_RNDN); // exact
 
-            //REPORT(LIST, "output variable: " << mpfr_get_d(s, GMP_RNDN))
+            //REPORT(LogLevel::MESSAGE, "output variable: " << mpfr_get_d(s, GMP_RNDN))
             // TODO CHECK HERE
             for (uint32_t i = 0; i < n; i++) {
                 mpfr_mul(t, xHistory[(currentIndex + i) % n], coeffb_mp_f_scaled[i],
                          GMP_RNDZ);                    // Here rounding possible, but precision used is ridiculously high so it won't matter
-                //REPORT(LIST, "forward: " << mpfr_get_d(t, GMP_RNDN)<< " = " << mpfr_get_d(xHistory[(currentIndex+i)%n], GMP_RNDN) << " * " << mpfr_get_d(coeffb_mp_f_scaled[i], GMP_RNDN))
+                //REPORT(LogLevel::MESSAGE, "forward: " << mpfr_get_d(t, GMP_RNDN)<< " = " << mpfr_get_d(xHistory[(currentIndex+i)%n], GMP_RNDN) << " * " << mpfr_get_d(coeffb_mp_f_scaled[i], GMP_RNDN))
                 mpfr_add(s, s, t, GMP_RNDN);                            // same comment as above
             }
             if(!isFIR)
@@ -964,10 +964,10 @@ namespace flopoco {
                 for (uint32_t i = 0; i < m; i++) {
                     mpfr_mul(t, yHistory[(currentIndex + i + 1) % (m + 2)], coeffa_mp_f_scaled[i],
                              GMP_RNDZ);                    // Here rounding possible, but precision used is ridiculously high so it won't matter
-                    //REPORT(LIST, "feedback: " << mpfr_get_d(t, GMP_RNDN)<< " = " << mpfr_get_d(yHistory[(currentIndex +i+1)%(m+2)], GMP_RNDN) << " * " << mpfr_get_d(coeffa_mp_f_scaled[i], GMP_RNDN))
+                    //REPORT(LogLevel::MESSAGE, "feedback: " << mpfr_get_d(t, GMP_RNDN)<< " = " << mpfr_get_d(yHistory[(currentIndex +i+1)%(m+2)], GMP_RNDN) << " * " << mpfr_get_d(coeffa_mp_f_scaled[i], GMP_RNDN))
                     mpfr_sub(s, s, t, GMP_RNDZ);                            // same comment as above
                 }
-            //REPORT(LIST, "output variable: " << mpfr_get_d(s, GMP_RNDZ))
+            //REPORT(LogLevel::MESSAGE, "output variable: " << mpfr_get_d(s, GMP_RNDZ))
             mpfr_set(yHistory[(currentIndex + 0) % (m + 2)], s, GMP_RNDN);
             }
 
@@ -1002,7 +1002,7 @@ namespace flopoco {
 
             // make s an integer -- no rounding here
             mpfr_mul_2si(s, s, -lsbOut, GMP_RNDN);
-            //REPORT(LIST, "output variable scaled with lsbOut: " << mpfr_get_d(s, GMP_RNDZ))
+            //REPORT(LogLevel::MESSAGE, "output variable scaled with lsbOut: " << mpfr_get_d(s, GMP_RNDZ))
 
             // We are waiting until the first meaningful value comes out of the IIR
             int bitVectorSize; // bit vector size is different for FIR since the position of the output is different
@@ -1040,7 +1040,7 @@ namespace flopoco {
         maxy = 0;
         int storageOffset = n + m;
         uint32_t kmax = vanishingK - storageOffset;
-        //REPORT(LIST, "kmax: " << kmax)
+        //REPORT(LogLevel::MESSAGE, "kmax: " << kmax)
         for (uint32_t i = 0; i < kmax; i++) {
             mpz_class val;
 #if 0
@@ -1055,12 +1055,12 @@ namespace flopoco {
             // But no observable difference...
             //val = ((mpz_class(1)<<(-lsbIn)) -1) * 9 / 10; // 011111;  *9/10 to trigger rounding errors
             val = ((mpz_class(1)<<(-lsbIn)+msbIn) -1) * 9 / 10; // 011111;  *9/10 to trigger rounding errors
-            //REPORT(LIST, "val not complement: " << val )
+            //REPORT(LogLevel::MESSAGE, "val not complement: " << val )
             if (yi[kmax - i] >= 0) {
                 // two's complement
                 //val = ((mpz_class(1)<<(-lsbIn+1)) -1) -val +1 ; // 111111 - val + 1
                 val = ((mpz_class(1)<<(-lsbIn+1)+msbIn) -1) -val +1 ; // 111111 - val + 1
-                //REPORT(LIST, "twos complement: " << val )
+                //REPORT(LogLevel::MESSAGE, "twos complement: " << val )
             }
 
 #endif
@@ -1070,7 +1070,7 @@ namespace flopoco {
             tcl->add(tc);
         }
 
-        REPORT(0, "Filter output remains in [" << miny << ", " << maxy << "]");
+        REPORT(LogLevel::MESSAGE, "Filter output remains in [" << miny << ", " << maxy << "]");
     }
         if(0) {
             int largestPossibleValue = pow(2, msbIn - lsbIn + 1) - 1;
@@ -1787,12 +1787,12 @@ namespace flopoco {
             epsilon = abs(y);
             //cout << "k=" << k << " yi=" << y << endl;
             if(k>=300000){
-                REPORT(0, "computeImpulseResponse: giving up for k=" <<k << " with epsilon still at " << epsilon << ", it seems hopeless");
+                REPORT(LogLevel::MESSAGE, "computeImpulseResponse: giving up for k=" <<k << " with epsilon still at " << epsilon << ", it seems hopeless");
                 epsilon=0;
             }
         }
         vanishingK=k;
-        REPORT(0, "Impulse response vanishes for k=" << k);
+        REPORT(LogLevel::MESSAGE, "Impulse response vanishes for k=" << k);
     }
 
     bool FixIIRShiftAdd::isPowerOfTwo(int64_t number, bool checkNegativeNumber)

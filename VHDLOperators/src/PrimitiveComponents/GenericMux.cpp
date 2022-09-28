@@ -42,7 +42,7 @@ namespace flopoco {
     }
 
     void GenericMux::buildAltera(Operator* parentOp, Target *target, const uint32_t &wIn, const uint32_t &inputCount){
-        REPORT(LIST,"Altera junction not fully implemented, fall back to common.");
+        REPORT(LogLevel::MESSAGE,"Altera junction not fully implemented, fall back to common.");
         buildCommon(target,wIn,inputCount);
     }
 

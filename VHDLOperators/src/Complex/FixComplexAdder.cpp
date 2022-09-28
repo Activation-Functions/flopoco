@@ -68,13 +68,13 @@ namespace flopoco {
 		   -> DEBUG for complete and debug information, to be used during operator development (includes the INFO and DETAILED levels) ( -verbose=3 )
 		*/
 		// basic message
-		REPORT(INFO,"Declaration of FixComplexAdder \n");
+		REPORT(LogLevel::DETAIL,"Declaration of FixComplexAdder \n");
 
 		// more detailed message
-		REPORT(DETAILED, "this operator has received Six parameters " << msbin << " and " << lsbin << " and " << msbout << " and " << lsbout << " and " << signedIn << " and " << addorsub);
+		REPORT(LogLevel::VERBOSE, "this operator has received Six parameters " << msbin << " and " << lsbin << " and " << msbout << " and " << lsbout << " and " << signedIn << " and " << addorsub);
   
 		// debug message for developer
-		REPORT(DEBUG,"debug of FixComplexAdder");
+		REPORT(LogLevel::DEBUG,"debug of FixComplexAdder");
 
 
 		/* vhdl is the stream which receives all the vhdl code, some special functions are

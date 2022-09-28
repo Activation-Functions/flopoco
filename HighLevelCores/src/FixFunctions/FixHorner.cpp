@@ -249,7 +249,7 @@ namespace flopoco{
 
 #if 0 // this is just to check that the error computation is tight
       // If I plug this code the autotest fails 12% of the cases
-			REPORT(0,"******************** Sabotage ! ********************************");
+			REPORT(LogLevel::MESSAGE,"******************** Sabotage ! ********************************");
 			lsb++;
 			for(int i=degree-1; i>=0; i--) {
 				lsbY[i] =  max(lsb - sumMSB[i+1], lsbIn);
@@ -268,9 +268,9 @@ namespace flopoco{
 		} // closes the for loop on k (the intervals)
 
 		// Final reporting
-		REPORT(LogLevel::DETAIL, "Architecture parameters:")
+		REPORT(LogLevel::VERBOSE, "Architecture parameters:")
 		for (int i = degree - 1; i >= 0; i--) {
-			REPORT(LogLevel::DETAIL,
+			REPORT(LogLevel::VERBOSE,
 			       "  Horner step "
 				   << i << ": YLSB=" << setw(3) << wcYLSB[i]
 				   << "   SSgn=" << setw(2) << wcSumSign[i]

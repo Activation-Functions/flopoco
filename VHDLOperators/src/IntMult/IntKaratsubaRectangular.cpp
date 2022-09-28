@@ -32,7 +32,7 @@ IntKaratsubaRectangular:: IntKaratsubaRectangular(Operator *parentOp, Target* ta
 		TileHeightMultiple=3;
 		TileWidth=TileBaseMultiple*TileWidthMultiple;
 		TileHeight=TileBaseMultiple*TileHeightMultiple;
-		REPORT(INFO, "using rectangular tiles of size " << TileWidth << "x" << TileHeight << " " << (useKaratsuba==1 ? "with" : "without") << " Karatsuba");
+		REPORT(LogLevel::DETAIL, "using rectangular tiles of size " << TileWidth << "x" << TileHeight << " " << (useKaratsuba==1 ? "with" : "without") << " Karatsuba");
 	}
 	else
 	{
@@ -41,7 +41,7 @@ IntKaratsubaRectangular:: IntKaratsubaRectangular(Operator *parentOp, Target* ta
 		TileHeightMultiple=1;
 		TileWidth=TileBaseMultiple*TileWidthMultiple;
 		TileHeight=TileBaseMultiple*TileHeightMultiple;
-		REPORT(INFO, "using rectangular tiles of size " << TileWidth << "x" << TileHeight << " " << (useKaratsuba==1 ? "with" : "without") << " Karatsuba");
+		REPORT(LogLevel::DETAIL, "using rectangular tiles of size " << TileWidth << "x" << TileHeight << " " << (useKaratsuba==1 ? "with" : "without") << " Karatsuba");
 	}
 
 
@@ -178,7 +178,7 @@ void IntKaratsubaRectangular::createMult(int i, int j)
 /*
 	vhdl << tab << declare(multDelay,"c" + to_string(i) + "_" + to_string(j),TileWidth+TileHeight) << " <= std_logic_vector(unsigned(a" <<  + i << " ) * unsigned(b" <<  + j << "));" << endl;
 */
-	REPORT(DEBUG, "implementing a" << i << " * b" << j << " with weight " << (i+j)*TileBaseMultiple << " (" << (i+j) << " x " << TileBaseMultiple << ")");
+	REPORT(LogLevel::DEBUG, "implementing a" << i << " * b" << j << " with weight " << (i+j)*TileBaseMultiple << " (" << (i+j) << " x " << TileBaseMultiple << ")");
 	if(!isSignalDeclared("a" + to_string(i) + "se"))
 		vhdl << tab << declare("a" + to_string(i) + "se",18) << " <= std_logic_vector(resize(unsigned(a" << i << "),18));" << endl;
 	if(!isSignalDeclared("b" + to_string(j) + "se"))
@@ -194,12 +194,12 @@ void IntKaratsubaRectangular::createMult(int i, int j)
 
 void IntKaratsubaRectangular::createRectKaratsuba(int i, int j, int k, int l)
 {
-	REPORT(FULL, "createRectKaratsuba(" << i << "," << j << "," << k << "," << l << ")");
+	REPORT(LogLevel::FULL, "createRectKaratsuba(" << i << "," << j << "," << k << "," << l << ")");
 	assert(i+j == k+l);
 
 	if(useKaratsuba)
 	{
-		REPORT(INFO, "implementing a" << i << " * b" << j << " + a" << k << " * b" << l << " with weight " << (i+j) << " as (a" << i << " - a" << k << ") * (b" << j << " - b" << l << ") + a" << i << " * b" << l << " + a" << k << " * b" << j);
+		REPORT(LogLevel::DETAIL, "implementing a" << i << " * b" << j << " + a" << k << " * b" << l << " with weight " << (i+j) << " as (a" << i << " - a" << k << ") * (b" << j << " - b" << l << ") + a" << i << " * b" << l << " + a" << k << " * b" << j);
 
 		if(!isSignalDeclared("d" + to_string(i) + "_" + to_string(k)))
 			vhdl << tab << declare("d" + to_string(i) + "_" + to_string(k),18) << " <= std_logic_vector(signed(resize(unsigned(a" << i << ")," << 18 << ")) - signed(resize(unsigned(a" << k << ")," << 18 << ")));" << endl;

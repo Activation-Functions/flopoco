@@ -13,8 +13,9 @@
 #include <float.h>
 #include <utility>
 
-#include "flopoco/Target.hpp"
+#include "flopoco/report.hpp"
 #include "flopoco/Signal.hpp"
+#include "flopoco/Target.hpp"
 
 #include "flopoco/TestBenches/TestCase.hpp"
 
@@ -34,17 +35,9 @@ namespace flopoco {
 	static const map<string, double> emptyDelayMap;
 	const std::string tab = "   ";
 
-	// Reporting levels
-#define LIST 0       // information necessary to the user of FloPoCo
-#define INFO 1       // information useful to the user of FloPoCo
-#define DETAILED 2   // information that shows how the algorithm works, useful to inquisitive users
-#define DEBUG 3      // debug info, useful mostly to developers
-#define FULL 4       // pure noise
-
 #define INNER_SEPARATOR "................................................................................"
 #define DEBUG_SEPARATOR "________________________________________________________________________________"
 #define OUTER_SEPARATOR "################################################################################"
-#define REPORT(level, stream) {if ((level)<=(UserInterface::verbose)){ cerr << "> " << srcFileName << " " << uniqueName_ <<": " << stream << endl;}else{}}
 #define THROWERROR(stream) {{ostringstream o; o << " ERROR in " << uniqueName_ << " (" << srcFileName << "): " << stream << endl; throw o.str();}}
 
 

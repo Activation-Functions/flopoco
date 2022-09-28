@@ -64,10 +64,10 @@ namespace flopoco{
 		// compute the precision -- TODO with NWB
 
 		cst_width =  2*wF_in+4;
-		REPORT(0, "***** WARNING Taking constant with 2*wF_in+4 bits. Correct rounding is not yet guaranteed. This is being implemented." );
+		REPORT(LogLevel::MESSAGE, "***** WARNING Taking constant with 2*wF_in+4 bits. Correct rounding is not yet guaranteed. This is being implemented." );
 
 
-		REPORT(INFO, "Required significand precision to reach correct rounding is " << cst_width  ); 
+		REPORT(LogLevel::DETAIL, "Required significand precision to reach correct rounding is " << cst_width  ); 
 
 		mpfr_set_prec(mpfrC, cst_width);
 		sollya_lib_get_constant(mpR, node);
@@ -85,7 +85,7 @@ namespace flopoco{
 		cst_exp_when_mantissa_int = cst_exp_when_mantissa_1_2 - cst_width + 1; 
 		mpfr_init2(mpfr_cst_sig, cst_width);
 		mpfr_div_2si(mpfr_cst_sig, mpR, cst_exp_when_mantissa_1_2, GMP_RNDN);
-		REPORT(INFO, "mpfr_cst_sig  = " << mpfr_get_d(mpfr_cst_sig, GMP_RNDN));
+		REPORT(LogLevel::DETAIL, "mpfr_cst_sig  = " << mpfr_get_d(mpfr_cst_sig, GMP_RNDN));
 
 
 		// Build the corresponding FPConstMult.
@@ -108,7 +108,7 @@ namespace flopoco{
 		xcut_sig_rd = mpz_class(zz);
 		mpz_clear(zz);
 
-		REPORT(DETAILED, "mpfr_xcut_sig = " << mpfr_get_d(mpfr_xcut_sig, GMP_RNDN) );
+		REPORT(LogLevel::VERBOSE, "mpfr_xcut_sig = " << mpfr_get_d(mpfr_xcut_sig, GMP_RNDN) );
 
 		// Now build the mpz significand
 		mpfr_mul_2si(mpfr_cst_sig,  mpfr_cst_sig, cst_width, GMP_RNDN);
@@ -118,7 +118,7 @@ namespace flopoco{
 		mpfr_get_z(zz, mpfr_cst_sig, GMP_RNDN);
 		cst_sig = mpz_class(zz);
 		mpz_clear(zz);
-		REPORT(DETAILED, "mpzclass cst_sig = " << cst_sig);
+		REPORT(LogLevel::VERBOSE, "mpzclass cst_sig = " << cst_sig);
 
 
 		// build the name

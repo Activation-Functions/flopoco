@@ -72,20 +72,20 @@ namespace flopoco{
 
 			// Constant normalization
 		while ((d % 2) ==0) {
-				REPORT(DEBUG, "d is even, normalising");
+				REPORT(LogLevel::DEBUG, "d is even, normalising");
 				d = d >>1;
 				dExp+=1;
 		}
 		mantissaIsOne = false;
 		if(d==1) {
-			REPORT(INFO, "Mantissa of d is 1, dividing by it will be easy"); 
+			REPORT(LogLevel::DETAIL, "Mantissa of d is 1, dividing by it will be easy"); 
 			mantissaIsOne = true;
 		}
 		
 		// Computing the binary64 value of the actual constant, taking exponent into account
 		dd = d*intpow2(dExp);
 
-		REPORT(INFO, "dividing by the constant " << dd);
+		REPORT(LogLevel::DETAIL, "dividing by the constant " << dd);
 
 
 

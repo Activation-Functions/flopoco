@@ -71,13 +71,13 @@ namespace flopoco {
 		   -> DEBUG for complete and debug information, to be used during operator development (includes the INFO and DETAILED levels) ( -verbose=3 )
 		*/
 		// basic message
-		REPORT(INFO,"Declaration of TutorialOperator \n");
+		REPORT(LogLevel::DETAIL,"Declaration of TutorialOperator \n");
 
 		// more detailed message
-		REPORT(DETAILED, "this operator has received two parameters " << param0 << " and " << param1);
+		REPORT(LogLevel::VERBOSE, "this operator has received two parameters " << param0 << " and " << param1);
   
 		// debug message for developer
-		REPORT(DEBUG,"debug of TutorialOperator");
+		REPORT(LogLevel::DEBUG,"debug of TutorialOperator");
 
 
 		/* vhdl is the stream which receives all the vhdl code, some special functions are

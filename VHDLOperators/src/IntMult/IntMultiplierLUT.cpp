@@ -51,7 +51,7 @@ IntMultiplierLUT::IntMultiplierLUT(Operator *parentOp, Target* target, int wX, i
 	outPortMap("Y", "Y1");
 
 	vector<mpz_class> val;
-	REPORT(DEBUG, "Filling table for a LUT multiplier of size " << wX << "x" << wY << " (out put size is " << wR << ")")
+	REPORT(LogLevel::DEBUG, "Filling table for a LUT multiplier of size " << wX << "x" << wY << " (out put size is " << wR << ")")
 	for (int yx=0; yx < 1<<(wX+wY); yx++)
 	{
 		val.push_back(function(yx));
@@ -87,7 +87,7 @@ mpz_class IntMultiplierLUT::function(int yx)
 	if ( r < 0)
 		r += mpz_class(1) << wF;
 
-	REPORT(DEBUG, "Value for x=" << x << ", y=" << y << " : " << r.get_str(2))
+	REPORT(LogLevel::DEBUG, "Value for x=" << x << ", y=" << y << " : " << r.get_str(2))
 	//if(!negate && isSignedX && isSignedY) cerr << "  r2C=" << r;
 
 	/*if(wX+wY < wF){ // wOut is that of Table

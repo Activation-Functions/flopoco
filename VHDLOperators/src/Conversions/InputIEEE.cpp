@@ -129,7 +129,7 @@ namespace flopoco{
 
 
 		else if (wEI<wEO) { // No overflow possible. Subnormal inputs need to be normalized
-			REPORT(INFO, "Warning: subnormal inputs would be representable in the destination format,\n   but will be flushed to zero anyway (TODO). Please complain to the FloPoCo team if you need correct rounding");
+			REPORT(LogLevel::DETAIL, "Warning: subnormal inputs would be representable in the destination format,\n   but will be flushed to zero anyway (TODO). Please complain to the FloPoCo team if you need correct rounding");
 			int32_t biasI = (1<<(wEI-1)) -1;
 			int32_t eMaxO = (1<<(wEO-1)); // that's our maximal exponent, one more than IEEE's
 			vhdl << tab << declare("overflow") << " <= '0';--  overflow never happens for these (wE_in, wE_out)"  << endl;

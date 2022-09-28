@@ -121,7 +121,7 @@ namespace flopoco
 	// This version works just as well but is less generic. Vae victis
 	void Multipartite::computeTIVCompressionParameters() {
 		string srcFileName = mpt->getSrcFileName(); // for REPORT to work
-		REPORT(FULL, "Entering computeTIVCompressionParameters: alpha=" << alpha << "  uncompressed size=" << sizeTIV);
+		REPORT(LogLevel::FULL, "Entering computeTIVCompressionParameters: alpha=" << alpha << "  uncompressed size=" << sizeTIV);
 		// OLD
 		int64_t bestS,bestSizeTIV;
 		// compression using only positive numbers
@@ -142,7 +142,7 @@ namespace flopoco
 			deltaRight = abs(yRL-yRR);
 			deltaMax = max(deltaLeft,deltaRight);   // for instance s=1 and we find deltaMax=21
 			deltaBits = intlog2(deltaMax);          // 21 fits on 5 bits. The deltaTIV will have 5 output bits.
-			REPORT(FULL, "trying s=" << s << " deltaleft deltaright = "<< deltaLeft << " " << deltaRight << "  \tdeltaBits="<<deltaBits);
+			REPORT(LogLevel::FULL, "trying s=" << s << " deltaleft deltaright = "<< deltaLeft << " " << deltaRight << "  \tdeltaBits="<<deltaBits);
 			// Now how many bits can we shave from the SSTIV?
 			slack = (1<<deltaBits)-1 - deltaMax; // so the deltaTIV may represent values between 0 and 31, therefore we have a slack of 31-21=10
 			saved_LSBs_in_SSTIV = intlog2(slack)-1; // for instance if slack=10 we may save 3 bits, because it will offset the TIV at most by 7 which is smaller than 10
@@ -153,7 +153,7 @@ namespace flopoco
 			tempSizeSSTIV = (outputSize+guardBits-saved_LSBs_in_SSTIV)<<tempRho;
 			tempSizeDiffTIV = deltaBits<<alpha;
 			tempCompressedSize = tempSizeSSTIV + tempSizeDiffTIV;
-			REPORT(DETAILED, "computeTIVCompressionParameters, unsigned: alpha=" << alpha << "  s=" << s << " compressedSize=" << tempCompressedSize
+			REPORT(LogLevel::VERBOSE, "computeTIVCompressionParameters, unsigned: alpha=" << alpha << "  s=" << s << " compressedSize=" << tempCompressedSize
 						 << " =" << outputSize+guardBits-saved_LSBs_in_SSTIV << ".2^" << tempRho
 						 << " + " << deltaBits << ".2^" << alpha
 						 << "  ( slack=" << slack <<"  saved_LSBs_in_SSTIV=" << saved_LSBs_in_SSTIV <<" )");
@@ -176,15 +176,15 @@ namespace flopoco
 				outputSizeDiffTIV = deltaBits;
 			}
 		}
-		REPORT(FULL, "Old computeTIVCompressionParameters: alpha=" << alpha << "  ssTIVIn=" << rho  << "  dcTIV.subsamplingWordSize=" << dcTIV.subsamplingWordSize << "  outputSizeDiffTIV=" <<  outputSizeDiffTIV);
-		REPORT(FULL, "    total TIV size before=" << ((outputSize+guardBits)<<alpha) << "    compressed=" <<  sizeSSTIV + sizeDiffTIV);
+		REPORT(LogLevel::FULL, "Old computeTIVCompressionParameters: alpha=" << alpha << "  ssTIVIn=" << rho  << "  dcTIV.subsamplingWordSize=" << dcTIV.subsamplingWordSize << "  outputSizeDiffTIV=" <<  outputSizeDiffTIV);
+		REPORT(LogLevel::FULL, "    total TIV size before=" << ((outputSize+guardBits)<<alpha) << "    compressed=" <<  sizeSSTIV + sizeDiffTIV);
 
 	}
 
 #else
 	void Multipartite::computeTIVCompressionParameters() {
 		string srcFileName = mpt->getSrcFileName(); // for REPORT to work
-		REPORT(FULL, "Entering computeTIVCompressionParameters: alpha=" << alpha << "  uncompressed size=" << sizeTIV);
+		REPORT(LogLevel::FULL, "Entering computeTIVCompressionParameters: alpha=" << alpha << "  uncompressed size=" << sizeTIV);
 
 
 		// NEW : this is mostly a wrapper to the different (and better) notations of Luc's code
@@ -206,7 +206,7 @@ namespace flopoco
 				mptiv.push_back(m);
 #endif
 			}
-			REPORT(FULL, "Computing new compression for  alpha=" << alpha << "   wOut=" << outputSize + guardBits);
+			REPORT(LogLevel::FULL, "Computing new compression for  alpha=" << alpha << "   wOut=" << outputSize + guardBits);
 			dcTIV = DifferentialCompression::find_differential_compression(mptiv, alpha, outputSize + guardBits, _target);
 			// Trick to save memory: we won't need the complete tables, they take up more than 16Gb for 24 bit functions
 			// better free them now, and recompute at the end only the winner
@@ -215,7 +215,7 @@ namespace flopoco
 			mpt->DCTIV[key]=dcTIV;
 		}
 		else {
-			REPORT(DETAILED, "Using cached TIV compression for g=" << guardBits << " and alpha=" << alpha);
+			REPORT(LogLevel::VERBOSE, "Using cached TIV compression for g=" << guardBits << " and alpha=" << alpha);
 			dcTIV = mpt->DCTIV[key];
 		}
 
@@ -223,9 +223,9 @@ namespace flopoco
 		for (int i=0; i<m; i++)		{
 			totalSize += sizeTOi[i];
 		}
-		REPORT(FULL, "New computeTIVCompressionParameters: alpha=" << alpha << "  ssTIVIn=" << dcTIV.subsamplingIndexSize  << "  dcTIV.subsamplingWordSize=" << dcTIV.subsamplingWordSize << "  dcTIV.diffWordSize=" <<  dcTIV.diffWordSize);
-		REPORT(FULL, "    total TIV size before=" << ((outputSize+guardBits)<<alpha) << "    compressed=" <<  dcTIV.subsamplingStorageSize() + dcTIV.diffsStorageSize());
-		REPORT(FULL, "Exiting computeTIVCompressionParameters");
+		REPORT(LogLevel::FULL, "New computeTIVCompressionParameters: alpha=" << alpha << "  ssTIVIn=" << dcTIV.subsamplingIndexSize  << "  dcTIV.subsamplingWordSize=" << dcTIV.subsamplingWordSize << "  dcTIV.diffWordSize=" <<  dcTIV.diffWordSize);
+		REPORT(LogLevel::FULL, "    total TIV size before=" << ((outputSize+guardBits)<<alpha) << "    compressed=" <<  dcTIV.subsamplingStorageSize() + dcTIV.diffsStorageSize());
+		REPORT(LogLevel::FULL, "Exiting computeTIVCompressionParameters");
 	}
 
 #endif

@@ -18,7 +18,7 @@ namespace flopoco{
 
 	void ParandehAfsharCompressionStrategy::compressionAlgorithm()
 	{
-		REPORT(DEBUG, "compressionAlgorithm is ParandehAfshar");
+		REPORT(LogLevel::DEBUG, "compressionAlgorithm is ParandehAfshar");
 
 		//for the parandehAfshar algorithm, the compressors should be ordered by efficiency
 		orderCompressorsByCompressionEfficiency();
@@ -49,7 +49,7 @@ namespace flopoco{
 
 
 	void ParandehAfsharCompressionStrategy::parandehAfshar(){
-		REPORT(DEBUG, " in parandehAfsahr algorithm");
+		REPORT(LogLevel::DEBUG, " in parandehAfsahr algorithm");
 
 		unsigned int s = 0;
 		while(true){
@@ -94,7 +94,7 @@ namespace flopoco{
 						if(tempResult.first != nullptr && tempResult.second >= 0){
 							found = true;
 							result = tempResult;
-							REPORT(DEBUG, " found compressor " << tempResult.first->getStringOfIO() << " at column " << tempResult.second);
+							REPORT(LogLevel::DEBUG, " found compressor " << tempResult.first->getStringOfIO() << " at column " << tempResult.second);
 						}
 					}
 					if(found){
@@ -107,11 +107,11 @@ namespace flopoco{
 					compressor = result.first;
 					placeCompressor(s, column, compressor);
 					printBitAmounts();
-										REPORT(DEBUG, "placed compressor " << compressor->getStringOfIO() << " at stage " << s << " and column " << column);
+										REPORT(LogLevel::DEBUG, "placed compressor " << compressor->getStringOfIO() << " at stage " << s << " and column " << column);
 				}
 
 			}
-			REPORT(DEBUG, "finished stage " << s << " with parandeh-afhar algorithm." << endl);
+			REPORT(LogLevel::DEBUG, "finished stage " << s << " with parandeh-afhar algorithm." << endl);
 
 			//finished one stage. bring the remaining bits in bitAmount to the new stage
 			for(unsigned int c = 0; c < bitAmount[s].size(); c++){
@@ -132,7 +132,7 @@ namespace flopoco{
 			s++;
 		}
 
-		REPORT(DEBUG, "finished parandehAfshar algorithm");
+		REPORT(LogLevel::DEBUG, "finished parandehAfshar algorithm");
 	}
 
 
@@ -176,7 +176,7 @@ namespace flopoco{
 		if(found == true){
 			result.first = compressor;
 			result.second = resultColumn;
-			REPORT(DEBUG, "returning compressor " << compressor->getStringOfIO() << " and resultColumn " << resultColumn << " with achievedEfficiencyBest is " << achievedEfficiencyBest);
+			REPORT(LogLevel::DEBUG, "returning compressor " << compressor->getStringOfIO() << " and resultColumn " << resultColumn << " with achievedEfficiencyBest is " << achievedEfficiencyBest);
 		}
 		else{
 			result.first = nullptr;

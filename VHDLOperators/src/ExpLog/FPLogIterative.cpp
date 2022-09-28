@@ -65,7 +65,7 @@ namespace flopoco{
 					/ ((double)(1<<(wIn))); // 1.0 11...11 (binary)
 			j=function(i);
 			y=output2double(j);
-			if(UserInterface::verbose)
+			if(is_log_lvl_enabled(LogLevel::DETAIL)
 				cout << "i="<<i<< " ("<<input2double(i)<<") j="<<j
 					  <<" min="<< x1*y <<" max="<< x2*y<< endl;
 			prod=x1*y; if (prod<minMulOut) minMulOut=prod;
@@ -165,7 +165,7 @@ namespace flopoco{
 		stages = i-1;
 		gLog=max(4, intlog2(3+0.5+0.5+3*stages));
 
-		if(UserInterface::verbose>=2) {
+		if(is_log_lvl_enabled(LogLevel::VERBOSE)) {
 			cerr << "> FPLogIterative\t Initial parameters:" << endl;
 			for(i=0; i<=stages; i++) {
 				cerr << "> FPLogIterative\t";
@@ -178,7 +178,7 @@ namespace flopoco{
 		pfinal = p[stages+1];
 		int extraBits = pfinal - ((wF+gLog-2)>>1);
 		int extraBitsperstage =  floor(((double)extraBits) / ((double)(stages+1)));
-		if(UserInterface::verbose)
+		if(is_log_lvl_enabled(LogLevel::DETAIL))
 			cerr << "> FPLogIterative\t before optimization:  pfinal=" << pfinal << "--- extraBits=" << extraBits << "---extraBitsperstage=" << extraBitsperstage << endl;
 		if(bitsPerStage>6) {
 			for (i=0; i<= stages; i++)
@@ -213,16 +213,16 @@ namespace flopoco{
 
 		extraBits = pfinal -  ((wF+gLog-2)>>1);
 
-		if(UserInterface::verbose>=2)
+		if(is_log_lvl_enabled(LogLevel::VERBOSE))
 			cerr << "> FPLogIterative\t after optimization:   pfinal=" << pfinal << "--- extraBits=" << extraBits << endl;
 
 
-		if(UserInterface::verbose)
+		if(is_log_lvl_enabled(LogLevel::DETAIL))
 			cerr << "> FPLogIterative"<<tab<<"Guard bits: " << gLog << endl;
 
 
 		target_prec = wF + pfinal +gLog;
-		if(UserInterface::verbose==2)
+		if(is_log_lvl_enabled(LogLevel::VERBOSE))
 			cerr << "> FPLogIterative"<<tab<<"Target precision: " << target_prec << endl;
 
 		s[0] = wF+2;
@@ -270,9 +270,9 @@ namespace flopoco{
 		// size will be target_prec - p[stages+1]
 
 
-		if(UserInterface::verbose)
+		if(is_log_lvl_enabled(LogLevel::DETAIL))
 			cerr<<"> FPLogIterative\t needs 1+"<<stages<<" range reduction stages"<<endl;
-		if(UserInterface::verbose>=2) {
+		if(is_log_lvl_enabled(LogLevel::VERBOSE)) {
 			for(i=0; i<=stages; i++) {
 				cerr << "> FPLogIterative\t";
 				cerr<<"\tp"<<i<<"=" << p[i];
@@ -388,7 +388,7 @@ namespace flopoco{
 								"R=>P0");
 		}
 		else {
-			REPORT(DETAILED, "unpipelined multiplier for P0, implemented as * in VHDL");
+			REPORT(LogLevel::VERBOSE, "unpipelined multiplier for P0, implemented as * in VHDL");
 			vhdl << tab << declare(getTarget()->logicDelay()+getTarget()->adderDelay(psize[0]), // TODO very approximate timing for a very flat mult
 														 "P0",  psize[0]) << " <= InvA0 * Y0;" <<endl <<endl;
 		}
@@ -418,7 +418,7 @@ namespace flopoco{
 								"R=>P0");
 			}
 			else {
-				REPORT(DETAILED,"Unpipelined multiplier for P"<<i<<", implemented as * in VHDL");
+				REPORT(LogLevel::VERBOSE,"Unpipelined multiplier for P"<<i<<", implemented as * in VHDL");
 				vhdl << tab << declare(getTarget()->logicDelay()+getTarget()->adderDelay(psize[i]+a[i]), // TODO very approximate timing for a very flat mult
 															 join("P",i),  psize[i] + a[i]) << " <= " << join("A",i) << "*" << join("ZM",i) << ";" << endl;
 			}
@@ -810,7 +810,7 @@ namespace flopoco{
 				 << "                               \"01\" & sR;" << endl;
 		vhdl << tab << "R<=  Rexn & EFR;" << endl;
 
-		REPORT(3, "Leaving constructor");
+		REPORT(LogLevel::DEBUG, "Leaving constructor");
 	}
 
 	FPLogIterative::~FPLogIterative()

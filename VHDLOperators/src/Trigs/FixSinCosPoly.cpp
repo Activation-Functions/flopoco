@@ -61,19 +61,19 @@ namespace flopoco{
 			mpfr_init2(a,10*wA-1);
 			mpfr_set_si(a, xs, GMP_RNDN);
 
-			//REPORT(0,"Evaluating function on point x="<<x<<" positive value xs="<<xs<<" converted value a="<<printMPFR(a, 10));
+			//REPORT(LogLevel::MESSAGE,"Evaluating function on point x="<<x<<" positive value xs="<<xs<<" converted value a="<<printMPFR(a, 10));
 
 			//divide by 2^w then we get a true fixpoint number between -1 and 1.
 			if (argRedCase==1){
 				if (xs>>(wA-1))
 					xs-=(1<<wA);
 				mpfr_div_2si(a,a,wA-1, GMP_RNDN);
-				//REPORT(0,"a divided by 2^"<<wA<<" a="<<printMPFR(a,10));
+				//REPORT(LogLevel::MESSAGE,"a divided by 2^"<<wA<<" a="<<printMPFR(a,10));
 			}
 
 			else if (argRedCase==4)	{ //quadrant
 				mpfr_div_2si(a,a,wA+1, GMP_RNDN);
-				//REPORT(0,"a divided by 2^"<<wA<<" a="<<printMPFR(a,10));
+				//REPORT(LogLevel::MESSAGE,"a divided by 2^"<<wA<<" a="<<printMPFR(a,10));
 			}
 
 			else if (argRedCase==8)	{ // octant
@@ -89,7 +89,7 @@ namespace flopoco{
 			mpfr_mul(s, s, scale, GMP_RNDN); //rescale the sine
 			mpfr_mul(c, c, scale, GMP_RNDN); //rescale the cosine
 
-			//REPORT(0," s="<<printMPFR(s,10)<<"; c="<<printMPFR(c,10));
+			//REPORT(LogLevel::MESSAGE," s="<<printMPFR(s,10)<<"; c="<<printMPFR(c,10));
 
 			mpfr_mul_2si(s, s, lsbOut+g, GMP_RNDN); //scale to int
 			mpfr_mul_2si(c, c, lsbOut+g, GMP_RNDN);
@@ -101,7 +101,7 @@ namespace flopoco{
 				sin += (mpz_class(1)<<(g-1));
 				cos += (mpz_class(1)<<(g-1));
 			}
-			//REPORT(0,"Calculated values before 2's complement test: sin="<<sin.get_mpz_t()<<"; cos="<<cos.get_mpz_t());
+			//REPORT(LogLevel::MESSAGE,"Calculated values before 2's complement test: sin="<<sin.get_mpz_t()<<"; cos="<<cos.get_mpz_t());
 
 			// no more need intermediates a, c, and s
 			mpfr_clears(a, c, s, NULL);
@@ -117,7 +117,7 @@ namespace flopoco{
 					cos+=mpz_class(1)<<(lsbOut+g+1);
 				}
 			}
-			// REPORT(0," function() returns. Value: "<<(sin+(cos<<wA))<<" ( sin=" << sin<<" , cos="<<cos<<  " )");
+			// REPORT(LogLevel::MESSAGE," function() returns. Value: "<<(sin+(cos<<wA))<<" ( sin=" << sin<<" , cos="<<cos<<  " )");
 			//			result.push_back( cos  + ( sin << (lsbOut+g + (argRedCase==1?1:0)) ) );
 			costable.push_back(cos);
 			sintable.push_back(sin);
@@ -210,14 +210,14 @@ namespace flopoco{
 
 
 
-		REPORT(0*DEBUG, "Boundaries on the various cases for w="<<w << ": " << wSmallerThanBorder1 << wSmallerThanBorder2 << wSmallerThanBorder3 << wSmallerThanBorder4 << wSmallerThanBorderFirstOrderTaylor<< wSmallerThanBorderSecondOrderTaylor);
+		REPORT(LogLevel::DEBUG, "Boundaries on the various cases for w="<<w << ": " << wSmallerThanBorder1 << wSmallerThanBorder2 << wSmallerThanBorder3 << wSmallerThanBorder4 << wSmallerThanBorderFirstOrderTaylor<< wSmallerThanBorderSecondOrderTaylor);
 
 
 
 
 
 		if (usePlainTable)	{
-			REPORT(INFO, "Simpler architecture: Using plain table" );
+			REPORT(LogLevel::DETAIL, "Simpler architecture: Using plain table" );
 			//int sinCosSize = 2*(w_+1); // size of output (sine plus cosine in a same number, sine on high weight bits)
 			vhdl << tab << declare("sinCosTabIn", w+1) << " <= X;" << endl;// signal declaration
 
@@ -248,7 +248,7 @@ namespace flopoco{
 		}
 
 		else if (usePlainTableWithQuadrantReduction) 	{
-			REPORT(INFO, "Simpler architecture: Using plain table with quadrant reduction");
+			REPORT(LogLevel::DETAIL, "Simpler architecture: Using plain table with quadrant reduction");
 			/*********************************** RANGE REDUCTION **************************************/
 			// the argument is reduced into (0,1/2) because one sin/cos
 			// computation in this range can always compute the right sin/cos
@@ -311,19 +311,19 @@ namespace flopoco{
 
 
 		else { // From now on we will have a table-based argument reduction
-			REPORT(INFO, "Using a table-based argument reduction");
+			REPORT(LogLevel::DETAIL, "Using a table-based argument reduction");
 			// We must set g here (early) in order to be able to factor out code that uses g
 			g=0;
 			int wA=0;
 			if (!wSmallerThanBorder4 && wSmallerThanBorderFirstOrderTaylor) {
 				g=gOrder1Arch;
 				wA = wAOrder1Arch;
-				REPORT(INFO, "Using order-1 arch with wA="<<wA << " and g=" << g);
+				REPORT(LogLevel::DETAIL, "Using order-1 arch with wA="<<wA << " and g=" << g);
 			}
 			else if(wSmallerThanBorderSecondOrderTaylor) {
 				g = gOrder2Arch;
 				wA = wAOrder2Arch;
-				REPORT(INFO, "Using order-2 arch with wA="<<wA << " and g=" << g);
+				REPORT(LogLevel::DETAIL, "Using order-2 arch with wA="<<wA << " and g=" << g);
 			}
 			else{ // generic case
 				g=gGeneric;
@@ -333,7 +333,7 @@ namespace flopoco{
 				while (w > 4*wA-4-g) {
 					wA++;
 				}
-				REPORT(INFO, "Using order-3 arch with wA="<<wA << " and g=" << g);
+				REPORT(LogLevel::DETAIL, "Using order-3 arch with wA="<<wA << " and g=" << g);
 			}
 
 			/*********************************** RANGE REDUCTION **************************************/
@@ -425,13 +425,13 @@ namespace flopoco{
 									"R=>Z");
 
 			int wZz=getSignalByName("Z")->width();
-			REPORT(DEBUG, "wZ=" <<wZ<<";"<<" wZz="<<wZz<<";");
+			REPORT(LogLevel::DEBUG, "wZ=" <<wZ<<";"<<" wZz="<<wZz<<";");
 
 
 
 			if (wSmallerThanBorderFirstOrderTaylor) {
 				// TODO bitheapize
-				REPORT(INFO,"Simpler architecture: Using only first order Taylor");
+				REPORT(LogLevel::DETAIL,"Simpler architecture: Using only first order Taylor");
 
 				//---------------------------- Sine computation ------------------------
 				vhdl << tab <<  declare("SinPiACosZ",w+g) << " <= SinPiA; -- For these sizes  CosZ approx 1"<<endl; // msb is -1;
@@ -462,7 +462,7 @@ namespace flopoco{
 
 			else if (wSmallerThanBorderSecondOrderTaylor) {
 
-				REPORT(DETAILED,"Using first-order Taylor for sine and second-order for cosine");
+				REPORT(LogLevel::VERBOSE,"Using first-order Taylor for sine and second-order for cosine");
 				// TODO bitheapize
 				//--------------------------- SQUARER --------------------------------
 
@@ -519,7 +519,7 @@ namespace flopoco{
 			}
 
 			else	{
-				REPORT(DETAILED, "Using generic architecture with 3rd-order Taylor");
+				REPORT(LogLevel::VERBOSE, "Using generic architecture with 3rd-order Taylor");
 				/*********************************** THE SQUARER **************************************/
 
 
@@ -557,7 +557,7 @@ namespace flopoco{
 					wZ3o6 = 2; //using 1 will generate bad vhdl
 
 				if(wZ3o6<=12) {
-					REPORT(DETAILED, "Tabulating Z^3/6 as we need it only on " << wZ3o6 << " bits");
+					REPORT(LogLevel::VERBOSE, "Tabulating Z^3/6 as we need it only on " << wZ3o6 << " bits");
 					vhdl << tab << "-- First truncate Z to its few MSBs relevant to the computation of Z^3/6" << endl;
 					vhdl << tab << declare("Z_truncToZ3o6", wZ3o6) << " <= Z" << range(wZ-1, wZ-wZ3o6) << ";" << endl;
 					newInstance("FixFunctionByTable",
@@ -569,7 +569,7 @@ namespace flopoco{
 					vhdl << tab << declare (getTarget()->adderDelay(wZ), "SinZ", wZ) << " <= Z - Z3o6;" << endl;
 				}
 				else {
-					REPORT(DETAILED, "Using a bit-heap based computation of Z-Z^3/6,  we need it on " << wZ3o6 << " bits");
+					REPORT(LogLevel::VERBOSE, "Using a bit-heap based computation of Z-Z^3/6,  we need it on " << wZ3o6 << " bits");
 					// This component is for internal use only, it has no user interface: using its constructor
 					schedule();
 					inPortMap ("X", "Z");
@@ -648,7 +648,7 @@ namespace flopoco{
 				int gMult=max(g1,g2);
 #endif
 
-				REPORT(0, "wZ2o2=" << wZ2o2 << "    wZ=" << wZ << "    g=" << g << "    gMult=" << gMult);
+				REPORT(LogLevel::MESSAGE, "wZ2o2=" << wZ2o2 << "    wZ=" << wZ << "    g=" << g << "    gMult=" << gMult);
 				BitHeap* bitHeapCos = new BitHeap(this, w+g+gMult, "Sin");
 
 				// Add CosPiA to the bit heap
@@ -743,7 +743,7 @@ namespace flopoco{
 				vhdl << tab << declare ("S_out", w)
 						 << " <= S_out_rnd_aux" << range (w+g-1, g) << ';' << endl;
 
-				REPORT(DETAILED, " wA=" << wA <<" wZ=" << wZ <<" wZ2=" << wZ2o2 <<" wZ3o6=" << wZ3o6 );
+				REPORT(LogLevel::VERBOSE, " wA=" << wA <<" wZ=" << wZ <<" wZ2=" << wZ2o2 <<" wZ3o6=" << wZ3o6 );
 
 				// For LateX in the paper
 				//	cout << "     " << w <<  "   &   "  << wA << "   &   " << wZ << "   &   " << wZ2o2 << "   &   " << wZ3o6 << "   \\\\ \n \\hline" <<  endl;

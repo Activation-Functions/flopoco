@@ -45,11 +45,11 @@ namespace flopoco{
 		}
 
 		if(method==1 && flags!=7){
-			REPORT(0, "method=1 only makes sense for flags=7, reverting to method=0");
+			REPORT(LogLevel::MESSAGE, "method=1 only makes sense for flags=7, reverting to method=0");
 			method=0;
 		}
 		if(method==2 && flags!=7){
-			REPORT(0, "Somebody has been lazy, method=2 only implemented for flags=7: this is what you shall get.");
+			REPORT(LogLevel::MESSAGE, "Somebody has been lazy, method=2 only implemented for flags=7: this is what you shall get.");
 			flags=7;
 		}
 		addInput ("X", w);
@@ -178,7 +178,7 @@ namespace flopoco{
 				vhdl << tab << declare("C_" + to_string(i) + "_" + to_string(i), 2)
 						 << " <= " << "X" << of(i) << " & "  <<  "C" << of(i) <<  ";"<<endl;
 			}
-			REPORT(DETAILED, "padding to the next power of two");
+			REPORT(LogLevel::VERBOSE, "padding to the next power of two");
 			int j=1 << intlog2(w); // next power of two
 			for(int i=w; i<j; i++) {
 				vhdl << tab << declare("C_" + to_string(i) + "_" + to_string(i), 2)
@@ -190,7 +190,7 @@ namespace flopoco{
 			int stride=1; // invariant stride=2^level
 			string Cd; // it needs to exit the loop
 			while (stride<w) { // need to add one more level
-				REPORT(DETAILED, "level=" << level);
+				REPORT(LogLevel::VERBOSE, "level=" << level);
 				level+=1;
 				stride *= 2;
 				for(int i=0; i<w; i+=stride) {

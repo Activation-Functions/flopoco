@@ -121,7 +121,7 @@ namespace flopoco{
 			{
 				nbIntervals = 1<<alpha;
 				alphaOK = true;
-				REPORT(DETAILED, " Testing alpha=" << alpha );
+				REPORT(LogLevel::VERBOSE, " Testing alpha=" << alpha );
 				for (int i=0; i<nbIntervals; i++) {
 					// The worst case is typically on the left (i==0) or on the right (i==nbIntervals-1).
 					// To test these two first, we do this small rotation of i
@@ -130,16 +130,16 @@ namespace flopoco{
 					// First build g_i(x) = f(2^(-alpha)*x + i*2^(-alpha))
 					sollya_obj_t giS = buildSubIntervalFunction(fS, alpha, ii);
 
-					if(DEBUG <= UserInterface::verbose)
+					if(is_log_lvl_enabled(LogLevel::DEBUG))
 						sollya_lib_printf("> UniformPiecewisePolyApprox: alpha=%d, ii=%d, testing  %b \n", alpha, ii, giS);
 					// Now what degree do we need to approximate gi?
 					int degreeInf, degreeSup;
 					BasicPolyApprox::guessDegree(giS, rangeS, targetAccuracy, &degreeInf, &degreeSup);
-					// REPORT(DEBUG, " guessDegree returned (" << degreeInf <<  ", " << degreeSup<<")" ); // no need to report, it is done by guessDegree()
+					// REPORT(LogLevel::DEBUG, " guessDegree returned (" << degreeInf <<  ", " << degreeSup<<")" ); // no need to report, it is done by guessDegree()
 					sollya_lib_clear_obj(giS);
 					// For now we only consider degreeSup. Is this a TODO?
 					if(degreeSup>degree) {
-						REPORT(DEBUG, "   alpha=" << alpha << " failed." );
+						REPORT(LogLevel::DEBUG, "   alpha=" << alpha << " failed." );
 						alphaOK=false;
 						break;
 					}
@@ -151,11 +151,11 @@ namespace flopoco{
 			} // end for loop on alpha
 
 			if (alphaOK)
-				REPORT(INFO, "Found alpha=" << alpha);
+				REPORT(LogLevel::DETAIL, "Found alpha=" << alpha);
 
 			// Compute the LSB of each coefficient. Minimum value is:
 			LSB = floor(log2(targetAccuracy*degree));
-			REPORT(DEBUG, "To obtain target accuracy " << targetAccuracy << " with a degree-"<<degree
+			REPORT(LogLevel::DEBUG, "To obtain target accuracy " << targetAccuracy << " with a degree-"<<degree
 					<<" polynomial, we compute coefficients accurate to LSB="<<LSB);
 			// It is pretty sure that adding intlog2(degree) bits is enough for FPMinimax.
 
@@ -175,21 +175,21 @@ namespace flopoco{
 				approxErrorBound = 0.0;
 				BasicPolyApprox *p;
 
-				REPORT(DETAILED, "Computing the actual polynomials ");
+				REPORT(LogLevel::VERBOSE, "Computing the actual polynomials ");
 				// initialize the vector of MSB weights
 				for (int j=0; j<=degree; j++) {
 					MSB.push_back(INT_MIN);
 				}
 
 				for (int i=0; i<nbIntervals; i++) {
-					REPORT(DETAILED, " ... computing polynomial approx for interval " << i << " / "<< nbIntervals);
+					REPORT(LogLevel::VERBOSE, " ... computing polynomial approx for interval " << i << " / "<< nbIntervals);
 					// Recompute the substitution. No big deal.
 					sollya_obj_t giS = buildSubIntervalFunction(fS, alpha, i);
 
 					p = new BasicPolyApprox(giS, degree, LSB, true);
 					poly.push_back(p);
 					if (approxErrorBound < p->getApproxErrorBound()){
-						REPORT(DEBUG, "   new approxErrorBound=" << p->getApproxErrorBound() );
+						REPORT(LogLevel::DEBUG, "   new approxErrorBound=" << p->getApproxErrorBound() );
 						approxErrorBound = p->getApproxErrorBound();
 					}
 					if (approxErrorBound>targetAccuracy){
@@ -217,11 +217,11 @@ namespace flopoco{
 				} // end for loop on i
 
 				if (approxErrorBound < targetAccuracy) {
-					REPORT(INFO, " *** Success! Final approxErrorBound=" << approxErrorBound << "  is smaller than target accuracy: " << targetAccuracy  );
+					REPORT(LogLevel::DETAIL, " *** Success! Final approxErrorBound=" << approxErrorBound << "  is smaller than target accuracy: " << targetAccuracy  );
 					success=true;
 				}
 				else {
-					REPORT(INFO, "With LSB="<<LSB<<", approx error:" << approxErrorBound << " is larger than target accuracy: " << targetAccuracy
+					REPORT(LogLevel::DETAIL, "With LSB="<<LSB<<", approx error:" << approxErrorBound << " is larger than target accuracy: " << targetAccuracy
 							<< ". Decreasing LSB and starting over. Thank you for your patience");
 					//empty poly
 					for (auto i:poly)
@@ -238,7 +238,7 @@ namespace flopoco{
 						lsbAttempts=0;
 						alpha++;
 						nbIntervals=1<<alpha;
-						REPORT(INFO, "guessDegree mislead us, increasing alpha to " << alpha << " and starting over");
+						REPORT(LogLevel::DETAIL, "guessDegree mislead us, increasing alpha to " << alpha << " and starting over");
 					}
 				}
 			} // end while(!success)
@@ -247,9 +247,9 @@ namespace flopoco{
 			// TODO? we could also check if one of the coeffs is always positive or negative, and optimize generated code accordingly
 			for (int i=0; i<nbIntervals; i++) {
 				for (int j=0; j<=degree; j++) {
-					// REPORT(DEBUG "Resizing MSB of coeff " << j << " of poly " << i << " : from " << poly[i] -> getCoeff(j) -> MSB << " to " <<  MSB[j]);
+					// REPORT(LogLevel::DEBUG "Resizing MSB of coeff " << j << " of poly " << i << " : from " << poly[i] -> getCoeff(j) -> MSB << " to " <<  MSB[j]);
 					poly[i] -> getCoeff(j) -> changeMSB(MSB[j]);
-					// REPORT(DEBUG, "   Now  " << poly[i] -> getCoeff(j) -> MSB);
+					// REPORT(LogLevel::DEBUG, "   Now  " << poly[i] -> getCoeff(j) -> MSB);
 				}
 			}
 
@@ -261,10 +261,10 @@ namespace flopoco{
 		}
 		else
 		{
-			REPORT(INFO, "Polynomial data cache found: " << cacheFileName.str());
+			REPORT(LogLevel::DETAIL, "Polynomial data cache found: " << cacheFileName.str());
 			//********************** Just read the cache *********************
 			readFromCacheFile(cacheFileName.str());
-			REPORT(INFO, "Polynomial data read: " << cacheFileName.str());
+			REPORT(LogLevel::DETAIL, "Polynomial data read: " << cacheFileName.str());
 		} // end if cache
 
 		// Check if all the coefficients of a given degree are of the same sign
@@ -401,21 +401,21 @@ namespace flopoco{
 	{
 		int totalOutputSize;
 
-		REPORT(INFO,"Parameters of the approximation polynomials: ");
-		REPORT(INFO,"  Degree=" << degree	<< "  alpha=" << alpha
+		REPORT(LogLevel::DETAIL,"Parameters of the approximation polynomials: ");
+		REPORT(LogLevel::DETAIL,"  Degree=" << degree	<< "  alpha=" << alpha
 				<< "    maxApproxErrorBound=" << approxErrorBound  << "    common coeff LSB="  << LSB);
 
 		totalOutputSize=0;
 		for (size_t j=0; j<=degree; j++) {
 			size_t size = MSB[j]-LSB + (coeffSigns[j] == 0);
 			totalOutputSize += size ;
-			REPORT(INFO,"  Coeff"<<setw(2) << j<<":  signedMSB =" <<setw(3)<< MSB[j]
+			REPORT(LogLevel::DETAIL,"  Coeff"<<setw(2) << j<<":  signedMSB =" <<setw(3)<< MSB[j]
 						 << (coeffSigns[j]==0? ",  variable sign " : ", constant sign "+string(coeffSigns[j]==1?"+":"-") )
 						 << "   => stored size ="<<setw(3) << size << " bits"
 						 );
 		}
 
-		REPORT(INFO, "  Total size of the table is " << nbIntervals << " x " << totalOutputSize << " = " << nbIntervals*totalOutputSize << " bits");
+		REPORT(LogLevel::DETAIL, "  Total size of the table is " << nbIntervals << " x " << totalOutputSize << " = " << nbIntervals*totalOutputSize << " bits");
 	}
 
 

@@ -48,7 +48,7 @@ namespace flopoco{
 
 		int depth = log2c_64(nonzeros(coeff));
 
-		REPORT(INFO, "depth=" << depth);
+		REPORT(LogLevel::DETAIL, "depth=" << depth);
 
 		PAGSuite::rpag *rpag = new PAGSuite::rpag(); //default is RPAG with 2 input adders
 
@@ -57,15 +57,15 @@ namespace flopoco{
 
 		if(depth > 3)
 		{
-			REPORT(DEBUG, "depth is 4 or more, limit search limit to 1");
+			REPORT(LogLevel::DEBUG, "depth is 4 or more, limit search limit to 1");
 			rpag->search_limit = 1;
 		}
 		if(depth > 4)
 		{
-			REPORT(DEBUG, "depth is 5 or more, limit MSD permutation limit");
+			REPORT(LogLevel::DEBUG, "depth is 5 or more, limit MSD permutation limit");
 			rpag->msd_digit_permutation_limit = 1000;
 		}
-		PAGSuite::global_verbose = UserInterface::verbose-1; //set rpag to one less than verbose of FloPoCo
+		PAGSuite::global_verbose = static_cast<int>(get_log_lvl())-1; //set rpag to one less than verbose of FloPoCo
 
 		PAGSuite::cost_model_t cost_model = PAGSuite::LL_FPGA;// with default value
 		rpag->input_wordsize = wIn;
@@ -80,7 +80,7 @@ namespace flopoco{
 
 		string adderGraph = output_adder_graph(pipelined_adder_graph,true);
 
-		REPORT(INFO, "adderGraph=" << adderGraph);
+		REPORT(LogLevel::DETAIL, "adderGraph=" << adderGraph);
 
 		ProcessIntConstMultShiftAdd(target,adderGraph,"",epsilon);
 

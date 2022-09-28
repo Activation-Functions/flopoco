@@ -53,7 +53,7 @@ namespace flopoco{
 		fpMaxFloat.getMPFR(maxExpIn);
 		mpfr_log(maxExpIn, maxExpIn, GMP_RNDU);
 		mpfr_mul(r,r,maxExpIn, GMP_RNDN);
-		if(UserInterface::verbose) mpfr_out_str (stderr, 10, 30, maxExpIn, GMP_RNDN); cerr << " ";
+		if(is_log_lvl_enabled(LogLevel::DETAIL)) mpfr_out_str (stderr, 10, 30, maxExpIn, GMP_RNDN); cerr << " ";
 
 		// then take the exp
 		mpfr_exp(r,r, GMP_RNDN);
@@ -100,7 +100,7 @@ namespace flopoco{
 
 
 		int logwF= wF+expG+wE-1;
-		REPORT(INFO, "mantissa width for the Log output: " << logwF);
+		REPORT(LogLevel::DETAIL, "mantissa width for the Log output: " << logwF);
 
 		vhdl << tab  << declare("flagsX", 2) << " <= X(wE+wF+2 downto wE+wF+1);" << endl;
 		vhdl << tab  << declare("signX") << " <= X(wE+wF);" << endl;

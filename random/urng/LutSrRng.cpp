@@ -146,7 +146,7 @@ unsigned  int no_tuple=sizeof(table)/sizeof(table[0]);
 		} while(m!=1);//&& q<no_tuple
 
 
-		REPORT(INFO, "n=" << n << "  r=" << r << "  t=" << t << "  k=" << k << "  s=" << s)
+		REPORT(LogLevel::DETAIL, "n=" << n << "  r=" << r << "  t=" << t << "  k=" << k << "  s=" << s)
 			//	printf("\n n->%u   r->%u   t->%u   k->%u   s->%x\n", n, r, t, k, s);
 //define the size of taps and cycle
 

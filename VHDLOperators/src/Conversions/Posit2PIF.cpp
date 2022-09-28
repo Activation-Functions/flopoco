@@ -62,13 +62,13 @@ namespace flopoco {
 
 
 		// basic message
-		REPORT(INFO,"Declaration of Posit2PIF \n");
+		REPORT(LogLevel::DETAIL,"Declaration of Posit2PIF \n");
 
 		// more detailed message
-		REPORT(DETAILED, "this operator has received two parameters " << widthI << " and " << wES);
+		REPORT(LogLevel::VERBOSE, "this operator has received two parameters " << widthI << " and " << wES);
   
 		// debug message for developper
-		REPORT(DEBUG,"debug of Posit2PIF");
+		REPORT(LogLevel::DEBUG,"debug of Posit2PIF");
 
 
 		/* vhdl is the stream which receives all the vhdl code, some special functions are

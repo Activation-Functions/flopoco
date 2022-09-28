@@ -4,6 +4,8 @@
 #include <iomanip>
 #include <regex>
 
+#include "flopoco/report.hpp"
+
 #include "flopoco/UserInterface.hpp"
 #include "flopoco/Targets/AllTargetsHeaders.hpp"
 #include "flopoco/TestBenches/TestBench.hpp"
@@ -29,7 +31,6 @@ namespace flopoco
 	// Allocation of the global objects
 	string UserInterface::outputFileName;
 	string UserInterface::entityName=""; // used for the -name option
-	int    UserInterface::verbose;
 	string UserInterface::targetFPGA;
 	double UserInterface::targetFrequencyMHz;
 	bool   UserInterface::clockEnable;
@@ -191,7 +192,9 @@ namespace flopoco
 
 	void UserInterface::parseGenericOptions(vector<string> &args) {
 		parseString(args, "name", &entityName, true); // not sticky: will be used, and reset, after the operator parser
+		int verbose;
 		parsePositiveInt(args, "verbose", &verbose, true); // sticky option
+		set_log_lvl(static_cast<LogLevel>(verbose));
 		parseString(args, "outputFile", &outputFileName, true); // not sticky: will be used, and reset, after the operator parser
 		parseString(args, "target", &targetFPGA, true); // not sticky: will be used, and reset, after the operator parser
 		parseFloat(args, "frequency", &targetFrequencyMHz, true); // sticky option
@@ -250,7 +253,7 @@ namespace flopoco
 		for (auto i: UserInterface::globalOpList){
 			if( op->getName() == i->getName() ) {
 				alreadyPresent=i;
-				// REPORT(DEBUG,"Operator::addToGlobalOpList(): " << op->getName() <<" already present in globalOpList");
+				// REPORT(LogLevel::DEBUG,"Operator::addToGlobalOpList(): " << op->getName() <<" already present in globalOpList");
 			}
 		}
 		if(alreadyPresent) {
@@ -361,7 +364,6 @@ namespace flopoco
 	void UserInterface::initialize(){
 		registerFactories();  //implemented in Factories.cpp
 		// Initialize all the command-line options
-		verbose=1;
 		outputFileName="flopoco.vhdl";
 		targetFPGA=defaultFPGA;
 		targetFrequencyMHz=400;

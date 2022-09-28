@@ -118,7 +118,7 @@ namespace flopoco{
 	void BasicPolyApprox::guessDegree(sollya_obj_t fS, sollya_obj_t inputRangeS, double targetAccuracy, int* degreeInfP, int* degreeSupP) {
 		// Accuracy has to be converted to sollya objects
 		// a few constant objects
-		external_log(LogLevel::DETAIL, [&] {
+		external_log(LogLevel::VERBOSE, [&] {
 			sollya_lib_printf(
 			    "> BasicPolyApprox::guessDegree() for function %b "
 			    "on range %b at target accuracy %1.5e\n",
@@ -147,7 +147,7 @@ namespace flopoco{
 		sollya_lib_get_constant_as_int(degreeInfP, degreeInfS);
 		sollya_lib_get_constant_as_int(degreeSupP, degreeSupS);
 
-		external_log(LogLevel::DETAIL, [&] {
+		external_log(LogLevel::VERBOSE, [&] {
 			sollya_lib_printf(
 			    "> BasicPolyApprox::guessDegree(): degree of poly "
 			    "approx should be in %b\n",
@@ -172,7 +172,7 @@ namespace flopoco{
 
 
 		// This will be the LSB of the constant (unless extended below)
-		REPORT(LogLevel::DETAIL, "floor(log2(targetAccuracy)) is " << floor(log2(targetAccuracy)))
+		REPORT(LogLevel::VERBOSE, "floor(log2(targetAccuracy)) is " << floor(log2(targetAccuracy)))
 
 		// A few lines to add guard bits to the constant, it will be for free in terms of evaluation
 		double coeffAccuracy = targetAccuracy;
@@ -188,7 +188,7 @@ namespace flopoco{
 		}
 
 		int initialLSB = ceil(log2(coeffAccuracy));
-		REPORT(LogLevel::DETAIL, "Initial LSB is " << initialLSB);
+		REPORT(LogLevel::VERBOSE, "Initial LSB is " << initialLSB);
 
 		sollya_obj_t degreeS = sollya_lib_constant_from_int(degree);
 
@@ -204,14 +204,14 @@ namespace flopoco{
 
 			// did we succeed in getting an accurate enough polynomial?
 			if(approxErrorBound < targetAccuracy) {
-				REPORT(LogLevel::DETAIL, "Polynomial is accurate enough");
+				REPORT(LogLevel::VERBOSE, "Polynomial is accurate enough");
 				success=true;
 			}
 			else {
 				success=false;
 				// put this polynomial to the recycle bin
 				sollya_lib_clear_obj(polynomialS);
-				REPORT(LogLevel::DETAIL, "Polynomial is NOT accurate enough");
+				REPORT(LogLevel::VERBOSE, "Polynomial is NOT accurate enough");
 
 				// Now there are two cases: if degree==degreeSup, guess_degree was assertive that it is possible with this degree: no choice but increase LSB.
 				// If degree < degreeSup, we first try to add more least-significant bits to give some freedom to fpminimax.
@@ -219,7 +219,7 @@ namespace flopoco{
 				if(degree==degreeSup || (degree<degreeSup && tryReducingLSB <= maxAttemptsReducingLSB)) {
 					LSB--;
 					tryReducingLSB++;
-					REPORT(LogLevel::DETAIL, "  ... pushing LSB to " << LSB << " and starting over (attempt #" << tryReducingLSB << ")");
+					REPORT(LogLevel::VERBOSE, "  ... pushing LSB to " << LSB << " and starting over (attempt #" << tryReducingLSB << ")");
 				}
 				else { // OK, we tried pushing LSB thrice and it didn't work. Besides guessDegree didn't seem so sure of the degree.  Maybe we should increase degree?
 					// restore LSB
@@ -229,7 +229,7 @@ namespace flopoco{
 					degree++;
 					sollya_lib_clear_obj(degreeS);
 					degreeS = sollya_lib_constant_from_int(degree);
-					REPORT(LogLevel::DETAIL, "Reducing LSB doesn't seem to work. Now trying increasing degree to  " << degree );
+					REPORT(LogLevel::VERBOSE, "Reducing LSB doesn't seem to work. Now trying increasing degree to  " << degree );
  				}
 			}
 		} // exit from the while loop... hopefully
@@ -247,7 +247,7 @@ namespace flopoco{
 		sollya_obj_t inputRangeS = f->inputRangeS; // no need to free this one
 		sollya_obj_t degreeS = sollya_lib_constant_from_int(degree);
 
-		REPORT(LogLevel::DETAIL, "Trying to build coefficients with LSB=" << LSB);
+		REPORT(LogLevel::VERBOSE, "Trying to build coefficients with LSB=" << LSB);
 		// Build the list of coefficient LSBs for fpminimax
 		// Sollya library is a bit painful, it is safer to just build a big string and parse it.
 		ostringstream s;
@@ -259,7 +259,7 @@ namespace flopoco{
 		s << "|]";
 
 		sollya_obj_t coeffSizeListS = sollya_lib_parse_string(s.str().c_str());
-		external_log(LogLevel::DETAIL, [&] {
+		external_log(LogLevel::VERBOSE, [&] {
 			sollya_lib_printf(
 			    "> BasicPolyApprox::buildApproxFromDegreeAndLSBs:  "
 			    "  fpminimax(%b, %b, %b, %b, %b, %b);\n",
@@ -270,7 +270,7 @@ namespace flopoco{
 		// Tadaaa! After all this we may launch fpminimax
 		polynomialS = sollya_lib_fpminimax(fS, degreeS, coeffSizeListS, inputRangeS, fixedS, absoluteS, NULL);
 		sollya_lib_clear_obj(coeffSizeListS);
-		external_log(LogLevel::DETAIL, [&] {
+		external_log(LogLevel::VERBOSE, [&] {
 			sollya_lib_printf(
 			    "> BasicPolyApprox::buildBasicPolyApprox: "
 			    "obtained polynomial   %b\n",
@@ -280,7 +280,7 @@ namespace flopoco{
 		// Checking its approximation error;
 		sollya_obj_t supNormS; // it will end up there
 		sollya_obj_t supNormAccS = sollya_lib_parse_string("1b-10"); // This is the size of the returned interval... 10^-3 should be enough for anybody
-		external_log(LogLevel::DETAIL, [&] {
+		external_log(LogLevel::VERBOSE, [&] {
 			sollya_lib_printf(">   supnorm(%b, %b, %b, %b, %b);\n",
 					  polynomialS, fS, inputRangeS,
 					  absoluteS, supNormAccS);
@@ -289,7 +289,7 @@ namespace flopoco{
 		if(sollya_lib_obj_is_error(supNormInputRangeS)) {
 			cout <<  ">   Sollya infnorm failed, but do not loose all hope yet: launching dirtyinfnorm:" << endl;
 			sollya_obj_t pminusfS = sollya_lib_sub(polynomialS, fS);
-			external_log(LogLevel::DETAIL, [&] {
+			external_log(LogLevel::VERBOSE, [&] {
 				sollya_lib_printf(">   dirtyinfnorm(%b, %b);\n",
 						  pminusfS, inputRangeS);
 			});
@@ -310,7 +310,7 @@ namespace flopoco{
 		sollya_lib_get_constant_as_double(& approxErrorBound, supNormS);
 		sollya_lib_clear_obj(supNormS);
 
-		REPORT(LogLevel::DETAIL, "Polynomial accuracy is " << approxErrorBound);
+		REPORT(LogLevel::VERBOSE, "Polynomial accuracy is " << approxErrorBound);
 		// Please leave the memory in the state you would like to find it when entering
 		sollya_lib_clear_obj(degreeS);
 	}
@@ -362,7 +362,7 @@ namespace flopoco{
 			mpfr_clear(mpcoeff);
 		}
 
-		REPORT(LogLevel::DETAIL, report());
+		REPORT(LogLevel::VERBOSE, report());
 	}
 
 

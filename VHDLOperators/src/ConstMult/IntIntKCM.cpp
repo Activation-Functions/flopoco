@@ -71,7 +71,7 @@ namespace flopoco{
 		// now if lastLutWidth=lutWidth + 1  then we need a larger last digit, and a different last table.
 		// Besides if signedResult we also need a different last table.
 
-		REPORT(INFO, "Constant multiplication in "<< nbOfTables << " tables, input sizes:  for the first tables, " << lutWidth << ", for the last table: " << lastLutWidth);
+		REPORT(LogLevel::DETAIL, "Constant multiplication in "<< nbOfTables << " tables, input sizes:  for the first tables, " << lutWidth << ", for the last table: " << lastLutWidth);
 
 		// TODO		setCriticalPath( getMaxInputDelays(inputDelays) );
 
@@ -266,7 +266,7 @@ namespace flopoco{
 		// 	now if lastLutWidth=lutWidth + 1  then we need a larger last digit, and a different last table.
 		// Besides if signedResult we also need a different last table.
 
-		REPORT(INFO, "Constant multiplication in " << nbOfTables << " tables, input sizes:  for the first tables, " << lutWidth << ", for the last table: " << lastLutWidth);
+		REPORT(LogLevel::DETAIL, "Constant multiplication in " << nbOfTables << " tables, input sizes:  for the first tables, " << lutWidth << ", for the last table: " << lastLutWidth);
 
 		parentOp->setCycleFromSignal(multiplicandX->getName());
 

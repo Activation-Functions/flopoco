@@ -40,7 +40,7 @@ namespace flopoco{
 		srcFileName = "Normalizer";
 		setCopyrightString("Florent de Dinechin, (2007-2020)");
 
-		REPORT(DETAILED, "wX="<<wX << " wR="<<wR << " maxShift="<<maxShift << " computeSticky=" << computeSticky  << " countType=" << countType);
+		REPORT(LogLevel::VERBOSE, "wX="<<wX << " wR="<<wR << " maxShift="<<maxShift << " computeSticky=" << computeSticky  << " countType=" << countType);
 
 		if(wR>wX) {
 			THROWERROR( "As far as we know, wR>wX doesn't make sense. If you believe otherwise, get in touch!");

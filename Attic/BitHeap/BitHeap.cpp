@@ -50,7 +50,7 @@ namespace flopoco
 		s << op->getName() << "_BitHeap"<< name << "_" << guid; // for REPORT to work
 
 		uniqueName_=s.str();
-		REPORT(DEBUG, "Creating BitHeap of size " << maxWeight);
+		REPORT(LogLevel::DEBUG, "Creating BitHeap of size " << maxWeight);
 		chunkDoneIndex=0;
 		inConcatIndex=0;
 		outConcatIndex=0;
@@ -144,7 +144,7 @@ namespace flopoco
 		if (weight<0)
 			THROWERROR("Negative weight (" << weight << ") in addUnsignedBitVector");
 		if(weight+size>maxWeight) {
-			REPORT(INFO, "in addUnsignedBitVector: Size of signal " << x << " is " << size <<
+			REPORT(LogLevel::DETAIL, "in addUnsignedBitVector: Size of signal " << x << " is " << size <<
 				   ", adding it at weight " << weight << " overflows the bit heap (maxWeight=" << maxWeight << ")");
 		}
 		op->setCycleFromSignal(x);
@@ -157,15 +157,15 @@ namespace flopoco
 
 	void BitHeap::addUnsignedBitVector(int weight, string x, unsigned size, int msb, int lsb, bool negativeWeight)
 	{
-		REPORT(FULL, "Entering addUnsignedBitVector(weight="<<weight<<", x=" << x
+		REPORT(LogLevel::FULL, "Entering addUnsignedBitVector(weight="<<weight<<", x=" << x
 					 << ", size=" << size << ", msb=" << msb<< ", lsb="<< lsb
 					 << ", negativeWeight=" << negativeWeight);
 		if(weight<0 && !negativeWeight)
 			THROWERROR("Negative weight (" << weight << ") in addUnsignedBitVector");
 		if(negativeWeight)
-			REPORT(INFO, "in addUnsignedBitVector: Warning: using negative weight for signal to add to bitheap");
+			REPORT(LogLevel::DETAIL, "in addUnsignedBitVector: Warning: using negative weight for signal to add to bitheap");
 		if(weight+size>maxWeight) {
-			REPORT(INFO, "in addUnsignedBitVector: Size of signal " << x << " is " << size <<
+			REPORT(LogLevel::DETAIL, "in addUnsignedBitVector: Size of signal " << x << " is " << size <<
 					", adding it at weight " << weight << " overflows the bit heap (maxWeight=" << maxWeight << ")");
 		}
 		if(msb<lsb)
@@ -188,7 +188,7 @@ namespace flopoco
 		if (weight<0)
 			THROWERROR("Negative weight (" << weight << ") in subtractUnsignedBitVector");
 		if(weight+size>maxWeight) {
-			REPORT(INFO, "in subtractUnsignedBitVector: Size of signal " << x << " is " << size <<
+			REPORT(LogLevel::DETAIL, "in subtractUnsignedBitVector: Size of signal " << x << " is " << size <<
 				   ", adding it at weight " << weight << " overflows the bit heap (maxWeight=" << maxWeight << ")");
 		}
 
@@ -213,9 +213,9 @@ namespace flopoco
 		if(weight<0 && !negativeWeight)
 			THROWERROR("Negative weight (" << weight << ") in addUnsignedBitVector");
 		if(negativeWeight)
-			REPORT(INFO, "in addUnsignedBitVector: Warning: using negative weight for signal to add to bitheap");
+			REPORT(LogLevel::DETAIL, "in addUnsignedBitVector: Warning: using negative weight for signal to add to bitheap");
 		if(weight+size>maxWeight) {
-			REPORT(INFO, "in subtractUnsignedBitVector: Size of signal " << x << " is " << size <<
+			REPORT(LogLevel::DETAIL, "in subtractUnsignedBitVector: Size of signal " << x << " is " << size <<
 					", adding it at weight " << weight << " overflows the bit heap (maxWeight=" << maxWeight << ")");
 		}
 		if(msb<lsb)
@@ -249,7 +249,7 @@ namespace flopoco
 
 		if(weight+size>maxWeight)
 		{
-			REPORT(INFO, "in subtractUnsignedBitVector: Size of signal " << x << " is " << size <<
+			REPORT(LogLevel::DETAIL, "in subtractUnsignedBitVector: Size of signal " << x << " is " << size <<
 				   ", adding it at weight " << weight << " overflows the bit heap (maxWeight=" << maxWeight << ")");
 		}
 
@@ -274,7 +274,7 @@ namespace flopoco
 
 	void BitHeap::addSignedBitVector(int weight, string x, unsigned size, int lsb, bool negativeWeight)
 	{
-		REPORT(FULL, "Entering addSignedBitVector(weight="<<weight<<", x=" << x
+		REPORT(LogLevel::FULL, "Entering addSignedBitVector(weight="<<weight<<", x=" << x
 					 << ", size=" << size
 					 //  << ", msb=" << msb    Why is there a msb in addUnsignedBitVector and not here?
 					 << ", lsb="<< lsb
@@ -283,10 +283,10 @@ namespace flopoco
 		if(weight<0 && !negativeWeight)
 			THROWERROR("Negative weight (" << weight << ") in addUnsignedBitVector");
 		if(negativeWeight)
-			REPORT(INFO, "in addUnsignedBitVector: Warning: using negative weight for signal to add to bitheap");
+			REPORT(LogLevel::DETAIL, "in addUnsignedBitVector: Warning: using negative weight for signal to add to bitheap");
 		if(weight+size>maxWeight)
 		{
-			REPORT(INFO, "in addSignedBitVector: Size of signal " << x << " is " << size <<
+			REPORT(LogLevel::DETAIL, "in addSignedBitVector: Size of signal " << x << " is " << size <<
 					", adding it at weight " << weight << " overflows the bit heap (maxWeight=" << maxWeight << ")");
 		}
 		if(lsb<0)
@@ -318,7 +318,7 @@ namespace flopoco
 			THROWERROR("Negative weight (" << weight << ") in subtractSignedBitVector");
 		if(weight+size>maxWeight)
 		{
-			REPORT(INFO, "in subtractSignedBitVector: Size of signal " << x << " is " << size <<
+			REPORT(LogLevel::DETAIL, "in subtractSignedBitVector: Size of signal " << x << " is " << size <<
 					", adding it at weight " << weight << " overflows the bit heap (maxWeight=" << maxWeight << ")");
 		}
 
@@ -343,10 +343,10 @@ namespace flopoco
 		if(weight<0 && !negativeWeight)
 			THROWERROR("Negative weight (" << weight << ") in addUnsignedBitVector");
 		if(negativeWeight)
-			REPORT(INFO, "in addUnsignedBitVector: Warning: using negative weight for signal to add to bitheap");
+			REPORT(LogLevel::DETAIL, "in addUnsignedBitVector: Warning: using negative weight for signal to add to bitheap");
 		if(weight+size>maxWeight)
 		{
-			REPORT(INFO, "in subtractSignedBitVector: Size of signal " << x << " is " << size <<
+			REPORT(LogLevel::DETAIL, "in subtractSignedBitVector: Size of signal " << x << " is " << size <<
 					", adding it at weight " << weight << " overflows the bit heap (maxWeight=" << maxWeight << ")");
 		}
 		if(lsb<0)
@@ -394,7 +394,7 @@ namespace flopoco
 		else
 			isXilinx = false;
 
-		//REPORT(DEBUG, "in buildSupertiles: mulBlocks' size=" << mulBlocks.size());
+		//REPORT(LogLevel::DEBUG, "in buildSupertiles: mulBlocks' size=" << mulBlocks.size());
 		for(unsigned i=0; i<mulBlocks.size()-1; i++)
 			for(unsigned j=i+1; j<mulBlocks.size(); j++)
 			{
@@ -404,8 +404,8 @@ namespace flopoco
 				// - use the "double multiplier mode" on Altera
 				// ...
 				bool chain = mulBlocks[i]->canBeChained(mulBlocks[j], isXilinx);
-				//REPORT(INFO, chain);
-				//REPORT(INFO, mulBlocks[i]->getWeight())
+				//REPORT(LogLevel::DETAIL, chain);
+				//REPORT(LogLevel::DETAIL, mulBlocks[i]->getWeight())
 
 				if(chain)
 				{
@@ -413,8 +413,8 @@ namespace flopoco
 					{
 						if((mulBlocks[j]->getNext() == NULL) && (mulBlocks[i]->getPrevious() == NULL))
 						{
-							//REPORT(INFO,"block : " << mulBlocks[j]->getbotX() << "  " << mulBlocks[j]->getbotY());
-							//REPORT(INFO,"with block : " << mulBlocks[i]->getbotX() << "  " << mulBlocks[i]->getbotY());
+							//REPORT(LogLevel::DETAIL,"block : " << mulBlocks[j]->getbotX() << "  " << mulBlocks[j]->getbotY());
+							//REPORT(LogLevel::DETAIL,"with block : " << mulBlocks[i]->getbotX() << "  " << mulBlocks[i]->getbotY());
 							mulBlocks[j]->setNext(mulBlocks[i]);
 							mulBlocks[i]->setPrevious(mulBlocks[j]);
 						}
@@ -423,8 +423,8 @@ namespace flopoco
 					{
 						if((mulBlocks[i]->getNext() == NULL) && (mulBlocks[j]->getPrevious() == NULL))
 						{
-							//REPORT(INFO,"block : " << mulBlocks[i]->getbotX() << "  " << mulBlocks[i]->getbotY());
-							//REPORT(INFO,"with block : " << mulBlocks[j]->getbotX() << "  " << mulBlocks[j]->getbotY());
+							//REPORT(LogLevel::DETAIL,"block : " << mulBlocks[i]->getbotX() << "  " << mulBlocks[i]->getbotY());
+							//REPORT(LogLevel::DETAIL,"with block : " << mulBlocks[j]->getbotX() << "  " << mulBlocks[j]->getbotY());
 							mulBlocks[i]->setNext(mulBlocks[j]);
 							mulBlocks[j]->setPrevious(mulBlocks[i]);
 						}
@@ -439,7 +439,7 @@ namespace flopoco
 		bool x1Signed, y1Signed, x2Signed, y2Signed, rSigned;
 		int length;
 
-		REPORT(DEBUG, "generating Altera supertile");
+		REPORT(LogLevel::DEBUG, "generating Altera supertile");
 
 		//test to see if the sizes match those of a DSP
 		//TODO: should be replaced with a test on the array of DSP configurations
@@ -490,7 +490,7 @@ namespace flopoco
 		x->setSignalLength(x->getwX() + x->getwY() + ((rSigned && x1Signed) ? 0 : 1) + ((rSigned && y1Signed) ? 0 : 1));
 		y->setSignalLength(y->getwX() + y->getwY() + ((rSigned && x2Signed) ? 0 : 1) + ((rSigned && y2Signed) ? 0 : 1));
 
-		REPORT(DEBUG, "generating Altera supertile completed");
+		REPORT(LogLevel::DEBUG, "generating Altera supertile completed");
 	}
 
 
@@ -501,7 +501,7 @@ namespace flopoco
 		if((enableSuperTiles) && (mulBlocks.size()>1))
 		{
 			buildSupertiles();
-			REPORT(DEBUG, "supertiles built");
+			REPORT(LogLevel::DEBUG, "supertiles built");
 		}
 		//generate the VHDL code for each supertile
 		op->vhdl << tab << "-- code generated by BitHeap::generateSupertileVHDL()"<< endl;
@@ -724,7 +724,7 @@ namespace flopoco
 					// adding the result to the bitheap (in the last block from the supertile)
 					string name=current->getSigName();
 					int length=current->getSigLength();
-					REPORT(DEBUG,"sending bits to bitheap after chain adding");
+					REPORT(LogLevel::DEBUG,"sending bits to bitheap after chain adding");
 					for(int k=length-1;k>=0;k--)
 					{
 						int weight=current->getWeight()+k;
@@ -765,12 +765,12 @@ namespace flopoco
 		if (w<0)
 			THROWERROR("Negative weight (" << w << ") in addBit");
 
-		REPORT(FULL, "addBit at weigth " <<w <<"   for rhs=" << rhs );
+		REPORT(LogLevel::FULL, "addBit at weigth " <<w <<"   for rhs=" << rhs );
 
 		// ignore bits beyond the declared maxWeight
 		if((unsigned)w >= maxWeight)
 		{
-			REPORT(INFO, "WARNING in addBit, w=" << w << " greater than mawWeight=" <<maxWeight << "... ignoring it"  );
+			REPORT(LogLevel::DETAIL, "WARNING in addBit, w=" << w << " greater than mawWeight=" <<maxWeight << "... ignoring it"  );
 			return;
 		}
 
@@ -807,7 +807,7 @@ namespace flopoco
 			op->vhdl <<  " -- " << comment;
 		op->vhdl <<  " -- " << "cycle= " << bit->getCycle() << " cp= " << bit->getCriticalPath(bit->getCycle()) << endl;
 
-		REPORT(DEBUG, "added bit named "  << bit->getName() << " on column " << w <<" at cycle= "<< bit->getCycle() <<" cp= "<<bit->getCriticalPath(bit->getCycle()));
+		REPORT(LogLevel::DEBUG, "added bit named "  << bit->getName() << " on column " << w <<" at cycle= "<< bit->getCycle() <<" cp= "<<bit->getCriticalPath(bit->getCycle()));
 
 		printColumnInfo(w);
 	};
@@ -828,7 +828,7 @@ namespace flopoco
 
 
 
-		REPORT(DEBUG,"remove bit from column " << weight);
+		REPORT(LogLevel::DEBUG,"remove bit from column " << weight);
 	}
 
 
@@ -841,7 +841,7 @@ namespace flopoco
 		list<WeightedBit*>::iterator it;
 
 		if(w>=maxWeight)	{
-			REPORT(DEBUG, "latestInputBitToCompressor returns null because w>=maxWeight");
+			REPORT(LogLevel::DEBUG, "latestInputBitToCompressor returns null because w>=maxWeight");
 			return NULL;
 		}
 
@@ -853,7 +853,7 @@ namespace flopoco
 				k++;
 			}
 			THROWERROR("latestInputBitToCompressor: shouldn't get there");
-			//REPORT(DEBUG, "in latestInputBitToCompressor");
+			//REPORT(LogLevel::DEBUG, "in latestInputBitToCompressor");
 		}
 		else { // compressor for two columns
 			int i=1, j=1;
@@ -881,21 +881,21 @@ namespace flopoco
 
 	void BitHeap::elemReduce(unsigned i, BasicCompressor* bc, int type)
 	{
-		REPORT(DEBUG, "Entering elemReduce for column "<< i << " using compressor " << bc->getName() );
+		REPORT(LogLevel::DEBUG, "Entering elemReduce for column "<< i << " using compressor " << bc->getName() );
 		list<WeightedBit*>::iterator it = bits[i].begin();
 		stringstream signal[2];
 
 		op->vhdl << endl;
 
-		//		REPORT(DEBUG, cnt[i] << "  " << bits[i].size());
-		//    REPORT(DEBUG, cnt[i+1] << "  " << bc->getColumnSize(1));
+		//		REPORT(LogLevel::DEBUG, cnt[i] << "  " << bits[i].size());
+		//    REPORT(LogLevel::DEBUG, cnt[i+1] << "  " << bc->getColumnSize(1));
 
 
 		WeightedBit* b =  latestInputBitToCompressor(i, bc->getColumnSize(0), bc->getColumnSize(1)) ;
 
 
 		if(b)	{
-			REPORT(DEBUG, "latest bit for this reduction" << b->getName());
+			REPORT(LogLevel::DEBUG, "latest bit for this reduction" << b->getName());
 				op->setCycle(  b ->getCycle()  );
 				op->setCriticalPath(  b ->getCriticalPath(op->getCurrentCycle()));
 				op->manageCriticalPath( op->getTarget()->lutDelay() + op->getTarget()->localWireDelay() );
@@ -964,7 +964,7 @@ namespace flopoco
 		if(!((bc->getColumnSize(0)==3) && (bc->getColumnSize(1)==0)))
 			addBit(i+2, join(out_concat, compressorIndex,"_", outConcatIndex, "(2)"),"",type);
 #endif
-		REPORT(DEBUG, "Exiting elemReduce() ");
+		REPORT(LogLevel::DEBUG, "Exiting elemReduce() ");
 
 		++compressorIndex;
 		++outConcatIndex;
@@ -1025,7 +1025,7 @@ namespace flopoco
 			for(col1=col0; col1>=0; col1--)
 				if((col0 + col1<=maxCompressibleBits) && (intlog2(col0 + 2*col1)<=3))
 					{
-						REPORT(DEBUG, "Generating compressor for col1=" << col1 <<", col0=" << col0);
+						REPORT(LogLevel::DEBUG, "Generating compressor for col1=" << col1 <<", col0=" << col0);
 						vector<int> newVect;
 						newVect.push_back(col0);
 						newVect.push_back(col1);
@@ -1133,7 +1133,7 @@ namespace flopoco
 
 		for(list<WeightedBit*>::iterator it = bits[w].begin(); it!=bits[w].end(); ++it)
 			{
-				REPORT(FULL, "i="<<i<<"  name=" << (*it)->getName() <<" cycle="<<(*it)->getCycle()
+				REPORT(LogLevel::FULL, "i="<<i<<"  name=" << (*it)->getName() <<" cycle="<<(*it)->getCycle()
 					   << " cp="<<(*it)->getCriticalPath((*it)->getCycle()));
 				// check the ordering -- this should be useless, was inserted for debug purpose
 				if(i>0) {
@@ -1154,7 +1154,7 @@ namespace flopoco
 	void BitHeap::generateCompressorVHDL()
 	{
 		op->vhdl << tab << endl << tab << "-- Beginning of code generated by BitHeap::generateCompressorVHDL" << endl;
-		REPORT(DEBUG, "begin generateCompressorVHDL");
+		REPORT(LogLevel::DEBUG, "begin generateCompressorVHDL");
 
 		generateSupertileVHDL();
 		// add the constant bits to the actual bit heap
@@ -1165,7 +1165,7 @@ namespace flopoco
 
 		op->setCycle(0); // TODO FIXME for the virtual multiplier case where inputs can arrive later
 
-		REPORT(DEBUG, "Adding the constant bits");
+		REPORT(LogLevel::DEBUG, "Adding the constant bits");
 		op->vhdl << endl << tab << "-- Adding the constant bits" << endl;
 		bool isConstantNonzero = false;
 
@@ -1178,7 +1178,7 @@ namespace flopoco
 
 		//when the constant bits are all zero, report it
 		if(!isConstantNonzero){
-			REPORT(DEBUG, "All the constant bits are zero, nothing to add");
+			REPORT(LogLevel::DEBUG, "All the constant bits are zero, nothing to add");
 			op->vhdl << tab << tab << "-- All the constant bits are zero, nothing to add" << endl;
 		}
 
@@ -1187,7 +1187,7 @@ namespace flopoco
 		printBitHeapStatus();
 
 		WeightedBit* firstBit = getFirstSoonestBit();
-		REPORT(DEBUG, "getFirstSoonestBit " << firstBit);
+		REPORT(LogLevel::DEBUG, "getFirstSoonestBit " << firstBit);
 		int minCycle = firstBit->getCycle();
 		double minCP = firstBit->getCriticalPath(minCycle);
 		op->setCycle(minCycle);
@@ -1235,7 +1235,7 @@ namespace flopoco
 				//	then compress with (what should be the best, but is actually the) second best compressor
 				//	and then compress with all the rest of the compressors, in order to reduce the heap to just two lines
 
-				REPORT(DEBUG, "checkpoint 0: compression type 0, starting compressions");
+				REPORT(LogLevel::DEBUG, "checkpoint 0: compression type 0, starting compressions");
 
 				while(getMaxHeight() >= 3)
 				{
@@ -1280,7 +1280,7 @@ namespace flopoco
 			if(getMaxHeight() > 2)
 			{
 				//plotter->heapSnapshot(true, op->getCurrentCycle(), op->getCriticalPath() );
-				REPORT(DEBUG, "only three levels left");
+				REPORT(LogLevel::DEBUG, "only three levels left");
 
 				WeightedBit *bb = getLatestBit(minWeight, maxWeight-1);
 				plotter->heapSnapshot(didCompress, bb->getCycle(), bb->getCriticalPath(bb->getCycle()));
@@ -1311,7 +1311,7 @@ namespace flopoco
 						while(cnt[i]<3)
 							i++;
 
-						REPORT(DEBUG, "minWeight=" << minWeight << "    first weight with 3 bits:" << i);
+						REPORT(LogLevel::DEBUG, "minWeight=" << minWeight << "    first weight with 3 bits:" << i);
 						if(i>minWeight)
 						{
 							WeightedBit *b = getLatestBit(minWeight, i-1);
@@ -1324,14 +1324,14 @@ namespace flopoco
 
 							concatenateLSBColumns();
 
-							//REPORT(DEBUG, "here" << maxWeight << " " << i);
+							//REPORT(LogLevel::DEBUG, "here" << maxWeight << " " << i);
 						}
 
 						WeightedBit* latestBit;
 
 						while(i<maxWeight)
 						{
-							REPORT(FULL, "i= "<< i << " cnt= " << cnt[i]);
+							REPORT(LogLevel::FULL, "i= "<< i << " cnt= " << cnt[i]);
 							// Now we are sure cnt[i] is 3
 							if (i==maxWeight-1)
 							{
@@ -1362,7 +1362,7 @@ namespace flopoco
 										}
 										while(cnt[i]==2);
 
-										//REPORT(INFO, "j= "<< j << " i-1= " << i-1);
+										//REPORT(LogLevel::DETAIL, "j= "<< j << " i-1= " << i-1);
 
 										latestBit = getLatestBit(j, i-1);
 										if(latestBit)
@@ -1372,7 +1372,7 @@ namespace flopoco
 											op->manageCriticalPath( op->getTarget()->localWireDelay() +
 																	op->getTarget()->adderDelay(i-j) );
 
-											//REPORT(INFO, endl << op->getTarget()->adderDelay(i-j) << endl );
+											//REPORT(LogLevel::DETAIL, endl << op->getTarget()->adderDelay(i-j) << endl );
 
 											stage = computeStage();
 										}
@@ -1415,7 +1415,7 @@ namespace flopoco
 
 					concatenateLSBColumns();
 
-					REPORT(DEBUG, "Column height after all compressions");
+					REPORT(LogLevel::DEBUG, "Column height after all compressions");
 					printBitHeapStatus();
 
 					stage = computeStage();
@@ -1471,7 +1471,7 @@ namespace flopoco
 			THROWERROR("Trying to round an uncompressed bit heap (in roundBitheap)! Must first call generateCompressorVHDL()");
 		if(lsb == 0)
 		{
-			REPORT(DEBUG, "Trying to round to the last bit. Nothing to be done.");
+			REPORT(LogLevel::DEBUG, "Trying to round to the last bit. Nothing to be done.");
 			op->vhdl << op->declare(join(getSumName(), "_rouded"), maxWeight) << " <= " << getSumName() << ";" << endl;
 		}
 		else
@@ -1498,7 +1498,7 @@ namespace flopoco
 		WeightedBit *b=0;
 		for(unsigned w=minWeight; w<maxWeight; w++)
 			{
-				//REPORT(DEBUG, "w=" << bits[w].size());
+				//REPORT(LogLevel::DEBUG, "w=" << bits[w].size());
 				if (bits[w].size() > (unsigned)0)
 					{
 
@@ -1529,17 +1529,17 @@ namespace flopoco
 
 	void BitHeap::applyCompressor3_2(int col)
 	{
-		REPORT(DEBUG, "Entering applyCompressor3_2(" << col << ") ");
+		REPORT(LogLevel::DEBUG, "Entering applyCompressor3_2(" << col << ") ");
 		unsigned i;
 		for(i=0; i<possibleCompressors.size(); i++)
 			{
 				if((possibleCompressors[i]->getColumnSize(0)==3) && (possibleCompressors[i]->getColumnSize(1)==0))
 					break; // exit the loop
 			}
-		REPORT(DEBUG, "Using Compressor3_2, reduce column " << col);
+		REPORT(LogLevel::DEBUG, "Using Compressor3_2, reduce column " << col);
 		elemReduce(col, possibleCompressors[i], 4);
 		usedCompressors[i]=true;
-		REPORT(DEBUG, "Exiting applyCompressor3_2(" << col << ") ");
+		REPORT(LogLevel::DEBUG, "Exiting applyCompressor3_2(" << col << ") ");
 	}
 
 
@@ -1549,13 +1549,13 @@ namespace flopoco
 	// assumes cnt has been set up
 	void BitHeap::applyAdder(int lsb, int msb, bool hasCin)
 	{
-		REPORT(DEBUG, "Applying an adder from columns " << lsb << " to " << msb);
+		REPORT(LogLevel::DEBUG, "Applying an adder from columns " << lsb << " to " << msb);
 		stringstream inAdder0, inAdder1, cin;
 
 		WeightedBit *lastBit = bits[lsb].front();
 
 		//compute the critical path
-		REPORT(DEBUG, "Computing critical path between columns " << lsb << " and " << msb);
+		REPORT(LogLevel::DEBUG, "Computing critical path between columns " << lsb << " and " << msb);
 
 		for(int i=lsb; i<=msb; i++)
 		{
@@ -1639,7 +1639,7 @@ namespace flopoco
 		}
 		removeCompressedBits(lsb, cnt[lsb]);
 
-		REPORT(DEBUG, "removed bits that are being compressed through an addition");
+		REPORT(LogLevel::DEBUG, "removed bits that are being compressed through an addition");
 
 		//for timing purposes
 		op->setCycle(lastBit->getCycle());
@@ -1718,9 +1718,9 @@ namespace flopoco
 
 		while(nbRows > 1)
 		{
-			REPORT(DEBUG, "Column height before adder tree round");
+			REPORT(LogLevel::DEBUG, "Column height before adder tree round");
 			for (unsigned int i=0; i<bits.size(); i++) {
-				REPORT(DEBUG, "   w=" << i << ":\t height=" << bits[i].size());
+				REPORT(LogLevel::DEBUG, "   w=" << i << ":\t height=" << bits[i].size());
 				printColumnInfo(i);
 			}
 
@@ -1910,8 +1910,8 @@ namespace flopoco
 				string term2Name = join("inAdderTree_2_bh", getGUid(), "_adder", adderCount);
 				string outputName = join("outAdderTree_bh", getGUid(), "_adder", adderCount);
 
-				REPORT(DEBUG, "term1IndexLeft=" << term1IndexLeft << " term1IndexRight=" << term1IndexRight << " term1IndexLeftNew=" << term1IndexLeftNew << " term1IndexRightNew=" << term1IndexRightNew);
-				REPORT(DEBUG, "term2IndexLeft=" << term2IndexLeft << " term2IndexRight=" << term2IndexRight);
+				REPORT(LogLevel::DEBUG, "term1IndexLeft=" << term1IndexLeft << " term1IndexRight=" << term1IndexRight << " term1IndexLeftNew=" << term1IndexLeftNew << " term1IndexRightNew=" << term1IndexRightNew);
+				REPORT(LogLevel::DEBUG, "term2IndexLeft=" << term2IndexLeft << " term2IndexRight=" << term2IndexRight);
 
 				op->vhdl << tab << op->declare(term1Name, term1IndexLeftNew-term1IndexRightNew+1+1) << " <= \'0\' & " << term1String.str() << ";" << endl;
 				op->vhdl << tab << op->declare(term2Name, term1IndexLeftNew-term1IndexRightNew+1+1) << " <= \'0\' & " << zg(term1IndexLeftNew-term2IndexLeft) << " & " << term2String.str() << ";" << endl;
@@ -2014,7 +2014,7 @@ namespace flopoco
 	//the final addition
 	void BitHeap::generateFinalAddVHDL(bool isXilinx)
 	{
-		REPORT(DEBUG, "in generateFinalAddVHDL");
+		REPORT(LogLevel::DEBUG, "in generateFinalAddVHDL");
 
 		if(getMaxHeight() < 2)
 		{
@@ -2051,7 +2051,7 @@ namespace flopoco
 			i = (maxIndex > 0) ? maxIndex-1 : 0;
 			while(i >= minIndex)
 			{
-				REPORT(FULL,"i=   " << i);
+				REPORT(LogLevel::FULL,"i=   " << i);
 				if(i >= 0)
 				{
 					list<WeightedBit*>::iterator it = bits[i].begin();
@@ -2148,7 +2148,7 @@ namespace flopoco
 			//forming the input signals for the first, second and third line
 			while((i>=minWeight)&&(i<maxWeight))
 			{
-				REPORT(FULL,"i=   "<<i);
+				REPORT(LogLevel::FULL,"i=   "<<i);
 				if(i>=0)
 				{
 					list<WeightedBit*>::iterator it = bits[i].begin();
@@ -2233,9 +2233,9 @@ namespace flopoco
 			op->getTarget()->suggestSubaddSize(subAddSize, maxWeight-minWeight);
 			op->getTarget()->suggestSubadd3Size(subAdd3Size, maxWeight-minWeight);
 
-			REPORT(DEBUG, "preparing for addition on " << maxWeight-minWeight << " bits; will be split into chunks of size " << subAddSize);
-			REPORT(DEBUG,"preparing for addition3 on " << maxWeight-minWeight << " bits; will be split into chunks of size " << subAdd3Size);
-			REPORT(DEBUG, tab << "maxWeight=" << maxWeight << " and minWeight=" << minWeight);
+			REPORT(LogLevel::DEBUG, "preparing for addition on " << maxWeight-minWeight << " bits; will be split into chunks of size " << subAddSize);
+			REPORT(LogLevel::DEBUG,"preparing for addition3 on " << maxWeight-minWeight << " bits; will be split into chunks of size " << subAdd3Size);
+			REPORT(LogLevel::DEBUG, tab << "maxWeight=" << maxWeight << " and minWeight=" << minWeight);
 
 			//perform addition on the pieces
 			for(unsigned int i=0; i<(maxWeight-minWeight)/subAddSize; i++)
@@ -2456,12 +2456,12 @@ namespace flopoco
 		}
 
 
-		REPORT(DEBUG, "maxWeight=" << maxWeight);
-		REPORT(DEBUG, "stage=" << stage);
-		REPORT(DEBUG, "Column height before compression");
+		REPORT(LogLevel::DEBUG, "maxWeight=" << maxWeight);
+		REPORT(LogLevel::DEBUG, "stage=" << stage);
+		REPORT(LogLevel::DEBUG, "Column height before compression");
 		for (w=0; w<bits.size(); w++)
 		{
-			REPORT(FULL, "   w=" << w << ":\t height=" << bits[w].size() << "\t cnt[w]=" << cnt[w]);
+			REPORT(LogLevel::FULL, "   w=" << w << ":\t height=" << bits[w].size() << "\t cnt[w]=" << cnt[w]);
 			printColumnInfo(w);
 		}
 
@@ -2476,7 +2476,7 @@ namespace flopoco
 		//WeightedBit *latestBitAdded, *possiblyLatestBitAdded;
 
 		//search for lsb columns that won't be compressed at the current stage
-		//REPORT(INFO, endl);
+		//REPORT(LogLevel::DETAIL, endl);
 
 		while((index<maxWeight) && ((cnt[index]<=2)&&(cnt[index]>0)))
 		{
@@ -2521,7 +2521,7 @@ namespace flopoco
 			index++;
 		}
 
-		REPORT(DEBUG,"checked for adder in last columns; found adder from " << minWeight << " to " << adderMaxWeight);
+		REPORT(LogLevel::DEBUG,"checked for adder in last columns; found adder from " << minWeight << " to " << adderMaxWeight);
 
 		if(adderMaxWeight > minWeight)
 		{
@@ -2568,7 +2568,7 @@ namespace flopoco
 
 
 		//--------------- Compress with ADD3s ----------------------------------
-		REPORT(DEBUG,"starting compression with ternary adders");
+		REPORT(LogLevel::DEBUG,"starting compression with ternary adders");
 
 		//search for the starting column
 
@@ -2701,22 +2701,22 @@ namespace flopoco
 					WeightedBit *lastBit = bits[index].front();
 					WeightedBit *currentBit = bits[index].front();
 
-					REPORT(DEBUG,"checking columns for critical path for found adder");
+					REPORT(LogLevel::DEBUG,"checking columns for critical path for found adder");
 					for(unsigned int i=index; i<=endAddChain; i++)
 					{
-						REPORT(DEBUG,"columns for the for found adder: index=" << i << " should have bits=" << cnt[i] << " actually has bits=" << bits[i].size());
+						REPORT(LogLevel::DEBUG,"columns for the for found adder: index=" << i << " should have bits=" << cnt[i] << " actually has bits=" << bits[i].size());
 
 						if(i<maxWeight)
 						{
-							REPORT(DEBUG,"       next column has bits=" << cnt[i+1]);
+							REPORT(LogLevel::DEBUG,"       next column has bits=" << cnt[i+1]);
 						}
 						else
 						{
-							REPORT(DEBUG,"       next column has bits= already at maxWeight");
+							REPORT(LogLevel::DEBUG,"       next column has bits= already at maxWeight");
 						}
 					}
 
-					REPORT(DEBUG,"computing critical path for found adder");
+					REPORT(LogLevel::DEBUG,"computing critical path for found adder");
 
 					//compute the critical path
 					for(unsigned int i=index; i<=endAddChain; i++)
@@ -2830,7 +2830,7 @@ namespace flopoco
 		//----------------------------------------------------------------------
 
 
-		REPORT(DEBUG,"start compressing maxHeight=" << getMaxHeight());
+		REPORT(LogLevel::DEBUG,"start compressing maxHeight=" << getMaxHeight());
 
 		/*
 		 * Try to use only optimal compressors. When going through the columns,
@@ -2854,8 +2854,8 @@ namespace flopoco
 					{
 						if((i < bits.size()-1) && (cnt[i] >= possibleCompressors[j]->getColumnSize(0)) && (cnt[i+1]>=possibleCompressors[j]->getColumnSize(1)))
 						{
-							REPORT(DEBUG,endl);
-							REPORT(DEBUG,"Using Compressor " << j <<" to reduce columns " << i << " and " << i+1);
+							REPORT(LogLevel::DEBUG,endl);
+							REPORT(LogLevel::DEBUG,"Using Compressor " << j <<" to reduce columns " << i << " and " << i+1);
 							elemReduce(i, possibleCompressors[j]);
 							cnt[i]-=possibleCompressors[j]->getColumnSize(0);
 							cnt[i+1]-=possibleCompressors[j]->getColumnSize(1);
@@ -2867,8 +2867,8 @@ namespace flopoco
 					{
 						if(cnt[i] >= possibleCompressors[j]->getColumnSize(0))
 						{
-							REPORT(DEBUG,endl);
-							REPORT(DEBUG,"Using Compressor " << j <<" to reduce column " << i);
+							REPORT(LogLevel::DEBUG,endl);
+							REPORT(LogLevel::DEBUG,"Using Compressor " << j <<" to reduce column " << i);
 							elemReduce(i, possibleCompressors[j]);
 							cnt[i]-=possibleCompressors[j]->getColumnSize(0);
 							didCompress = true;
@@ -2911,7 +2911,7 @@ namespace flopoco
 		int zerosX=0;
 		int zerosY=0;
 
-		//REPORT(INFO,"LENGHTS"<<m->getwX()<<" "<<m->getwY());
+		//REPORT(LogLevel::DETAIL,"LENGHTS"<<m->getwX()<<" "<<m->getwY());
 
 		if((signedIO) && (op->getTarget()->getVendor()=="Xilinx"))
 		{
@@ -2967,7 +2967,7 @@ namespace flopoco
 
 		s << join("DSP_bh" , guid, (uid==0 ? "_ch" : "_root"), i, "_", uid);
 
-		REPORT(DETAILED,"computed in this moment= "<< join("DSP_bh", guid, (uid==0 ? "_ch" : "_root"), i, "_", uid)
+		REPORT(LogLevel::VERBOSE,"computed in this moment= "<< join("DSP_bh", guid, (uid==0 ? "_ch" : "_root"), i, "_", uid)
 			   << "length= " << m->getwX()+m->getwY() << " <= ("
 			   << input1 << range(botX,topX+addx) << " & " << zg(addx) << ") * ("
 			   << input2 << range(botY,topY+addy) << " & " << zg(addy)<<");");
@@ -2983,7 +2983,7 @@ namespace flopoco
 	void BitHeap::concatenateLSBColumns()
 	{
 		unsigned w;
-		REPORT(DEBUG, "Checking whether rightmost columns need compressing");
+		REPORT(LogLevel::DEBUG, "Checking whether rightmost columns need compressing");
 		bool alreadyCompressed=true;
 		w=minWeight;
 
@@ -3008,7 +3008,7 @@ namespace flopoco
 					w++;
 				}
 				else { // currentHeight(w) == 1
-					REPORT(DEBUG, "Level " << w << " is already compressed; will go directly to the final result");
+					REPORT(LogLevel::DEBUG, "Level " << w << " is already compressed; will go directly to the final result");
 					w++;
 				}
 			}
@@ -3052,16 +3052,16 @@ namespace flopoco
 
 		minWeight=w;
 
-		REPORT(DEBUG, "minWeight="<< minWeight);
+		REPORT(LogLevel::DEBUG, "minWeight="<< minWeight);
 
 	}
 
 	void BitHeap::printBitHeapStatus()
 	{
-		REPORT(DEBUG, "Columns:");
+		REPORT(LogLevel::DEBUG, "Columns:");
 		for (unsigned w=0; w<bits.size(); w++)
 			{
-				REPORT(DEBUG, "   w=" << w << ":\t height=" << bits[w].size());
+				REPORT(LogLevel::DEBUG, "   w=" << w << ":\t height=" << bits[w].size());
 				printColumnInfo(w);
 			}
 

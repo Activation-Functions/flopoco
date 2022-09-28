@@ -78,7 +78,7 @@ namespace flopoco{
 		computeGuardBits();
 		
 		// To help debug KCM called from other operators, report in FloPoCo CLI syntax
-		REPORT(DETAILED, "FixRealKCM  signedIn=" << signedIn << " msbIn=" << msbIn << " lsbIn=" << lsbIn << " lsbOut=" << lsbOut << " constant=\"" << constant << "\"  targetUlpError="<< targetUlpError);
+		REPORT(LogLevel::VERBOSE, "FixRealKCM  signedIn=" << signedIn << " msbIn=" << msbIn << " lsbIn=" << lsbIn << " lsbOut=" << lsbOut << " constant=\"" << constant << "\"  targetUlpError="<< targetUlpError);
 		
 		addInput("X",  msbIn-lsbIn+1);
 		//		addFixInput("X", signedIn,  msbIn, lsbIn); // The world is not ready yet
@@ -119,7 +119,7 @@ namespace flopoco{
 		// From now we have stuff to do.
 		//create the bitheap
 		//		int bitheaplsb = lsbOut - g;
-		REPORT(DEBUG, "Creating bit heap for msbOut=" << msbOut <<" lsbOut=" << lsbOut <<" g=" << g);
+		REPORT(LogLevel::DEBUG, "Creating bit heap for msbOut=" << msbOut <<" lsbOut=" << lsbOut <<" g=" << g);
 		bitHeap = new BitHeap(this, msbOut-lsbOut+1+g); // hopefully some day we get a fixed-point bit heap
 		
 		buildTablesForBitHeap(); // does everything up to bit heap compression
@@ -217,7 +217,7 @@ namespace flopoco{
 			constantIsExactlyZero = true;
 			msbOut=lsbOut; // let us return a result on one bit, why not.
 			errorInUlps=0;
-			REPORT(INFO, "It seems somebody asked for a multiplication by 0. We can do that.");
+			REPORT(LogLevel::DETAIL, "It seems somebody asked for a multiplication by 0. We can do that.");
 			return;
 		}
 		
@@ -229,7 +229,7 @@ namespace flopoco{
 		// msbIn is sent to msbIn+ msbC +1 at most
 		if(msbOut<lsbOut){
 			constantRoundsToZeroInTheStandaloneCase = true;
-			REPORT(INFO, "If nobody adds guard bits, multiplying the input by such a small constant will always returns 0. This could simplify the architecture.");
+			REPORT(LogLevel::DETAIL, "If nobody adds guard bits, multiplying the input by such a small constant will always returns 0. This could simplify the architecture.");
 			msbOut=lsbOut; // let us return a result on one bit, why not.
 			errorInUlps=0.5;// TODO this is an overestimation
 			return;
@@ -249,20 +249,20 @@ namespace flopoco{
 			
 		
 			if(lsbIn+msbC<lsbOut) {   // The truncation case
-				REPORT(DETAILED, "Constant is a power of two. Simple shift will be used instead of tables, but still there will be a truncation");
+				REPORT(LogLevel::VERBOSE, "Constant is a power of two. Simple shift will be used instead of tables, but still there will be a truncation");
 				errorInUlps=1;
 			}
 
 			
 			else { // The padding case
 				// The stand alone constructor computes a full subtraction. The Bitheap one adds negated bits, and a constant one that completes the subtraction.
-				REPORT(DETAILED, "Constant is a power of two. Simple shift will be used instead of tables, and this KCM will be exact");
+				REPORT(LogLevel::VERBOSE, "Constant is a power of two. Simple shift will be used instead of tables, and this KCM will be exact");
 				errorInUlps=0;
 			}
 			return; // init stops here.
 		}
 		
-		REPORT(DETAILED, "msbConstant=" << msbC  << "   (msbIn,lsbIn)=("<< 
+		REPORT(LogLevel::VERBOSE, "msbConstant=" << msbC  << "   (msbIn,lsbIn)=("<< 
 					 msbIn << "," << lsbIn << ")    lsbIn=" << lsbIn << 
 				"   (msbOut,lsbOut)=(" << msbOut << "," << lsbOut <<
 					 ")  signedOutput=" << signedOutput
@@ -337,12 +337,12 @@ namespace flopoco{
 					and the C++ code is simpler.
 */
 		for (int i=0; i<numberOfTables; i++) {
-			REPORT(DETAILED, "Table " << i << "   inMSB=" << m[i] << "   inLSB=" << l[i] << "   tableOutputSign=" << tableOutputSign[i]  );
+			REPORT(LogLevel::VERBOSE, "Table " << i << "   inMSB=" << m[i] << "   inLSB=" << l[i] << "   tableOutputSign=" << tableOutputSign[i]  );
 		}
 
 		// Finally computing the error due to this setup. We express it as ulps at position lsbOut-g, whatever g will be
 		errorInUlps=0.5*numberOfTables;
-		REPORT(DETAILED,"errorInUlps=" << errorInUlps);
+		REPORT(LogLevel::VERBOSE,"errorInUlps=" << errorInUlps);
 	}
 
 
@@ -369,7 +369,7 @@ namespace flopoco{
 				maxErrorWithGuardBits /= 2.0;
 			}
 		}
-		REPORT(DETAILED, "For errorInUlps=" << errorInUlps << " and targetUlpError=" << targetUlpError << "  we compute g=" << g);
+		REPORT(LogLevel::VERBOSE, "For errorInUlps=" << errorInUlps << " and targetUlpError=" << targetUlpError << "  we compute g=" << g);
 	}
 
 
@@ -431,7 +431,7 @@ namespace flopoco{
 		// This is a shift left: negative means shift right.
 		int shift= lsbIn -(lsbOut-g)  + msbC ; 
 		int rTempSize = msbC+msbIn -(lsbOut -g) +1; // initial msbOut is msbC+msbIn
-		REPORT(DETAILED,"Power of two, msbC=" << msbC << "     Shift left of " << shift << " bits");
+		REPORT(LogLevel::VERBOSE,"Power of two, msbC=" << msbC << "     Shift left of " << shift << " bits");
 		// compute the product by the abs constant
 
 		thisOp->vhdl << tab << thisOp->declare(rTempName, rTempSize) << " <= ";
@@ -467,11 +467,11 @@ namespace flopoco{
 			// Now that we have g we may compute if it has useful output bits
 			int tableOutSize = m[i] + msbC  - lsbOut + g +1; // TODO: the +1 could sometimes be removed
 			if(tableOutSize<=0) {  
-				REPORT(DETAILED, " *** Table " << i << " was contributing nothing to the bit heap and has been discarded");
+				REPORT(LogLevel::VERBOSE, " *** Table " << i << " was contributing nothing to the bit heap and has been discarded");
 				// The remaining autotest last-bit bug is here.	
 			}
 			else { // Build it and add its output to the bit heap
-				// REPORT(DEBUG, "lsbIn=" << lsbIn);
+				// REPORT(LogLevel::DEBUG, "lsbIn=" << lsbIn);
 				thisOp->vhdl << tab << thisOp->declare(sliceInName, m[i]- l[i] +1 ) << " <= "
 											 << inputSignalName << range(m[i]-lsbIn, l[i]-lsbIn) << ";"
 											 << "-- input address  m=" << m[i] << "  l=" << l[i]
@@ -588,7 +588,7 @@ namespace flopoco{
 		vector<mpz_class> r;
 		int wIn = m[i] - l[i]+1;
 		int wOut = 	m[i] + msbC  - lsbOut + g +1;
-		REPORT(DEBUG, "Table "<<i<<" wOut=" << wOut);
+		REPORT(LogLevel::DEBUG, "Table "<<i<<" wOut=" << wOut);
 		for (int x0=0; x0 < (1<<wIn); x0++) {
 			// get rid of two's complement
 			int x=x0;

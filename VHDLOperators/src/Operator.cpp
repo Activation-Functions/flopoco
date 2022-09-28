@@ -61,7 +61,7 @@ namespace flopoco{
 	int verbose=0;
 
 	Operator::Operator(Target* target): Operator(nullptr, target){
-		REPORT(INFO, "Operator  constructor without parentOp is deprecated");
+		REPORT(LogLevel::DETAIL, "Operator  constructor without parentOp is deprecated");
 	}
 
 	Operator::Operator(Operator* parentOp, Target* target){
@@ -125,7 +125,7 @@ namespace flopoco{
 		for (auto i: subComponentList_){
 			if( op->getName() == i->getName() ) {
 				alreadyPresent=i;
-				// REPORT(DEBUG,"Operator::addToGlobalOpList(): " << op->getName() <<" already present in globalOpList");
+				// REPORT(LogLevel::DEBUG,"Operator::addToGlobalOpList(): " << op->getName() <<" already present in globalOpList");
 			}
 		}
 
@@ -382,7 +382,7 @@ namespace flopoco{
 
 	void Operator::connectIOFromPortMap(Signal *portSignal)
 	{
-		REPORT(DEBUG, "Entering connectIOFromPortMap for signal " <<  portSignal->getName() << " parentOp=" << parentOp_);
+		REPORT(LogLevel::DEBUG, "Entering connectIOFromPortMap for signal " <<  portSignal->getName() << " parentOp=" << parentOp_);
 
 		//TODO: add more checks here
 		//if this is a global operator or a shared instance, then there is nothing to be done
@@ -398,11 +398,11 @@ namespace flopoco{
 			THROWERROR("Signal " << portSignal->getName() << " is not an input or output signal");
 		//select the iterators according to the signal type
 		if(portSignal->type() == Signal::in){
-			REPORT(FULL, "connectIOFromPortMap(" << portSignal->getName() <<") : this is an input ");
+			REPORT(LogLevel::FULL, "connectIOFromPortMap(" << portSignal->getName() <<") : this is an input ");
 			itStart = parentOp_->tmpInPortMap_.begin();
 			itEnd = parentOp_->tmpInPortMap_.end();
 		}else{
-			REPORT(FULL, "connectIOFromPortMap(" << portSignal->getName() <<") : this is an output ");
+			REPORT(LogLevel::FULL, "connectIOFromPortMap(" << portSignal->getName() <<") : this is an output ");
 			itStart = parentOp_->tmpOutPortMap_.begin();
 			itEnd = parentOp_->tmpOutPortMap_.end();
 		}
@@ -416,11 +416,11 @@ namespace flopoco{
 				}
 			}
 
-		//REPORT(FULL, "connectionSignal=" << connectionSignal);
+		//REPORT(LogLevel::FULL, "connectionSignal=" << connectionSignal);
 
 		//check if any match was found in the port mappings
 		if(connectionSignal == nullptr) {
-			REPORT(0,"I/O port " << portSignal->getName() << " of operator " << getName()
+			REPORT(LogLevel::MESSAGE,"I/O port " << portSignal->getName() << " of operator " << getName()
 								 << " is not connected to any signal of parent operator " << parentOp_->getName());
 			exit(1);
 			// The following exception seems to be stupidely caught somewhere and lost, and I'm too lazy to debug that 
@@ -436,7 +436,7 @@ namespace flopoco{
 								 << " cannot be found in what is supposed to be its parent operator: " << parentOp_->getName());
 		}
 
-		REPORT(FULL, portSignal->getName() << "   connected to " << connectionSignal->getName() << " whose timing is cycle=" << connectionSignal->getCycle() << " CP=" << connectionSignal->getCriticalPath() );
+		REPORT(LogLevel::FULL, portSignal->getName() << "   connected to " << connectionSignal->getName() << " whose timing is cycle=" << connectionSignal->getCycle() << " CP=" << connectionSignal->getCriticalPath() );
 		//now we can connect the two signals
 		if(portSignal->type() == Signal::in)
 			{
@@ -846,7 +846,7 @@ namespace flopoco{
 		maxCycle = 0;
 		maxCP = 0.0;
 		for(auto i: ioList_) {
-			REPORT(DEBUG, "signal " << i->getName() <<  "  Cycle=" << i->getCycle() <<  "  criticalPath=" << i->getCriticalPath() );
+			REPORT(LogLevel::DEBUG, "signal " << i->getName() <<  "  Cycle=" << i->getCycle() <<  "  criticalPath=" << i->getCriticalPath() );
 			if((i->getCycle() > maxCycle)
 				 || ((i->getCycle() == maxCycle) && (i->getCriticalPath() > maxCP)))	{
 				maxCycle = i->getCycle();
@@ -885,7 +885,7 @@ namespace flopoco{
 	}
 
 	string Operator::declare(double criticalPathContribution, string name, const int width, bool isbus, Signal::SignalType regType) {
-		REPORT(FULL, "Declaring signal " << name << " in operator uid" << this->getuid());
+		REPORT(LogLevel::FULL, "Declaring signal " << name << " in operator uid" << this->getuid());
 		Signal* s;
 		bool incompleteDeclaration;
 		// check the signal doesn't already exist
@@ -1034,7 +1034,7 @@ namespace flopoco{
 		int oldMSB = rhsSignal->MSB();
 		int oldLSB = rhsSignal->LSB();
 
-		REPORT(DEBUG, "Resizing signal " << rhsName << " from (" << oldMSB << ", " << oldLSB << ") to (" << MSB << ", " << LSB << ")");
+		REPORT(LogLevel::DEBUG, "Resizing signal " << rhsName << " from (" << oldMSB << ", " << oldLSB << ") to (" << MSB << ", " << LSB << ")");
 
 		for (int i=0; i<indentLevel; i++)
 			vhdl << tab;
@@ -1069,7 +1069,7 @@ namespace flopoco{
 		}
 		else { // oldMSB>=MSB, cases 2 or 3
 			if(MSB<oldMSB)
-				REPORT(DETAILED, "Warning: cutting off some MSBs when resizing signal " << rhsName << " from ("
+				REPORT(LogLevel::VERBOSE, "Warning: cutting off some MSBs when resizing signal " << rhsName << " from ("
 							 << oldMSB << ", " << oldLSB << ") to (" << MSB << ", " << LSB << ")");
 			m = oldSize-(oldMSB-MSB)-1;
 		}
@@ -1135,7 +1135,7 @@ namespace flopoco{
 
 
 	void Operator::outPortMap(OperatorPtr op, string componentPortName, string actualSignalName){
-		REPORT(0, "Here is an obsolete version of outPortMap. Ignoring op...");
+		REPORT(LogLevel::MESSAGE, "Here is an obsolete version of outPortMap. Ignoring op...");
 		outPortMap(componentPortName, actualSignalName);
 	}
 
@@ -1145,7 +1145,7 @@ namespace flopoco{
 		if(!isSignalDeclared(actualSignalName))
 			{
 				declare(actualSignalName, -1); // -1 for incomplete declaration
-				REPORT(FULL,"outPortMap: Created incomplete " << actualSignalName);
+				REPORT(LogLevel::FULL,"outPortMap: Created incomplete " << actualSignalName);
 			}
 
 		/* should be removed soon:
@@ -1160,7 +1160,7 @@ namespace flopoco{
 		//	the rest of the information will be completed by addOutput, which has the rest of the required information
 		//	and add it to the list of signals to be scheduled
 		declare(actualSignalName, -1); // -1 for incomplete declaration
-		REPORT(FULL,"outPortMap: Created incomplete " << actualSignalName);
+		REPORT(LogLevel::FULL,"outPortMap: Created incomplete " << actualSignalName);
 		*/
 		// add the mapping to the output mapping list of Op
 		tmpOutPortMap_[componentPortName] = actualSignalName;
@@ -1169,13 +1169,13 @@ namespace flopoco{
 
 
 	void Operator::inPortMap(OperatorPtr op, string componentPortName, string actualSignalName){
-		REPORT(0, "Here is an obsolete version of inPortMap. Ignoring op...");
+		REPORT(LogLevel::MESSAGE, "Here is an obsolete version of inPortMap. Ignoring op...");
 		inPortMap(componentPortName, actualSignalName);
 	}
 
 
 	void Operator::inPortMap(string componentPortName, string actualSignalName){
-		REPORT(DEBUG, "InPortMaP : " << componentPortName << " => "  << actualSignalName);
+		REPORT(LogLevel::DEBUG, "InPortMaP : " << componentPortName << " => "  << actualSignalName);
 
 		//check if the signal already exists
 		try{
@@ -1191,7 +1191,7 @@ namespace flopoco{
 
 
 	void Operator::setGeneric( string name, string value, int width, bool isBus ) {
-		REPORT(DEBUG, "setGeneric: "<< getName() << " : " << name << " => "  << value);
+		REPORT(LogLevel::DEBUG, "setGeneric: "<< getName() << " : " << name << " => "  << value);
 
 		Signal *s = new Signal(this, name, Signal::constant, width, isBus);
 
@@ -1206,7 +1206,7 @@ namespace flopoco{
 	}
 
 	void Operator::inPortMapCst(OperatorPtr op, string componentPortName, string constantValue){
-		REPORT(0, "Here is an obsolete version of inPortMapCst. Ignoring op...");
+		REPORT(LogLevel::MESSAGE, "Here is an obsolete version of inPortMapCst. Ignoring op...");
 		inPortMapCst(componentPortName, constantValue);
 	}
 
@@ -1216,7 +1216,7 @@ namespace flopoco{
 		double constValue;
 		sollya_obj_t node;
 
-		REPORT(DEBUG, "InPortMapCst: "<< " : " << componentPortName << " => "  << constantValue);
+		REPORT(LogLevel::DEBUG, "InPortMapCst: "<< " : " << componentPortName << " => "  << constantValue);
 		// TODO: do we need to add the input port mapping to the mapping list of Op?
 		// 		as this is a constant signal
 
@@ -1280,7 +1280,7 @@ namespace flopoco{
 		ostringstream o;
 
 		if(outputWarning && ! op->isShared()) {
-			REPORT(INFO, "instance() is deprecated except for shared operators, please use newInstance() instead");
+			REPORT(LogLevel::DETAIL, "instance() is deprecated except for shared operators, please use newInstance() instead");
 		};
 
 		// First, I/O sanity check: check that all the signals are connected
@@ -1401,7 +1401,7 @@ namespace flopoco{
 				Signal* actual = getSignalByName(actualName); // the connexion here is actual -> formal
 				string formalName = it->first; // ... with actual in this and formal in op
 				Signal* formal=op->getSignalByName(formalName);
-				REPORT(DEBUG, "instance: out port loop  " << actualName << " "<< actual->incompleteDeclaration()<<" " << formalName  );
+				REPORT(LogLevel::DEBUG, "instance: out port loop  " << actualName << " "<< actual->incompleteDeclaration()<<" " << formalName  );
 
 				//the signal connected to the output should be an incompletely declared signal,
 				//	so its information must be completed and it must be properly connected now
@@ -1413,7 +1413,7 @@ namespace flopoco{
 					actual->setHasBeenScheduled(false);
  					actual->setIncompleteDeclaration(false); //mark the signal as completely declared
 					if(op->isShared()){ // shared instance:  directly connect the inputs to the actual output in the dependency graph
-						REPORT(DEBUG, "instance():  Actual parameter "<< actual->getUniqueName()  << " of shared instance " << op->getName());
+						REPORT(LogLevel::DEBUG, "instance():  Actual parameter "<< actual->getUniqueName()  << " of shared instance " << op->getName());
 						// relink the critical path info for the pipeline to work.
 						double criticalPath = formal->getCriticalPath(); // this is OK because the subcomponent has been scheduled
 						Signal* cloneOrActual = actual;
@@ -1439,7 +1439,7 @@ namespace flopoco{
 						for (auto i: inputActualList) {
 							i->addSuccessor(cloneOrActual);
 							cloneOrActual->addPredecessor(i);
-							REPORT(FULL, "instance() added dependency "<< i->getUniqueName() << " -> "<<  cloneOrActual->getUniqueName() );
+							REPORT(LogLevel::FULL, "instance() added dependency "<< i->getUniqueName() << " -> "<<  cloneOrActual->getUniqueName() );
 						}
 
 					}
@@ -1482,7 +1482,7 @@ namespace flopoco{
 		}
 		instanceOp_[instanceName] = op;
 		instanceActualIO_[instanceName] = actualIOList;
-		REPORT(DEBUG, "Finished building instanceActualIO_["<< instanceName<< "], it is of size " << instanceActualIO_[instanceName].size());
+		REPORT(LogLevel::DEBUG, "Finished building instanceActualIO_["<< instanceName<< "], it is of size " << instanceActualIO_[instanceName].size());
 
 		//clear the port mappings
 		tmpInPortMap_.clear();
@@ -1511,8 +1511,8 @@ namespace flopoco{
 		vector<string> parametersVector;
 		string portName, signalName, mapping;
 
-		REPORT(DEBUG, "entering newInstance("<< opName << ", " << instanceName <<")" );
-		REPORT(DETAILED, "An instance corresponding to :    flopoco " + opName  + " " + parameters); 
+		REPORT(LogLevel::DEBUG, "entering newInstance("<< opName << ", " << instanceName <<")" );
+		REPORT(LogLevel::VERBOSE, "An instance corresponding to :    flopoco " + opName  + " " + parameters); 
 		
 		schedule(); // Schedule the parent operator, so the subcomponent may get timing information about its inputs.
 
@@ -1536,19 +1536,19 @@ namespace flopoco{
 		//parse the input port mappings
 		parsePortMappings(outPortMaps, 2);
 
-		REPORT(DEBUG, "   newInstance("<< opName << ", " << instanceName <<"): after parsePortMapping" );
+		REPORT(LogLevel::DEBUG, "   newInstance("<< opName << ", " << instanceName <<"): after parsePortMapping" );
 		for (auto i: parametersVector){
-			REPORT(DEBUG, i);
+			REPORT(LogLevel::DEBUG, i);
 		}
 		//create the operator
 		instance = instanceOpFactory->parseArguments(this, target_, parametersVector);
 
-		REPORT(DEBUG, "   newInstance("<< opName << ", " << instanceName <<"): after factory call" );
+		REPORT(LogLevel::DEBUG, "   newInstance("<< opName << ", " << instanceName <<"): after factory call" );
 
 		//create the instance
 		vhdl << this->instance(instance, instanceName, false);
 		// false means: no warning. Eventually the code of instance() should be inlined here, this is a transitionnal measure to support legacy constructor code
-		REPORT(DEBUG, "   newInstance("<< opName << ", " << instanceName <<"): after instance()" );
+		REPORT(LogLevel::DEBUG, "   newInstance("<< opName << ", " << instanceName <<"): after instance()" );
 
 		return instance;
 	}
@@ -1579,7 +1579,7 @@ namespace flopoco{
 					THROWERROR("In newInstance: these port maps are not specified correctly: <" << portMappings<<">");
 				string portName = mapping.substr(0, sepPos);
 				string signalName = mapping.substr(sepPos+2, mapping.size()-sepPos-2);
-				REPORT(4, "port map " << portName << "=>" << signalName << " of type " << portTypes);
+				REPORT(LogLevel::FULL, "port map " << portName << "=>" << signalName << " of type " << portTypes);
 				if(portTypes == 0)
 					inPortMap(portName, signalName);
 				else if(portTypes == 1)
@@ -2060,8 +2060,8 @@ namespace flopoco{
 		int count, lhsNameLength, rhsNameLength;
 		bool unknownLHSName = false, unknownRHSName = false;
 
-		REPORT(DEBUG, "doApplySchedule(): entering operator " << getName());
-		REPORT(FULL, "doApplySchedule: vhdl stream after first lexing " << endl << vhdl.str());
+		REPORT(LogLevel::DEBUG, "doApplySchedule(): entering operator " << getName());
+		REPORT(LogLevel::FULL, "doApplySchedule: vhdl stream after first lexing " << endl << vhdl.str());
 		//reset the new vhdl code buffer
 		newStr.str("");
 
@@ -2090,7 +2090,7 @@ namespace flopoco{
 				//now get a new line to parse
 				workStr = oldStr.substr(nextPos+2, oldStr.find(';', nextPos)+1-nextPos-2);
 
-				REPORT(FULL, "doApplySchedule: processing " << workStr);
+				REPORT(LogLevel::FULL, "doApplySchedule: processing " << workStr);
 				//extract the lhs_name
 				if(isSelectedAssignment == true)
 					{
@@ -2129,13 +2129,13 @@ namespace flopoco{
 						i--;
 					size_t beginInstanceName = i+1;
 					string instanceName = oldStr.substr(beginInstanceName, endInstanceName-beginInstanceName);
-					REPORT(FULL,"doApplySchedule found instance name >>>>"<<instanceName<<"<<<<");
+					REPORT(LogLevel::FULL,"doApplySchedule found instance name >>>>"<<instanceName<<"<<<<");
 
 					string subOpName=lhsName;
 					OperatorPtr subop = getSubComponent(subOpName);
 					if(subop==nullptr)
 						THROWERROR("doApplySchedule(): " << subOpName << " does not seem to be a subcomponent of " << getName());
-					REPORT(DEBUG, "doApplySchedule: found instance: " << subOpName);//workStr.substr(auxPosition, auxPosition2));
+					REPORT(LogLevel::DEBUG, "doApplySchedule: found instance: " << subOpName);//workStr.substr(auxPosition, auxPosition2));
 					//try to parse the names of the signals in the port mapping
 					if(workStr.find("?", auxPosition2) == string::npos) {
 						//empty port mapping
@@ -2155,7 +2155,7 @@ namespace flopoco{
 							//extract a lhsName
 							tmpNextPos = workStr.find("?", tmpCurrentPos+2);
 							lhsName = workStr.substr(tmpCurrentPos+2, tmpNextPos-tmpCurrentPos-2);
-							REPORT(FULL, "doApplySchedule: instance lhsName=" << lhsName);
+							REPORT(LogLevel::FULL, "doApplySchedule: instance lhsName=" << lhsName);
 
 							//copy lhsName (the formal input/output) to the new vhdl buffer
 							newStr << lhsName;
@@ -2178,7 +2178,7 @@ namespace flopoco{
 								open = true;
 							}
 
-							REPORT(FULL, "doApplySchedule/instance skipping: " << workStr.substr(tmpCurrentPos, tmpNextPos-tmpCurrentPos));
+							REPORT(LogLevel::FULL, "doApplySchedule/instance skipping: " << workStr.substr(tmpCurrentPos, tmpNextPos-tmpCurrentPos));
 							newStr << workStr.substr(tmpCurrentPos, tmpNextPos-tmpCurrentPos);
 
 							//extract a rhsName
@@ -2206,7 +2206,7 @@ namespace flopoco{
 							}
 
 							rhsName = workStr.substr(tmpCurrentPos, tmpNextPos-tmpCurrentPos);
-							REPORT(FULL, "doApplySchedule/instance rhsname= " << rhsName);
+							REPORT(LogLevel::FULL, "doApplySchedule/instance rhsname= " << rhsName);
 
 							//						rhsSignal = NULL;
 							//						lhsSignal = NULL;
@@ -2236,7 +2236,7 @@ namespace flopoco{
 									Signal* subopOutput = getSignalByName(actualIO[i]);
 
 									// was								subopOutput = (*subopInput->successors())[0].first; // but bug if the actual input has other successors
-									REPORT(DEBUG, "doApplySchedule: shared instance: " << instanceName << " has input " << subopInput->getName() << " and output " << subopOutput->getName());//workStr.substr(auxPosition, auxPosition2));
+									REPORT(LogLevel::DEBUG, "doApplySchedule: shared instance: " << instanceName << " has input " << subopInput->getName() << " and output " << subopOutput->getName());//workStr.substr(auxPosition, auxPosition2));
 									int deltaCycle =subopOutput->getCycle() - subopInput->getCycle();
 									if( deltaCycle> 0) {
 										newStr << "_d" << vhdlize(deltaCycle);
@@ -2245,10 +2245,10 @@ namespace flopoco{
 								}
 							}
 							catch(string &e) {
-								REPORT(FULL, "doApplySchedule caught " << e << " and is ignoring it.");
+								REPORT(LogLevel::FULL, "doApplySchedule caught " << e << " and is ignoring it.");
 							}
 							catch(char const *e) {
-								REPORT(FULL, "doApplySchedule caught " << e << " and is ignoring it.");
+								REPORT(LogLevel::FULL, "doApplySchedule caught " << e << " and is ignoring it.");
 							}
 
 							//prepare to parse a new pair
@@ -2399,7 +2399,7 @@ namespace flopoco{
 					if(newRhsName.find('^') != string::npos){
 						string sdelay = newRhsName.substr(newRhsName.find('^') + 1, string::npos-1);
 						newRhsName = newRhsName.substr(0, newRhsName.find('^'));
-						REPORT(FULL, "doApplySchedule: Found funct. delayed signal  : " << newRhsName << " delay:" << sdelay );
+						REPORT(LogLevel::FULL, "doApplySchedule: Found funct. delayed signal  : " << newRhsName << " delay:" << sdelay );
 						functionalDelay = stoi(sdelay);
 					}
 
@@ -2459,7 +2459,7 @@ namespace flopoco{
 
 		vhdl.setSecondLevelCode(newStr.str());
 
-		REPORT(DEBUG, "doApplySchedule: finished " << getName());
+		REPORT(LogLevel::DEBUG, "doApplySchedule: finished " << getName());
 	}
 
 
@@ -2539,14 +2539,14 @@ namespace flopoco{
 				try{
 					lhs = getSignalByName(it.first()); // Was this signal declared since last time?
 				}catch(string &e){
-					// REPORT(DEBUG, "Warning: signal name on the left-hand side of an assignment still unknown: " << it.first);
+					// REPORT(LogLevel::DEBUG, "Warning: signal name on the left-hand side of an assignment still unknown: " << it.first);
 					unknownLHSName = true;
 				}
 
 				try{
 					rhs = getSignalByName(it.second()); // or this one
 				}catch(string &e){
-					// REPORT(DEBUG, "Warning: signal name on the right-hand side of an assignment still unknown: " << it.second);
+					// REPORT(LogLevel::DEBUG, "Warning: signal name on the right-hand side of an assignment still unknown: " << it.second);
 					unknownRHSName = true;
 				}
 
@@ -2581,7 +2581,7 @@ namespace flopoco{
 											 << "Please fix it, as it will crash the scheduler: FloPoCo, contrary to VHDL, is case-sensitive");
 					}
 					else{
-						REPORT(DEBUG, "Warning: LHS signal name: " << it->first() << " unknown so far" );
+						REPORT(LogLevel::DEBUG, "Warning: LHS signal name: " << it->first() << " unknown so far" );
 						unknownLHSName = true;
 					}
 				}
@@ -2599,7 +2599,7 @@ namespace flopoco{
 						} else if (constants_.find(it->second()) != constants_.end()) {
 							// this is a constant
 						} else {
-							REPORT(DEBUG, endl << "Warning: RHS signal name: " << it->second() << " unknown so far"  << endl);
+							REPORT(LogLevel::DEBUG, endl << "Warning: RHS signal name: " << it->second() << " unknown so far"  << endl);
 						}
 					}
 				}
@@ -2648,7 +2648,7 @@ namespace flopoco{
 
 	void Operator::schedule()
 	{
-		REPORT(DEBUG, "Entering schedule() of operator " << getName() << " with isOperatorScheduled_="<< isOperatorScheduled_);
+		REPORT(LogLevel::DEBUG, "Entering schedule() of operator " << getName() << " with isOperatorScheduled_="<< isOperatorScheduled_);
 		if(noParseNoSchedule_ || isOperatorScheduled_) // for TestBench and Wrapper
 			return;
 
@@ -2659,11 +2659,11 @@ namespace flopoco{
 		// schedule from the root parent op
     //cout << "!!! parentOp_=" << parentOp_ << ", isShared=" << isShared() << endl;
 		if(parentOp_ != nullptr && !isShared()) {
-			REPORT(DEBUG, "schedule(): Not the root Operator, moving up to " << parentOp_->getName());
+			REPORT(LogLevel::DEBUG, "schedule(): Not the root Operator, moving up to " << parentOp_->getName());
 			parentOp_ ->schedule();
 		}
 		else { // We are the root parent op
-			REPORT(DEBUG, "schedule(): It seems I am a root Operator, starting scheduling");
+			REPORT(LogLevel::DEBUG, "schedule(): It seems I am a root Operator, starting scheduling");
 
 
 			// Algorithm initialization
@@ -2700,10 +2700,10 @@ namespace flopoco{
 					ostringstream s1,s2;
 					for(auto i: successorsFront)
 						s1 << i->getUniqueName() << " ";
-					REPORT(DEBUG, "schedule(): current wavefront is " << s1.str());
+					REPORT(LogLevel::DEBUG, "schedule(): current wavefront is " << s1.str());
 					for(auto i: alreadyScheduled)
 						s2 << i->getUniqueName() << " ";
-					REPORT(DEBUG, "schedule(): currently scheduled: " << s2.str());
+					REPORT(LogLevel::DEBUG, "schedule(): currently scheduled: " << s2.str());
 				}
 
 				for(auto candidate: successorsFront) {
@@ -2713,21 +2713,21 @@ namespace flopoco{
 					for(auto i : *candidate->predecessors()) {
 						Signal* pred=i.first;
 						if(pred->hasBeenScheduled() == false) {
-							REPORT(DEBUG, "schedule():   " << candidate->getUniqueName() << " cannot be scheduled because of predecessor " << pred->getUniqueName());
+							REPORT(LogLevel::DEBUG, "schedule():   " << candidate->getUniqueName() << " cannot be scheduled because of predecessor " << pred->getUniqueName());
 							allPredecessorsScheduled = false;
 						}
 					}
 					if(allPredecessorsScheduled) {
 						setSignalTiming(candidate); // also marks it as scheduled
 						alreadyScheduled.insert(candidate);
-						REPORT(DEBUG, "schedule(): :) " << candidate->getUniqueName()
+						REPORT(LogLevel::DEBUG, "schedule(): :) " << candidate->getUniqueName()
 									 << " has been scheduled at lexicographic time (" << candidate->getCycle() << ", " << candidate->getCriticalPath() <<")"  );
 
 						nextIterationFront.erase(candidate);// it may have been already added to nextIterationFront in this iteration
 
 						for(auto i : *candidate->successors()) {
 							if(i.first->hasBeenScheduled() == false) {
-								REPORT(DEBUG, "schedule():     " << i.first->getUniqueName() << " added to the wavefront");
+								REPORT(LogLevel::DEBUG, "schedule():     " << i.first->getUniqueName() << " added to the wavefront");
 								nextIterationFront.insert(i.first);
 							}
 						}
@@ -2757,13 +2757,13 @@ namespace flopoco{
 				ostringstream unscheduled;
 				for (auto i: unscheduledOutputs)
 					unscheduled << "  " << i;
-				REPORT(DEBUG, "schedule(): Warning: the following outputs were NOT scheduled: " << unscheduled.str());
+				REPORT(LogLevel::DEBUG, "schedule(): Warning: the following outputs were NOT scheduled: " << unscheduled.str());
 			}
 #endif
 			ostringstream unscheduled;
 			for (auto i: unscheduledOutputs)
 				unscheduled << "  " << i;
-			REPORT(DEBUG, "exiting schedule(), currently unscheduled outputs: " << unscheduled.str());
+			REPORT(LogLevel::DEBUG, "exiting schedule(), currently unscheduled outputs: " << unscheduled.str());
 		}
 	}
 
@@ -2772,7 +2772,7 @@ namespace flopoco{
 	{
 		auto op=this;
 		auto opName = op->getName();
-		REPORT(FULL,"Operator::checkAllSignalsScheduled() for operator " << opName);
+		REPORT(LogLevel::FULL,"Operator::checkAllSignalsScheduled() for operator " << opName);
 		auto ok = true;
 		// check if all signals of this op are scheduled
 		auto signals = op->signalList_;
@@ -2781,11 +2781,11 @@ namespace flopoco{
 			auto name = signal->getName();
 			auto isScheduled = signal->hasBeenScheduled();
 			if(isScheduled) {
-				REPORT(FULL, "Utility::checkAllSignalsScheduled: Signal '" << name << "' of operator '" << opName << "' is scheduled lexiographic time (" << signal->getCycle() << "," << signal->getCriticalPath() << ")");
+				REPORT(LogLevel::FULL, "Utility::checkAllSignalsScheduled: Signal '" << name << "' of operator '" << opName << "' is scheduled lexiographic time (" << signal->getCycle() << "," << signal->getCriticalPath() << ")");
 			}
 			else {
 				ok = false;
-				REPORT(DETAILED, "Utility::checkAllSignalsScheduled: Attention! Signal '" << name << "' of operator '" << opName << "' has not been scheduled!");
+				REPORT(LogLevel::VERBOSE, "Utility::checkAllSignalsScheduled: Attention! Signal '" << name << "' of operator '" << opName << "' has not been scheduled!");
 			}
 		}
 		// also check I/O ports
@@ -2797,11 +2797,11 @@ namespace flopoco{
 			auto name = signal->getName();
 			auto isScheduled = signal->hasBeenScheduled();
 			if(isScheduled) {
-				REPORT(FULL, "Utility::checkAllSignalsScheduled: Port '" << name << "' of operator '" << opName << "' is scheduled lexiographic time (" << signal->getCycle() << "," << signal->getCriticalPath() << ")");
+				REPORT(LogLevel::FULL, "Utility::checkAllSignalsScheduled: Port '" << name << "' of operator '" << opName << "' is scheduled lexiographic time (" << signal->getCycle() << "," << signal->getCriticalPath() << ")");
 			}
 			else {
 				ok = false;
-				REPORT(DETAILED, "Utility::checkAllSignalsScheduled: Attention! Port '" << name << "' of operator '" << opName << "' has not been scheduled!");
+				REPORT(LogLevel::VERBOSE, "Utility::checkAllSignalsScheduled: Attention! Port '" << name << "' of operator '" << opName << "' has not been scheduled!");
 			}
 		}
 
@@ -2939,8 +2939,8 @@ namespace flopoco{
 				out << i->getName() << "@" << i->getCycle() << " ";
 			}
 		}
-		REPORT(DEBUG, "Input timing:  " << in.str());
-		REPORT(DEBUG, "Output timing: " << out.str());
+		REPORT(LogLevel::DEBUG, "Input timing:  " << in.str());
+		REPORT(LogLevel::DEBUG, "Output timing: " << out.str());
 
 		int maxInputCycle  = -1;
 		int maxOutputCycle = -1;
@@ -2958,7 +2958,7 @@ namespace flopoco{
 
 		for(auto i:ioList_)	{
 			if((i->type() == Signal::out) && (i->getCycle() != maxOutputCycle))
-				REPORT(DEBUG, "A warning from computePipelineDepths(): this operator's outputs are not synchronized!");
+				REPORT(LogLevel::DEBUG, "A warning from computePipelineDepths(): this operator's outputs are not synchronized!");
 		}
 
 		pipelineDepth_ = maxOutputCycle-maxInputCycle;
@@ -3311,7 +3311,7 @@ namespace flopoco{
 			return name;
 		}
 		else if(w < s->width()){
-			REPORT(INFO, "WARNING: signExtend() called for a sign extension to " << w
+			REPORT(LogLevel::DETAIL, "WARNING: signExtend() called for a sign extension to " << w
 						 << " bits of signal " << name << " whose width is " << s->width());
 			return name;
 		}
@@ -3342,7 +3342,7 @@ namespace flopoco{
 			return name;
 		}
 		else if(w < s->width()){
-			REPORT(INFO,  "WARNING: zeroExtend() to " << w << " bits of signal " << name << " whose width is " << s->width());
+			REPORT(LogLevel::DETAIL,  "WARNING: zeroExtend() to " << w << " bits of signal " << name << " whose width is " << s->width());
 			return name;
 		}
 		else{
@@ -3735,7 +3735,7 @@ namespace flopoco{
 	void Operator::outputVHDLToFile(ofstream& file){
 		vector<Operator*> oplist;
 
-		REPORT(DEBUG, "Entering outputVHDLToFile");
+		REPORT(LogLevel::DEBUG, "Entering outputVHDLToFile");
 
 		//build a copy of the global oplist hidden in UserInterface (if it exists):
 		for (unsigned i=0; i<UserInterface::globalOpList.size(); i++)

@@ -35,13 +35,13 @@ namespace flopoco {
     }
 
     void GenericMult::buildXilinx(Target* target, const uint32_t &wIn){
-        REPORT(LIST,"Xilinx junction not fully implemented, fall back to common.");
+        REPORT(LogLevel::MESSAGE,"Xilinx junction not fully implemented, fall back to common.");
         buildCommon(target,wIn);
 
     }
 
     void GenericMult::buildAltera(Target *target, const uint32_t &wIn){
-        REPORT(LIST,"Altera junction not fully implemented, fall back to common.");
+        REPORT(LogLevel::MESSAGE,"Altera junction not fully implemented, fall back to common.");
         buildCommon(target,wIn);
 
     }

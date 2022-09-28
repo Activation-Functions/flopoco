@@ -17,7 +17,7 @@ namespace flopoco{
 
 	void FirstFittingCompressionStrategy::compressionAlgorithm()
 	{
-		REPORT(DEBUG, "compressionAlgorithm is FirstFitting");
+		REPORT(LogLevel::DEBUG, "compressionAlgorithm is FirstFitting");
 		double delay = compressionDelay;
 		unsigned int colorCount = 0;
 
@@ -29,10 +29,10 @@ namespace flopoco{
 			soonestBit = getSoonestBit(0, bitheap->width-1);
 			//get the soonest compressible bit in the bitheap
 			soonestCompressibleBit = getSoonestCompressibleBit(0, bitheap->width-1, delay);
-			REPORT(DEBUG, "before compress");
+			REPORT(LogLevel::DEBUG, "before compress");
 			//apply as many compressors as possible, with the current delay
 			bool bitheapCompressed = compress(delay, soonestCompressibleBit);
-			REPORT(DEBUG, "after compress");
+			REPORT(LogLevel::DEBUG, "after compress");
 			//take a snapshot of the bitheap, if a compression was performed
 			//	including the bits that are to be removed
 			if(bitheapCompressed == true)

@@ -87,7 +87,7 @@ rattrapper les erreurs sur guess degree des fonctions très méchantes
 
 		setCopyrightString("Florent de Dinechin (2014,2018)");
 		addHeaderComment("-- Evaluator for " +  f-> getDescription() + "\n");
-		REPORT(DETAILED, "Entering: FixFunctionByVaryingPiecewisePoly \"" << func << "\" " << lsbIn << " " << msbOut << " " << lsbOut);
+		REPORT(LogLevel::VERBOSE, "Entering: FixFunctionByVaryingPiecewisePoly \"" << func << "\" " << lsbIn << " " << msbOut << " " << lsbOut);
  		int wX=-lsbIn;
 		addInput("X", wX);
 		int outputSize = msbOut-lsbOut+1;
@@ -97,7 +97,7 @@ rattrapper les erreurs sur guess degree des fonctions très méchantes
 
 		// Build the polynomial approximation
 		double targetAcc= approxErrorBudget*pow(2, lsbOut);
-		REPORT(INFO, "Computing polynomial approximation for target accuracy "<< targetAcc);
+		REPORT(LogLevel::DETAIL, "Computing polynomial approximation for target accuracy "<< targetAcc);
 		polyApprox = new VaryingPiecewisePolyApprox(func, targetAcc, lsbIn, lsbOut);
 		bool tabulateRest = polyApprox->tabulateRest;
 		degree = polyApprox->degree;
@@ -115,7 +115,7 @@ rattrapper les erreurs sur guess degree des fonctions très méchantes
 
 		// What remains of the error budget for the evaluation phase ?
 		double roundingErrorBudget=exp2(lsbOut-1)-polyApprox->approxErrorBound;
-		REPORT(INFO, "Overall error budget = " << exp2(lsbOut) << "  of which approximation error = " << polyApprox->approxErrorBound
+		REPORT(LogLevel::DETAIL, "Overall error budget = " << exp2(lsbOut) << "  of which approximation error = " << polyApprox->approxErrorBound
 		       << " hence rounding error budget = "<< roundingErrorBudget );
 
 		if (tabulateRest==true) {
@@ -201,10 +201,10 @@ rattrapper les erreurs sur guess degree des fonctions très méchantes
 		computeSigmaSignsAndMSBs(); // TODO make it a method of FixHornerEvaluator?
 		// the previous has computed the min value of msbOut.
 		if(msbOut<sigmaMSB[0])
-		  REPORT(0, "WARNING: msbOut is set to " << msbOut << " but I compute that it should be " << sigmaMSB[0]);
+		  REPORT(LogLevel::MESSAGE, "WARNING: msbOut is set to " << msbOut << " but I compute that it should be " << sigmaMSB[0]);
 
 
-		REPORT(INFO, "Now building the Horner evaluator for rounding error budget "<< roundingErrorBudget);
+		REPORT(LogLevel::DETAIL, "Now building the Horner evaluator for rounding error budget "<< roundingErrorBudget);
 
 #if 0
 		// This builds an architecture such as eps_finalround < 2^(lsbOut-1) and eps_round<2^(lsbOut-2)
@@ -270,8 +270,8 @@ rattrapper les erreurs sur guess degree des fonctions très méchantes
 		for (int i=0; i<=degree; i++) {
 			polyTableOutputSize += polyApprox->MSB[i] - polyApprox->LSB + (polyApprox->coeffSigns[i]==0? 1 : 0);
 		}
-		REPORT(DETAILED, "Poly table input size  = " << alpha);
-		REPORT(DETAILED, "Poly table output size = " << polyTableOutputSize);
+		REPORT(LogLevel::VERBOSE, "Poly table input size  = " << alpha);
+		REPORT(LogLevel::VERBOSE, "Poly table output size = " << polyTableOutputSize);
 
 		int x;
 		for(x=0; x<(1<<alpha); x++) {
@@ -285,15 +285,15 @@ rattrapper les erreurs sur guess degree des fonctions très méchantes
 					coeff = coeff & mask;
 				}
 				z += coeff << currentShift; // coeff of degree i from poly number x
-				// REPORT(DEBUG, "i=" << i << "   z=" << unsignedBinary(z, 64));
+				// REPORT(LogLevel::DEBUG, "i=" << i << "   z=" << unsignedBinary(z, 64));
 				if(i==0 && finalRounding){ // coeff of degree 0
 					int finalRoundBitPos = lsbOut-1;
 					z += mpz_class(1)<<(currentShift + finalRoundBitPos - polyApprox->LSB); // add the round bit
-					//REPORT(DEBUG, "i=" << i << " + z=" << unsignedBinary(z, 64));
+					//REPORT(LogLevel::DEBUG, "i=" << i << " + z=" << unsignedBinary(z, 64));
 					// This may entail an overflow of z, in the case -tiny -> +tiny, e.g. first polynomial of atan
 					// This is OK modulo 2^wOut (two's complement), but will break the vhdl output of Table: fix it here.
 					z = z & ((mpz_class(1)<<polyTableOutputSize) -1);
-					// REPORT(INFO, "Adding final round bit at position " << finalRoundBitPos-polyApprox->LSB);
+					// REPORT(LogLevel::DETAIL, "Adding final round bit at position " << finalRoundBitPos-polyApprox->LSB);
 				}
 				currentShift +=  polyApprox->MSB[i] - polyApprox->LSB + (polyApprox->coeffSigns[i]==0? 1: 0);
 			}
@@ -318,7 +318,7 @@ rattrapper les erreurs sur guess degree des fonctions très méchantes
 		mpfr_init2(res_right, 10000); // should be enough for anybody
 		rangeS = sollya_lib_parse_string("[-1;1]");
 
-		REPORT(DEBUG, "Computing sigmas, signs and MSBs");
+		REPORT(LogLevel::DEBUG, "Computing sigmas, signs and MSBs");
 
 		// initialize the vector of MSB weights
 		for (int j=0; j<=degree; j++) {
@@ -351,7 +351,7 @@ rattrapper les erreurs sur guess degree des fonctions très méchantes
 				// First a tentative conversion to double to sort and get an estimate of the MSB and zeroness
 				double l=mpfr_get_d(res_left, GMP_RNDN);
 				double r=mpfr_get_d(res_right, GMP_RNDN);
-				REPORT(DEBUG, "i=" << i << "  j=" << j << "  left=" << l << " right=" << r);
+				REPORT(LogLevel::DEBUG, "i=" << i << "  j=" << j << "  left=" << l << " right=" << r);
 				// Now we want to know is if both have the same sign
 				if (l>=0 && r>=0) { // sigma is positive
 					if (sigmaSign[j] == 17 || sigmaSign[j] == +1)
@@ -398,7 +398,7 @@ rattrapper les erreurs sur guess degree des fonctions très méchantes
 		sollya_lib_clear_obj(rangeS);
 
 		for (int j=degree; j>=0; j--) {
-			REPORT(DETAILED, "Horner step " << j << ":   sigmaSign = " << sigmaSign[j] << " \t sigmaMSB = " << sigmaMSB[j]);
+			REPORT(LogLevel::VERBOSE, "Horner step " << j << ":   sigmaSign = " << sigmaSign[j] << " \t sigmaMSB = " << sigmaMSB[j]);
 		}
 
 	}

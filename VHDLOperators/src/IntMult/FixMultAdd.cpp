@@ -73,7 +73,7 @@ namespace flopoco {
 			name << wX << "x" << wY << "p" << wA << "r" << wOut << "" << (signedIO?"signed":"unsigned");
 			name << Operator::getNewUId();
 			setNameWithFreqAndUID(name.str());
-			REPORT(DEBUG, "Building " << name.str());
+			REPORT(LogLevel::DEBUG, "Building " << name.str());
 		}
 
 		THROWERROR("FixMultAdd needs more work");
@@ -102,11 +102,11 @@ namespace flopoco {
 			workPLSB = outLSB-g;
 
 			possibleOutputs = 2;
-			REPORT(DETAILED, "Faithfully rounded architecture");
+			REPORT(LogLevel::VERBOSE, "Faithfully rounded architecture");
 
 			ostringstream dbgMsg;
 			dbgMsg << "Multiplication of " << wX << " by " << wY << " bits, with the result truncated to weight " << workPLSB;
-			REPORT(DETAILED, dbgMsg.str());
+			REPORT(LogLevel::VERBOSE, dbgMsg.str());
 		}
 		else
 		{
@@ -114,11 +114,11 @@ namespace flopoco {
 			workPLSB = pLSB;
 
 			possibleOutputs = 1; // No faithful rounding
-			REPORT(DETAILED, "Exact architecture");
+			REPORT(LogLevel::VERBOSE, "Exact architecture");
 
 			ostringstream dbgMsg;
 			dbgMsg << "Full multiplication of " << wX << " by " << wY;
-			REPORT(DETAILED, dbgMsg.str());
+			REPORT(LogLevel::VERBOSE, dbgMsg.str());
 		}
 		//msb
 		if(pMSB <= outMSB)
@@ -181,7 +181,7 @@ namespace flopoco {
 			ostringstream dbgMsg;
 			dbgMsg << "Using " << g << " guard bits" << endl;
 			dbgMsg << "Creating bit heap of size " << wOut+g << ", out of which " << g << " guard bits";
-			REPORT(DETAILED, dbgMsg.str());
+			REPORT(LogLevel::VERBOSE, dbgMsg.str());
 		}
 		bitHeap = new BitHeap(this,								//parent operator
 							  wOut+g,							//size of the bit heap

@@ -64,20 +64,20 @@ namespace flopoco{
 				//determine chunk size
 				int cs;
 				if (!getTarget()->suggestSlackSubcomparatorSize(cs, wIn_, getCriticalPath() + getTarget()->localWireDelay() + getTarget()->ffDelay(), constant)){
-					REPORT(INFO, "Extra reg level inserted here!");
+					REPORT(LogLevel::DETAIL, "Extra reg level inserted here!");
 					nextCycle();
 					setCriticalPath(0.0);
 					getTarget()->suggestSlackSubcomparatorSize(cs, wIn, getTarget()->localWireDelay() + getTarget()->ffDelay(), constant);
 				}
-				REPORT(INFO, "The suggested chunk size for the first splitting was:"<<cs);
+				REPORT(LogLevel::DETAIL, "The suggested chunk size for the first splitting was:"<<cs);
 				//number of chunks
 				int k = ( wIn % cs ==0? wIn/cs : wIn/cs + 1);
 				if (k > 1){
 					//first checks in parallel all chunks for equality
-					REPORT(INFO, "Cp before "<<getCriticalPath());
-					REPORT(INFO, "comp delay = " << getTarget()->eqComparatorDelay(cs));
+					REPORT(LogLevel::DETAIL, "Cp before "<<getCriticalPath());
+					REPORT(LogLevel::DETAIL, "comp delay = " << getTarget()->eqComparatorDelay(cs));
 					manageCriticalPath( getTarget()->eqComparatorDelay(cs) );
-					REPORT(INFO, "Cp after"<< getCriticalPath());
+					REPORT(LogLevel::DETAIL, "Cp after"<< getCriticalPath());
 
 					for (int i=0; i<k; i++){
 						vhdl <<tab << declare(join("b",i,"l",0))<<" <= '1' when X"<<range(min((i+1)*cs-1,wIn-1),i*cs);
@@ -95,7 +95,7 @@ namespace flopoco{
 						setCriticalPath(0.0);
 						getTarget()->suggestSlackSubcomparatorSize(cs, ibits, getTarget()->localWireDelay() + getTarget()->ffDelay(), true);
 					}
-					REPORT(INFO, "The number of ibits is "<<ibits<<" cs="<<cs);
+					REPORT(LogLevel::DETAIL, "The number of ibits is "<<ibits<<" cs="<<cs);
 					k = ( ibits % cs ==0? ibits/cs : ibits/cs + 1);
 					while (ibits>1){
 						l++;

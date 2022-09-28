@@ -108,8 +108,8 @@ l1=ll-1;
 
 			maxAdderSize =  l0+l1+ll*(ll+1)/2;
 
-			REPORT(INFO, "ll="<<ll);
-			REPORT(INFO, "max adder size is="<< maxAdderSize);
+			REPORT(LogLevel::DETAIL, "ll="<<ll);
+			REPORT(LogLevel::DETAIL, "max adder size is="<< maxAdderSize);
 
 #ifdef MAXSIZE
 cout << " f="<<aa<<" s="<<maxAdderSize<<endl;
@@ -157,11 +157,11 @@ exit(1);
 			getTarget()->suggestSlackSubaddSize(ll, wIn, t - (t-c)/2);
 
 			int maxAdderSize =  2*ll+ll*(ll+1)/2;
-			REPORT(INFO, "ll="<<ll);
-			REPORT(INFO, "max adder size is="<< maxAdderSize);
+			REPORT(LogLevel::DETAIL, "ll="<<ll);
+			REPORT(LogLevel::DETAIL, "max adder size is="<< maxAdderSize);
 
 			if (wIn>maxAdderSize)
-				REPORT(INFO, "cannot do proper chunk splitting");
+				REPORT(LogLevel::DETAIL, "cannot do proper chunk splitting");
 
 			cSize = new int[100];
 

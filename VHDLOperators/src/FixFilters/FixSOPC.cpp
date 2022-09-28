@@ -120,9 +120,9 @@ namespace flopoco{
 		setCopyrightString("Matei Istoan, Louis Besème, Florent de Dinechin (2013-2015)");
 
 		//reporting on the command line
-		REPORT(DETAILED, "FixSOPC  lsbOut=" << lsbOut << "   g=" << g) ;
+		REPORT(LogLevel::VERBOSE, "FixSOPC  lsbOut=" << lsbOut << "   g=" << g) ;
 		for (int i=0; i< n; i++)
-			REPORT(DETAILED, "i=" << i << "  coeff=" << coeff[i] << "  msbIn=" << msbIn[i] << "  lsbIn=" << lsbIn[i]);
+			REPORT(LogLevel::VERBOSE, "i=" << i << "  coeff=" << coeff[i] << "  msbIn=" << msbIn[i] << "  lsbIn=" << lsbIn[i]);
 
 		for (int i=0; i< n; i++)
 			addInput(join("X",i), msbIn[i]-lsbIn[i]+1);
@@ -158,7 +158,7 @@ namespace flopoco{
 
 			// now sumAbsCoeff is the max value that the SOPC can take.
 			double sumAbs = mpfr_get_d(sumAbsCoeff, GMP_RNDU); // just to make the following loop easier
-			REPORT(DETAILED, "sumAbs=" << sumAbs);
+			REPORT(LogLevel::VERBOSE, "sumAbs=" << sumAbs);
 			msbOut=1;
 			while(sumAbs>=2.0){
 				sumAbs*=0.5;
@@ -168,17 +168,17 @@ namespace flopoco{
 				sumAbs*=2.0;
 				msbOut--;
 			}
-			REPORT(INFO, "Computed msbOut=" << msbOut);
+			REPORT(LogLevel::DETAIL, "Computed msbOut=" << msbOut);
 			mpfr_clears(sumAbsCoeff, absCoeff, mpMaxX, NULL);
 		}
 		else {
-			REPORT(INFO, "Provided msbOut=" << msbOut);
+			REPORT(LogLevel::DETAIL, "Provided msbOut=" << msbOut);
 		}
 
 		addOutput("R", msbOut-lsbOut+1);
 
 		int sumSize = 1 + msbOut - lsbOut ;
-		REPORT(DETAILED, "Sum size is: "<< sumSize );
+		REPORT(LogLevel::VERBOSE, "Sum size is: "<< sumSize );
 
 
 		// Now call all the KCM constructors for lsbOut, 
@@ -187,7 +187,7 @@ namespace flopoco{
 		double targetUlpError = 1.0;
 		double maxAbsError=0;
 		for(int i=0; i<n; i++)		{
-			REPORT(0, "i=" << i << "  msbIn[i]=" << msbIn[i] << "  lsbIn[i]=" << lsbIn[i]);
+			REPORT(LogLevel::MESSAGE, "i=" << i << "  msbIn[i]=" << msbIn[i] << "  lsbIn[i]=" << lsbIn[i]);
 			// instantiating a KCM object. This call does not build any VHDL but computes errorInUlps out of the tentative architecture for g=0.
 			FixRealKCM* m = new FixRealKCM(
 																		 this,                         // the enveloping operator
@@ -201,10 +201,10 @@ namespace flopoco{
 																		 targetUlpError
 																		 );
 			kcm.push_back(m);
-			REPORT(0, "KCM creation OK");
+			REPORT(LogLevel::MESSAGE, "KCM creation OK");
 			double errorInUlps=m->getErrorInUlps();
 			maxAbsError += errorInUlps;
-			REPORT(DETAILED,"KCM for C" << i << "=" << coeff[i] << " entails an error of " <<  errorInUlps << " ulp(s)")
+			REPORT(LogLevel::VERBOSE,"KCM for C" << i << "=" << coeff[i] << " entails an error of " <<  errorInUlps << " ulp(s)")
 		}
 
 		g = 0;
@@ -214,8 +214,8 @@ namespace flopoco{
 			maxErrorWithGuardBits /= 2.0;
 		}
 		sumSize += g;
-		REPORT(DETAILED,"Overall error is " << maxAbsError  << " ulps, which we will manage by adding " << g << " guard bits to the bit heap" );
-		REPORT(DETAILED, "Sum size with KCM guard bits is: "<< sumSize << " bits.");
+		REPORT(LogLevel::VERBOSE,"Overall error is " << maxAbsError  << " ulps, which we will manage by adding " << g << " guard bits to the bit heap" );
+		REPORT(LogLevel::VERBOSE, "Sum size with KCM guard bits is: "<< sumSize << " bits.");
 		
 		if(!getTarget()->plainVHDL())
 		{

@@ -20,7 +20,7 @@ namespace flopoco{
 
 	void MaxEfficiencyCompressionStrategy::compressionAlgorithm()
 	{
-		REPORT(DEBUG, "compressionAlgorithm is maxEfficiency");
+		REPORT(LogLevel::DEBUG, "compressionAlgorithm is maxEfficiency");
 
 		//for the maxEfficiency algorithm, the compressors should be ordered by efficiency
 		orderCompressorsByCompressionEfficiency();
@@ -76,7 +76,7 @@ namespace flopoco{
 
 				for(unsigned int e = 0; e < possibleCompressors.size(); e++){
 					BasicCompressor* currentCompressor = possibleCompressors[e];
-					REPORT(DEBUG, "compressor is " << currentCompressor->getStringOfIO());
+					REPORT(LogLevel::DEBUG, "compressor is " << currentCompressor->getStringOfIO());
 					vector<bool> used;
 					used.resize(bitAmount[s].size(), false);
 
@@ -94,7 +94,7 @@ namespace flopoco{
 						}
 						used[currentMaxColumn] = true;
 						double achievedEfficiencyCurrent = getCompressionEfficiency(s, currentMaxColumn, currentCompressor);
-						REPORT(FULL, "checked " << currentCompressor->getStringOfIO() << " in stage " << s << " and column " << currentMaxColumn << " with an efficiency of " << achievedEfficiencyCurrent);
+						REPORT(LogLevel::FULL, "checked " << currentCompressor->getStringOfIO() << " in stage " << s << " and column " << currentMaxColumn << " with an efficiency of " << achievedEfficiencyCurrent);
 
 						float lowerBound;
 						if(s < lowerBounds.size())
@@ -112,8 +112,8 @@ namespace flopoco{
 					}
 				}
 				if(found){
-					REPORT(DETAILED, "placed compressor " << compressor->getStringOfIO() << " in stage " << s << " and column " << column);
-					REPORT(DETAILED, "efficiency is " << achievedEfficiencyBest);
+					REPORT(LogLevel::VERBOSE, "placed compressor " << compressor->getStringOfIO() << " in stage " << s << " and column " << column);
+					REPORT(LogLevel::VERBOSE, "efficiency is " << achievedEfficiencyBest);
 					placeCompressor(s, column, compressor);
 				}
 			}
@@ -125,7 +125,7 @@ namespace flopoco{
 				}
 				solution.setEmptyInputsByRemainingBits(s, bitAmount[s]);
 			}
-			REPORT(DEBUG, "finished stage " << s);
+			REPORT(LogLevel::DEBUG, "finished stage " << s);
 			printBitAmounts();
 			s++;
 		}

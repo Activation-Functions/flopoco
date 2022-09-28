@@ -264,7 +264,7 @@ namespace flopoco {
 
     void BaseMultiplierDSPKaratsubaOp::createMult(int i, int j)
     {
-        REPORT(DEBUG, "implementing a" << i << " * b" << j << " with weight " << (i+j)*TileBaseMultiple << " (" << (i+j) << " x " << TileBaseMultiple << ")");
+        REPORT(LogLevel::DEBUG, "implementing a" << i << " * b" << j << " with weight " << (i+j)*TileBaseMultiple << " (" << (i+j) << " x " << TileBaseMultiple << ")");
         if(!isSignalDeclared("a" + to_string(i) + "se" ))
             vhdl << tab << declare("a" + to_string(i) + "se",18) << " <= std_logic_vector(resize(unsigned(a" << i << "),18));" << endl;
         if(!isSignalDeclared("b" + to_string(j) + "se"))
@@ -289,9 +289,9 @@ namespace flopoco {
     void BaseMultiplierDSPKaratsubaOp::createRectKaratsuba(int i, int j)
     {
         int k = j, l = i;
-        REPORT(FULL, "createRectKaratsuba(" << i << "," << j << "," << k << "," << l << ")");
+        REPORT(LogLevel::FULL, "createRectKaratsuba(" << i << "," << j << "," << k << "," << l << ")");
 
-        REPORT(INFO, "implementing a" << i << " * b" << j << " + a" << k << " * b" << l << " with weight " << (i+j) << " as (a" << i << " - a" << k << ") * (b" << j << " - b" << l << ") + a" << i << " * b" << l << " + a" << k << " * b" << j);
+        REPORT(LogLevel::DETAIL, "implementing a" << i << " * b" << j << " + a" << k << " * b" << l << " with weight " << (i+j) << " as (a" << i << " - a" << k << ") * (b" << j << " - b" << l << ") + a" << i << " * b" << l << " + a" << k << " * b" << j);
 
         if(!isSignalDeclared("d" + to_string(i) + "_" + to_string(k)))
             vhdl << tab << declare("d" + to_string(i) + "_" + to_string(k),18) << " <= std_logic_vector(signed(resize(unsigned(a" << i << ")," << 18 << ")) - signed(resize(unsigned(a" << k << ")," << 18 << ")));" << endl;

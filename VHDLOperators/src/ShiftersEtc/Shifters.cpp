@@ -67,7 +67,7 @@ namespace flopoco{
 		setNameWithFreqAndUID(name.str());
 
 		
-		REPORT(DETAILED, " wX="<<wX<<" maxShift="<<maxShift<<" direction="<< (direction == Right?  "RightShifter": "LeftShifter") );
+		REPORT(LogLevel::VERBOSE, " wX="<<wX<<" maxShift="<<maxShift<<" direction="<< (direction == Right?  "RightShifter": "LeftShifter") );
 
 
 		wShiftIn     = intlog2(maxShift);
@@ -89,7 +89,7 @@ namespace flopoco{
 		// The theory is that the number of shift levels that the tools should be able to pack in a row of LUT-k is ceil((k-1)/2)
 		// Actually there are multiplexers in CLBs etc that can also be used, so let us keep it simple at k/2. It works on Virtex6, TODO test on Stratix.
 		int levelPerLut = (getTarget()->lutInputs()-1)/2; // this is a floor so it is the same as the formula above
-		REPORT(DETAILED, "Trying to pack " << levelPerLut << " levels in a row of LUT" << getTarget()->lutInputs())
+		REPORT(LogLevel::VERBOSE, "Trying to pack " << levelPerLut << " levels in a row of LUT" << getTarget()->lutInputs())
 		int levelInLut=0;
 		double levelDelay;
 		double totalDelay=0; // for reporting
@@ -113,7 +113,7 @@ namespace flopoco{
 				if (levelInLut >= levelPerLut) {
 					levelDelay=getTarget()->logicDelay();
 					totalDelay += levelDelay;
-					REPORT(DETAILED, "level delay is " << levelDelay << "   total delay (if no pipeline occurs) is " << totalDelay);
+					REPORT(LogLevel::VERBOSE, "level delay is " << levelDelay << "   total delay (if no pipeline occurs) is " << totalDelay);
 					levelInLut=0;
 				}
 				else {// this level incurs no delay
@@ -147,7 +147,7 @@ namespace flopoco{
 					if (levelInLut >= levelPerLut) {
 						levelDelay=getTarget()->logicDelay() + getTarget()->fanoutDelay(wX+intpow2(currentLevel+1)-1);
 						totalDelay += levelDelay;
-						REPORT(DETAILED, "level delay is " << levelDelay << "   total delay (if no pipeline occurs) is " << totalDelay);
+						REPORT(LogLevel::VERBOSE, "level delay is " << levelDelay << "   total delay (if no pipeline occurs) is " << totalDelay);
 						levelInLut=0;
 					}
 					else // this level incurs no delay

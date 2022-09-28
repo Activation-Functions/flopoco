@@ -46,7 +46,7 @@ namespace flopoco{
 		srcFileName="TestBench";
 		setNameWithFreqAndUID("TestBench_" + op_->getName());
 
-		//		REPORT(LIST,"Test bench for "+ op_->getName());
+		//		REPORT(LogLevel::MESSAGE,"Test bench for "+ op_->getName());
 
 		// initialization of flopoco random generator
 		// TODO : has to be initialized before any use of getLargeRandom or getRandomIEEE...
@@ -357,10 +357,10 @@ namespace flopoco{
 			if (!fileOut)
 				THROWERROR("Not able to open " << inputFileName << " in order to write inputs. ");
 
-			REPORT(LIST,"Generating the exhaustive test bench, this may take some time");
+			REPORT(LogLevel::MESSAGE,"Generating the exhaustive test bench, this may take some time");
 			// exhaustive test
 			int length = inputSignalVector.size();
-			//			REPORT(0, "Found " << length << "inputs"); 
+			//			REPORT(LogLevel::MESSAGE, "Found " << length << "inputs"); 
 			int* InWidth = new int[length];
 			// getting signal width
 			for (int i = 0; i < length; i++) InWidth[i] = inputSignalVector[i]->width();

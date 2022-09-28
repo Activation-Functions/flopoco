@@ -65,7 +65,7 @@ namespace flopoco{
 		double rho = ((double)alpha)/(radix-1);
 
 		if (dMax>1) {
-			REPORT(0, endl << "FPDiv::selFunctionTable: Code untested for dMax>1" << endl);
+			REPORT(LogLevel::MESSAGE, endl << "FPDiv::selFunctionTable: Code untested for dMax>1" << endl);
 		}
 		// what is the weight of the MSB of d, the bits of D passed to selFunTable?
 		// dMin between 0.5 and 0.75 -> msbWeight=0.5
@@ -245,7 +245,7 @@ namespace flopoco{
 
 			for(i=nDigit-1; i>=1; i--) {
 
-				REPORT(DEBUG, "Entering iteration " << i);
+				REPORT(LogLevel::DEBUG, "Entering iteration " << i);
 				// TODO: get rid of all the ostringstream on the model of qi
 				string qi =join("q", i);						//actual quotient digit, LUT's output
 
@@ -261,7 +261,7 @@ namespace flopoco{
 				vhdl << tab << declare(seli.str(),7) << " <= " << wi.str() << range( wF+5, wF+1)<<" & prescaledfY"<< range(wF, wF-1) <<";" << endl;
 
 				newSharedInstance(selfunctiontable , tInstance, "X=>"+seli.str(), "Y=>"+ qi);
-				// REPORT(DEBUG, "After table instance " << i);
+				// REPORT(LogLevel::DEBUG, "After table instance " << i);
 
 				vhdl << tab << declare(wipad.str(), wF+7) << " <= " << wi.str() << " & '0';" << endl;
 
@@ -273,7 +273,7 @@ namespace flopoco{
 						 << tab << tab << wipad.str() << " + (\"000\" & prescaledfY & \"0\")		when \"10\"," << endl
 						 << tab << tab << wipad.str() << "							when others;" << endl;
 
-				REPORT(DEBUG, "After with 1 ");
+				REPORT(LogLevel::DEBUG, "After with 1 ");
 
 #if 0 // Splitting the following logic into two levels gives better synthesis results...
 				vhdl << tab << "with " << qi << range(3,1) << " select " << endl;

@@ -54,8 +54,8 @@ namespace flopoco{
 
 		 	
 
-		REPORT(DEBUG, "Constant evaluates to " << mpfr_get_d(mpC, GMP_RNDN));
-		REPORT(DEBUG, "Constant exponent is " << mpfr_get_exp(mpC) );
+		REPORT(LogLevel::DEBUG, "Constant evaluates to " << mpfr_get_d(mpC, GMP_RNDN));
+		REPORT(LogLevel::DEBUG, "Constant exponent is " << mpfr_get_exp(mpC) );
 
 		// build the name
 		ostringstream name;

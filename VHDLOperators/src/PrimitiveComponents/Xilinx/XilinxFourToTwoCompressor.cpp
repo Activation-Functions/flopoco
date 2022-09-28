@@ -50,7 +50,7 @@ namespace flopoco{
 
         int needed_cc = ( width / 4 ) + ( width % 4 > 0 ? 1 : 0 ); //no. of required carry chains
 
-        REPORT(DEBUG, "no of required carry-chains for width=" << width << " is " << needed_cc);
+        REPORT(LogLevel::DEBUG, "no of required carry-chains for width=" << width << " is " << needed_cc);
 
         declare( "cc_s", needed_cc * 4 );
         declare( "cc_di", needed_cc * 4 );

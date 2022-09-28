@@ -145,7 +145,7 @@ namespace flopoco{
 			else { // using FixMultAdd
 				THROWERROR("Sorry, use the plainVHDL option until we revive FixMultAdd");
 #if 0
-				//REPORT(DEBUG, "*** iteration " << i << );
+				//REPORT(LogLevel::DEBUG, "*** iteration " << i << );
 				FixMultAdd::newComponentAndInstance(this,
 																						join("Step",i),     // instance name
 																						join("XsTrunc",i),  // x

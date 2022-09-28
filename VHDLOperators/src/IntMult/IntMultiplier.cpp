@@ -70,7 +70,7 @@ namespace flopoco {
                         " keep bits. The error budget is " << errorBudget << " and the error re-centering constant " << centerErrConstant;
         }
 
-        REPORT(INFO, "IntMultiplier(): Constructing a multiplier of size " <<
+        REPORT(LogLevel::DETAIL, "IntMultiplier(): Constructing a multiplier of size " <<
         wX << "x" << wY << ((wOut < wFullP)?trunc_info.str():"") << ", using a DSP threshold of " << dspOccupationThreshold << ".")
 
 		string xname="X";
@@ -98,7 +98,7 @@ namespace flopoco {
 		//BitHeap bitHeap(this, wOut + guardBits);
         unsigned bitHeapLSBWeight = 0;
 
-		REPORT(INFO, "Creating BaseMultiplierCollection")
+		REPORT(LogLevel::DETAIL, "Creating BaseMultiplierCollection")
 		BaseMultiplierCollection baseMultiplierCollection(getTarget());
 //		baseMultiplierCollection.print();
 
@@ -106,7 +106,7 @@ namespace flopoco {
 
 		string tilingMethod = getTarget()->getTilingMethod();
 
-		REPORT(INFO, "Creating TilingStrategy using tiling method " << tilingMethod)
+		REPORT(LogLevel::DETAIL, "Creating TilingStrategy using tiling method " << tilingMethod)
 
 		TilingStrategy* tilingStrategy;
 		if(tilingMethod.compare("heuristicBasicTiling") == 0) {
@@ -221,7 +221,7 @@ namespace flopoco {
 			THROWERROR("Tiling strategy " << tilingMethod << " unknown");
 		}
 
-		REPORT(DEBUG, "Solving tiling problem")
+		REPORT(LogLevel::DEBUG, "Solving tiling problem")
 		tilingStrategy->solve();
 
 		list<TilingStrategy::mult_tile_t> &solution = tilingStrategy->getSolution();
@@ -234,7 +234,7 @@ namespace flopoco {
             }
         tilingStrategy->printSolution();
 		auto solLen = solution.size();
-		REPORT(DETAILED, "Found solution has " << solLen << " tiles")
+		REPORT(LogLevel::VERBOSE, "Found solution has " << solLen << " tiles")
 		if (target_->generateFigures())
             createFigures(tilingStrategy);
 
@@ -257,7 +257,7 @@ namespace flopoco {
                 mpz_and(bitstate.get_mpz_t(), colweight.get_mpz_t(), centerErrConstant.get_mpz_t());
                 if (bitstate) {
                     bitHeap.addConstantOneBit(i - (wFullP - wOut - guardBits));
-                    REPORT(DEBUG,  "Adding constant bit with weight=" << i << " BitHeap col=" << i - (wFullP - wOut - guardBits) << "to recenter the truncation error at 0");
+                    REPORT(LogLevel::DEBUG,  "Adding constant bit with weight=" << i << " BitHeap col=" << i - (wFullP - wOut - guardBits) << "to recenter the truncation error at 0");
                     //cout << "height at pos " << i - (wFullP - wOut - guardBits) << ": " << bitHeap.getColumnHeight( i - (wFullP - wOut - guardBits)) << endl;
                 }
                 i++;
@@ -267,7 +267,7 @@ namespace flopoco {
         branchToBitheap(&bitHeap, solution, bitHeapLSBWeight);
 
 		if (dynamic_cast<CompressionStrategy*>(tilingStrategy)) {
-		    REPORT(DEBUG,  "Class is derived from CompressionStrategy, passing result for compressor tree.");
+		    REPORT(LogLevel::DEBUG,  "Class is derived from CompressionStrategy, passing result for compressor tree.");
 			bitHeap.startCompression(dynamic_cast<CompressionStrategy*>(tilingStrategy));
 		} else {
 			bitHeap.startCompression();
@@ -290,7 +290,7 @@ namespace flopoco {
 		errorBudget <<= (nbDontCare >= 1) ? nbDontCare - 1 : 0;
 		errorBudget -= 1;
 
-		REPORT(DEBUG, "computeGuardBits: error budget is " << errorBudget.get_str())
+		REPORT(LogLevel::DEBUG, "computeGuardBits: error budget is " << errorBudget.get_str())
 
 		unsigned int nbUnneeded;
 		for (nbUnneeded = 1 ; nbUnneeded <= nbDontCare ; nbUnneeded += 1) {
@@ -302,14 +302,14 @@ namespace flopoco {
 			} else {
 				bitAtCurCol = ps -nbUnneeded;
 			}
-			REPORT(DETAILED, "computeGuardBits: Nb bit in column " << nbUnneeded << " : " << bitAtCurCol)
+			REPORT(LogLevel::VERBOSE, "computeGuardBits: Nb bit in column " << nbUnneeded << " : " << bitAtCurCol)
 			mpz_class currbitErrorAmount{bitAtCurCol};
 			currbitErrorAmount <<= (nbUnneeded - 1);
 
-			REPORT(DETAILED, "computeGuardBits: Local error for column " << nbUnneeded << " : " << currbitErrorAmount.get_str())
+			REPORT(LogLevel::VERBOSE, "computeGuardBits: Local error for column " << nbUnneeded << " : " << currbitErrorAmount.get_str())
 
 			errorBudget -= currbitErrorAmount;
-			REPORT(DETAILED, "computeGuardBits: New error budget: " << errorBudget.get_str())
+			REPORT(LogLevel::VERBOSE, "computeGuardBits: New error budget: " << errorBudget.get_str())
 			if(errorBudget < 0) {
 				break;
 			}

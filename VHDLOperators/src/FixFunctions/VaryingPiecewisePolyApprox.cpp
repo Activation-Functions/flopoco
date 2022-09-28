@@ -111,10 +111,10 @@ namespace flopoco {
 			
 			for (nbInterval=0; nbInterval<biggestNbInterval; nbInterval++)
 			{
-			        REPORT(DETAILED, " Testing nbInterval=" << nbInterval );
+			        REPORT(LogLevel::VERBOSE, " Testing nbInterval=" << nbInterval );
 
 				sollya_obj_t giS = buildSubIntervalFunction(fS, nbInterval);
-				if(DEBUG <= UserInterface::verbose)
+				if(is_log_lvl_enabled(LogLevel::DEBUG))
 				  sollya_lib_printf("> VaryingPiecewisePolyApprox: nbInterval=%d, testing  %b \n", nbInterval, giS);
 				int degreeInf, degreeSup;
 				BasicPolyApprox::guessDegree(giS, rangeS, targetAccuracy, &degreeInf, &degreeSup);
@@ -122,7 +122,7 @@ namespace flopoco {
 				degree = max(degreeSup, degree);
 
 				giS = buildFinalSubIntervalFunction(fS, nbInterval);
-				if(DEBUG <= UserInterface::verbose)
+				if(is_log_lvl_enabled(LogLevel::DEBUG))
 				  sollya_lib_printf("> VaryingPiecewisePolyApprox, Interval rest : nbInterval=%d, testing  %b \n", nbInterval, giS);
 				BasicPolyApprox::guessDegree(giS, rangeS, targetAccuracy, &degreeInf, &degreeSup);
 				sollya_lib_clear_obj(giS);
@@ -132,22 +132,22 @@ namespace flopoco {
 				  break;
 				}
 				else {
-				  REPORT(DEBUG, "   nbInterval=" << nbInterval+1 << " failed." );
+				  REPORT(LogLevel::DEBUG, "   nbInterval=" << nbInterval+1 << " failed." );
 				}
 				
 			} // end for loop on i
 			nbInterval++; nbInterval++;
 			
-			REPORT(INFO, "Found nbInterval=" << nbInterval)
+			REPORT(LogLevel::DETAIL, "Found nbInterval=" << nbInterval)
 			
 			if (tabulateRest==true) {
-			    REPORT(INFO, "The smallest interval will be tabulated");
+			    REPORT(LogLevel::DETAIL, "The smallest interval will be tabulated");
 			    nbInterval --; //parce qu'on utilise ce nombre pour les approx poly
 			}
 			
 			// Compute the LSB of each coefficient. Minimum value is:
 			LSB = floor(log2(targetAccuracy*degree));
-			REPORT(DEBUG, "To obtain target accuracy " << targetAccuracy << " with a degree-"<< degree
+			REPORT(LogLevel::DEBUG, "To obtain target accuracy " << targetAccuracy << " with a degree-"<< degree
 					<<" polynomial, we compute coefficients accurate to LSB="<<LSB);
 			// It is pretty sure that adding intlog2(degree) bits is enough for FPMinimax.
 
@@ -167,14 +167,14 @@ namespace flopoco {
 				approxErrorBound = 0.0;
 				BasicPolyApprox *p;
 
-				REPORT(DETAILED, "Computing the actual polynomials ");
+				REPORT(LogLevel::VERBOSE, "Computing the actual polynomials ");
 				// initialize the vector of MSB weights
 				for (int j=0; j<=degree; j++) {
 					MSB.push_back(INT_MIN);
 				}
 
 				for (int i=0; i<nbInterval; i++) {
-					REPORT(DETAILED, " ... computing polynomial approx for interval " << i << " / "<< nbInterval);
+					REPORT(LogLevel::VERBOSE, " ... computing polynomial approx for interval " << i << " / "<< nbInterval);
 					// Recompute the substitution. No big deal.
 					sollya_obj_t giS;
 					if (i==nbInterval-1 && not tabulateRest) {
@@ -187,7 +187,7 @@ namespace flopoco {
 					p = new BasicPolyApprox(giS, degree, LSB, true);
 					poly.push_back(p);
 					if (approxErrorBound < p->getApproxErrorBound()){
-						REPORT(DEBUG, "   new approxErrorBound=" << p->getApproxErrorBound() );
+						REPORT(LogLevel::DEBUG, "   new approxErrorBound=" << p->getApproxErrorBound() );
 						approxErrorBound = p->getApproxErrorBound();
 					}
 					if (approxErrorBound>targetAccuracy){
@@ -206,11 +206,11 @@ namespace flopoco {
 				} // end for loop on j
 
 				if (approxErrorBound < targetAccuracy) {
-					REPORT(INFO, " *** Success! Final approxErrorBound=" << approxErrorBound << "  is smaller than target accuracy: " << targetAccuracy  );
+					REPORT(LogLevel::DETAIL, " *** Success! Final approxErrorBound=" << approxErrorBound << "  is smaller than target accuracy: " << targetAccuracy  );
 					success=true;
 				}
 				else {
-					REPORT(INFO, "Measured approx error:" << approxErrorBound << " is larger than target accuracy: " << targetAccuracy
+					REPORT(LogLevel::DETAIL, "Measured approx error:" << approxErrorBound << " is larger than target accuracy: " << targetAccuracy
 							<< ". Increasing LSB and starting over. Thank you for your patience");
 					//empty poly
 					for (auto i:poly)
@@ -226,10 +226,10 @@ namespace flopoco {
 					        LSB+=lsbAttempts;
 						lsbAttempts=0;
 						degree ++;
-						REPORT(INFO, "guessDegree mislead us, increasing degree to " << degree << " and starting over");
+						REPORT(LogLevel::DETAIL, "guessDegree mislead us, increasing degree to " << degree << " and starting over");
 						//alpha++;
 						//nbInterval=1<<alpha;
-						//REPORT(INFO, "guessDegree mislead us, increasing alpha to " << alpha << " and starting over");
+						//REPORT(LogLevel::DETAIL, "guessDegree mislead us, increasing alpha to " << alpha << " and starting over");
 					}
 				}
 			} // end while(!success)
@@ -238,21 +238,21 @@ namespace flopoco {
 			// TODO? we could also check if one of the coeffs is always positive or negative, and optimize generated code accordingly
 			for (int i=0; i<nbInterval; i++) {
 				for (int j=0; j<=degree; j++) {
-					// REPORT(DEBUG "Resizing MSB of coeff " << j << " of poly " << i << " : from " << poly[i] -> getCoeff(j) -> MSB << " to " <<  MSB[j]);
+					// REPORT(LogLevel::DEBUG "Resizing MSB of coeff " << j << " of poly " << i << " : from " << poly[i] -> getCoeff(j) -> MSB << " to " <<  MSB[j]);
 					poly[i] -> getCoeff(j) -> changeMSB(MSB[j]);
-					// REPORT(DEBUG, "   Now  " << poly[i] -> getCoeff(j) -> MSB);
+					// REPORT(LogLevel::DEBUG, "   Now  " << poly[i] -> getCoeff(j) -> MSB);
 				}
 			}
 
 			//Compute the table
 			if (tabulateRest==true) {
-			  REPORT(INFO, "Tabulating the values for the last interval");
+			  REPORT(LogLevel::DETAIL, "Tabulating the values for the last interval");
 			  sollya_obj_t giS = buildFinalSubIntervalFunction(fS, nbInterval-1);
 			  char *buf;
 			  size_t sz;
 			  sz = sollya_lib_snprintf(NULL, 0, "%b", giS);
 			  if (sz==(size_t)NULL)
-			    REPORT(INFO, "No function, oupsie");
+			    REPORT(LogLevel::DETAIL, "No function, oupsie");
 			  buf = (char *)malloc(sz + 1);
 			  sollya_lib_snprintf(buf, sz+1,"%b", giS);
 			  FixFunction* g = new FixFunction(buf, true, -5, lsbOut);
@@ -274,7 +274,7 @@ namespace flopoco {
 		}
 		else
 		{
-			REPORT(INFO, "Polynomial data cache found: " << cacheFileName.str());
+			REPORT(LogLevel::DETAIL, "Polynomial data cache found: " << cacheFileName.str());
 			//********************** Just read the cache *********************
 			readFromCacheFile(cacheFileName.str());
 		} // end if cache
@@ -408,19 +408,19 @@ namespace flopoco {
 	{
 		int totalOutputSize;
 
-		REPORT(INFO,"Parameters of the approximation polynomials: ");
-		REPORT(INFO,"  Degree=" << degree	<< "  TableSize=" << intlog2(nbInterval)
+		REPORT(LogLevel::DETAIL,"Parameters of the approximation polynomials: ");
+		REPORT(LogLevel::DETAIL,"  Degree=" << degree	<< "  TableSize=" << intlog2(nbInterval)
 				<< "    maxApproxErrorBound=" << approxErrorBound  << "    common coeff LSB="  << LSB);
 
 		totalOutputSize=0;
 		for (int j=0; j<=degree; j++) {
 			int size = MSB[j]-LSB + (coeffSigns[j]==0? 1 : 0);
 			totalOutputSize += size ;
-			REPORT(INFO,"      MSB["<<j<<"] = \t" << MSB[j] << "\t size=" << size
+			REPORT(LogLevel::DETAIL,"      MSB["<<j<<"] = \t" << MSB[j] << "\t size=" << size
 					<< (coeffSigns[j]==0? "\t variable sign " : "\t constant sign ") << coeffSigns[j]);
 		}
 
-		REPORT(INFO, "  Total size of the coeff table is " << nbInterval << " x " << totalOutputSize << " bits");
+		REPORT(LogLevel::DETAIL, "  Total size of the coeff table is " << nbInterval << " x " << totalOutputSize << " bits");
 	}
 
 

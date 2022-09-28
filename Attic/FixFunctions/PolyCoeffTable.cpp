@@ -61,7 +61,7 @@ namespace flopoco{
 
     if(!file.is_open()){
       //********************** Do the work, then write the cache ********************* 
-      REPORT(INFO, "No polynomial data cache found, creating " << cacheFileName.str());
+      REPORT(LogLevel::DETAIL, "No polynomial data cache found, creating " << cacheFileName.str());
       file.open(cacheFileName.str().c_str(), ios::out);
 
       /* Start initialization */
@@ -120,7 +120,7 @@ namespace flopoco{
 	Function *fi;
 	fi=(pwf->getPiecewiseFunctionArray(iter));
 			
-	REPORT(INFO, "Now approximating "<<fi->getName());
+	REPORT(LogLevel::DETAIL, "Now approximating "<<fi->getName());
 	/*start with one interval; subdivide until the error is satisfied for all functions involved*/
 
 	int nrIntervals = 256;
@@ -136,7 +136,7 @@ namespace flopoco{
 		
 	while((errBoundBool==0)&& (nrIntervals <=nrMaxIntervals)){   // Loop increasing the number of intervals
 	  errBoundBool=1; 
-	  REPORT(DETAILED, "Now trying with "<< nrIntervals <<" intervals");
+	  REPORT(LogLevel::VERBOSE, "Now trying with "<< nrIntervals <<" intervals");
 	  
 	  // Compute the precision list for this splitting
 	  
@@ -201,9 +201,9 @@ namespace flopoco{
 	    }
 	    if (mpfr_cmp(mpErr, eps)>0) {
 	      errBoundBool=0; 
-	      REPORT(DETAILED, tab << "we have found an interval where the error is not small enough");
-	      REPORT(DETAILED, tab << "failed at interval "<< k+1 << "/" << nrIntervals);
-	      REPORT(DETAILED, tab << "proceed to splitting"); 
+	      REPORT(LogLevel::VERBOSE, tab << "we have found an interval where the error is not small enough");
+	      REPORT(LogLevel::VERBOSE, tab << "failed at interval "<< k+1 << "/" << nrIntervals);
+	      REPORT(LogLevel::VERBOSE, tab << "proceed to splitting"); 
 	      /*erase the polys and the errors put so far for this function; keep the previous good ones intact*/
 	      polys.resize(nrIntCompleted+1);
 	      errPolys.resize(nrIntCompleted+1);
@@ -218,8 +218,8 @@ namespace flopoco{
 	
 	if (errBoundBool==1){ 
 	  /*we have the good polynomials for one function*/
-	  REPORT(DETAILED, "the number of intervals is:"<< nrIntervals); 
-	  REPORT(DETAILED, "We proceed to the next function");
+	  REPORT(LogLevel::VERBOSE, "the number of intervals is:"<< nrIntervals); 
+	  REPORT(LogLevel::VERBOSE, "We proceed to the next function");
 	  /*we have to update the total size of the coefficients*/
 #if 0
 	  int ii=0;
@@ -254,7 +254,7 @@ namespace flopoco{
 	    maxError =errPolys[k];
 	}
 		
-	REPORT(DEBUG, "maximum error = " << maxError);
+	REPORT(LogLevel::DEBUG, "maximum error = " << maxError);
 
 
 
@@ -285,7 +285,7 @@ namespace flopoco{
 	/* Setting up the actual array of values */ 
 	buildActualTable();
 
-	REPORT(INFO, "Writing the cache file");
+	REPORT(LogLevel::DETAIL, "Writing the cache file");
 	file << "Polynomial data cache for " << cacheFileName.str() << endl;
 	file << "Erasing this file is harmless, but do not try to edit it." <<endl; 
 	file << wIn  << endl;
@@ -333,7 +333,7 @@ namespace flopoco{
       sollya_lib_clear_obj(degreeS);
     }
     else{
-      REPORT(INFO, "Polynomial data cache found: " << cacheFileName.str());
+      REPORT(LogLevel::DETAIL, "Polynomial data cache found: " << cacheFileName.str());
       //********************** Just read the cache ********************* 
       string line;
       int nrIntervals, nrCoeffs;
@@ -377,7 +377,7 @@ namespace flopoco{
       //generateDebugPwf();
       if (verbose>=INFO){	
 	printPolynomialCoefficientsVector();
-	REPORT(DETAILED, "Parameters for polynomial evaluator:");
+	REPORT(LogLevel::VERBOSE, "Parameters for polynomial evaluator:");
 	printCoeffParamVector();
       }
 
@@ -517,7 +517,7 @@ namespace flopoco{
 	sollya_lib_clear_obj(iS);
 	sollya_lib_clear_obj(coefS);
 
-	REPORT(DEBUG, i<<"th coeff: "<<sPrintBinary(coef)<<endl);
+	REPORT(LogLevel::DEBUG, i<<"th coeff: "<<sPrintBinary(coef)<<endl);
 
 	if (mpfr_sgn(coef)==0){
 	  weight=0;
@@ -566,9 +566,9 @@ namespace flopoco{
     for (i=0; i<nrIntervals; i++){	
       pcoeffs=polyCoeffVector[i];
       degree= pcoeffs.size();
-      REPORT(DEBUG, "polynomial "<<i<<": ");
+      REPORT(LogLevel::DEBUG, "polynomial "<<i<<": ");
       for (j=0; j<degree; j++){
-	REPORT(DEBUG, " "<<(*pcoeffs[j]).getSize()<< " "<<(*pcoeffs[j]).getWeight());
+	REPORT(LogLevel::DEBUG, " "<<(*pcoeffs[j]).getSize()<< " "<<(*pcoeffs[j]).getWeight());
       }
     }
   }
@@ -583,7 +583,7 @@ namespace flopoco{
     int j, degree;
     degree= coeffParamVector.size();
     for (j=0; j<degree; j++){		
-      REPORT(DETAILED, " "<<(*coeffParamVector[j]).getSize()<< " "<<(*coeffParamVector[j]).getWeight()); 
+      REPORT(LogLevel::VERBOSE, " "<<(*coeffParamVector[j]).getSize()<< " "<<(*coeffParamVector[j]).getWeight()); 
     }
   }
 

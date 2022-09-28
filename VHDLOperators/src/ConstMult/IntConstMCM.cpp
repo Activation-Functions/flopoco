@@ -37,8 +37,8 @@ namespace flopoco {
 		{
 			if(constants[i] == 0)
 			{
-				REPORT(LIST, "Here I am, brain the size of a planet and they ask me to multiply by zero. Call that job satisfaction? 'Cos I don't.");
-				REPORT(LIST, "Detected constant equal; will not use it when generating the operator.");
+				REPORT(LogLevel::MESSAGE, "Here I am, brain the size of a planet and they ask me to multiply by zero. Call that job satisfaction? 'Cos I don't.");
+				REPORT(LogLevel::MESSAGE, "Detected constant equal; will not use it when generating the operator.");
 				//increasig the number of inputs equal to zero
 				nbConst--;
 				nbConstZero++;

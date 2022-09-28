@@ -100,7 +100,7 @@ namespace flopoco{
 
 			// debug
 			if((h>=(1<<27)) || l>=512 || h<0 || l<0)
-				REPORT(0, "Ouch!!!!!" <<"x=" << x << " " << xs << "    " << h << " " << l );
+				REPORT(LogLevel::MESSAGE, "Ouch!!!!!" <<"x=" << x << " " << xs << "    " << h << " " << l );
 
 			//cout << x << "\t" << h << "\t" << l <<endl;
 			mpfr_clears(yh, yl, a, one, NULL);
@@ -214,7 +214,7 @@ namespace flopoco{
 
 			// debug
 			if((h>=(mpz_class(1)<<wOut)) || h<0)
-				REPORT(0, "Ouch!!!!!" << h);
+				REPORT(LogLevel::MESSAGE, "Ouch!!!!!" << h);
 
 			//cout << x << "\t" << h << "\t" << l <<endl;
 			mpfr_clears(y, a, NULL);
@@ -287,16 +287,16 @@ namespace flopoco{
 		sizeY=wF+g;
 		sizeExpY = wF+g+1+2; // e^Y has MSB weight 1; 2 added because it enables to keep g=2 and it costs nothing here, being at the table output.
 		mpz_class sizeExpATable= (mpz_class(1)<<sizeY) * sizeExpY;
-		REPORT(3, "Tabulating e^Y would consume " << sizeExpATable << " bits   (RAM block size is " << blockRAMSize << " bits");
+		REPORT(LogLevel::DEBUG, "Tabulating e^Y would consume " << sizeExpATable << " bits   (RAM block size is " << blockRAMSize << " bits");
 		if( sizeExpATable <= mpz_class(blockRAMSize)) {
-			REPORT(DETAILED, "Tabulating e^Y in a blockRAM, using " << sizeExpATable << " bits");
+			REPORT(LogLevel::VERBOSE, "Tabulating e^Y in a blockRAM, using " << sizeExpATable << " bits");
 			expYTabulated=true;
-			REPORT(DETAILED, "g=" << g );
-			REPORT(DETAILED, "sizeY=" << sizeY);
-			REPORT(DETAILED, "sizeExpY=" << sizeExpY);
+			REPORT(LogLevel::VERBOSE, "g=" << g );
+			REPORT(LogLevel::VERBOSE, "sizeY=" << sizeY);
+			REPORT(LogLevel::VERBOSE, "sizeExpY=" << sizeExpY);
 		}
 		else if (wF<=23) {
-			REPORT(DETAILED, "We will split Y into A and Z, using a table for the Z part");
+			REPORT(LogLevel::VERBOSE, "We will split Y into A and Z, using a table for the Z part");
 			if(guardBits==-1) // otherwise we don't touch it from the initialization
 				g=4;
 			k=10;
@@ -307,23 +307,23 @@ namespace flopoco{
 			sizeExpZm1 = sizeZ+1; //
 			sizeMultIn = sizeZ; // sacrificing accuracy where it costs
 			if (sizeZ<=k) {
-				REPORT(DETAILED, "Z is small, simpler table tabulating e^Z-1");
+				REPORT(LogLevel::VERBOSE, "Z is small, simpler table tabulating e^Z-1");
 				useTableExpZm1=true;
 			}
 			else {
-				REPORT(DETAILED, "Z is large, magic table tabulating e^Z-Z-1");
+				REPORT(LogLevel::VERBOSE, "Z is large, magic table tabulating e^Z-Z-1");
 				useTableExpZmZm1=true;
 				sizeZtrunc=wF+g-2*k;
 				sizeExpZmZm1 = wF+g - 2*k +1;
 				sizeMultIn = sizeZ; // sacrificing accuracy where it costs
-				REPORT(DETAILED, "g=" << g);
-				REPORT(DETAILED, "k=" << k);
-				REPORT(DETAILED, "sizeY=" << sizeY);
-				REPORT(DETAILED, "sizeExpY=" << sizeExpY);
-				REPORT(DETAILED, "sizeZ=" << sizeZ);
-				REPORT(DETAILED, "sizeZtrunc=" << sizeZtrunc);
-				REPORT(DETAILED, "sizeExpZmZm1=" << sizeExpZmZm1);
-				REPORT(DETAILED, "sizeExpZm1=" << sizeExpZm1);
+				REPORT(LogLevel::VERBOSE, "g=" << g);
+				REPORT(LogLevel::VERBOSE, "k=" << k);
+				REPORT(LogLevel::VERBOSE, "sizeY=" << sizeY);
+				REPORT(LogLevel::VERBOSE, "sizeExpY=" << sizeExpY);
+				REPORT(LogLevel::VERBOSE, "sizeZ=" << sizeZ);
+				REPORT(LogLevel::VERBOSE, "sizeZtrunc=" << sizeZtrunc);
+				REPORT(LogLevel::VERBOSE, "sizeExpZmZm1=" << sizeExpZmZm1);
+				REPORT(LogLevel::VERBOSE, "sizeExpZm1=" << sizeExpZm1);
 			}
 		}
 
@@ -331,7 +331,7 @@ namespace flopoco{
 			if(guardBits==-1) // otherwise we don't touch it from the initialization
 				g=4;
 			if(k==0 && d==0) { 		// if automatic mode, set up the parameters
-				REPORT(DETAILED, "Chosing sensible defaults for both k and d");
+				REPORT(LogLevel::VERBOSE, "Chosing sensible defaults for both k and d");
 				d=2; 
 				k=9;
 
@@ -355,14 +355,14 @@ namespace flopoco{
 			else if(k!=0 && d==0) {
 				// The idea here is that if k only was provided then we just do a single polynomial with no further table.
 				d = max(wF/k-2, 0) ; // because Y<2^(-k) hence y^k<2^(-dk)				
-				REPORT(DETAILED, "k=" << k << " provided, chosing sensible default for d: d="<<d);
+				REPORT(LogLevel::VERBOSE, "k=" << k << " provided, chosing sensible default for d: d="<<d);
 			}
 			else if(k==0 && d!=0) {
 				k=9; // because it is always sensible?
-				REPORT(DETAILED, "d=" << d << " provided, chosing sensible default for k: k="<<k);
+				REPORT(LogLevel::VERBOSE, "d=" << d << " provided, chosing sensible default for k: k="<<k);
 			}
 
-			REPORT(DETAILED, "Generic case with k=" << k << " and degree d=" << d);
+			REPORT(LogLevel::VERBOSE, "Generic case with k=" << k << " and degree d=" << d);
 			// redefine all the parameters because g depends on the branch
 			sizeY=wF+g;
 			sizeExpY = wF+g+1; // e^Y has MSB weight 1
@@ -372,14 +372,14 @@ namespace flopoco{
 			sizeExpZmZm1 = wF+g - 2*k +1;
 			sizeExpZm1 = sizeZ+1; //
 			sizeMultIn = sizeZ; // sacrificing accuracy where it costs
-			REPORT(DETAILED, "k=" << k << " d=" << d);
-			REPORT(DETAILED, "g=" << g);
-			REPORT(DETAILED, "sizeY=" << sizeY);
-			REPORT(DETAILED, "sizeExpY=" << sizeExpY);
-			REPORT(DETAILED, "sizeZ=" << sizeZ);
-			REPORT(DETAILED, "sizeZtrunc=" << sizeZtrunc);
-			REPORT(DETAILED, "sizeExpZmZm1=" << sizeExpZmZm1);
-			REPORT(DETAILED, "sizeExpZm1=" << sizeExpZm1);
+			REPORT(LogLevel::VERBOSE, "k=" << k << " d=" << d);
+			REPORT(LogLevel::VERBOSE, "g=" << g);
+			REPORT(LogLevel::VERBOSE, "sizeY=" << sizeY);
+			REPORT(LogLevel::VERBOSE, "sizeExpY=" << sizeExpY);
+			REPORT(LogLevel::VERBOSE, "sizeZ=" << sizeZ);
+			REPORT(LogLevel::VERBOSE, "sizeZtrunc=" << sizeZtrunc);
+			REPORT(LogLevel::VERBOSE, "sizeExpZmZm1=" << sizeExpZmZm1);
+			REPORT(LogLevel::VERBOSE, "sizeExpZm1=" << sizeExpZm1);
 		}
 
 
@@ -625,7 +625,7 @@ namespace flopoco{
 				else { // generic case, use a polynomial evaluator
 
 					vhdl << tab << declare("Ztrunc", sizeZtrunc) << " <= Z" << range(sizeZ-1, sizeZ-sizeZtrunc) << ";\n";
-					REPORT(LIST, "Generating the polynomial approximation, this may take some time");
+					REPORT(LogLevel::MESSAGE, "Generating the polynomial approximation, this may take some time");
 					// We want the LSB value to be  2^(wF+g)
 					ostringstream function;
 					function << "1b"<<2*k-1<<"*(exp(x*1b-" << k << ")-x*1b-" << k << "-1)";  // e^z-z-1

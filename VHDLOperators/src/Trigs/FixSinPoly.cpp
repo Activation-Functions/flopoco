@@ -59,7 +59,7 @@ namespace flopoco{
 			wOut = (msbIn<0 ? msbIn : 3*msbIn) - lsbOut + 1;
 			wOutFull = (msbIn<0 ? msbIn : 3*msbIn) - (lsbIn<0 ? 3*lsbIn : lsbIn) + 1 + 1;			//one more bit to cover all the range of produced bits
 
-			REPORT(DEBUG, "wIn=" << wIn << " wOut=" << wOut << " msbIn=" << msbIn << " lsbIn=" << lsbIn << " msbOut=" << msbOut << " lsbOut=" << lsbOut << " g=" << g);
+			REPORT(LogLevel::DEBUG, "wIn=" << wIn << " wOut=" << wOut << " msbIn=" << msbIn << " lsbIn=" << lsbIn << " msbOut=" << msbOut << " lsbOut=" << lsbOut << " g=" << g);
 		}
 		else
 		{
@@ -68,7 +68,7 @@ namespace flopoco{
 
 			wOut = (msbIn<0 ? msbIn : 3*msbIn) - (lsbIn<0 ? 3*lsbIn : lsbIn) + 1 + 1;				//one more bit to cover all the range of produced bits
 
-			REPORT(DEBUG, "wIn=" << wIn << " wOut=" << wOut << " msbIn=" << msbIn << " lsbIn=" << lsbIn << " msbOut=" << msbOut << " lsbOut=" << lsbOut);
+			REPORT(LogLevel::DEBUG, "wIn=" << wIn << " wOut=" << wOut << " msbIn=" << msbIn << " lsbIn=" << lsbIn << " msbOut=" << msbOut << " lsbOut=" << lsbOut);
 		}
 
 		// build the name
@@ -83,7 +83,7 @@ namespace flopoco{
 		//create the bitheap that computes the sum
 		bitHeap = new BitHeap(this, wOut+g);
 
-		REPORT(DEBUG, "Adding the bits for X");
+		REPORT(LogLevel::DEBUG, "Adding the bits for X");
 
 		//add the bits corresponding to sum_{i=imin}^imax(2^i*x_i)
 		indexMin = (truncated ? (lsbOut-g>lsbIn ? lsbOut-g : lsbIn) : lsbIn);
@@ -112,7 +112,7 @@ namespace flopoco{
 		}
 
 
-		REPORT(DEBUG, "Adding the bits for the first sum");
+		REPORT(LogLevel::DEBUG, "Adding the bits for the first sum");
 		//add the terms corresponding to sum_{i=imin}^imax(2^(3i-1)*x_i)
 		//	negated
 		ConstDiv3ForSinPoly *divider;
@@ -141,7 +141,7 @@ namespace flopoco{
 				bitHeap->addConstantOneBit(j);
 		}
 
-		REPORT(DEBUG, "Adding the bits for the second sum");
+		REPORT(LogLevel::DEBUG, "Adding the bits for the second sum");
 
 		//add the terms corresponding to sum_i_j_imin^imax(2^(i+2j-1)*x_i*x_j)
 		//	negated
@@ -169,7 +169,7 @@ namespace flopoco{
 					bitHeap->addConstantOneBit(k);
 			}
 
-		REPORT(DEBUG, "Adding the bits for the third sum");
+		REPORT(LogLevel::DEBUG, "Adding the bits for the third sum");
 
 
 		//add the terms corresponding to sum_i_j_k_imin^imax(2^(i+j+k)*x_i*x_j*x_k)
@@ -281,18 +281,18 @@ namespace flopoco{
 		//the size of the computations
 		fullWOut = (msbIn<0 ? msbIn : 3*msbIn) - (lsbIn<0 ? 3*lsbIn : lsbIn) + 1 + 1;				//one more bit to cover all the range of produced bits
 
-		REPORT(DEBUG, "fullWOut=" << fullWOut << " maximum weight allowed=" << fullWOut-1-(msbIn-k));
+		REPORT(LogLevel::DEBUG, "fullWOut=" << fullWOut << " maximum weight allowed=" << fullWOut-1-(msbIn-k));
 
 		//initialize the sum to 0
 		sum = 0;
 
-		//REPORT(DEBUG, "initially sum=" << sum);
+		//REPORT(LogLevel::DEBUG, "initially sum=" << sum);
 
 		//add the truncated bits corresponding to sum_{i=imin}^imax(2^i*x_i)
 		for(int i=lsbIn; i<k; i++)
 			sum += (mpz_class(1) << (fullWOut-1-(msbIn-i)));
 
-		//REPORT(DEBUG, "after adding bits from the initial number, sum=" << sum);
+		//REPORT(LogLevel::DEBUG, "after adding bits from the initial number, sum=" << sum);
 
 		//add the truncated terms corresponding to sum_{i=imin}^imax(2^(3i-1)*x_i)
 		//	negated
@@ -300,17 +300,17 @@ namespace flopoco{
 		{
 			sum += (mpz_class(1) << i);
 
-			//REPORT(DEBUG, "added to sum " << (mpz_class(1) << i));
+			//REPORT(LogLevel::DEBUG, "added to sum " << (mpz_class(1) << i));
 
 			for(int j=i; j<=fullWOut-1-(msbIn-k); j++)
 			{
 				signBitSum += (mpz_class(1) << j);
 
-				//REPORT(DEBUG, "added to signBitSum " << (mpz_class(1) << j));
+				//REPORT(LogLevel::DEBUG, "added to signBitSum " << (mpz_class(1) << j));
 			}
 		}
 
-		//REPORT(DEBUG, "after adding bits from the first sum, sum=" << sum);
+		//REPORT(LogLevel::DEBUG, "after adding bits from the first sum, sum=" << sum);
 
 		//add the truncated terms corresponding to sum_i_j_imin^imax(2^(i+2j-1)*x_i*x_j)
 		//	negated
@@ -327,13 +327,13 @@ namespace flopoco{
 
 				sum += (mpz_class(1)<<((lsbIn<0 ? (i-lsbIn)+2*(j-lsbIn)-1 : i+2*j-1) + 1));
 
-				//REPORT(DEBUG, "added to sum " << (mpz_class(1)<<((lsbIn<0 ? (i-lsbIn)+2*(j-lsbIn)-1 : i+2*j-1) + 1)));
+				//REPORT(LogLevel::DEBUG, "added to sum " << (mpz_class(1)<<((lsbIn<0 ? (i-lsbIn)+2*(j-lsbIn)-1 : i+2*j-1) + 1)));
 
 				for(int l=(lsbIn<0 ? (i-lsbIn)+2*(j-lsbIn)-1 : i+2*j-1) + 1; l<=fullWOut-1-(msbIn-k); l++)
 					signBitSum += (mpz_class(1)<<l);
 			}
 
-		//REPORT(DEBUG, "after adding bits from the second sum, sum=" << sum);
+		//REPORT(LogLevel::DEBUG, "after adding bits from the second sum, sum=" << sum);
 
 		//add the truncated terms corresponding to sum_i_j_k_imin^imax(2^(i+j+k)*x_i*x_j*x_k)
 		//	negated
@@ -348,13 +348,13 @@ namespace flopoco{
 					//i < j < k
 					sum += (mpz_class(1)<<((lsbIn<0 ? (i-lsbIn)+(j-lsbIn)+(l-lsbIn) : i+j+l) + 1));
 
-					//REPORT(DEBUG, "added to sum " << (mpz_class(1)<<((lsbIn<0 ? (i-lsbIn)+(j-lsbIn)+(l-lsbIn) : i+j+l) + 1)));
+					//REPORT(LogLevel::DEBUG, "added to sum " << (mpz_class(1)<<((lsbIn<0 ? (i-lsbIn)+(j-lsbIn)+(l-lsbIn) : i+j+l) + 1)));
 
 					for(int m=(lsbIn<0 ? (i-lsbIn)+(j-lsbIn)+(l-lsbIn) : i+j+l) + 1; m<=fullWOut-1-(msbIn-k); m++)
 						signBitSum += (mpz_class(1)<<m);
 				}
 
-		//REPORT(DEBUG, "after adding bits from the third sum, sum=" << sum);
+		//REPORT(LogLevel::DEBUG, "after adding bits from the third sum, sum=" << sum);
 
 		//count the overflow bits
 		//	count the total number of bits of the result
@@ -362,7 +362,7 @@ namespace flopoco{
 
 		temp = sum + signBitSum;
 
-		//REPORT(DEBUG, "temp=" << temp);
+		//REPORT(LogLevel::DEBUG, "temp=" << temp);
 
 		if(temp == 0)
 			nbDigits = 1;
@@ -371,18 +371,18 @@ namespace flopoco{
 
 		while(temp > 0)
 		{
-			//REPORT(DEBUG, "temp=" << temp);
+			//REPORT(LogLevel::DEBUG, "temp=" << temp);
 
 			temp = (temp >> 1);
 			nbDigits++;
 		}
 
-		//REPORT(DEBUG, "number of digits in the number: " << nbDigits);
+		//REPORT(LogLevel::DEBUG, "number of digits in the number: " << nbDigits);
 
 		//	now compute the number of bits exceding the truncation limit k
 		guardBits = nbDigits - (fullWOut-1-(msbIn-k));
 
-		//REPORT(DEBUG, "number of guard bits: " << guardBits);
+		//REPORT(LogLevel::DEBUG, "number of guard bits: " << guardBits);
 
 		//return the number of needed guard bits
 		if(guardBits<0)

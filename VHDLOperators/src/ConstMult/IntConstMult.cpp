@@ -435,7 +435,7 @@ namespace flopoco{
 
 
 			if (!mpz_cmp_ui(n.get_mpz_t(),0)){
-				REPORT(LIST, "Here I am, brain the size of a planet and they ask me to multiply by zero. Call that job satisfaction? 'Cos I don't.");
+				REPORT(LogLevel::MESSAGE, "Here I am, brain the size of a planet and they ask me to multiply by zero. Call that job satisfaction? 'Cos I don't.");
 				// TODO: replace with a REPORT (keep the HGG quotation), and build a multiplier by 0:
 				//			this constructor will be called by automatic generators, and should perform the required operation in all cases.
 				addInput("X", xsize);
@@ -459,11 +459,11 @@ namespace flopoco{
 				//				ShiftAddDag* implem_try_euclidean0 = buildEuclideanTree(n);
 				//ShiftAddDag* implem_try_Shifts = buildMultBoothTreeSmallestShifts(n);
 
-				REPORT (DETAILED,"Building from the left: cost="<<costF(implem_try_left)<<" surface="<<costF(implem_try_left,1)<<" latency="<<costF(implem_try_left,-1) );
-				REPORT (DETAILED,"Building from the right: cost="<<costF(implem_try_right)<<" surface="<<costF(implem_try_right,1)<<" latency="<<costF(implem_try_right,-1) );
-				REPORT (DETAILED,"Building balanced: cost="<<costF(implem_try_balanced)<<" surface="<<costF(implem_try_balanced,1)<<" latency="<<costF(implem_try_balanced,-1) );
-				//REPORT (DETAILED,"Building with Euclid 0: cost="<<costF(implem_try_euclidean0)<<" surface="<<costF(implem_try_euclidean0,1)<<" latency="<<costF(implem_try_euclidean0,-1) );
-				//REPORT (DETAILED,"Building using shifts: cost="<<costF(implem_try_Shifts)<<" surface="<<costF(implem_try_Shifts,1)<<" latency="<<costF(implem_try_Shifts,-1) );
+				REPORT(LogLevel::VERBOSE,"Building from the left: cost="<<costF(implem_try_left)<<" surface="<<costF(implem_try_left,1)<<" latency="<<costF(implem_try_left,-1) );
+				REPORT(LogLevel::VERBOSE,"Building from the right: cost="<<costF(implem_try_right)<<" surface="<<costF(implem_try_right,1)<<" latency="<<costF(implem_try_right,-1) );
+				REPORT(LogLevel::VERBOSE,"Building balanced: cost="<<costF(implem_try_balanced)<<" surface="<<costF(implem_try_balanced,1)<<" latency="<<costF(implem_try_balanced,-1) );
+				//REPORT(LogLevel::VERBOSE,"Building with Euclid 0: cost="<<costF(implem_try_euclidean0)<<" surface="<<costF(implem_try_euclidean0,1)<<" latency="<<costF(implem_try_euclidean0,-1) );
+				//REPORT(LogLevel::VERBOSE,"Building using shifts: cost="<<costF(implem_try_Shifts)<<" surface="<<costF(implem_try_Shifts,1)<<" latency="<<costF(implem_try_Shifts,-1) );
 
 				ShiftAddDag* tries[5];
 				tries[1]=implem_try_left;
@@ -484,21 +484,21 @@ namespace flopoco{
 				
 				switch (position) {
 					case 0: implementation=implem_try_right;
-							REPORT( DETAILED,"Building "<<n.get_mpz_t()<<" from the right was better");
+							REPORT(LogLevel::VERBOSE,"Building "<<n.get_mpz_t()<<" from the right was better");
 							delete implem_try_left;
 							delete implem_try_balanced;
 							//delete implem_try_euclidean0;
 							//delete implem_try_Shifts;
 							break;
 					case 1: implementation=implem_try_left;
-							REPORT( DETAILED,"Building "<<n.get_mpz_t()<<" from the left was better amelioration against right-building= "<< costF(implem_try_right,1)-costF(implem_try_left,1) << " amelioration on latency= " << costF(implem_try_right,-1)-costF(implem_try_left,-1) );
+							REPORT(LogLevel::VERBOSE,"Building "<<n.get_mpz_t()<<" from the left was better amelioration against right-building= "<< costF(implem_try_right,1)-costF(implem_try_left,1) << " amelioration on latency= " << costF(implem_try_right,-1)-costF(implem_try_left,-1) );
 							delete implem_try_right;
 							delete implem_try_balanced;
 							//delete implem_try_euclidean0;
 							//delete implem_try_Shifts;
 							break;
 					case 2: implementation=implem_try_balanced;
-							REPORT( DETAILED,"Building "<<n.get_mpz_t()<<" with balanced method was better amelioration against right-building= "<< costF(implem_try_right,1)-costF(implem_try_balanced,1) << " amelioration on latency= " << costF(implem_try_right,-1)-costF(implem_try_balanced,-1) );
+							REPORT(LogLevel::VERBOSE,"Building "<<n.get_mpz_t()<<" with balanced method was better amelioration against right-building= "<< costF(implem_try_right,1)-costF(implem_try_balanced,1) << " amelioration on latency= " << costF(implem_try_right,-1)-costF(implem_try_balanced,-1) );
 							delete implem_try_right;
 							delete implem_try_left;
 							///delete implem_try_euclidean0;
@@ -506,14 +506,14 @@ namespace flopoco{
 							break;
 #if 0
 				case 3: implementation=implem_try_euclidean0;
-							REPORT( DETAILED,"Building "<<n.get_mpz_t()<<" with euclide 0 was better amelioration against right-building= "<< costF(implem_try_right,1)-costF(implem_try_euclidean0,1) << " amelioration on latency= " << costF(implem_try_right,-1)-costF(implem_try_euclidean0,-1) );
+							REPORT(LogLevel::VERBOSE,"Building "<<n.get_mpz_t()<<" with euclide 0 was better amelioration against right-building= "<< costF(implem_try_right,1)-costF(implem_try_euclidean0,1) << " amelioration on latency= " << costF(implem_try_right,-1)-costF(implem_try_euclidean0,-1) );
 							delete implem_try_right;
 							delete implem_try_left;
 							delete implem_try_balanced;
 							delete implem_try_Shifts;
 							break;
 					case 4: implementation=implem_try_Shifts;
-							REPORT( DETAILED,"Building "<<n.get_mpz_t()<<" targetting smallest shifts was better amelioration against right-building= "<< costF(implem_try_right,1)-costF(implem_try_Shifts,1) << " amelioration on latency= " << costF(implem_try_right,-1)-costF(implem_try_Shifts,-1) );
+							REPORT(LogLevel::VERBOSE,"Building "<<n.get_mpz_t()<<" targetting smallest shifts was better amelioration against right-building= "<< costF(implem_try_right,1)-costF(implem_try_Shifts,1) << " amelioration on latency= " << costF(implem_try_right,-1)-costF(implem_try_Shifts,-1) );
 							delete implem_try_right;
 							delete implem_try_left;
 							delete implem_try_balanced;
@@ -527,15 +527,15 @@ namespace flopoco{
 				//delete implementation;
 				//implementation=buildMultBoothTreeFromRight(n);
 
-				if(UserInterface::verbose>=DETAILED) showShiftAddDag();
+				if(is_log_lvl_enabled(LogLevel::VERBOSE)) showShiftAddDag();
 
 #if HACK4ARITH2019
 				showRPAG();
 #endif
 
 				int cost=compute_total_cost(implementation->result);
-				REPORT(INFO, "Estimated bare cost (not counting pipeline overhead) : " << cost << " FA/LUT" );
-				REPORT(INFO, "Depth of the DAG : " << compute_tree_depth(implementation->result) );
+				REPORT(LogLevel::DETAIL, "Estimated bare cost (not counting pipeline overhead) : " << cost << " FA/LUT" );
+				REPORT(LogLevel::DETAIL, "Depth of the DAG : " << compute_tree_depth(implementation->result) );
 
 				// recursively build the pipeline in the vhdl stream
 				build_pipeline(implementation->result);
@@ -615,7 +615,7 @@ namespace flopoco{
 			//implementation = new ShiftAddDag(this);
 
 			rsize = intlog2(n * ((mpz_class(1)<<xsize)-1));
-			REPORT(INFO, "Building a periodic DAG for  " << n );
+			REPORT(LogLevel::DETAIL, "Building a periodic DAG for  " << n );
 
 			addInput("X", xsize);
 			addOutput("R", rsize);
@@ -645,9 +645,9 @@ namespace flopoco{
 					implementation->result = new ShiftAddOp(implementation, Add, powerOfTwo[j], (periodSize<<i), powerOfTwo[i] );
 			}
 			else {
-				// REPORT(DEBUG, "DAG before adding header and zero=" << zeroLSBs);
+				// REPORT(LogLevel::DEBUG, "DAG before adding header and zero=" << zeroLSBs);
 				// if(verbose>=DETAILED) showShiftAddDag();
-				REPORT(DEBUG, "Header not null: header="<<header);
+				REPORT(LogLevel::DEBUG, "Header not null: header="<<header);
 				ShiftAddOp* headerSAO;
 				headerSAO=implementation->sadAppend(buildMultBoothTreeFromRight(header));
 				if(j==-1)//just repeat the period 2^i times
@@ -664,11 +664,11 @@ namespace flopoco{
 				}
 			}
 
-			if(UserInterface::verbose>=DETAILED) showShiftAddDag();
+			if(is_log_lvl_enabled(LogLevel::VERBOSE)) showShiftAddDag();
 
 			int cost=compute_total_cost(implementation->result);
-			REPORT(INFO, "Estimated bare cost (not counting pipeline overhead) : " << cost << " FA/LUT" );
-			REPORT(INFO, "Depth of the DAG : " << compute_tree_depth(implementation->result) );
+			REPORT(LogLevel::DETAIL, "Estimated bare cost (not counting pipeline overhead) : " << cost << " FA/LUT" );
+			REPORT(LogLevel::DETAIL, "Depth of the DAG : " << compute_tree_depth(implementation->result) );
 
 			// recursively build the pipeline in the vhdl stream
 			build_pipeline(implementation->result);
@@ -786,7 +786,7 @@ namespace flopoco{
 	//			The improvement is started but does not work it is set in the #define USE_EXPERIMENTAL_HEURISTIC_1.
 	bool IntConstMult::findBestDivider(mpz_class n, mpz_t & divider, mpz_t & quotient, mpz_t & remainder) {
 
-		REPORT(FULL,"Entering findBestDivider()");
+		REPORT(LogLevel::FULL,"Entering findBestDivider()");
 
 		mpz_t sizeTest;
 		mpz_init(sizeTest);
@@ -804,7 +804,7 @@ namespace flopoco{
 			sizeOfmaxDivider--;
 		mpz_clear(sizeTest);
 
-		REPORT(DEBUG,"					sizeOfmaxDivider="<<sizeOfmaxDivider);
+		REPORT(LogLevel::DEBUG,"					sizeOfmaxDivider="<<sizeOfmaxDivider);
 
 
 		mpz_t q,r;
@@ -830,12 +830,12 @@ namespace flopoco{
 			mpz_add_ui(potentialDividers[i],potentialDividers[i],1);
 			if (mpz_cmp(potentialDividers[i],n.get_mpz_t())>0)
 				mpz_set_ui(potentialDividers[i],3); //we set it to three to avoid problems trying to divide a constant by a superior divider.
-			REPORT(DEBUG,"potentialDividers["<<i<<"]="<<potentialDividers[i]);
+			REPORT(LogLevel::DEBUG,"potentialDividers["<<i<<"]="<<potentialDividers[i]);
 
 			//the second one with 2^i-1
 			mpz_ui_pow_ui(potentialDividers[i+1],2,sizeOfmaxDivider-1-(i/2));
 			mpz_sub_ui(potentialDividers[i+1],potentialDividers[i+1],1);
-			REPORT(DEBUG,"potentialDividers["<<i+1<<"]="<<potentialDividers[i+1]);
+			REPORT(LogLevel::DEBUG,"potentialDividers["<<i+1<<"]="<<potentialDividers[i+1]);
 		}
 
 #if defined USE_EXPERIMENTAL_HEURISTIC_1
@@ -847,7 +847,7 @@ namespace flopoco{
 		{
 			//computing euclidean division
 			mpz_tdiv_qr(q,r,n.get_mpz_t(),potentialDividers[i]);
-			//			REPORT(DEBUG,"q="<<q<<" r="<<r);
+			//			REPORT(LogLevel::DEBUG,"q="<<q<<" r="<<r);
 
 #if defined USE_EXPERIMENTAL_HEURISTIC_1
 			//FIXME: this does not work and finishes with an infinite loop state
@@ -876,7 +876,7 @@ namespace flopoco{
 				mpz_set(divider,potentialDividers[i]);
 				mpz_set(quotient,q);
 				mpz_set(remainder,r);
-			REPORT(DEBUG, "				I am in the test. I managed to set the operands. remainder="<<remainder<<" quotient="<<quotient<<" divider="<<divider <<" n="<<n.get_mpz_t());
+			REPORT(LogLevel::DEBUG, "				I am in the test. I managed to set the operands. remainder="<<remainder<<" quotient="<<quotient<<" divider="<<divider <<" n="<<n.get_mpz_t());
 			}
 #endif
 
@@ -929,7 +929,7 @@ namespace flopoco{
 
 		ostringstream o;
 		for (int i=nsize-1; i>=0; i--)    o << ((int) b[i]);   
-		REPORT(DETAILED, "Constant binary is  " << o.str() << " with " << nonZero << " ones"); 
+		REPORT(LogLevel::VERBOSE, "Constant binary is  " << o.str() << " with " << nonZero << " ones"); 
 
 		int needMinusX=0;
 		c = new int[nsize+1];
@@ -952,15 +952,15 @@ namespace flopoco{
 				nonZeroInBoothCode ++;
 		}
 
-		REPORT(DETAILED, "Booth recoding is  " << printBoothCode(BoothCode, nsize+1)  << " with " << nonZeroInBoothCode << " non-zero digits"); 
+		REPORT(LogLevel::VERBOSE, "Booth recoding is  " << printBoothCode(BoothCode, nsize+1)  << " with " << nonZeroInBoothCode << " non-zero digits"); 
 
 		// If there is no savings in terms of additions, discard the Booth code 
 		if (nonZeroInBoothCode+needMinusX >= nonZero) {
-			REPORT(DETAILED, "Reverting to non-Booth"); 
+			REPORT(LogLevel::VERBOSE, "Reverting to non-Booth"); 
 			for (i=0; i<nsize; i++)
 				BoothCode[i] = b[i];
 			nonZeroInBoothCode=nonZero;
-			REPORT(DETAILED, "Booth recoding is   " << printBoothCode(BoothCode, nsize)  << " with " << nonZeroInBoothCode << " non-zero digits"); 
+			REPORT(LogLevel::VERBOSE, "Booth recoding is   " << printBoothCode(BoothCode, nsize)  << " with " << nonZeroInBoothCode << " non-zero digits"); 
 		}
 
 		delete [] c; delete [] b;
@@ -1017,7 +1017,7 @@ namespace flopoco{
 	/** builds the euclidean DAG using the method buildEuclideanDAG. */
 	ShiftAddDag* IntConstMult::buildEuclideanTree(const mpz_class n){
 
-		REPORT(DEBUG,"Entering BuildEuclideanTree for "<<n);
+		REPORT(LogLevel::DEBUG,"Entering BuildEuclideanTree for "<<n);
 
 		ShiftAddDag *tree_try = new ShiftAddDag(this);
 
@@ -1042,7 +1042,7 @@ namespace flopoco{
 	// to try: compute the cost at each level for several ways to build the DAG and chose the best (warning: it could be tricky)
 	ShiftAddOp* IntConstMult::buildEuclideanDag(const mpz_class n, ShiftAddDag* constant){
 
-		REPORT(FULL,"Entering buildEuclideanDag for "<<n.get_mpz_t());
+		REPORT(LogLevel::FULL,"Entering buildEuclideanDag for "<<n.get_mpz_t());
 		ShiftAddOp *finalQ, *pmQ, *finalAQ, *finalR; //*res;
 		ShiftAddDag *computeQ, *computeR;
 		mpz_t q,d,r,test;
@@ -1126,7 +1126,7 @@ namespace flopoco{
 		int nsize = intlog2(n);
 
 		if((mpz_class(1) << (nsize-1)) == n) { // n is a power of two
-			REPORT(DEBUG, "Power of two");
+			REPORT(LogLevel::DEBUG, "Power of two");
 			result= tree_try->provideShiftAddOp(Shift, tree_try->PX, intlog2(n)-1);
 			globalshift = nsize-1;
 			return 1;
@@ -1191,10 +1191,10 @@ namespace flopoco{
 		unsigned int* shifts;
 
 
-		REPORT(DEBUG, "Entering buildMultBoothTreeFromRight for "<< n);		
+		REPORT(LogLevel::DEBUG, "Entering buildMultBoothTreeFromRight for "<< n);		
 
 		if ( !prepareBoothTree(n,tree_try, level, result, MX, shifts, nonZeroInBoothCode, globalshift) ){
-			REPORT(DEBUG, "nonZeroInBoothCode=" <<nonZeroInBoothCode<<" globalshift=" << globalshift);
+			REPORT(LogLevel::DEBUG, "nonZeroInBoothCode=" <<nonZeroInBoothCode<<" globalshift=" << globalshift);
 			k=nonZeroInBoothCode;
 			while(k!=1) {
 				nk=k>>1;
@@ -1222,7 +1222,7 @@ namespace flopoco{
 			delete level;
 			delete shifts;
 		}
-		REPORT(DETAILED,  "buildMultBoothTreeFromRight: Number of adders: "<<tree_try->saolist.size() );
+		REPORT(LogLevel::VERBOSE,  "buildMultBoothTreeFromRight: Number of adders: "<<tree_try->saolist.size() );
 		tree_try->result=result;
 		return tree_try;
 	}
@@ -1241,7 +1241,7 @@ namespace flopoco{
 		unsigned int* shifts;
 
 
-		REPORT(DEBUG, "Entering buildMultBoothTreeFromLeft for "<< n);
+		REPORT(LogLevel::DEBUG, "Entering buildMultBoothTreeFromLeft for "<< n);
 
 		if ( !prepareBoothTree(n,tree_try, level, result, MX, shifts, nonZeroInBoothCode, globalshift) ){
 			k=nonZeroInBoothCode;
@@ -1273,7 +1273,7 @@ namespace flopoco{
 
 		}
 
-		REPORT(DETAILED,  "buildMultBoothTreeFromLeft: Number of adders: "<<tree_try->saolist.size() );
+		REPORT(LogLevel::VERBOSE,  "buildMultBoothTreeFromLeft: Number of adders: "<<tree_try->saolist.size() );
 		tree_try->result=result;
 		return tree_try;
 	}
@@ -1291,7 +1291,7 @@ namespace flopoco{
 		unsigned int* shifts;
 
 
-		REPORT(DEBUG, "Entering buildMultBoothTreeToMiddle for "<< n);
+		REPORT(LogLevel::DEBUG, "Entering buildMultBoothTreeToMiddle for "<< n);
 
 		if ( !prepareBoothTree(n,tree_try, level, result, MX, shifts, nonZeroInBoothCode, globalshift) ){
 			ShiftAddOp **fillLevel;
@@ -1361,7 +1361,7 @@ namespace flopoco{
 
 		}
 
-		REPORT(DETAILED,  "buildMultBoothTreeToMiddle: Number of adders: "<<tree_try->saolist.size() );
+		REPORT(LogLevel::VERBOSE,  "buildMultBoothTreeToMiddle: Number of adders: "<<tree_try->saolist.size() );
 		tree_try->result=result;
 		return tree_try;
 	}
@@ -1412,7 +1412,7 @@ namespace flopoco{
 		unsigned int* shifts;
 
 
-		REPORT(DEBUG, "Entering buildMultBoothTreeSmallestShifts for "<< n);
+		REPORT(LogLevel::DEBUG, "Entering buildMultBoothTreeSmallestShifts for "<< n);
 		//each iteration we search the smallest shift between two non-zero bits
 		//	and compute all the operator including this shift, leaving the others for the next step
 		if ( !prepareBoothTree(n,tree_try, level, result, MX, shifts, nonZeroInBoothCode, globalshift) ){
@@ -1464,16 +1464,16 @@ namespace flopoco{
 
 		}
 
-		REPORT(DETAILED,  "Number of adders: "<<tree_try->saolist.size() );
+		REPORT(LogLevel::VERBOSE,  "Number of adders: "<<tree_try->saolist.size() );
 		tree_try->result=result;
 		return tree_try;
 	}
 
 
 	void IntConstMult::showShiftAddDag(){
-		REPORT(DETAILED, " ShiftAddDag:");
+		REPORT(LogLevel::VERBOSE, " ShiftAddDag:");
 		for (uint32_t i=0; i<implementation->saolist.size(); i++) {
-			REPORT(DETAILED, "  "<<*(implementation->saolist[i]));
+			REPORT(LogLevel::VERBOSE, "  "<<*(implementation->saolist[i]));
 		}
 	};
 
@@ -1486,7 +1486,7 @@ namespace flopoco{
 			rpag += implementation->saolist[i] -> rpagdesc;
 		}
 		rpag += "}";
-		REPORT(DETAILED, " RPAG description:\n" << rpag);
+		REPORT(LogLevel::VERBOSE, " RPAG description:\n" << rpag);
 		
 	};
 
@@ -1508,11 +1508,11 @@ namespace flopoco{
 		unsigned int* shifts;
 		vector<int> tempHeadShifts;
 
-		REPORT(DEBUG, "Entering buildMultBoothTreeBitheap for "<< n);
+		REPORT(LogLevel::DEBUG, "Entering buildMultBoothTreeBitheap for "<< n);
 
 		if ( !prepareBoothTree(n,tree_try, level, result, MX, shifts, nonZeroInBoothCode, globalshift) )
 		{
-			REPORT(DEBUG, "nonZeroInBoothCode=" <<nonZeroInBoothCode<<" globalshift=" << globalshift);
+			REPORT(LogLevel::DEBUG, "nonZeroInBoothCode=" <<nonZeroInBoothCode<<" globalshift=" << globalshift);
 			k=nonZeroInBoothCode;
 
 			//if there is no reutilization
@@ -1588,7 +1588,7 @@ namespace flopoco{
 			tree_try->saoHeadlist.push_back(result);
 			tree_try->saoHeadShift.push_back(globalshift);
 		}
-		REPORT(DETAILED, "Number of adders: " << tree_try->saolist.size());
+		REPORT(LogLevel::VERBOSE, "Number of adders: " << tree_try->saolist.size());
 
 		//there's no need for the result, as there might several heads for the DAG (stored in saoHeadlist)
 		tree_try->result = NULL;

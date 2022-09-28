@@ -42,7 +42,7 @@ namespace flopoco
 			logicTable = (table.wIn <= getTarget()->lutInputs()) ||
 				     (table.wOut * (mpz_class(1) << wIn) <
 				      getTarget()->sizeOfMemoryBlock() / 2);
-		REPORT(DEBUG, "_logicTable=" << _logicTable
+		REPORT(LogLevel::DEBUG, "_logicTable=" << _logicTable
 					     << "  logicTable=" << logicTable);
 
 		// Sanity check: the table is built using a RAM, but is
@@ -50,7 +50,7 @@ namespace flopoco
 		if (!logicTable && ((wIn <= getTarget()->lutInputs()) ||
 				    (wOut * (mpz_class(1) << wIn) <
 				     0.5 * getTarget()->sizeOfMemoryBlock())))
-			REPORT(0, "Warning: the table is built using a RAM "
+			REPORT(LogLevel::MESSAGE, "Warning: the table is built using a RAM "
 				  "block, but is underutilized");
 
 		// Logic tables are shared by default, large tables are unique
@@ -70,7 +70,7 @@ namespace flopoco
 
 		// user warnings
 		if (wIn > 12)
-			REPORT(FULL,
+			REPORT(LogLevel::FULL,
 			       "WARNING: FloPoCo is building a table with "
 				   << wIn << " input bits, it will be large.");
 	}
@@ -78,7 +78,7 @@ namespace flopoco
 	void TableOperator::generateVHDL()
 	{
 		// create the code for the table
-		REPORT(DEBUG, "Table.cpp: Filling the table");
+		REPORT(LogLevel::DEBUG, "Table.cpp: Filling the table");
 
 		if (logicTable) {
 			int lutsPerBit;
@@ -87,14 +87,14 @@ namespace flopoco
 			else
 				lutsPerBit =
 				    1 << (wIn - getTarget()->lutInputs());
-			REPORT(DETAILED, "Building a logic table that uses "
+			REPORT(LogLevel::VERBOSE, "Building a logic table that uses "
 					     << lutsPerBit
 					     << " LUTs per output bit");
 		}
 
 		cpDelay = getTarget()->tableDelay(wIn, wOut, logicTable);
 		declare(cpDelay, "Y0", wOut);
-		REPORT(DEBUG, "logicTable=" << logicTable
+		REPORT(LogLevel::DEBUG, "logicTable=" << logicTable
 					    << "   table delay is " << cpDelay
 					    << " s");
 

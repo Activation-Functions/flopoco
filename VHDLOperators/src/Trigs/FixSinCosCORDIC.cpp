@@ -35,7 +35,7 @@ namespace flopoco{
 
 
 		if(wIn<12){
-			REPORT(INFO, "wIn=" << wIn << " is small, are you sure you don't want to tabulate this operator in a ROM?");
+			REPORT(LogLevel::DETAIL, "wIn=" << wIn << " is small, are you sure you don't want to tabulate this operator in a ROM?");
 		}
 
 		if (reducedIterations == 1)
@@ -46,7 +46,7 @@ namespace flopoco{
 #define ROUNDED_ROTATION 0 // 0:trunc 
 
 #if ROUNDED_ROTATION
-		REPORT(DETAILED, "Using rounding to the nearest of each rotation");
+		REPORT(LogLevel::VERBOSE, "Using rounding to the nearest of each rotation");
 #endif
 		
 		//error analysis
@@ -63,7 +63,7 @@ namespace flopoco{
 		}
 
 		eps+=1; // the final neg-by-not
-		REPORT(DETAILED, "Error analysis computes eps=" << eps << " ulps (before final rounding)");
+		REPORT(LogLevel::VERBOSE, "Error analysis computes eps=" << eps << " ulps (before final rounding)");
 
 #if 0 // The following error analysis separates deltaS and deltaC, but it doesn't improve anytbing.
 		// It should remain in the code to remember that it is not such a good idea
@@ -75,7 +75,7 @@ namespace flopoco{
 		for(stage=2; stage<=maxIterations; stage++){
 			deltaC = deltaC + deltaS*shift + 1.0; // 1.0 assume truncation in the rotation.
 			deltaS = deltaS + deltaC*shift + 1.0; // 1.0 assume truncation in the rotation.
-		REPORT(DETAILED, "Error analysis computes deltaS=" << deltaS << "  and deltaC=" << deltaC << " )");
+		REPORT(LogLevel::VERBOSE, "Error analysis computes deltaS=" << deltaS << "  and deltaC=" << deltaC << " )");
 			shift *=0.5;
 		}
 
@@ -86,7 +86,7 @@ namespace flopoco{
 
 		deltaS+=1; // the final neg-by-not
 		deltaC+=1; // the final neg-by-not
-		REPORT(DETAILED, "Error analysis computes deltaS=" << deltaS << "  and deltaC=" << deltaC << "  ulps (before final rounding)");
+		REPORT(LogLevel::VERBOSE, "Error analysis computes deltaS=" << deltaS << "  and deltaC=" << deltaC << "  ulps (before final rounding)");
 #endif
 		
 		// guard bits depend only on the number of iterations
@@ -106,7 +106,7 @@ namespace flopoco{
 
 		w = wOut + g; 
 
-		REPORT(DETAILED, "wIn=" << wIn << " wOut=" << wOut 
+		REPORT(LogLevel::VERBOSE, "wIn=" << wIn << " wOut=" << wOut 
 		       << "   MaxIterations: " << maxIterations 
 		       << "  Guard bits g=" << g << "  Neg. weight of LSBs w=" << w );
 		
@@ -157,7 +157,7 @@ namespace flopoco{
 
 		mpfr_mul(kfactor, kfactor, scale, GMP_RNDN);
 		
-		REPORT(DEBUG, "kfactor=" << printMPFR(kfactor));
+		REPORT(LogLevel::DEBUG, "kfactor=" << printMPFR(kfactor));
 		mpfr_clear(temp);
 		
 		// initialize the zatan mpfr. It will be cleared outside the loop
@@ -222,10 +222,10 @@ namespace flopoco{
 			mpfr_div_2si(zatan, zatan, stage, GMP_RNDN);
 			mpfr_atan(zatan, zatan, GMP_RNDN);
 			mpfr_div(zatan, zatan, constPi, GMP_RNDN);
-			REPORT(DEBUG, "stage=" << stage << "  atancst=" << printMPFR(zatan));		
+			REPORT(LogLevel::DEBUG, "stage=" << stage << "  atancst=" << printMPFR(zatan));		
 			//create the arctangent factor to be added to Zin
 									
-			REPORT(DEBUG, "  sizeZ=" << sizeZ << "   zMSB="<<zMSB );
+			REPORT(LogLevel::DEBUG, "  sizeZ=" << sizeZ << "   zMSB="<<zMSB );
 
 			if(stage<maxIterations || reducedIterations == 1) {
 				// LSB is always -w 

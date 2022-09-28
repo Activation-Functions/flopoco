@@ -189,15 +189,15 @@ namespace flopoco{
 		   |<--- coef[i]_->getSize() ---->|        */
 
 		updateCoefficients(coef);
-		REPORT(DETAILED, "Polynomial to evaluate: " << printPolynomial(coef, y, 0));
-		REPORT(DETAILED, "y size=" << y_->getSize() << " weight=" << y_->getWeight());
+		REPORT(LogLevel::VERBOSE, "Polynomial to evaluate: " << printPolynomial(coef, y, 0));
+		REPORT(LogLevel::VERBOSE, "y size=" << y_->getSize() << " weight=" << y_->getWeight());
 
 		/* I/O Signal Declarations; y and the coefficients*/
 		addInput("Y", y_->getSize()); /* y is positive so we don't store the sign */
 
 		for (uint32_t i=0; i <= unsigned(degree_); i++){
 			addInput(join("a",i), coef_[i]->getSize()+1); /* the size does not contain the sign bit */
-			REPORT(DETAILED, "a"<<i<<" size=" << coef_[i]->getSize() << " weight=" << coef_[i]->getWeight());
+			REPORT(LogLevel::VERBOSE, "a"<<i<<" size=" << coef_[i]->getSize() << " weight=" << coef_[i]->getWeight());
 		}
 
 		allocateErrorVectors();
@@ -230,7 +230,7 @@ namespace flopoco{
 			mpfr_add( u, *approximationError, *e, GMP_RNDN);
 
 			if (  mpfr_cmp( u, targetError) <= 0 ){
-				REPORT(DETAILED, " Solution found. Starting refinement");
+				REPORT(LogLevel::VERBOSE, " Solution found. Starting refinement");
 				/* if we do, then we set the solution true and that's it */
 				sol = true;
 				mpfr_clear(*e);
@@ -271,8 +271,8 @@ namespace flopoco{
 		for (unsigned j=1; j<=degree_; j++)
 			s2 << "yG["<<j<<"]="<<yGuard_[j]<<" ";
 
-		REPORT(INFO, s1.str());
-		REPORT(INFO, s2.str());
+		REPORT(LogLevel::DETAIL, s1.str());
+		REPORT(LogLevel::DETAIL, s2.str());
 		setCriticalPath(getMaxInputDelays(inputDelays));
 
 		for (unsigned i=0; i<=degree_; i++){
@@ -515,9 +515,9 @@ namespace flopoco{
 			s2 << "yG["<<j<<"]=" << yGuard[j] << " ";
 		}
 
-		REPORT(DETAILED, "------------------------------------------------------------");
-		REPORT(DETAILED, s1.str());
-		REPORT(DETAILED, s2.str());
+		REPORT(LogLevel::VERBOSE, "------------------------------------------------------------");
+		REPORT(LogLevel::VERBOSE, s1.str());
+		REPORT(LogLevel::VERBOSE, s2.str());
 
 		/* pre-set the magnitude of y */
 		mpfr_t *yy;
@@ -659,7 +659,7 @@ namespace flopoco{
 
 		}
 
-		REPORT(DETAILED, "Error (order) for P(y)=" << mpfr_get_exp(*sigmakP_sigmak[degree_]));
+		REPORT(LogLevel::VERBOSE, "Error (order) for P(y)=" << mpfr_get_exp(*sigmakP_sigmak[degree_]));
 
 		/***** Clean up *********************/
 		for (uint32_t i=1; i<= unsigned(degree_); i++){
@@ -712,14 +712,14 @@ namespace flopoco{
 
 
 	void PolynomialEvaluator::updateCoefficients(vector<FixedPointCoefficient*> coef){
-		REPORT(DETAILED, "Coefficient manipulation ... ");
+		REPORT(LogLevel::VERBOSE, "Coefficient manipulation ... ");
 		for (uint32_t i=0; i< coef.size(); i++){
-			REPORT(DEBUG, "Coefficient before; size="<<coef[i]->getSize()<<" weight="<<coef[i]->getWeight());
+			REPORT(LogLevel::DEBUG, "Coefficient before; size="<<coef[i]->getSize()<<" weight="<<coef[i]->getWeight());
 			FixedPointCoefficient *fp = new FixedPointCoefficient(coef[i]);
 			/* update the coefficient size; see Doxygen in hpp for more details*/
 			fp->setSize(coef[i]->getSize()+coef[i]->getWeight());
 			coef_.push_back(fp);
-			REPORT(DEBUG, "Coefficient after; size="<<coef_[i]->getSize()<<" weight="<<coef_[i]->getWeight());
+			REPORT(LogLevel::DEBUG, "Coefficient after; size="<<coef_[i]->getSize()<<" weight="<<coef_[i]->getWeight());
 		}
 	}
 
@@ -744,7 +744,7 @@ namespace flopoco{
 		approximationError = (mpfr_t*) malloc( sizeof(mpfr_t));
 		mpfr_init2(*approximationError, 1000);
 		mpfr_set( *approximationError, *p, GMP_RNDN);
-		REPORT(DETAILED, "The approximation error budget is (represented as double):" << mpfr_get_d(*approximationError,GMP_RNDN));
+		REPORT(LogLevel::VERBOSE, "The approximation error budget is (represented as double):" << mpfr_get_d(*approximationError,GMP_RNDN));
 	}
 
 
@@ -755,7 +755,7 @@ namespace flopoco{
 		mpfr_pow_si( maxABSy, maxABSy, y_->getSize(), GMP_RNDN);
 		mpfr_add_si( maxABSy, maxABSy, -1, GMP_RNDN);
 		mpfr_set_exp( maxABSy, mpfr_get_exp(maxABSy)+y_->getWeight()-y_->getSize());
-		REPORT(DETAILED, "Abs max value of y is " << mpfr_get_d( maxABSy, GMP_RNDN));
+		REPORT(LogLevel::VERBOSE, "Abs max value of y is " << mpfr_get_d( maxABSy, GMP_RNDN));
 	}
 
 
@@ -839,7 +839,7 @@ namespace flopoco{
 			objectiveStatesY.insert(pair<int,int>(i+1, 0));
 		}
 		for (multimap<int, int>::iterator it = objectiveStatesY.begin(); it != objectiveStatesY.end(); ++it){
-			REPORT(DEBUG, "yGuardObjective[" << (*it).first << ", " << (*it).second << "]");
+			REPORT(LogLevel::DEBUG, "yGuardObjective[" << (*it).first << ", " << (*it).second << "]");
 		}
 	}
 
@@ -847,7 +847,7 @@ namespace flopoco{
 	void PolynomialEvaluator::setNumberOfPossibleValuesForEachY(){
 		for (int i=1; i <= getPolynomialDegree(); i++){
 			maxBoundY[i] = objectiveStatesY.count(i);
-			REPORT(DEBUG, "MaxBoundY["<<i<<"]="<<maxBoundY[i]);
+			REPORT(LogLevel::DEBUG, "MaxBoundY["<<i<<"]="<<maxBoundY[i]);
 		}
 	}
 
@@ -864,7 +864,7 @@ namespace flopoco{
 	}
 
 	int PolynomialEvaluator::getPossibleYValue(int i, int state){
-		REPORT(DEBUG, "Possible value i="<<i<<" state="<<state);
+		REPORT(LogLevel::DEBUG, "Possible value i="<<i<<" state="<<state);
 		pair<multimap<int, int>::iterator, multimap<int, int>::iterator> ppp;
 		ppp = objectiveStatesY.equal_range(i);
 		int index=0;

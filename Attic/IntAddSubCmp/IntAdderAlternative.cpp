@@ -80,16 +80,16 @@ namespace flopoco {
 			{
 				//the non-slack version
 				updateParameters(target, alpha, beta, k);
-				REPORT(DETAILED, "1) alpha="<<alpha<<" beta="<<beta<<" k="<<k);
+				REPORT(LogLevel::VERBOSE, "1) alpha="<<alpha<<" beta="<<beta<<" k="<<k);
 			}else
 			{
 				if(alternativeSlackVersion == 0){
 					updateParameters(target, inputDelays, alpha, beta, k);
-					REPORT(DETAILED, "2) alpha="<<alpha<<" beta="<<beta<<" k="<<k);
+					REPORT(LogLevel::VERBOSE, "2) alpha="<<alpha<<" beta="<<beta<<" k="<<k);
 				}else{
 					nextCycle();
 					updateParameters(target, alpha, beta, k);
-					REPORT(DETAILED, "3) alpha="<<alpha<<" beta="<<beta<<" k="<<k);
+					REPORT(LogLevel::VERBOSE, "3) alpha="<<alpha<<" beta="<<beta<<" k="<<k);
 				}
 			}
 

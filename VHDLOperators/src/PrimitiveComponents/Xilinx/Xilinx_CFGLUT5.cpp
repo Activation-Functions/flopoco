@@ -44,11 +44,11 @@ namespace flopoco {
         ///addComment(" This is a primitive and will directly be maped to a LUT without any logic description ");
 
 		// basic message
-		REPORT(INFO,"Declaration of Xilinx_CFGLUT5 \n");
+		REPORT(LogLevel::DETAIL,"Declaration of Xilinx_CFGLUT5 \n");
 		// more detailed message
-		REPORT(DETAILED, "this operator has received no parameters ");
+		REPORT(LogLevel::VERBOSE, "this operator has received no parameters ");
 		// debug message for developper
-		REPORT(DEBUG,"debug of Xilinx_CFGLUT5");
+		REPORT(LogLevel::DEBUG,"debug of Xilinx_CFGLUT5");
 	};
 
 	

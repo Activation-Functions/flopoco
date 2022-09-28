@@ -75,10 +75,10 @@ void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(
         int epsilon
 	)
 {
-    REPORT( DETAILED, "IntConstMultShiftAdd started with syncoptions:")
-	REPORT( DETAILED, "\tsyncInOut: " << (syncInOut?"enabled":"disabled"))
-	REPORT( DETAILED, "\tsyncMux: " << (syncMux?"enabled":"disabled"))
-	REPORT( DETAILED, "\tsync every " << syncEveryN << " stages" << std::endl )
+    REPORT(LogLevel::VERBOSE, "IntConstMultShiftAdd started with syncoptions:")
+	REPORT(LogLevel::VERBOSE, "\tsyncInOut: " << (syncInOut?"enabled":"disabled"))
+	REPORT(LogLevel::VERBOSE, "\tsyncMux: " << (syncMux?"enabled":"disabled"))
+	REPORT(LogLevel::VERBOSE, "\tsync every " << syncEveryN << " stages" << std::endl )
 
     needs_unisim = false;
     emu_conf = 0;
@@ -90,20 +90,20 @@ void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(
 
 //    setCopyrightString(UniKs::getAuthorsString(UniKs::AUTHOR_MKLEINLEIN|UniKs::AUTHOR_MKUMM|UniKs::AUTHOR_KMOELLER));
 
-    if(UserInterface::verbose >= 3)
+    if(is_log_lvl_enabled(LogLevel::DEBUG))
         pipelined_adder_graph.quiet = false; //enable debug output
     else
         pipelined_adder_graph.quiet = true; //disable debug output, except errors
 
-    REPORT( DETAILED, "parse graph...")
+    REPORT(LogLevel::VERBOSE, "parse graph...")
     validParse = pipelined_adder_graph.parse_to_graph(pipelined_realization_str);
 
     if(validParse)
     {
-        REPORT( DETAILED,  "check graph...")
+        REPORT(LogLevel::VERBOSE,  "check graph...")
 		pipelined_adder_graph.check_and_correct(pipelined_realization_str);
 
-		if(UserInterface::verbose >= DETAILED)
+		if(is_log_lvl_enabled(LogLevel::VERBOSE))
 			pipelined_adder_graph.print_graph();
         pipelined_adder_graph.drawdot("pag_input_graph.dot");
 
@@ -111,7 +111,7 @@ void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(
 
 		if(truncations.empty() && (epsilon > 0))
 		{
-			REPORT(INFO,  "Found non-zero epsilon=" << epsilon << ", computing word sizes of truncated MCM");
+			REPORT(LogLevel::DETAIL,  "Found non-zero epsilon=" << epsilon << ", computing word sizes of truncated MCM");
 
 			map<pair<mpz_class, int>, vector<int> > wordSizeMap;
 
@@ -119,8 +119,8 @@ void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(
 			WordLengthCalculator wlc = WordLengthCalculator(pipelined_adder_graph, wIn, epsilon, target);
 			wordSizeMap = wlc.optimizeTruncation();
 
-			REPORT(INFO, "Finished computing word sizes of truncated MCM");
-			if(UserInterface::verbose >= INFO)
+			REPORT(LogLevel::DETAIL, "Finished computing word sizes of truncated MCM");
+			if(is_log_lvl_enabled(LogLevel::DETAIL))
 			{
 				for(auto & it : wordSizeMap) {
 					std::cout << "(" << it.first.first << ", " << it.first.second << "): ";
@@ -136,13 +136,13 @@ void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(
 #endif
 		}
 
-		REPORT( DETAILED, "truncationReg is " << truncationReg.convertToString());
+		REPORT(LogLevel::VERBOSE, "truncationReg is " << truncationReg.convertToString());
 
 		int noOfFullAdders = IntConstMultShiftAdd_TYPES::getGraphAdderCost(pipelined_adder_graph,wIn,false);
-		REPORT( INFO, "adder graph without truncation requires " << noOfFullAdders << " full adders");
+		REPORT(LogLevel::DETAIL, "adder graph without truncation requires " << noOfFullAdders << " full adders");
 
         noOfFullAdders = IntConstMultShiftAdd_TYPES::getGraphAdderCost(pipelined_adder_graph,wIn,false,truncationReg);
-		REPORT( INFO, "truncated adder graph requires " << noOfFullAdders << " full adders");
+		REPORT(LogLevel::DETAIL, "truncated adder graph requires " << noOfFullAdders << " full adders");
 
 
         noOfConfigurations = (*pipelined_adder_graph.nodes_list.begin())->output_factor.size();
@@ -155,9 +155,9 @@ void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(
 			}
 		}
 
-        REPORT( DETAILED, "noOfInputs: " << noOfInputs)
-		REPORT( DETAILED, "noOfConfigurations: " << noOfConfigurations)
-		REPORT( DETAILED, "noOfPipelineStages: " << noOfPipelineStages)
+        REPORT(LogLevel::VERBOSE, "noOfInputs: " << noOfInputs)
+		REPORT(LogLevel::VERBOSE, "noOfConfigurations: " << noOfConfigurations)
+		REPORT(LogLevel::VERBOSE, "noOfPipelineStages: " << noOfPipelineStages)
 
 		if(noOfConfigurations > 1) {
 			addInput("config_no", configurationSignalWordsize);
@@ -169,7 +169,7 @@ void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(
         IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE::configurationSignalWordsize = configurationSignalWordsize;
 
         //IDENTIFY NODE
-        REPORT(DETAILED,"identifying nodes...")
+        REPORT(LogLevel::VERBOSE,"identifying nodes...")
 
 		map<adder_graph_base_node_t*,IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE*> additionalNodeInfoMap;
         map<int,list<adder_graph_base_node_t*> > stageNodesMap;
@@ -186,7 +186,7 @@ void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(
                        || t->nodeType == IntConstMultShiftAdd_TYPES::NODETYPE_ADDSUB3_2STATE
                        || t->nodeType == IntConstMultShiftAdd_TYPES::NODETYPE_ADDSUB3_CONF
                        ){
-                REPORT(DEBUG,"has decoder")
+                REPORT(LogLevel::DEBUG,"has decoder")
 
                 conf_adder_subtractor_node_t* cc = new conf_adder_subtractor_node_t();
                 cc->stage = nodePtr->stage-1;
@@ -196,7 +196,7 @@ void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(
                             make_pair<adder_graph_base_node_t*,IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE*>(cc,((IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE_CONF*)t)->decoder)
                             );
             }else if(t->nodeType == IntConstMultShiftAdd_TYPES::NODETYPE_MUX){
-                REPORT(DEBUG,"has decoder")
+                REPORT(LogLevel::DEBUG,"has decoder")
 
                 mux_node_t* cc = new mux_node_t();
                 cc->stage = nodePtr->stage-1;
@@ -225,7 +225,7 @@ void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(
             additionalNodeInfoMap.insert( {nodePtr,t} );
         }
         //IDENTIFY CONNECTIONS
-        REPORT(DETAILED,"identifiing node connections..")
+        REPORT(LogLevel::VERBOSE,"identifiing node connections..")
 		for (auto nodePtr : pipelined_adder_graph.nodes_list)
         {
             identifyOutputConnections(nodePtr ,additionalNodeInfoMap);
@@ -233,7 +233,7 @@ void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(
         printAdditionalNodeInfo(additionalNodeInfoMap);
 
         //START BUILDING NODES
-        REPORT(DETAILED,"building nodes..")
+        REPORT(LogLevel::VERBOSE,"building nodes..")
                 int unpiped_stage_count=0;
         bool isMuxStage = false;
         for (
@@ -245,7 +245,7 @@ void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(
             for (auto operationNode : stageNodesMap[currentStage])
             {
                 IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE* op_node = additionalNodeInfoMap[operationNode];
-                REPORT( DETAILED, op_node->outputSignalName << " as " << op_node->get_name())
+                REPORT(LogLevel::VERBOSE, op_node->outputSignalName << " as " << op_node->get_name())
 
                 if(op_node->nodeType == IntConstMultShiftAdd_TYPES::NODETYPE_INPUT)
                 {
@@ -311,7 +311,7 @@ void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(
 
             if(doPipe)
             {
-                REPORT( DETAILED, "----pipeline----")
+                REPORT(LogLevel::VERBOSE, "----pipeline----")
 //                        nextCycle(); //!!!
                 unpiped_stage_count = 0;
             }
@@ -916,7 +916,7 @@ void IntConstMultShiftAdd::printAdditionalNodeInfo(map<adder_graph_base_node_t *
 
     nodeInfoString << endl;
 
-    REPORT( DETAILED, nodeInfoString.str())
+    REPORT(LogLevel::VERBOSE, nodeInfoString.str())
 }
 
 	OperatorPtr flopoco::IntConstMultShiftAdd::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args )

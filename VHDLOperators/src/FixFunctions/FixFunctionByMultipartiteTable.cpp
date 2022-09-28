@@ -91,7 +91,7 @@ namespace flopoco
 
 		setCopyrightString("Franck Meyer, Florent de Dinechin (2015-2020)");
 		addHeaderComment("-- Evaluator for " +  f->getDescription() + "\n");
-		REPORT(DETAILED, "Entering: FixFunctionByMultipartiteTable \"" << functionName_ << "\" " << nbTOi_ << " " << signedIn_ << " " << lsbIn_  << " " << lsbOut_ << " ");
+		REPORT(LogLevel::VERBOSE, "Entering: FixFunctionByMultipartiteTable \"" << functionName_ << "\" " << nbTOi_ << " " << signedIn_ << " " << lsbIn_  << " " << lsbOut_ << " ");
 		int wX=-lsbIn_;
 		addInput("X", wX);
 		int outputSize = f->wOut; // TODO finalRounding would impact this line
@@ -120,12 +120,12 @@ namespace flopoco
 				nbTOi=1;
 				decompositionFound=true;
 				while (decompositionFound) {
-					REPORT(INFO, "Exploring nbTO=" << nbTOi);
+					REPORT(LogLevel::DETAIL, "Exploring nbTO=" << nbTOi);
 					buildOneTableError();
 					buildGammaiMin();
 					decompositionFound = enumerateDec();
 					if(!decompositionFound)
-						REPORT(INFO, "No decomposition found for nbTOi=" << nbTOi << ", stopping search.");
+						REPORT(LogLevel::DETAIL, "No decomposition found for nbTOi=" << nbTOi << ", stopping search.");
 					nbTOi ++;
 				}
 				if(topTen[0]->totalSize == sizeMax) {
@@ -151,28 +151,28 @@ namespace flopoco
 					tryAgain=false;
 				}
 				else {
-					REPORT(INFO, "Now running exhaustive test on candidate #" << rank << " :" << endl
+					REPORT(LogLevel::DETAIL, "Now running exhaustive test on candidate #" << rank << " :" << endl
 								 << tab << bestMP->descriptionString() << endl
 								 << tab<< bestMP->descriptionStringLaTeX()  );
 					bestMP->mkTables();
 					if (bestMP->exhaustiveTest()) {
-						REPORT(INFO, "... passed, now building the operator");
+						REPORT(LogLevel::DETAIL, "... passed, now building the operator");
 						tryAgain = false;
 					}
 					else {
-						REPORT(INFO, "... failed, trying next candidate");
+						REPORT(LogLevel::DETAIL, "... failed, trying next candidate");
 						rank++;
 					}
 				}
 			}
 
 			if(rank==ten || bestMP->totalSize==sizeMax) {
-				REPORT(INFO, "It seems we have to use the safe value of g... starting again");
+				REPORT(LogLevel::DETAIL, "It seems we have to use the safe value of g... starting again");
 				for (int i=0; i<ten; i++){
 					topTen[i]-> totalSize =	sizeMax;
 				}
 				guardBitsSlack ++;
-				//REPORT(0,"guardBitsSlack now " << guardBitsSlack);
+				//REPORT(LogLevel::MESSAGE,"guardBitsSlack now " << guardBitsSlack);
 				nbTOi=nbTOi_;
 			}
 			else {
@@ -186,7 +186,7 @@ namespace flopoco
 
 		bestMP = topTen[rank];
 
-		REPORT(DEBUG,"Full table dump:" <<endl << bestMP->fullTableDump());
+		REPORT(LogLevel::DEBUG,"Full table dump:" <<endl << bestMP->fullTableDump());
 		vector<mpz_class> mpzTIV;
 		for (auto i : bestMP->tiv) {
 			mpzTIV.push_back(mpz_class((long) i));
@@ -199,7 +199,7 @@ namespace flopoco
 				vhdl << endl;
 		}else
 			{ // Hsiao-compressed TIV
-				REPORT (INFO, "TIV compression report:" << endl << bestMP->dcTIV.report()); 
+				REPORT(LogLevel::DETAIL, "TIV compression report:" << endl << bestMP->dcTIV.report()); 
 				vhdl << tab << declare("inSSTIV", bestMP->dcTIV.subsamplingIndexSize) << " <= X" << range(f->wIn-1, f->wIn-bestMP->dcTIV.subsamplingIndexSize) << ";" << endl;
 				vector<mpz_class> mpzssTIV;
 				for (auto i : bestMP->ssTIV)
@@ -693,7 +693,7 @@ namespace flopoco
 
 
 	void  FixFunctionByMultipartiteTable::insertInTopTen(Multipartite* mp) {
-		REPORT(DEBUG, "Entering  insertInTopTen");
+		REPORT(LogLevel::DEBUG, "Entering  insertInTopTen");
 		int rank=ten-1;
 		Multipartite* current = topTen[rank];
 		while(rank >= 0 &&  // mp strictly smaller than current
@@ -704,7 +704,7 @@ namespace flopoco
 
 		if(rank<ten-1) { // this mp belongs to the top ten,
 			rank ++; // the last rank for which mp was strictly smaller than topTen[rank]
-			REPORT(INFO, "The following is now top #" << rank <<" : " << mp->descriptionString());
+			REPORT(LogLevel::DETAIL, "The following is now top #" << rank <<" : " << mp->descriptionString());
 			delete(topTen[ten-1]);
 			// shift the bottom
 			for (int i=ten-1; i>rank; i--)
@@ -712,7 +712,7 @@ namespace flopoco
 			topTen[rank] = mp;
 			//debug
 			for (rank=0; rank<ten; rank++)
-				REPORT(DETAILED, "top "<< rank << " size is " << topTen[rank]->totalSize);
+				REPORT(LogLevel::VERBOSE, "top "<< rank << " size is " << topTen[rank]->totalSize);
 		}
 	}
 

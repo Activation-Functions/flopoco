@@ -58,19 +58,19 @@ namespace flopoco{
 		}
 
 		if(cstIntSig==0) {
-			REPORT(INFO, "building a multiplier by 0, it will be easy");
+			REPORT(LogLevel::DETAIL, "building a multiplier by 0, it will be easy");
 			constant_is_zero=true;
 		}
 		else {
 			// Constant normalization
 			while ((cstIntSig % 2) ==0) {
-				REPORT(INFO, "Significand is even, normalising");
+				REPORT(LogLevel::DETAIL, "Significand is even, normalising");
 				cstIntSig = cstIntSig >>1;
 				cst_exp_when_mantissa_int+=1;
 			}
 			mantissa_is_one = false;
 			if(cstIntSig==1) {
-				REPORT(INFO, "Constant mantissa is 1, multiplying by it will be easy"); 
+				REPORT(LogLevel::DETAIL, "Constant mantissa is 1, multiplying by it will be easy"); 
 				mantissa_is_one = true;
 			}
 
@@ -88,7 +88,7 @@ namespace flopoco{
 			
 			if(cstSgn==1)
 				mpfr_neg(mpfrC,  mpfrC, GMP_RNDN);
-			REPORT(INFO, "mpfrC = " << mpfr_get_d(mpfrC, GMP_RNDN));
+			REPORT(LogLevel::DETAIL, "mpfrC = " << mpfr_get_d(mpfrC, GMP_RNDN));
 
 
 			if(!mantissa_is_one) {
@@ -143,7 +143,7 @@ namespace flopoco{
 		mpfr_set_prec(mpfrC, 10*(wE_in+wF_in+wE_out+wF_out)); // should be enough for anybody
 		mpfr_div(mpfrC, mpa, mpb, GMP_RNDN);
 		
-		REPORT(DEBUG, "Constant evaluates as " << mpfr_get_d( mpfrC, GMP_RNDN) );
+		REPORT(LogLevel::DEBUG, "Constant evaluates as " << mpfr_get_d( mpfrC, GMP_RNDN) );
 
 		if(a<0){
 			cstSgn=1;
@@ -162,7 +162,7 @@ namespace flopoco{
 		}
 		a=a/be;
 		b=b/be;
-		REPORT(DEBUG, "GCD of a and b is " << be << ", simplified fraction to " << a << "/" << b);
+		REPORT(LogLevel::DEBUG, "GCD of a and b is " << be << ", simplified fraction to " << a << "/" << b);
 
 		// Now get rid of powers of two in both a and b.
 		// we transform them into (a',b',expUpdate) such that a' and b' are both odd
@@ -177,7 +177,7 @@ namespace flopoco{
 			expUpdate--;
 		}
 		
-		REPORT(DEBUG, "fraction " << a_ << "/" << b_ << " rewritten as 2^" << expUpdate << "*" << a << "/" << b  );
+		REPORT(LogLevel::DEBUG, "fraction " << a_ << "/" << b_ << " rewritten as 2^" << expUpdate << "*" << a << "/" << b  );
 		if(b==1) {
 			throw("This fraction does not have an infinite binary representation -- not implemented yet");
 		}
@@ -208,7 +208,7 @@ namespace flopoco{
 			headerSize=intlog2(header);
 
 			cc = aa - header*bb; // remainder
-			REPORT(DEBUG, "fraction " << a << "/" << b << " rewritten as " << header << "+" << cc << "/" << bb );
+			REPORT(LogLevel::DEBUG, "fraction " << a << "/" << b << " rewritten as " << header << "+" << cc << "/" << bb );
 			// Now look for the order of 2 modulo bb
 			periodSize=1;
 			mpz_class twotoperiodSize=2;
@@ -226,7 +226,7 @@ namespace flopoco{
 			// 
 
 
-			REPORT(DETAILED, "Found header " << header.get_str(2) << " of size "<< headerSize 
+			REPORT(LogLevel::VERBOSE, "Found header " << header.get_str(2) << " of size "<< headerSize 
 						 << " and period " << periodicPattern.get_str(2) << " of size " << periodSize);
 	 
 			int wC;
@@ -234,16 +234,16 @@ namespace flopoco{
 			if(wF_out >= wF_in) {
 				correctRounding=true;
 				wC = wF_out + 1  +1 + intlog2(b);
-				REPORT(INFO, "Building a correctly rounded multiplier");
+				REPORT(LogLevel::DETAIL, "Building a correctly rounded multiplier");
 			} 
 			else {
 				correctRounding=false;
 				wC = wF_out + 3;
-				REPORT(INFO, "wF_out < <F_in, building a faithful multiplier");
+				REPORT(LogLevel::DETAIL, "wF_out < <F_in, building a faithful multiplier");
 			}
 
 			int r = ceil(   ((double)(wC-headerSize)) / ((double)periodSize)   ); // Needed repetitions
-			REPORT(DETAILED, "target wC=" << wC << ", need to repeat the period " << r << " times");
+			REPORT(LogLevel::VERBOSE, "target wC=" << wC << ", need to repeat the period " << r << " times");
 			int i = intlog2(r) -1; // 2^i < r < 2^{i+1}
 			int rr = r - (1<<i);
 			int j;
@@ -255,11 +255,11 @@ namespace flopoco{
 			// now round up the number of needed repetitions
 			if(j==-1) {
 				r=(1<<i);
-				REPORT(DETAILED, "... Will repeat 2^i with i=" << i);
+				REPORT(LogLevel::VERBOSE, "... Will repeat 2^i with i=" << i);
 			}
 			else{
 				r=(1<<i)+(1<<j);
-				REPORT(DETAILED, "... Will repeat 2^i+2^j = " << (1<<i) + (1<<j) << " with i=" << i << " and j=" << j);
+				REPORT(LogLevel::VERBOSE, "... Will repeat 2^i+2^j = " << (1<<i) + (1<<j) << " with i=" << i << " and j=" << j);
 			}
 
 
@@ -267,20 +267,20 @@ namespace flopoco{
 			cstIntSig = header;
 			for(int k=0; k<r; k++)
 				cstIntSig = (cstIntSig<<periodSize) + periodicPattern;
-			REPORT(DEBUG, "Constant mantissa rebuilt as " << cstIntSig << " ==  " << cstIntSig.get_str(2) );
+			REPORT(LogLevel::DEBUG, "Constant mantissa rebuilt as " << cstIntSig << " ==  " << cstIntSig.get_str(2) );
 			// Beware, this may not be normalized (example 1/3 begins with a zero)
 
 			cstWidth = headerSize  + r*periodSize; // may be a few bits too many if the period has MSB 0s, eg 1/3
 
-			REPORT(DETAILED, "Final constant precision is " << cstWidth << " bits");
+			REPORT(LogLevel::VERBOSE, "Final constant precision is " << cstWidth << " bits");
 
 			int patternLeadingZeroes, patternLSBZeroes;
 			if(header==0) {
 			 	// Do we have leading zeroes in the pattern?
 			 	patternLeadingZeroes = periodSize - intlog2(periodicPattern);
-				REPORT(DETAILED, "Null header, and period starting with  " << patternLeadingZeroes << " zero(s)...");
+				REPORT(LogLevel::VERBOSE, "Null header, and period starting with  " << patternLeadingZeroes << " zero(s)...");
 				cstWidth -= patternLeadingZeroes;
-				REPORT(DETAILED, "   ... so the practical size of the constant is " << cstWidth 
+				REPORT(LogLevel::VERBOSE, "   ... so the practical size of the constant is " << cstWidth 
 							 << " bits, and it does provide "<< cstWidth + patternLeadingZeroes << " bits of accuracy");
 			}
 			
@@ -292,13 +292,13 @@ namespace flopoco{
 			// Do we have trailing zeroes in the pattern ?
 			patternLSBZeroes=0;
 			while ((cstIntSig % 2) ==0) {
-				REPORT(DEBUG, "Significand is even, normalising");
+				REPORT(LogLevel::DEBUG, "Significand is even, normalising");
 				cstIntSig = cstIntSig >>1;
 				periodicPattern = periodicPattern >>1;
 				cst_exp_when_mantissa_int++;
 				patternLSBZeroes++;
 			}
-			REPORT(DETAILED, "Periodic pattern has " << patternLSBZeroes << " zero(s) at the LSB");
+			REPORT(LogLevel::VERBOSE, "Periodic pattern has " << patternLSBZeroes << " zero(s) at the LSB");
 
 
 			icm = new IntConstMult(parentOp, target, wF_in+1, cstIntSig, periodicPattern, patternLSBZeroes, periodSize, header, headerSize, i, j);
@@ -348,7 +348,7 @@ namespace flopoco{
 
 		mpfr_inits(mpfrC, NULL);
 		sollya_lib_get_constant(mpfrC, node);
-		REPORT(DEBUG, "Constant evaluates to " << mpfr_get_d(mpfrC, GMP_RNDN));
+		REPORT(LogLevel::DEBUG, "Constant evaluates to " << mpfr_get_d(mpfrC, GMP_RNDN));
 		
 		
 		
@@ -399,7 +399,7 @@ namespace flopoco{
 	{
 
 		if(mpfr_zero_p(mpfrC)) {
-			REPORT(INFO, "building a multiplier by 0, it will be easy");
+			REPORT(LogLevel::DETAIL, "building a multiplier by 0, it will be easy");
 			constant_is_zero=true;
 			return;
 		}
@@ -423,7 +423,7 @@ namespace flopoco{
 		cst_exp_when_mantissa_1_2 = mpfr_get_exp(mpfrC) - 1; //mpfr_get_exp() assumes significand in [1/2,1)  
 		mpfr_init2( cstSig, cstWidth);
 		mpfr_div_2si(cstSig, mpfrC, cst_exp_when_mantissa_1_2, GMP_RNDN);
-		REPORT(INFO, "cstSig  = " << mpfr_get_d(cstSig, GMP_RNDN));		
+		REPORT(LogLevel::DETAIL, "cstSig  = " << mpfr_get_d(cstSig, GMP_RNDN));		
 	}
 
 
@@ -449,14 +449,14 @@ namespace flopoco{
 		mpfr_get_z(zz, xcut_wF, GMP_RNDN);
 		xcut_sig_rd = mpz_class(zz);
 		mpz_clear(zz);
-		REPORT(DETAILED, "mpfr_xcut_sig = " << mpfr_get_d(mpfr_xcut_sig, GMP_RNDN) );
+		REPORT(LogLevel::VERBOSE, "mpfr_xcut_sig = " << mpfr_get_d(mpfr_xcut_sig, GMP_RNDN) );
 	}
 
 
 	void FPConstMult::computeIntExpSig()
 	{
 		cst_exp_when_mantissa_int = mpfr_get_z_exp(cstIntSig.get_mpz_t(), mpfrC);
-		REPORT(DETAILED, "mpzclass cstIntSig = " << cstIntSig);
+		REPORT(LogLevel::VERBOSE, "mpzclass cstIntSig = " << cstIntSig);
 	}
 
 
@@ -464,14 +464,14 @@ namespace flopoco{
 	{
 		// Constant normalization
 		while ((cstIntSig % 2) ==0) {
-			REPORT(DETAILED, "Significand is even, normalising");
+			REPORT(LogLevel::VERBOSE, "Significand is even, normalising");
 			cstIntSig = cstIntSig >>1;
 			cst_exp_when_mantissa_int += 1;
 			cstWidth -= 1;
 		}
 
 		if(cstIntSig==1) {
-			REPORT(INFO, "Constant mantissa is 1, multiplying by it will be easy"); 
+			REPORT(LogLevel::DETAIL, "Constant mantissa is 1, multiplying by it will be easy"); 
 			mantissa_is_one = true;
 			return;
 		}
@@ -521,7 +521,7 @@ namespace flopoco{
 
 		// bit width of constant exponent
 		int wE_cst=intlog2(abs(cst_exp_when_mantissa_1_2));
-		REPORT(DEBUG, "wE_cst = " << wE_cst);
+		REPORT(LogLevel::DEBUG, "wE_cst = " << wE_cst);
 	
 		// We have to compute Er = E_X - bias(wE_in) + E_C + bias(wE_R)
 		// Let us pack all the constants together
@@ -537,7 +537,7 @@ namespace flopoco{
 			wE_sum = wE_in;
 		if(wE_out > wE_sum) 
 			wE_sum = wE_out;
-		REPORT(DEBUG, "expAddend: " << expAddendSign << " " << expAddend << "   wE_sum " << wE_sum);
+		REPORT(LogLevel::DEBUG, "expAddend: " << expAddendSign << " " << expAddend << "   wE_sum " << wE_sum);
 
 		vhdl << tab << declare("x_exn",2) << " <=  X("<<wE_in<<"+"<<wF_in<<"+2 downto "<<wE_in<<"+"<<wF_in<<"+1);"<<endl;
 		vhdl << tab << declare("x_sgn") << " <=  X("<<wE_in<<"+"<<wF_in<<");"<<endl;
@@ -555,7 +555,7 @@ namespace flopoco{
 				vhdl << tab << declare("r_frac", wF_out) << " <= X("<<wF_in-1 <<" downto 0)  &  " << rangeAssign(wF_out-wF_in-1, 0, "'0'") << ";"<<endl;
 				}
 			else{ // wF_out < wF_in, this is a rounding of the mantissa TODO
-				REPORT(INFO, "rounding of multiplication by a power of two  not implemented properly when  wF_out < wF_in, truncating. Please complain to the FloPoCo team if you need correct rounding");
+				REPORT(LogLevel::DETAIL, "rounding of multiplication by a power of two  not implemented properly when  wF_out < wF_in, truncating. Please complain to the FloPoCo team if you need correct rounding");
 				vhdl << tab << declare("r_frac", wF_out) << " <= X" << range(wF_in-1, wF_out -wF_in) << ";"<<endl;
 			}
 			vhdl << tab << declare("norm") << " <= '0';"<<endl;

@@ -65,7 +65,7 @@ namespace flopoco {
 
 			int maxShift = (wF+1+1)/2+g;
 			int sizeRightShift = intlog2(maxShift);
-			REPORT(DETAILED, "maxShift="<< maxShift << "  sizeRightShift=" << sizeRightShift);
+			REPORT(LogLevel::VERBOSE, "maxShift="<< maxShift << "  sizeRightShift=" << sizeRightShift);
 
 			vhdl << endl << tab << "-- Shift FB before squaring: this way, max shift is only (wF+2)/2+g = "<<maxShift << endl;
 

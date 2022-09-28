@@ -64,7 +64,7 @@ namespace flopoco{
 			THROWERROR("wIn>wOut: I could build such a silly operator but I don't want to.");
 		}
 
-		REPORT(INFO, "wOut=" << wOut);
+		REPORT(LogLevel::DETAIL, "wOut=" << wOut);
 		addOutput("R", wOut);
 		bh = new BitHeap(this, wOut); 
 

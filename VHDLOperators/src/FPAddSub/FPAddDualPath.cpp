@@ -188,7 +188,7 @@ namespace flopoco{
 			// substract the fraction signals for the close path;
 
 			// instanciate the box that computes X-Y and Y-X. Note that it could take its inputs before the swap (TODO ?)
-			REPORT(DETAILED, "Building close path dual mantissa subtraction box");
+			REPORT(LogLevel::VERBOSE, "Building close path dual mantissa subtraction box");
 
 			newInstance("IntDualAddSub",
 						getName() + "_DualSubClose",
@@ -208,7 +208,7 @@ namespace flopoco{
 				 << "fracSignClose);" << endl;
 
 			// LZC + Shifting. The number of leading zeros are returned together with the shifted input
-			REPORT(DEBUG, "Building close path LZC + shifter");
+			REPORT(LogLevel::DEBUG, "Building close path LZC + shifter");
 			int countWidth = intlog2(wF + 2);
 			newInstance("Normalizer",
 									"norm",
@@ -260,7 +260,7 @@ namespace flopoco{
 		vhdl<<tab<< declare("fracNewY",wF+1) << " <= '1' & newY("<<wF-1<<" downto 0);"<<endl;
 
 		// shift right the significand of new Y with as many positions as the exponent difference suggests (alignment)
-		REPORT(DEBUG, "Building far path right shifter");
+		REPORT(LogLevel::DEBUG, "Building far path right shifter");
 
 /* The following #if allows the following experiment with vivado 2016.4 on Kintex
 
@@ -314,7 +314,7 @@ With combined shifter sticky (despite a few useless gates)
 		vhdl<<tab<< declare("cInAddFar") << " <= EffSub and not sticky;"<< endl;
 
 		// perform carry in addition
-		REPORT(DETAILED, "Building far path adder");
+		REPORT(LogLevel::VERBOSE, "Building far path adder");
 		newInstance("IntAdder", getName()+"_fracAddFar",
 								join("wIn=", wF+4),
 								"X=>fracXfar,Y=>fracYfarXorOp,Cin=>cInAddFar", "R=>fracResultfar0");
@@ -405,7 +405,7 @@ With combined shifter sticky (despite a few useless gates)
 
 		vhdl<< endl << "-- Rounding --" << endl;
 
-		REPORT(DETAILED, "Building final round adder");
+		REPORT(LogLevel::VERBOSE, "Building final round adder");
 		// finalRoundAdd will add the mantissa concatenated with exponent, two bits reserved for possible under/overflow
 
 		newInstance("IntAdder",

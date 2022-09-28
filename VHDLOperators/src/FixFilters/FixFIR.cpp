@@ -100,7 +100,7 @@ namespace flopoco {
 		mpfr_clears(sumAbsCoeff, NULL);
 
 		if(rescale){
-			REPORT(INFO, "Scaling all the coefficients by 1/" << sumAbs);			
+			REPORT(LogLevel::DETAIL, "Scaling all the coefficients by 1/" << sumAbs);			
 			// now just replace each coeff with the scaled version
 			for (int i=0; i< n; i++)	{
 				ostringstream s;
@@ -115,7 +115,7 @@ namespace flopoco {
 			for (int i=0; i< n/2; i++)	{ // n/2 is floor(n/2) 
 				if(symmetry==1) {
 					if (coeffD[i]!=coeffD[n-i-1]) {
-						REPORT(0, endl << endl  << " **** WARNING **** This filter is supposed to be symmetric, but coefficients " << i << " and " << n-i-1
+						REPORT(LogLevel::MESSAGE, endl << endl  << " **** WARNING **** This filter is supposed to be symmetric, but coefficients " << i << " and " << n-i-1
 									 << " evaluate respectively to " << endl << setprecision(16) << "     " << coeffD[i] << endl << " and " << coeffD[n-i-1]
 									 << endl << " This is could be a numerical artifact, who am I to decide if it is significant to your computation ?"
 									 << endl << " However this discrepancy may prevent TestBench to succeed, and I encourage you to fix it." << endl );									 
@@ -123,7 +123,7 @@ namespace flopoco {
 				}
 				if(symmetry==-1) {
 					if (coeffD[i]!=-coeffD[n-i-1]) {
-						REPORT(0, endl << endl  << " **** WARNING **** This filter is supposed to be anti-symmetric, but coefficients " << i << " and " << n-i-1
+						REPORT(LogLevel::MESSAGE, endl << endl  << " **** WARNING **** This filter is supposed to be anti-symmetric, but coefficients " << i << " and " << n-i-1
 									 << " evaluate respectively to " << endl << setprecision(16) << "     " << coeffD[i] << endl << " and " << coeffD[n-i-1]
 									 << endl << " This is could be a numerical artifact, who am I to decide if it is significant to your computation ?"
 									 << endl << " However this discrepancy may prevent TestBench to succeed, and I encourage you to fix it."  << endl );									 
@@ -132,7 +132,7 @@ namespace flopoco {
 			}
 			if((symmetry==-1) && (n%2 == 1)) {
 				if (coeffD[n/2]!=0) {
-					REPORT(0, endl << endl << " **** WARNING **** This filter is supposed to be anti-symmetric, but coefficient " << n/2 << " evaluates to "
+					REPORT(LogLevel::MESSAGE, endl << endl << " **** WARNING **** This filter is supposed to be anti-symmetric, but coefficient " << n/2 << " evaluates to "
 								 << setprecision(16) << "  " << coeffD[n/2] << "   which is not exactly equal to zero." 
 								 << endl << " This is could be a numerical artifact, who am I to decide if it is significant to your computation ?"
 								 << endl << " However this discrepancy may prevent TestBench to succeed, and I encourage you to fix it." << endl );									 
@@ -141,7 +141,7 @@ namespace flopoco {
 		} // End symmetry checks
 
 		// now sumAbs is the max value that the SOPC can take.
-		REPORT(DETAILED, "sumAbs=" << sumAbs);
+		REPORT(LogLevel::VERBOSE, "sumAbs=" << sumAbs);
 		msbOut = 1;
 		while(sumAbs>=2.0){
 			sumAbs*=0.5;
@@ -151,7 +151,7 @@ namespace flopoco {
 			sumAbs*=2.0;
 			msbOut--;
 		}
-		REPORT(INFO, "Computed msbOut=" << msbOut);
+		REPORT(LogLevel::DETAIL, "Computed msbOut=" << msbOut);
 	
 		// prepare the strings for newInstance()
 		string inportmap = "";
@@ -223,7 +223,7 @@ namespace flopoco {
 			// TODO get rid of its svg output...
 			UserInterface::pushAndClearGlobalOpList();
 			refFixSOPC = new FixSOPC(nullptr, getTarget(), lsbIn, msbOut, lsbOut, coeff);
-			REPORT(INFO, "Created reference SOPC called " << refFixSOPC->getName() );
+			REPORT(LogLevel::DETAIL, "Created reference SOPC called " << refFixSOPC->getName() );
 			UserInterface::popGlobalOpList();
 		}
 		else {

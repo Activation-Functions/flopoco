@@ -79,7 +79,7 @@ namespace flopoco{
         adderGraphComplete << "{" << adderGraph.str().substr(0,adderGraph.str().length()-1) << "}";
 
         REPORT(
-				INFO,
+				LogLevel::DETAIL,
 				"adder_graph=" << adderGraphComplete.str()
                 );
 
@@ -126,7 +126,7 @@ namespace flopoco{
 		{
 		case ADD:
 			int eA,eB,signA,signB;
-            REPORT(DEBUG, "additive: " << c << "=" << "Aop(" << solutions_op_a[i] << "," << solutions_op_b[i] << ")");
+            REPORT(LogLevel::DEBUG, "additive: " << c << "=" << "Aop(" << solutions_op_a[i] << "," << solutions_op_b[i] << ")");
 
 			expRet = getExponents(solutions_op_a[i],solutions_op_b[i],c,&eA,&eB,&signA,&signB);
 			assert(expRet);
@@ -136,13 +136,13 @@ namespace flopoco{
 			if(solutions_op_b[i] != 1) buildAdderGraph(solutions_op_b[i],preFactor);
 			break;
 		case MUL:
-            REPORT(DEBUG, "multiplicative: " << c << " = " << solutions_op_a[i] << " * " << solutions_op_b[i]);
+            REPORT(LogLevel::DEBUG, "multiplicative: " << c << " = " << solutions_op_a[i] << " * " << solutions_op_b[i]);
 			preFactor *= solutions_op_b[i];
 			if(solutions_op_a[i] != 1) buildAdderGraph(solutions_op_a[i],preFactor);
 			if(solutions_op_b[i] != 1) buildAdderGraph(solutions_op_b[i]);
 			break;
 		case LF2:
-            REPORT(DEBUG, "leapfrog-2: " << solutions_gt[i] << " with " << solutions_op_a[i] << " and " << solutions_op_b[i]);
+            REPORT(LogLevel::DEBUG, "leapfrog-2: " << solutions_gt[i] << " with " << solutions_op_a[i] << " and " << solutions_op_b[i]);
 
 			compute_successor_set(solutions_op_a[i],1,4*c,&leap1_candidate_set1,false);
 

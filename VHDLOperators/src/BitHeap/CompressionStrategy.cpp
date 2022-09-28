@@ -34,7 +34,7 @@ namespace flopoco{
 			stagesPerCycle = INT_MAX;
 		}
 
-		REPORT(DEBUG, "compressionDelay is " << compressionDelay << " and stagesPerCycle is " << stagesPerCycle);
+		REPORT(LogLevel::DEBUG, "compressionDelay is " << compressionDelay << " and stagesPerCycle is " << stagesPerCycle);
 
 		//generate all the compressors that can be used
 		generatePossibleCompressors();
@@ -48,14 +48,14 @@ namespace flopoco{
 
 	void CompressionStrategy::orderBitsByColumnAndStage()
 	{
-		REPORT(DEBUG, "in orderBitsByColumnAndStage")
+		REPORT(LogLevel::DEBUG, "in orderBitsByColumnAndStage")
 		double objectiveDelay = 1.0/bitheap->getOp()->getTarget()->frequency();
 
 
 		bitheap->op->schedule();
 		bitheap->sortBitsInColumns();
 
-		REPORT(DEBUG, "after scheduling of inputs the bits in the bitheap are the following ")
+		REPORT(LogLevel::DEBUG, "after scheduling of inputs the bits in the bitheap are the following ")
 		printBitsInBitheap();
 		//first get the minimal cycle and maximum cycle
 		int minCycle = 1E6;
@@ -69,7 +69,7 @@ namespace flopoco{
 			{
 				int currentCycle = getStageOfArrivalForBit(bitheap->bits[i][j]);
 
-				REPORT(DEBUG, "bit at column " << i << " and j " << j << " is called " << bitheap->bits[i][j]->signal->getName() << ". cycle is " << bitheap->bits[i][j]->signal->getCycle() << " and critical path is " << bitheap->bits[i][j]->signal->getCriticalPath() << " currentCycle=" << currentCycle);
+				REPORT(LogLevel::DEBUG, "bit at column " << i << " and j " << j << " is called " << bitheap->bits[i][j]->signal->getName() << ". cycle is " << bitheap->bits[i][j]->signal->getCycle() << " and critical path is " << bitheap->bits[i][j]->signal->getCriticalPath() << " currentCycle=" << currentCycle);
 
 
 				if(currentCycle > maxCycle){
@@ -84,14 +84,14 @@ namespace flopoco{
 
 			}
 		}
-		REPORT(DEBUG, "max is cycle " << maxCycle);
-		REPORT(DEBUG, "min is cycle " << minCycle);
+		REPORT(LogLevel::DEBUG, "max is cycle " << maxCycle);
+		REPORT(LogLevel::DEBUG, "min is cycle " << minCycle);
 		assert(minBit != nullptr);
 		assert(maxBit != nullptr);
-		REPORT(DEBUG, "minBit is " << minBit->signal->getName() << " and maxBit is " << maxBit->signal->getName());
+		REPORT(LogLevel::DEBUG, "minBit is " << minBit->signal->getName() << " and maxBit is " << maxBit->signal->getName());
 
-		REPORT(DEBUG, "objectiveDelay = " << objectiveDelay);
-		REPORT(DEBUG, "compressionDelay = " << compressionDelay);
+		REPORT(LogLevel::DEBUG, "objectiveDelay = " << objectiveDelay);
+		REPORT(LogLevel::DEBUG, "compressionDelay = " << compressionDelay);
 		//get the first and last stage, where bits arrive.
 
 		unsigned int maxStage;
@@ -101,7 +101,7 @@ namespace flopoco{
 
 		maxStage -= minStage;
 		//in [0 ... maxStage] can bits arrive
-		REPORT(DEBUG, "maxStage is " << maxStage << " with a offset(minStage) of " << minStage);
+		REPORT(LogLevel::DEBUG, "maxStage is " << maxStage << " with a offset(minStage) of " << minStage);
 
 		orderedBits.resize(maxStage + 1);
 		for(unsigned s = 0; s < orderedBits.size(); s++){
@@ -114,7 +114,7 @@ namespace flopoco{
 				unsigned int tempStage = getStageOfArrivalForBit(bitheap->bits[c][i]);
 				tempStage -= minStage;  //subtract the offset
 				orderedBits[tempStage][c].push_back(bitheap->bits[c][i]); //TODO: check if we set the new criticalPath accordingly
-				REPORT(DEBUG, "added Bit " << bitheap->bits[c][i]->signal->getName() << " with cycle " << bitheap->bits[c][i]->signal->getCycle() << " and criticalPath " << bitheap->bits[c][i]->signal->getCriticalPath() << " to stage " << tempStage << " and column " << c);
+				REPORT(LogLevel::DEBUG, "added Bit " << bitheap->bits[c][i]->signal->getName() << " with cycle " << bitheap->bits[c][i]->signal->getCycle() << " and criticalPath " << bitheap->bits[c][i]->signal->getCriticalPath() << " to stage " << tempStage << " and column " << c);
 			}
 		}
 	}
@@ -179,18 +179,18 @@ namespace flopoco{
 	}
 
 	void CompressionStrategy::printBitsInBitheap(){
-		if(UserInterface::verbose < DEBUG){
+		if(!is_log_lvl_enabled(LogLevel::DEBUG)){
 			return;
 		}
 		for(unsigned int c = 0; c < bitheap->bits.size(); c++){
 			for(unsigned int i = 0; i < bitheap->bits[c].size(); i++){
-				REPORT(DEBUG, "bit at column " << c << " and i " << i << " is called " << bitheap->bits[c][i]->signal->getName() << ". cycle is " << bitheap->bits[c][i]->signal->getCycle() << " and critical path is " << bitheap->bits[c][i]->signal->getCriticalPath());
+				REPORT(LogLevel::DEBUG, "bit at column " << c << " and i " << i << " is called " << bitheap->bits[c][i]->signal->getName() << ". cycle is " << bitheap->bits[c][i]->signal->getCycle() << " and critical path is " << bitheap->bits[c][i]->signal->getCriticalPath());
 			}
 		}
 	}
 
 	void CompressionStrategy::printBitAmounts(){
-		if(UserInterface::verbose < DETAILED){
+		if(!is_log_lvl_enabled(LogLevel::VERBOSE)){
 			return;
 		}
 		//first find max value length and maxcolumn
@@ -251,7 +251,7 @@ namespace flopoco{
 	}
 
 	void CompressionStrategy::printSolutionStatistics(){
-		REPORT(DEBUG, "calculating compression area");
+		REPORT(LogLevel::DEBUG, "calculating compression area");
 		unsigned int totalArea = 0;  //area in Compressor.hpp
 		for(unsigned int s = 0; s < bitAmount.size() - 1; s++) {
 
@@ -267,7 +267,7 @@ namespace flopoco{
 						continue;
 					}
 					*/
-					REPORT(DEBUG, "applying " << tempVector[j].second+1 << " compressors of type " << tempVector[j].first->getStringOfIO() <<
+					REPORT(LogLevel::DEBUG, "applying " << tempVector[j].second+1 << " compressors of type " << tempVector[j].first->getStringOfIO() <<
 												 " at stage " << s << " and column " << c << " with a combined LUT-area cost of " << (tempVector[j].second+1)*tempVector[j].first->getArea());
 					totalArea+=(tempVector[j].second+1)*tempVector[j].first->getArea();
 
@@ -275,14 +275,14 @@ namespace flopoco{
 				}
 			}
 		}
-		REPORT(DETAILED, "total area of the compression is equivalent to " << totalArea << " LUTs");
-		REPORT(DETAILED, "total number of stages is " << bitAmount.size()-1);
+		REPORT(LogLevel::VERBOSE, "total area of the compression is equivalent to " << totalArea << " LUTs");
+		REPORT(LogLevel::VERBOSE, "total number of stages is " << bitAmount.size()-1);
 	}
 
 
 
 	void CompressionStrategy::applyAllCompressorsFromSolution(){
-		REPORT(DEBUG, "applying all compressors");
+		REPORT(LogLevel::DEBUG, "applying all compressors");
 
 		unsigned int colorCount = 0; //for bitheapPlotter
 		for(unsigned int s = 0; s < bitAmount.size() - 1; s++){
@@ -295,9 +295,9 @@ namespace flopoco{
 			for(unsigned int c = 0; c < bitheap->width; c++){   //drop all compressors which start > MSB
 				vector<pair<BasicCompressor*, unsigned int> > tempVector;
 				tempVector = solution.getCompressorsAtPosition(s, c);
-				REPORT(DEBUG, "at stage " << s << " and column " << c << " there are " << tempVector.size() << " compressors");
+				REPORT(LogLevel::DEBUG, "at stage " << s << " and column " << c << " there are " << tempVector.size() << " compressors");
 				for(unsigned int j = 0; j < tempVector.size(); j++){
-					REPORT(DEBUG, "applying compressor " << tempVector[j].first->getStringOfIO());
+					REPORT(LogLevel::DEBUG, "applying compressor " << tempVector[j].first->getStringOfIO());
 					//applyCompressor
 					unsigned int middleLength = tempVector[j].second;
 					Compressor* realCompressor = tempVector[j].first->getCompressor(middleLength);  //TODO: consider middleLength
@@ -323,7 +323,7 @@ namespace flopoco{
 								emptyInputs[c + cTemp] = 0;
 							}
 						}
-						REPORT(DEBUG, "after emptyInputs maxBitsToCompress is " << maxBitsToCompress);
+						REPORT(LogLevel::DEBUG, "after emptyInputs maxBitsToCompress is " << maxBitsToCompress);
 						unsigned int bitsFound = 0;
 						//check if the position of bits (c + cTemp) is inside the range of the bitheap
 						if(c + cTemp < bitheap->bits.size()){
@@ -354,8 +354,8 @@ namespace flopoco{
 
 			bitheapPlotter->takeSnapshot(soonestBit, soonestCompressibleBit);
 
-			REPORT(DEBUG, "finished stage " << s << " of " << bitAmount.size() - 1);
-			REPORT(DEBUG, "the bits in the bitheap are ordered as following");
+			REPORT(LogLevel::DEBUG, "finished stage " << s << " of " << bitAmount.size() - 1);
+			REPORT(LogLevel::DEBUG, "the bits in the bitheap are ordered as following");
 			printBitsInBitheap();
 		}
 		concatenateLSBColumns();
@@ -453,7 +453,7 @@ namespace flopoco{
 			}
 			rightOrder.push_back(possibleCompressors[pos]);
 			alreadyChosen[pos] = true;
-			REPORT(DETAILED, "found compressor " << possibleCompressors[pos]->getStringOfIO() << " with compressionRatio of " << currentMaxRatio << ". Original compressor position is " << pos);
+			REPORT(LogLevel::VERBOSE, "found compressor " << possibleCompressors[pos]->getStringOfIO() << " with compressionRatio of " << currentMaxRatio << ". Original compressor position is " << pos);
 		}
 		possibleCompressors = rightOrder;
 	}
@@ -465,7 +465,7 @@ namespace flopoco{
 		double delay;
 
 		// Add the constant bits
-		REPORT(DEBUG, "Adding the constant bits");
+		REPORT(LogLevel::DEBUG, "Adding the constant bits");
 		bitheap-> op->vhdl << endl << tab << "-- Adding the constant bits " << endl;
 		bool isConstantNonzero = false;
 		for (int w = bitheap->lsb; w <= bitheap->msb; w++){
@@ -487,7 +487,7 @@ namespace flopoco{
 		}
 		//when the constant bits are all zero, report it
 		if(!isConstantNonzero){
-			REPORT(DEBUG, "All the constant bits are zero, nothing to add");
+			REPORT(LogLevel::DEBUG, "All the constant bits are zero, nothing to add");
 			bitheap-> op->vhdl << tab << tab << "-- All the constant bits are zero, nothing to add" << endl;
 		}
 		bitheap-> op->vhdl << endl;
@@ -499,18 +499,18 @@ namespace flopoco{
 		//first, set the delay to the delay of a compressor
 		delay = compressionDelay;
 
-		REPORT(DEBUG, "current delay is: delay=" << delay);
+		REPORT(LogLevel::DEBUG, "current delay is: delay=" << delay);
 
 		//compress the bitheap to height 2
 		//  (the last column can be of height 3)
 		if(!bitheap->isCompressed || bitheap->compressionRequired())
 		{
-			REPORT(DEBUG, "starting compressionAlgorithm");
+			REPORT(LogLevel::DEBUG, "starting compressionAlgorithm");
 			compressionAlgorithm();
-			REPORT(DEBUG, "compressionAlgorithm ended");
+			REPORT(LogLevel::DEBUG, "compressionAlgorithm ended");
 
 		}else{
-			REPORT(DEBUG, "Bitheap already compressed, so startCompression has nothing else to do.");
+			REPORT(LogLevel::DEBUG, "Bitheap already compressed, so startCompression has nothing else to do.");
 		}
 		//generate the final addition
 		generateFinalAddVHDL(bitheap->getOp()->getTarget()->getVendor() == "Xilinx");
@@ -983,7 +983,7 @@ namespace flopoco{
 			THROWERROR("Invalid arguments for getSoonest bit: lsbColumn="
 					<< lsbColumn << " msbColumn=" << msbColumn);
 		if(bitheap->getMaxHeight() == 0)
-			REPORT(DEBUG, "Warning: trying to obtain the soonest bit from an empty bitheap!");
+			REPORT(LogLevel::DEBUG, "Warning: trying to obtain the soonest bit from an empty bitheap!");
 
 		//determine the first non-empty bit column
 		while((count < msbColumn) && (bitheap->bits[count].size() == 0))
@@ -1023,7 +1023,7 @@ namespace flopoco{
 			THROWERROR("Invalid arguments for getSoonestCompressibleBit bit: lsbColumn="
 					<< lsbColumn << " msbColumn=" << msbColumn);
 		if(bitheap->getMaxHeight() == 0)
-			REPORT(DEBUG, "Warning: trying to obtain the soonest bit from an empty bitheap!");
+			REPORT(LogLevel::DEBUG, "Warning: trying to obtain the soonest bit from an empty bitheap!");
 
 		//determine the first non-empty bit column
 		while((count < msbColumn) && (bitheap->bits[count].size() == 0))
@@ -1150,7 +1150,7 @@ namespace flopoco{
 					{
 						vector<int> newVect;
 
-						REPORT(DEBUG, "Generating compressor for col1=" << col1 <<", col0=" << col0);
+						REPORT(LogLevel::DEBUG, "Generating compressor for col1=" << col1 <<", col0=" << col0);
 
 						newVect.push_back(col0);
 						newVect.push_back(col1);
@@ -1247,7 +1247,7 @@ namespace flopoco{
 		}
 		if(bitheap->getOp()->getTarget()->useTargetOptimizations() && (bitheap->getOp()->getTarget()->getVendor() == "Xilinx"))
 		{
-			REPORT(DEBUG,"Adding target optimized GPCs for Xilinx FPGAs");
+			REPORT(LogLevel::DEBUG,"Adding target optimized GPCs for Xilinx FPGAs");
 
 //          possibleCompressors.push_back(new BasicXilinxGPC(bitheap->getOp(), bitheap->getOp()->getTarget(), {6,0,6})); //outdated since (6,0,7;5) GPC
 			possibleCompressors.push_back(new BasicXilinxGPC(bitheap->getOp(), bitheap->getOp()->getTarget(), {7,0,6}));

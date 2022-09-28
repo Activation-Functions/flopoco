@@ -149,7 +149,7 @@ namespace flopoco
         addOutput("R", wR);
 
         vector<mpz_class> val;
-        REPORT(DEBUG, "Filling table for a non-rectangular LUT multiplier of max size " << wX << "x" << wY << " (out put size is " << wR << ")")
+        REPORT(LogLevel::DEBUG, "Filling table for a non-rectangular LUT multiplier of max size " << wX << "x" << wY << " (out put size is " << wR << ")")
         for (int yx=0; yx < 1<<(wsx+wsy); yx++)
         {
             val.push_back(function(yx));
@@ -196,7 +196,7 @@ namespace flopoco
         //printf(", 0x%03x, shift=%01d, 0x%03x\n", raw_result, (unsigned)BaseMultiplierIrregularLUTXilinx::getRelativeResultLSBWeight(this->shape), (unsigned)(raw_result >> BaseMultiplierIrregularLUTXilinx::getRelativeResultLSBWeight(this->shape)));
         mpz_class r  = (raw_result >> BaseMultiplierIrregularLUTXilinx::getRelativeResultLSBWeight(this->shape));
 
-        REPORT(DEBUG, "Value for x=" << x << ", y=" << y << " : " << r.get_str(2))
+        REPORT(LogLevel::DEBUG, "Value for x=" << x << ", y=" << y << " : " << r.get_str(2))
         return r;
 
     }

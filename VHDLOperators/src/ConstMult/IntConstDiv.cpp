@@ -121,7 +121,7 @@ namespace flopoco{
 				o << "x";
 		}
 		
-		REPORT(INFO, "Composite division, d=" << d);
+		REPORT(LogLevel::DETAIL, "Composite division, d=" << d);
 
 		rSize = intlog2(d-1);
 
@@ -157,28 +157,28 @@ namespace flopoco{
 		int overallCostUp=0;
 		for(unsigned int i=0; i<divisors.size(); i++) {
 			cost=evaluateLUTCostOfLinearArch(wInCurrent, divisors[i], getTarget()->lutInputs());
-			REPORT (INFO, "Dividing by " << divisors[i] << " for wIn=" << wInCurrent << " should cost about " << cost << " LUTs");
+			REPORT(LogLevel::DETAIL, "Dividing by " << divisors[i] << " for wIn=" << wInCurrent << " should cost about " << cost << " LUTs");
 			currentDivProd *= divisors[i];
 			wInCurrent = intlog2( ((mpz_class(1)<<wIn)-1) / currentDivProd );
 			overallCostUp+=cost;
 		}
-		REPORT(INFO, "  Overall cost of composite division: " << overallCostUp << " LUTs");
+		REPORT(LogLevel::DETAIL, "  Overall cost of composite division: " << overallCostUp << " LUTs");
 #if 0
 			wInCurrent=wIn;
 			currentDivProd=1;
 			int overallCostDown=0;
 			for(int i=divisors.size()-1; i>=0; i--) {
 				cost=evaluateLUTCostOfLinearArch(wInCurrent, divisors[i], getTarget()->lutInputs());
-				REPORT (INFO, "Dividing by " << divisors[i] << " for wIn=" << wInCurrent << " costs " << cost);
+				REPORT(LogLevel::DETAIL, "Dividing by " << divisors[i] << " for wIn=" << wInCurrent << " costs " << cost);
 				currentDivProd *= divisors[i];
 				wInCurrent = intlog2( ((mpz_class(1)<<wIn)-1) / currentDivProd );
 				overallCostDown+=cost;
 			}
-			REPORT(INFO, "  Overall cost of composite division, counting down: " << overallCostDown );
+			REPORT(LogLevel::DETAIL, "  Overall cost of composite division, counting down: " << overallCostDown );
 
 			// Now we reverse
 			if(overallCostDown<overallCostUp) {
-				REPORT(INFO, "Reversing the divisor list");
+				REPORT(LogLevel::DETAIL, "Reversing the divisor list");
 				reverse(divisors.begin(), divisors.end());
 			}
 #endif
@@ -195,7 +195,7 @@ namespace flopoco{
 				outportmap << "Q=>Q"<<i+1<<",R=>R"<<i+1;
 				newInstance("IntConstDiv", join("subDiv",i), params.str(), inportmap.str(), outportmap.str());
 
-				// REPORT(INFO, join("subDiv",i) << " " <<  params.str() << "  " << inportmap.str() << "   " << outportmap.str());
+				// REPORT(LogLevel::DETAIL, join("subDiv",i) << " " <<  params.str() << "  " << inportmap.str() << "   " << outportmap.str());
 				// Slight sub-optimality here, TODO: we can win one bit from time to time
 				// wInCurrent = intlog2( ((mpz_class(1)<<wIn)-1) /divisors[i]);
 				wInCurrent = getSignalByName(join("Q",i+1))->width();
@@ -248,7 +248,7 @@ namespace flopoco{
 		rSize = intlog2(d-1);
 
 		if(rSize>4) {
-			REPORT(LIST, "WARNING: This operator is efficient for small constants. " << d << " is quite large. Attempting anyway.");
+			REPORT(LogLevel::MESSAGE, "WARNING: This operator is efficient for small constants. " << d << " is quite large. Attempting anyway.");
 		}
 		
 			
@@ -256,8 +256,8 @@ namespace flopoco{
 			if(architecture==0) {
 				alpha = getTarget()->lutInputs()-rSize;
 				if (alpha<1) {
-					REPORT(LIST, "WARNING: This value of d is too large for the LUTs of this FPGA (alpha="<<alpha<<").");
-					REPORT(LIST, " Building an architecture nevertheless, but it may be very large and inefficient.");
+					REPORT(LogLevel::MESSAGE, "WARNING: This value of d is too large for the LUTs of this FPGA (alpha="<<alpha<<").");
+					REPORT(LogLevel::MESSAGE, " Building an architecture nevertheless, but it may be very large and inefficient.");
 					alpha=1;
 					}
 			}
@@ -294,7 +294,7 @@ namespace flopoco{
 
 		// First evaluate the cost of the atomic divider
 		int cost0=evaluateLUTCostOfLinearArch(wIn, d, getTarget()->lutInputs());		  
-		REPORT(INFO, "  Estimated cost: " << cost0 );
+		REPORT(LogLevel::DETAIL, "  Estimated cost: " << cost0 );
 		
 		vector<int> divisors;
 
@@ -302,7 +302,7 @@ namespace flopoco{
 		int dd=d;
 		while (dd>1){
 			while(dd % divofd ==0){
-				REPORT(INFO, "Found divisor: " << divofd);
+				REPORT(LogLevel::DETAIL, "Found divisor: " << divofd);
 				divisors.push_back(divofd);
 				dd = dd/divofd;
 			}
@@ -311,18 +311,18 @@ namespace flopoco{
 
 		
 		if(divisors[0]!=d) { // which means that there is more than one
-			REPORT(INFO, "This constant can be decomposed in smaller factors, consider doing it. I'm building an atomic divider anyway.");
+			REPORT(LogLevel::DETAIL, "This constant can be decomposed in smaller factors, consider doing it. I'm building an atomic divider anyway.");
 		}
 
 
 
 		rho = intlog2(  ((mpz_class(1)<<alpha)-1)/d  );
 
-		REPORT(INFO, "alpha="<<alpha);
-		REPORT(DEBUG, "rSize=" << rSize << " qSize=" << qSize << " rho=" << rho);
+		REPORT(LogLevel::DETAIL, "alpha="<<alpha);
+		REPORT(LogLevel::DEBUG, "rSize=" << rSize << " qSize=" << qSize << " rho=" << rho);
 
 		if((d&1)==0)
-			REPORT(LIST, "WARNING, d=" << d << " is even, this is suspicious. Might work nevertheless, but surely suboptimal.")
+			REPORT(LogLevel::MESSAGE, "WARNING, d=" << d << " is even, this is suspicious. Might work nevertheless, but surely suboptimal.")
 
 
 				int xDigits = wIn/alpha;
@@ -335,8 +335,8 @@ namespace flopoco{
 			qDigits++;
 
 		
-		REPORT(INFO, "Architecture splits the input in xDigits=" << xDigits  <<  " chunks."   );
-		REPORT(DEBUG, "  d=" << d << "  wIn=" << wIn << "  alpha=" << alpha << "  rSize=" << rSize <<  "  xDigits=" << xDigits  <<  "  qSize=" << qSize );
+		REPORT(LogLevel::DETAIL, "Architecture splits the input in xDigits=" << xDigits  <<  " chunks."   );
+		REPORT(LogLevel::DEBUG, "  d=" << d << "  wIn=" << wIn << "  alpha=" << alpha << "  rSize=" << rSize <<  "  xDigits=" << xDigits  <<  "  qSize=" << qSize );
 
 		if(architecture==INTCONSTDIV_LINEAR_ARCHITECTURE) {
 			//////////////////////////////////////// Linear architecture //////////////////////////////////:
@@ -392,7 +392,7 @@ namespace flopoco{
 			
 			// The number of levels is computed out of the number of digits of the _input_
 			int levels = intlog2(2*xDigits-1); 
-			REPORT(INFO, "levels=" << levels);
+			REPORT(LogLevel::DETAIL, "levels=" << levels);
 			string ri, xi, ini, outi, qi, qs, r;
 
 
@@ -422,7 +422,7 @@ namespace flopoco{
 				}
 				else if(i==qDigits-1)  {
 					qiSize = qSize - (qDigits-1)*alpha;
-					REPORT(INFO, "-- qsize=" << qSize << " qisize=" << qiSize << "   rho=" << rho);
+					REPORT(LogLevel::DETAIL, "-- qsize=" << qSize << " qisize=" << qiSize << "   rho=" << rho);
 					if(qiSize>=rho)
 						vhdl << tab << declare(qi, qiSize, true) << " <= " << zg(qiSize -rho) << " & (" <<outi << range(rho+rSize-1, rSize) << ");" << endl;
 					else
@@ -440,7 +440,7 @@ namespace flopoco{
 				int qLevelSize = qDigits/(1<<level); // how many sub-quotients we have in this level
 				if (qDigits%((1<<level)) !=0 )
 					qLevelSize++;
-				REPORT(INFO, "level=" << level << "  rLevelSize=" << rLevelSize << "  qLevelSize=" << qLevelSize);
+				REPORT(LogLevel::DETAIL, "level=" << level << "  rLevelSize=" << rLevelSize << "  qLevelSize=" << qLevelSize);
 
 
 				vector<mpz_class> tableContent = otherLevelCBLKTable(level, d, alpha, rSize, rho);
@@ -475,7 +475,7 @@ namespace flopoco{
 					int subQSize; // The size, in bits, of the part of Q we are building
 					if (i<qLevelSize-1) { // The simple chunks where we just assemble a full binary tree
 						subQSize = (1<<level)*alpha;
-						REPORT(INFO, "level=" << level << "  i=" << i << "  subQSize=" << subQSize << "  tableOut=" << table->wOut << " rSize=" << rSize );
+						REPORT(LogLevel::DETAIL, "level=" << level << "  i=" << i << "  subQSize=" << subQSize << "  tableOut=" << table->wOut << " rSize=" << rSize );
 						vhdl << tab << declare(q, subQSize) << " <= " << zg(subQSize - (table->wOut-rSize)) << " & " << out << range (table->wOut-1, rSize) << ";"  << endl;
 						// TODO simplify the content of the zg above
 						vhdl << tab << declare(getTarget()->adderDelay(subQSize), qs, subQSize) << " <= " << q << " + (" <<  qsl << " & " << qsr << ");  -- partial quotient so far"  << endl;
@@ -483,7 +483,7 @@ namespace flopoco{
 					else if (i==qLevelSize-1){ // because i can reach qLevelSize when rlevelSize=qLevelSize+1, but then we have nothing to do
 						// Lefttmost chunk
 						subQSize = qSize-(qLevelSize-1)*(1<<level)*alpha;
-						REPORT(INFO, "level=" << level << "  i=" << i << "  subQSize=" << subQSize << "  tableOut=" << table->wOut << " rSize=" << rSize  << "  (leftmost)");
+						REPORT(LogLevel::DETAIL, "level=" << level << "  i=" << i << "  subQSize=" << subQSize << "  tableOut=" << table->wOut << " rSize=" << rSize  << "  (leftmost)");
 						
 						vhdl << tab << declare(q, subQSize) << " <= " ;
 						if(subQSize >= (table->wOut-rSize))
@@ -528,7 +528,7 @@ namespace flopoco{
 				mpz_class t1 = d*t0 -1;
 				mpz_class td = ( (d-1) * (mpz_class(1)<<k)) % d;  // in the article it is (-2^k)%d 
 				mpz_class t2 = td*t1 - (mpz_class(1)<<k); 
-				// REPORT(INFO, "k=" << k << "   td=" << td << "   t2=" << t2 ); 
+				// REPORT(LogLevel::DETAIL, "k=" << k << "   td=" << td << "   t2=" << t2 ); 
 				found = t2<0;
 			}
 			int optkp=k;
@@ -541,11 +541,11 @@ namespace flopoco{
 				mpz_class t1 = d*t0 -d +1;
 				mpz_class td = (mpz_class(1)<<k) % d;
 				mpz_class t2 = td*t1 - (mpz_class(1)<<k); 
-				// REPORT(INFO, "k=" << k << "   t2=" << t2 ); 
+				// REPORT(LogLevel::DETAIL, "k=" << k << "   t2=" << t2 ); 
 				found = t2<0;
 			}
 			int optkm=k;
-			REPORT(INFO, "Found optkp=" << optkp << "   optkm=" << optkm );
+			REPORT(LogLevel::DETAIL, "Found optkp=" << optkp << "   optkm=" << optkm );
 
 			// optkm--; optkp--; // optimality check: if this line is uncommented, it should no longer pass the exhaustive test
 			//                   // which is te case. 
@@ -567,8 +567,8 @@ namespace flopoco{
 			// TODO this interface is ugly
 			int costm = multm -> getArea() + wIn; 
 
-			REPORT(INFO, " Cost of optkp version is " << costp << " LUTs" );
-			REPORT(INFO, " Cost of optkm version is " << costm << " LUTs" );
+			REPORT(LogLevel::DETAIL, " Cost of optkp version is " << costp << " LUTs" );
+			REPORT(LogLevel::DETAIL, " Cost of optkm version is " << costm << " LUTs" );
 
 			// Finally get to VHDL generation
 			ostringstream multParams;
@@ -590,7 +590,7 @@ namespace flopoco{
 			}
 			else
 				{
-					REPORT(INFO, "WARNING: this architecture computed the quotient and does not output it; consider using architecture=0, it could be cheaper."); 
+					REPORT(LogLevel::DETAIL, "WARNING: this architecture computed the quotient and does not output it; consider using architecture=0, it could be cheaper."); 
 				}
 			if(computeRemainder) {
 				ostringstream multParams;

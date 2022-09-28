@@ -80,7 +80,7 @@ namespace flopoco{
 		signedOut = f->signedOut;
 
 		addHeaderComment("Evaluator for " +  f-> getDescription() + "\n");
-		REPORT(DETAILED, "Entering constructor, FixFunction description: " << f-> getDescription());
+		REPORT(LogLevel::VERBOSE, "Entering constructor, FixFunction description: " << f-> getDescription());
 		int wX=-lsbIn;
 		addInput("X", wX); // TODO manage signedIn
 
@@ -88,7 +88,7 @@ namespace flopoco{
 		addOutput("Y" ,outputSize , 2);
 
 		if(degree==0){ // This is a simple table
-			REPORT(DETAILED, "Degree 0: building a simple table");
+			REPORT(LogLevel::VERBOSE, "Degree 0: building a simple table");
 			ostringstream params;
 			params << "f="<<func
 						 << " signedIn=false" << " lsbIn=" << lsbIn
@@ -103,13 +103,13 @@ namespace flopoco{
 		}
 		else{
 			if(degree==1){ // For degree 1, MultiPartite could work better
-			REPORT(INFO, "Degree 1: You should consider using FixFunctionByMultipartiteTable");
+			REPORT(LogLevel::DETAIL, "Degree 1: You should consider using FixFunctionByMultipartiteTable");
 			}
 
 
 			// Build the polynomial approximation
 			double targetAcc= approxErrorBudget*pow(2, lsbOut);
-			REPORT(INFO, "Computing polynomial approximation of degree " << degree << " for target accuracy "<< targetAcc);
+			REPORT(LogLevel::DETAIL, "Computing polynomial approximation of degree " << degree << " for target accuracy "<< targetAcc);
 			pwp = new UniformPiecewisePolyApprox(func, targetAcc, degree);
 			alpha =  pwp-> alpha; // coeff table input size
 
@@ -119,7 +119,7 @@ namespace flopoco{
 			// What remains of the error budget for the evaluation phase ?
 			double roundingErrorBudget=exp2(lsbOut-1)-pwp->approxErrorBound;
 			// (this is actually useless because we will jointly optimize approx+round errors on each subinterval)
-			REPORT(INFO, "Overall error budget = " << exp2(lsbOut) << "  of which approximation error = " << pwp->approxErrorBound
+			REPORT(LogLevel::DETAIL, "Overall error budget = " << exp2(lsbOut) << "  of which approximation error = " << pwp->approxErrorBound
 						 << " hence rounding error budget = "<< roundingErrorBudget );
 
 			// The VHDL that splits the input into A and Z
@@ -147,7 +147,7 @@ namespace flopoco{
 			// Here I wish I could plug other (more parallel) evaluators.
 
 
-			REPORT(INFO, "Now building the Horner evaluator for rounding error budget "<< roundingErrorBudget);
+			REPORT(LogLevel::DETAIL, "Now building the Horner evaluator for rounding error budget "<< roundingErrorBudget);
 
 		// This is the same order as newInstance() would do, but does not require to write a factory for this Operator, which wouldn't make sense
 		schedule();
@@ -192,8 +192,8 @@ namespace flopoco{
 			vector<mpz_class> v;
 			SplitCoeffTableVector.push_back(v);
 		}
-		REPORT(DETAILED, "Poly table input size  = " << alpha);
-		REPORT(DETAILED, "Poly table output size = " << polyTableOutputSize);
+		REPORT(LogLevel::VERBOSE, "Poly table input size  = " << alpha);
+		REPORT(LogLevel::VERBOSE, "Poly table output size = " << polyTableOutputSize);
 
 		int x;
 		for(x=0; x<(1<<alpha); x++) {
@@ -207,15 +207,15 @@ namespace flopoco{
 				}
 				SplitCoeffTableVector[i].push_back(coeff); // TODO if this is to be used: integrate the rounding bit below into coeff before storing it in SplitCoeffTable
 				z += coeff << currentShift; // coeff of degree i from poly number x
-				// REPORT(DEBUG, "i=" << i << "   z=" << unsignedBinary(z, 64));
+				// REPORT(LogLevel::DEBUG, "i=" << i << "   z=" << unsignedBinary(z, 64));
 				if(i==0 && finalRounding){ // coeff of degree 0
 					int finalRoundBitPos = lsbOut-1;
 					z += mpz_class(1)<<(currentShift + finalRoundBitPos - pwp->LSB); // add the round bit
-					//REPORT(DEBUG, "i=" << i << " + z=" << unsignedBinary(z, 64));
+					//REPORT(LogLevel::DEBUG, "i=" << i << " + z=" << unsignedBinary(z, 64));
 					// This may entail an overflow of z, in the case -tiny -> +tiny, e.g. first polynomial of atan
 					// This is OK modulo 2^wOut (two's complement), but will break the vhdl output of Table: fix it here.
 					z = z & ((mpz_class(1)<<polyTableOutputSize) -1);
-					// REPORT(INFO, "Adding final round bit at position " << finalRoundBitPos-pwp->LSB);
+					// REPORT(LogLevel::DETAIL, "Adding final round bit at position " << finalRoundBitPos-pwp->LSB);
 				}
 				currentShift +=  pwp->MSB[i] - pwp->LSB + (pwp->coeffSigns[i]==0? 1: 0);
 			}
@@ -226,11 +226,11 @@ namespace flopoco{
 		int compressedCost=0;
 		for (int i=0; i<=degree; i++) {
 			auto dc = DifferentialCompression::find_differential_compression(SplitCoeffTableVector[i], alpha, pwp->MSB[i] - pwp->LSB + (pwp->coeffSigns[i]==0? 1: 0), getTarget());
-			REPORT(0, "Differential compression of coeff table for degree " << i << endl << dc.report());
+			REPORT(LogLevel::MESSAGE, "Differential compression of coeff table for degree " << i << endl << dc.report());
 			initialCost += (dc.originalWout)<< alpha;
 			compressedCost += dc.subsamplingStorageSize() + dc.diffsStorageSize();
 		}
-		REPORT(0, "For the full table of coeffs, initial cost is: " << initialCost <<   ", compressed cost is: " << compressedCost <<   "   Saved: " << 100*((double)initialCost-compressedCost)/ ((double)initialCost) << " %");
+		REPORT(LogLevel::MESSAGE, "For the full table of coeffs, initial cost is: " << initialCost <<   ", compressed cost is: " << compressedCost <<   "   Saved: " << 100*((double)initialCost-compressedCost)/ ((double)initialCost) << " %");
 
 
 	}

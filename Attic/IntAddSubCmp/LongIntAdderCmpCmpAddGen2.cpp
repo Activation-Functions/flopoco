@@ -108,9 +108,9 @@ for (int aa=25; aa<=400; aa+=25){
 			if (t-c<=0) l0 = 2;
 			else getTarget()->suggestSlackSubaddSize(l0, wIn, t-c);
 
-			REPORT(INFO, "l0 ="<<l0<<"	l1="<<l1<<"	ll="<<ll);
+			REPORT(LogLevel::DETAIL, "l0 ="<<l0<<"	l1="<<l1<<"	ll="<<ll);
 			maxAdderSize =  l0+l1+ll*(ll+1)/2;
-			REPORT(INFO, "Max adder size is="<< maxAdderSize);
+			REPORT(LogLevel::DETAIL, "Max adder size is="<< maxAdderSize);
 #ifdef MAXSIZE
 		int area = 2*maxAdderSize - l0 - 1 + (ll-1);
 		cout << " f="<<aa<<" s="<<maxAdderSize<<" area="<<area<<endl;
@@ -147,7 +147,7 @@ exit(-1);
 			}
 
 			for (int i=0; i<nbOfChunks; i++)
-				REPORT(INFO, "cSize["<<i<<"]="<<cSize[i]);
+				REPORT(LogLevel::DETAIL, "cSize["<<i<<"]="<<cSize[i]);
 
 //#define test512
 #ifdef test512

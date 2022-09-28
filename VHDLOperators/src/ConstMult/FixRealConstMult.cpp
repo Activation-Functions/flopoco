@@ -28,8 +28,8 @@ FixRealConstMult::FixRealConstMult(OperatorPtr parentOp, Target *target, bool si
 {
 	constStringToSollya(); //necessary to update variables for emulate and setting of msbC
 
-  REPORT(DEBUG, "Constant evaluates to " << mpfr_get_d(mpC, GMP_RNDN));
-  REPORT(DEBUG, "MSB of constant is " << msbC);
+  REPORT(LogLevel::DEBUG, "Constant evaluates to " << mpfr_get_d(mpC, GMP_RNDN));
+  REPORT(LogLevel::DEBUG, "MSB of constant is " << msbC);
 
   msbOut = msbIn_ + msbC;
 	int wIn = msbIn_ - lsbIn_ + 1;
@@ -51,7 +51,7 @@ FixRealConstMult::FixRealConstMult(OperatorPtr parentOp, Target *target, bool si
 	// Now we can check when this is a multiplier by 0: either because the it is zero, or because it is close enough
 	if (mpfr_zero_p(mpC) != 0)
 	{
-		REPORT(INFO, "It seems somebody asked for a multiplication by 0. We can do that.");
+		REPORT(LogLevel::DETAIL, "It seems somebody asked for a multiplication by 0. We can do that.");
 		vhdl << tab << "R <= (others => '0');" << endl;
 		return;
 	}

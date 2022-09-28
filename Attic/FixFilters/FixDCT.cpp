@@ -26,7 +26,7 @@ namespace flopoco{
 
 		// guard bits for a faithful result
 		int g = 1 + intlog2(N-1);
-		REPORT(INFO, "g = " << g);
+		REPORT(LogLevel::DETAIL, "g = " << g);
 
 		mpfr_t sumAbsCoeff;
 		mpfr_init2 (sumAbsCoeff, 10*(1+p));
@@ -67,14 +67,14 @@ namespace flopoco{
 			sumAbs *= 2.0;
 			leadingBit--;
 		}
-		REPORT(INFO, "Worst-case weight of MSB of the result is " << leadingBit);
+		REPORT(LogLevel::DETAIL, "Worst-case weight of MSB of the result is " << leadingBit);
 
 		wO = 1+ (leadingBit - (-p)) + 1; //1 + sign  ; 
 
 		addOutput("R", wO, 2); // sign + 
 
 		int size = 1 + (leadingBit - (-p) +1) + g; // sign + overflow  bits on the left, guard bits on the right
-		REPORT(INFO, "Sum size is: "<< size);
+		REPORT(LogLevel::DETAIL, "Sum size is: "<< size);
 		
 		//compute the guard bits from the KCM mulipliers
 		int guardBitsKCM = 0;
@@ -91,7 +91,7 @@ namespace flopoco{
 		}
 		
 		size += guardBitsKCM; // sign + overflow  bits on the left, guard bits + guard bits from KCMs on the right
-		REPORT(INFO, "Sum size with KCM guard bits is: "<< size);
+		REPORT(LogLevel::DETAIL, "Sum size with KCM guard bits is: "<< size);
 		
 		// Creating the FIR filter that will compute the DCT2
 		FixFIR* filter = new FixFIR(target, 		// the target FPGA

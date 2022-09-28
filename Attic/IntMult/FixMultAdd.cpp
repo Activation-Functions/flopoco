@@ -90,7 +90,7 @@ namespace flopoco {
 			// name << wX << "x" << wY << "p" << wA << "r" << wOut << "" << (signedIO?"s":"u");
 			name << Operator::getNewUId();
 			setNameWithFreqAndUID ( name.str() );
-			REPORT(DEBUG, "Building " << name.str() );
+			REPORT(LogLevel::DEBUG, "Building " << name.str() );
 		}
 
 		// Set up the VHDL library style
@@ -157,14 +157,14 @@ namespace flopoco {
 			wOutP = wX+wY; // the parameter we'll pass to IntMultiplier
 			g=0;
 			possibleOutputs=1; // No faithful rounding
-			REPORT(DETAILED, " Exact architecture" )
+			REPORT(LogLevel::VERBOSE, " Exact architecture" )
 		}
 		else { // there is a truncation of the product
 			// we will add g guard bits to the bit heap
 			wOutP=msbP;
 			g = IntMultiplier::neededGuardBits(wX, wY, wOutP); 
 			possibleOutputs=2; // No faithful rounding
-			REPORT(DETAILED, " Faithfully rounded architecture" )
+			REPORT(LogLevel::VERBOSE, " Faithfully rounded architecture" )
 		}
 
 		// The bit heap

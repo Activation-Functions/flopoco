@@ -19,7 +19,7 @@ namespace flopoco{
 
 	void OptimalCompressionStrategy::compressionAlgorithm()
 	{
-		REPORT(DEBUG, "compressionAlgorithm is optimal");
+		REPORT(LogLevel::DEBUG, "compressionAlgorithm is optimal");
 
 #ifndef HAVE_SCALP
 		THROWERROR("For the optimal compressor tree generation scalp is needed");
@@ -52,7 +52,7 @@ namespace flopoco{
 		}
 		else{
 			unsigned int stages = getMinAmountOfStages();
-			REPORT(DEBUG, "after getMinAmountOfStages stages = " << stages);
+			REPORT(LogLevel::DEBUG, "after getMinAmountOfStages stages = " << stages);
 			bool foundSolution = false;
 			while(!foundSolution){
 				foundSolution = optimalGeneration(stages, true);
@@ -75,7 +75,7 @@ namespace flopoco{
 		if(!optimalMinStages){
 			unsigned int daddaStageCount = getMaxStageCount();
 
-			REPORT(DEBUG, "daddaStageCount is " << daddaStageCount);
+			REPORT(LogLevel::DEBUG, "daddaStageCount is " << daddaStageCount);
 
 			resizeBitAmount(daddaStageCount);//set bitAmounts to 5 stages
 		}
@@ -83,35 +83,35 @@ namespace flopoco{
 			resizeBitAmount(stages);
 		}
 
-		REPORT(DEBUG, "bitAmount has now a size of " << bitAmount.size());
-		REPORT(DEBUG, "resized bitAmount");
+		REPORT(LogLevel::DEBUG, "bitAmount has now a size of " << bitAmount.size());
+		REPORT(LogLevel::DEBUG, "resized bitAmount");
 
 		initializeSolver();
-		REPORT(DEBUG, "initialized solver");
+		REPORT(LogLevel::DEBUG, "initialized solver");
 
 		addFlipFlop();
-		REPORT(DEBUG, "added flipflop");
+		REPORT(LogLevel::DEBUG, "added flipflop");
 
 		initializeVariables();
-		REPORT(DEBUG, "initialized variables");
+		REPORT(LogLevel::DEBUG, "initialized variables");
 
 		generateObjective();
-		REPORT(DEBUG, "generated objective");
+		REPORT(LogLevel::DEBUG, "generated objective");
 
 		generateConstraintC0();
-		REPORT(DEBUG, "finished constraint C0");
+		REPORT(LogLevel::DEBUG, "finished constraint C0");
 
 		generateConstraintC1();
-		REPORT(DEBUG, "finished constraint C1");
+		REPORT(LogLevel::DEBUG, "finished constraint C1");
 
 		generateConstraintC2();
-		REPORT(DEBUG, "finished constraint C2");
+		REPORT(LogLevel::DEBUG, "finished constraint C2");
 
 		generateConstraintC3();
-		REPORT(DEBUG, "finished constraint C3");
+		REPORT(LogLevel::DEBUG, "finished constraint C3");
 
 		generateConstraintC4();
-		REPORT(DEBUG, "generated all constraints");
+		REPORT(LogLevel::DEBUG, "generated all constraints");
 
 		if(optimalMinStages){
 			selectOutputStage(stages);
@@ -124,10 +124,10 @@ namespace flopoco{
 		problemSolver->writeLP("compressorTree.lp");
 
 		bool success = solve();
-		REPORT(DEBUG, "solved with success = " << success);
+		REPORT(LogLevel::DEBUG, "solved with success = " << success);
 		if(success){
 			fillSolutionFromILP();
-			REPORT(DEBUG, "solution done from ilp");
+			REPORT(LogLevel::DEBUG, "solution done from ilp");
 		}
 
 		return success;
@@ -150,7 +150,7 @@ namespace flopoco{
 
 		problemSolver = new ScaLP::Solver(ScaLP::newSolverDynamic({bitheap->getOp()->getTarget()->getILPSolver(),"Gurobi","CPLEX","SCIP","LPSolve"}));
 		problemSolver->timeout = bitheap->getOp()->getTarget()->getILPTimeout();
-        REPORT(DEBUG, "timeout is set to " << problemSolver->timeout << " seconds");
+        REPORT(LogLevel::DEBUG, "timeout is set to " << problemSolver->timeout << " seconds");
 	}
 
 	void OptimalCompressionStrategy::initializeVariables(){
@@ -171,7 +171,7 @@ namespace flopoco{
 				}
 			}
 		}
-		REPORT(DEBUG, "finished initializing k-variables");
+		REPORT(LogLevel::DEBUG, "finished initializing k-variables");
 
 		//N_s_c
 		columnBitCountVars.clear();
@@ -184,7 +184,7 @@ namespace flopoco{
 				columnBitCountVars[s - 1].push_back(tempN);
 			}
 		}
-		REPORT(DEBUG, "finished initializing N-variables");
+		REPORT(LogLevel::DEBUG, "finished initializing N-variables");
 
 		//U_s_c
 		newBitsCountVars.clear();
@@ -197,7 +197,7 @@ namespace flopoco{
 				newBitsCountVars[s].push_back(tempU);
 			}
 		}
-		REPORT(DEBUG, "finished initializing U-variables");
+		REPORT(LogLevel::DEBUG, "finished initializing U-variables");
 
 		//Z_s_c
 		emptyInputVars.clear();
@@ -210,7 +210,7 @@ namespace flopoco{
 				emptyInputVars[s].push_back(tempZ);
 			}
 		}
-		REPORT(DEBUG, "finished initializing Z-variables");
+		REPORT(LogLevel::DEBUG, "finished initializing Z-variables");
 
 		//D_s
 		stageVars.clear();
@@ -221,7 +221,7 @@ namespace flopoco{
 			ScaLP::Variable tempD = ScaLP::newBinaryVariable(varName.str());
 			stageVars[s] = tempD;
 		}
-		REPORT(DEBUG, "finished initializing D-variables");
+		REPORT(LogLevel::DEBUG, "finished initializing D-variables");
 
 	}
 
@@ -261,7 +261,7 @@ namespace flopoco{
 
 				for(unsigned int e = 0; e < possibleCompressors.size(); e++){
 					for(int ce = 0; ce < (int) possibleCompressors[e]->getHeights(); ce++){
-						//REPORT(DEBUG, "ce is " << ce << " for compressor " << possibleCompressors[e]->getStringOfIO());
+						//REPORT(LogLevel::DEBUG, "ce is " << ce << " for compressor " << possibleCompressors[e]->getStringOfIO());
 						if(c - ce >= 0){
 							int tempColumn = possibleCompressors[e]->getHeights() - ce - 1;
 							c1Term = c1Term + possibleCompressors[e]->getHeightsAtColumn((unsigned) tempColumn, true) * compCountVars[s][e][(unsigned)(c - ce)];
@@ -273,9 +273,9 @@ namespace flopoco{
 					c1Term = c1Term - columnBitCountVars[s - 1][c];
 				}
 				//U
-				//REPORT(DEBUG, "before U");
+				//REPORT(LogLevel::DEBUG, "before U");
 				c1Term = c1Term - newBitsCountVars[s][c];
-				//REPORT(DEBUG, "after adding U");
+				//REPORT(LogLevel::DEBUG, "after adding U");
 				//Z
 				c1Term = c1Term - emptyInputVars[s][c];
 				c1Term = c1Term + LARGE_NUMBER * stageVars[s];
@@ -393,20 +393,20 @@ namespace flopoco{
 	bool OptimalCompressionStrategy::solve(){
 
 		for(unsigned int e = 0; e < possibleCompressors.size(); e++){
-			REPORT(DEBUG, "at position " << e << " is compressor " << possibleCompressors[e]->getStringOfIO() << " with costs of " << possibleCompressors[e]->area);
+			REPORT(LogLevel::DEBUG, "at position " << e << " is compressor " << possibleCompressors[e]->getStringOfIO() << " with costs of " << possibleCompressors[e]->area);
 		}
 
 		bool solutionFound = false;
 		problemSolver->threads = 1;
 		problemSolver->quiet = false;
 
-		REPORT(DEBUG, "backend while solving ilp problem is " << problemSolver->getBackendName());
+		REPORT(LogLevel::DEBUG, "backend while solving ilp problem is " << problemSolver->getBackendName());
 
 		ScaLP::status stat = problemSolver->solve();
 
 		if(stat == ScaLP::status::INFEASIBLE_OR_UNBOUND || stat == ScaLP::status::INFEASIBLE || stat == ScaLP::status::UNBOUND){
 			solutionFound = false;
-			REPORT(DEBUG, "problem is unbound, infeasible or no solution within timelimit is reached");
+			REPORT(LogLevel::DEBUG, "problem is unbound, infeasible or no solution within timelimit is reached");
 		}
 		else if(stat == ScaLP::status::OPTIMAL || stat == ScaLP::status::FEASIBLE || stat == ScaLP::status::TIMEOUT_FEASIBLE ){
 			solutionFound = true;

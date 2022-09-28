@@ -109,8 +109,8 @@ for (int aa=25; aa<=400; aa+=25){
 		getTarget()->suggestSlackSubaddSize(l0, wIn, t - (getTarget()->lutDelay()+ getTarget()->adderDelay(l1)) );
 
 		maxAdderSize = l0+l1+ll*(ll+1)/2;
-		REPORT(INFO, "l0 ="<<l0<<"	l1="<<l1<<"	ll="<<ll);
-		REPORT(INFO, "The maximum adder size is="<< maxAdderSize);
+		REPORT(LogLevel::DETAIL, "l0 ="<<l0<<"	l1="<<l1<<"	ll="<<ll);
+		REPORT(LogLevel::DETAIL, "The maximum adder size is="<< maxAdderSize);
 
 #ifdef MAXSIZE
 		cout << " Frequency="<< aa <<" Width="<<maxAdderSize<<endl;
@@ -156,7 +156,7 @@ exit(-1);
 			}
 		}
 		for (int i=0; i<nbOfChunks; i++)
-			REPORT(INFO, "cSize["<<i<<"]="<<cSize[i]);
+			REPORT(LogLevel::DETAIL, "cSize["<<i<<"]="<<cSize[i]);
 
 //#define test512
 #ifdef test512

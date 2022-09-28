@@ -82,7 +82,7 @@ namespace flopoco{
 		// Now we can check when this is a multiplier by 0: either because the it is zero, or because it is close enough
 		if (mpfr_zero_p(mpC) != 0)
 		{
-			REPORT(INFO, "It seems somebody asked for a multiplication by 0. We can do that.");
+			REPORT(LogLevel::DETAIL, "It seems somebody asked for a multiplication by 0. We can do that.");
 			addOutput("R", wIn);
 			vhdl << tab << "R <= (others => '0');" << endl;
 			return;
@@ -90,7 +90,7 @@ namespace flopoco{
 		if(msbOut < lsbOut)
 			THROWERROR("Sorry, but the combination of parameters leads to a result where not bits remain (msbOut=" << msbOut << " and lsbOut=" << lsbOut << "). Please choose your parameter wisely.");
 
-		REPORT(INFO, "Output precisions: msbOut=" << msbOut << ", lsbOut=" << lsbOut);
+		REPORT(LogLevel::DETAIL, "Output precisions: msbOut=" << msbOut << ", lsbOut=" << lsbOut);
 
 		mpfr_t mpOp1, mpOp2; //temporary variables for operands
 		mpfr_init2(mpOp1, 100);
@@ -105,7 +105,7 @@ namespace flopoco{
 
 		mpfr_pow(mpEpsilonMax, mpOp1, mpOp2, GMP_RNDN); //2^(lsbOut-1)
 		ios::fmtflags old_settings = cout.flags();
-		REPORT(INFO, "Epsilon max=" << std::scientific << mpfr_get_d(mpEpsilonMax, GMP_RNDN));
+		REPORT(LogLevel::DETAIL, "Epsilon max=" << std::scientific << mpfr_get_d(mpEpsilonMax, GMP_RNDN));
 		cout.flags(old_settings);
 
     int q=4; // the search range for different integer representations
@@ -118,7 +118,7 @@ namespace flopoco{
 		mpfr_init2(s, 64);
 		mpfr_set_si(s, wCOut, GMP_RNDN);
 
-		REPORT(DETAILED, "coefficient word size = " << msbC + wCOut);
+		REPORT(LogLevel::VERBOSE, "coefficient word size = " << msbC + wCOut);
 		if(q >= msbC + wCOut) q=msbC + wCOut-1; //q=4 is a good value, however, it should be always less than the coefficient word size
 
 		mpfr_t mpCInt;
@@ -197,7 +197,7 @@ namespace flopoco{
 			int shiftTotal = mpfr_get_si(s, GMP_RNDN) - shift;
 
 			ios::fmtflags old_settings = cerr.flags();
-			REPORT(INFO, "k=" << k << ", constant = " << mpzCInt << " / 2^" << shiftTotal
+			REPORT(LogLevel::DETAIL, "k=" << k << ", constant = " << mpzCInt << " / 2^" << shiftTotal
 							  << ", mpEpsilonCoeff=" << std::scientific << mpfr_get_d(mpEpsilonCoeff, GMP_RNDN)
 							  << ", mpEpsilonMult=" << std::scientific << mpfr_get_d(mpEpsilonMult, GMP_RNDN)
 							  << ", mpEpsilonCoeffNorm=" << std::fixed << mpfr_get_d(mpEpsilonCoeffNorm, GMP_RNDN)
@@ -214,15 +214,15 @@ namespace flopoco{
 			computeAdderGraph(adderGraph, adderGraphStr, (PAGSuite::int_t) mpzCInt.get_si());
 
 			int noOfFullAddersBeforeTrunc = IntConstMultShiftAdd_TYPES::getGraphAdderCost(adderGraph, wIn, false);
-			REPORT(INFO, "  adder graph before truncation requires " << noOfFullAddersBeforeTrunc << " full adders");
+			REPORT(LogLevel::DETAIL, "  adder graph before truncation requires " << noOfFullAddersBeforeTrunc << " full adders");
 
 
 			map<pair<mpz_class, int>, vector<int> > wordSizeMap;
 
 			WordLengthCalculator wlc = WordLengthCalculator(adderGraph, wIn, epsilonMultNormInt, target);
 			wordSizeMap = wlc.optimizeTruncation();
-			REPORT(DEBUG, "Finished computing word sizes of truncated MCM");
-			if (UserInterface::verbose >= DETAILED)
+			REPORT(LogLevel::DEBUG, "Finished computing word sizes of truncated MCM");
+			if (is_log_lvl_enabled(LogLevel::VERBOSE))
 			{
 				for (auto &it : wordSizeMap)
 				{
@@ -235,14 +235,14 @@ namespace flopoco{
 			IntConstMultShiftAdd_TYPES::TruncationRegister truncationReg(wordSizeMap);
 
 			string trunactionStr = truncationReg.convertToString();
-			REPORT(INFO, "  truncation: " << trunactionStr);
+			REPORT(LogLevel::DETAIL, "  truncation: " << trunactionStr);
 			int noOfFullAddersAfterTrunc = IntConstMultShiftAdd_TYPES::getGraphAdderCost(adderGraph, wIn, false, truncationReg);
-			REPORT(INFO, "  adder graph after truncation requires " << noOfFullAddersAfterTrunc << " full adders");
+			REPORT(LogLevel::DETAIL, "  adder graph after truncation requires " << noOfFullAddersAfterTrunc << " full adders");
 
 //			IntConstMultShiftAdd_TYPES::print_aligned_word_graph(adderGraph, "", wIn, cout);
 //			IntConstMultShiftAdd_TYPES::print_aligned_word_graph(adderGraph, truncationReg, wIn, cout);
 
-			if (UserInterface::verbose >= DETAILED)
+			if(is_log_lvl_enabled(LogLevel::VERBOSE))
 			{
 				old_settings = cerr.flags();
 				cerr << k << " & $" << mpzCInt << "/2^" << shiftTotal << "$"
@@ -268,12 +268,12 @@ namespace flopoco{
 			}
 
 		}
-		REPORT(INFO, "best solution found for coefficient " << mpzCIntBest << " / 2^" << shiftTotalBest << " with "
+		REPORT(LogLevel::DETAIL, "best solution found for coefficient " << mpzCIntBest << " / 2^" << shiftTotalBest << " with "
 															<< noOfFullAddersBest << " full adders")
-		REPORT(INFO, "  adder graph " << adderGraphStrBest);
-		REPORT(INFO, "  truncations:" << trunactionStrBest);
+		REPORT(LogLevel::DETAIL, "  adder graph " << adderGraphStrBest);
+		REPORT(LogLevel::DETAIL, "  truncations:" << trunactionStrBest);
 
-    if (UserInterface::verbose >= DETAILED)
+    if(is_log_lvl_enabled(LogLevel::VERBOSE))
     {
       IntConstMultShiftAdd_TYPES::print_aligned_word_graph(adderGraphBest, "", wIn, cerr);
       IntConstMultShiftAdd_TYPES::print_aligned_word_graph(adderGraphBest, truncationRegBest, wIn, cerr);
@@ -294,7 +294,7 @@ namespace flopoco{
 		if(output_node != nullptr)
 		{
 			IntConstMultShiftAdd_TYPES::ErrorStorage es = getAccumulatedErrorFor(output_node,truncationRegBest);
-			REPORT(DETAILED, "error is +" << es.positive_error << " / -" << es.negative_error);
+			REPORT(LogLevel::VERBOSE, "error is +" << es.positive_error << " / -" << es.negative_error);
 		}
 
 		//VHDL code generation:
@@ -362,7 +362,7 @@ namespace flopoco{
 
 		int depth = PAGSuite::log2c_64(PAGSuite::nonzeros(coefficient));
 
-//		REPORT(INFO, "depth=" << depth);
+//		REPORT(LogLevel::DETAIL, "depth=" << depth);
 
 		PAGSuite::rpag *rpag = new PAGSuite::rpag(); //default is RPAG with 2 input adders
 
@@ -371,15 +371,15 @@ namespace flopoco{
 
 		if(depth > 3)
 		{
-			REPORT(DEBUG, "depth is 4 or more, limit search limit to 1");
+			REPORT(LogLevel::DEBUG, "depth is 4 or more, limit search limit to 1");
 			rpag->search_limit = 1;
 		}
 		if(depth > 4)
 		{
-			REPORT(DEBUG, "depth is 5 or more, limit MSD permutation limit");
+			REPORT(LogLevel::DEBUG, "depth is 5 or more, limit MSD permutation limit");
 			rpag->msd_digit_permutation_limit = 1000;
 		}
-		PAGSuite::global_verbose = UserInterface::verbose-2; //set rpag to one less than verbose of FloPoCo
+		PAGSuite::global_verbose = static_cast<int>(get_log_lvl())-2; //set rpag to one less than verbose of FloPoCo
 
 		PAGSuite::cost_model_t cost_model = PAGSuite::LL_FPGA;// with default value
 		rpag->input_wordsize = msbIn-lsbIn;
@@ -394,27 +394,24 @@ namespace flopoco{
 
 		adderGraphStr = PAGSuite::output_adder_graph(rpagAdderGraph,true);
 
-		REPORT(INFO, "  adderGraphStr=" << adderGraphStr);
+		REPORT(LogLevel::DETAIL, "  adderGraphStr=" << adderGraphStr);
 
-		if(UserInterface::verbose >= 3)
-			adderGraph.quiet = false; //enable debug output
-		else
-			adderGraph.quiet = true; //disable debug output, except errors
-
-		REPORT( DETAILED, "parse graph...")
+		adderGraph.quiet = is_log_lvl_enabled(LogLevel::DEBUG);
+		
+		REPORT(LogLevel::VERBOSE, "parse graph...")
 		bool validParse = adderGraph.parse_to_graph(adderGraphStr);
 
 		if(validParse)
 		{
 
-			REPORT(DETAILED, "check graph...")
+			REPORT(LogLevel::VERBOSE, "check graph...")
 			adderGraph.check_and_correct(adderGraphStr);
 
-			if (UserInterface::verbose >= DETAILED)
+			if(is_log_lvl_enabled(LogLevel::VERBOSE))
 				adderGraph.print_graph();
 			adderGraph.drawdot("pag_input_graph.dot");
 
-//			REPORT(INFO, "  adderGraph=" << adderGraph.get_adder_graph_as_string());
+//			REPORT(LogLevel::DETAIL, "  adderGraph=" << adderGraph.get_adder_graph_as_string());
 
 			return true;
 		}

@@ -312,7 +312,7 @@ namespace flopoco{
 
 		vhdl << tab << "R <= R0;" << endl;
 		getSignalByName("R") -> setCriticalPath(cpDelay);
-		REPORT(DEBUG, "Generated " << name.str());
+		REPORT(LogLevel::DEBUG, "Generated " << name.str());
 	}
 
 	void Compressor::setWordSizes()

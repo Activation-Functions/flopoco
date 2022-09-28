@@ -81,7 +81,7 @@ namespace flopoco {
 			mpfr_init2(coeffb_mp[i], 10000);
 			sollya_lib_get_constant(coeffb_mp[i], node);
 			coeffb_d[i] = mpfr_get_d(coeffb_mp[i], GMP_RNDN);
-			REPORT(DETAILED, "b[" << i << "]=" << setprecision(15) << scientific  << coeffb_d[i]);			
+			REPORT(LogLevel::VERBOSE, "b[" << i << "]=" << setprecision(15) << scientific  << coeffb_d[i]);			
 		}
 
 		for (uint32_t i=0; i< m; i++)		{
@@ -95,7 +95,7 @@ namespace flopoco {
 			mpfr_init2(coeffa_mp[i], 10000);
 			sollya_lib_get_constant(coeffa_mp[i], node);
 			coeffa_d[i] = mpfr_get_d(coeffa_mp[i], GMP_RNDN);
-			REPORT(DETAILED, "a[" << i << "]=" << scientific << setprecision(15) << coeffa_d[i]);			
+			REPORT(LogLevel::VERBOSE, "a[" << i << "]=" << scientific << setprecision(15) << coeffa_d[i]);			
 		}
 
 		
@@ -103,24 +103,24 @@ namespace flopoco {
 		if(H==0 && Heps==0) {
 #if HAVE_WCPG
 
-			REPORT(INFO, "H not provided: computing worst-case peak gain");
+			REPORT(LogLevel::DETAIL, "H not provided: computing worst-case peak gain");
 
 			if (!WCPG_tf(&H, coeffb_d, coeffa_d, n, m, (int)0))
 				THROWERROR("Could not compute WCPG");
-			REPORT(INFO, "Computed filter worst-case peak gain: H=" << H);
+			REPORT(LogLevel::DETAIL, "Computed filter worst-case peak gain: H=" << H);
 
 			double one_d[1] = {1.0}; 
 			if (!WCPG_tf(&Heps, one_d, coeffa_d, 1, m, (int)0))
 				THROWERROR("Could not compute WCPG");
-			REPORT(INFO, "Computed error amplification worst-case peak gain: Heps=" << Heps);
+			REPORT(LogLevel::DETAIL, "Computed error amplification worst-case peak gain: Heps=" << Heps);
 			
 #else 
 			THROWERROR("WCPG was not found (see cmake output), cannot compute worst-case peak gain H. Either provide H, or compile FloPoCo with WCPG");
 #endif
 		}
 		else {
-			REPORT(INFO, "Filter worst-case peak gain: H=" << H);
-			REPORT(INFO, "Error amplification worst-case peak gain: Heps=" << Heps);
+			REPORT(LogLevel::DETAIL, "Filter worst-case peak gain: H=" << H);
+			REPORT(LogLevel::DETAIL, "Error amplification worst-case peak gain: Heps=" << Heps);
 		}
 		
 		// guard bits for a faithful result
@@ -136,8 +136,8 @@ namespace flopoco {
 #endif
 		
 		msbOut = ceil(log2(H)); // see the paper
-		REPORT(INFO, "We ask for a SOPC faithful to lsbExt=" << lsbExt);
-		REPORT(INFO, "msbOut=" << msbOut);
+		REPORT(LogLevel::DETAIL, "We ask for a SOPC faithful to lsbExt=" << lsbExt);
+		REPORT(LogLevel::DETAIL, "msbOut=" << msbOut);
 
 
 		// Initialisations for the emulate
@@ -356,12 +356,12 @@ namespace flopoco {
 			epsilon = abs(y);
 			//cout << "k=" << k << " yi=" << y << endl;
 			if(k>=300000){
-				REPORT(0, "computeImpulseResponse: giving up for k=" <<k << " with epsilon still at " << epsilon << ", it seems hopeless");
+				REPORT(LogLevel::MESSAGE, "computeImpulseResponse: giving up for k=" <<k << " with epsilon still at " << epsilon << ", it seems hopeless");
 				epsilon=0;
 			}
 		}
 		vanishingK=k;
-		REPORT(0, "Impulse response vanishes for k=" << k);
+		REPORT(LogLevel::MESSAGE, "Impulse response vanishes for k=" << k);
 	}
 
 	
@@ -415,7 +415,7 @@ namespace flopoco {
 			
 			}
 
-			REPORT(0,"Filter output remains in [" << miny << ", " << maxy<<"]");
+			REPORT(LogLevel::MESSAGE,"Filter output remains in [" << miny << ", " << maxy<<"]");
 		}		
 	};
 

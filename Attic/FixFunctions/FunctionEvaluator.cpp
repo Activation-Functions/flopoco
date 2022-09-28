@@ -48,17 +48,17 @@ namespace flopoco{
 
 		setCopyrightString("Bogdan Pasca, Mioara Joldes, Florent de Dinechin (2010)");
 
-		REPORT(INFO, "Will try to implement the function: " << func );
-		REPORT(INFO, "The input precision of x is: " << wInX << " with x in [0,1[");
-		REPORT(INFO, "The LSB weight of the output is: "<<lsbOut);
-		REPORT(INFO, "The degree of the polynomial used to approximate this function is: " << n );
+		REPORT(LogLevel::DETAIL, "Will try to implement the function: " << func );
+		REPORT(LogLevel::DETAIL, "The input precision of x is: " << wInX << " with x in [0,1[");
+		REPORT(LogLevel::DETAIL, "The LSB weight of the output is: "<<lsbOut);
+		REPORT(LogLevel::DETAIL, "The degree of the polynomial used to approximate this function is: " << n );
 
 		pf = new PiecewiseFunction(func);
 		tg = new PolyCoeffTable(target, pf, lsbOut+1, n);
 		oplist.push_back(tg);
 
-		REPORT(INFO, "The number of intervals of the function: "<< intpow2(tg->wIn));
-		REPORT(INFO, "The number of bits used for y: "<< wInX-tg->wIn << " and its weight is: " << -tg->wIn);
+		REPORT(LogLevel::DETAIL, "The number of intervals of the function: "<< intpow2(tg->wIn));
+		REPORT(LogLevel::DETAIL, "The number of bits used for y: "<< wInX-tg->wIn << " and its weight is: " << -tg->wIn);
 
 
 		/* the nmber of bits of the address */
@@ -77,9 +77,9 @@ namespace flopoco{
 		wR = pe->getRWidth();
 		weightR = pe->getRWeight()+1;
 
-		REPORT(INFO, "The width of the polynomial evaluator output is: "<< wR);
+		REPORT(LogLevel::DETAIL, "The width of the polynomial evaluator output is: "<< wR);
 		/* number of digits to the left of the . */
-		REPORT(INFO, "The weight of the PE output is: "<<weightR);
+		REPORT(LogLevel::DETAIL, "The weight of the PE output is: "<<weightR);
 
 
 		addInput ("X", wInX);
@@ -181,8 +181,8 @@ namespace flopoco{
 
 		/* Compute the function */
 		f->eval(mpR, mpX);
-		REPORT(FULL,"emulate() input is:"<<sPrintBinary(mpX));
-		REPORT(FULL,"emulate() output before rounding is:"<<sPrintBinary(mpR));
+		REPORT(LogLevel::FULL,"emulate() input is:"<<sPrintBinary(mpX));
+		REPORT(LogLevel::FULL,"emulate() output before rounding is:"<<sPrintBinary(mpR));
 		/* Compute the signal value */
 		if (mpfr_signbit(mpR))
 			{
@@ -196,7 +196,7 @@ namespace flopoco{
 		 */
 		mpfr_get_z(rd.get_mpz_t(), mpR, GMP_RNDD);
 		ru = rd + 1;
-		REPORT(FULL,"emulate() output rd="<<rd <<"  ru="<< ru);
+		REPORT(LogLevel::FULL,"emulate() output rd="<<rd <<"  ru="<< ru);
 
 		tc->addExpectedOutput("R", rd);
 		tc->addExpectedOutput("R", ru);
