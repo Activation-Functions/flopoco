@@ -31,20 +31,20 @@ namespace flopoco {
    * @param lvl 
    * @param action 
    */
-  void external_log(LogLevel lvl, auto action){
+  auto external_log = [](LogLevel lvl, auto action){
     if (is_log_lvl_enabled(lvl)){
         action();
     }
-  }
+  };
 
   LogLevel get_log_lvl();
 
-  void report(LogLevel lvl, std::string_view message, auto filename, auto line, auto funcname) {
+  auto report = [](LogLevel lvl, std::string_view message, auto filename, auto line, auto funcname) {
     if (is_log_lvl_enabled(lvl)) {
         std::ostream& out = (lvl < 0) ? std::cerr : std::cout;
         out << "> (" << filename << ":" << line <<" (" << funcname << ")): " << message << std::endl;
     }
-  }
+  };
 }
 
 #define REPORT(level, stream) { \
