@@ -63,27 +63,24 @@ namespace flopoco{
 		f->emulate(tc);
 	}
 
-	OperatorPtr PositFunctionByTable::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args)
+	OperatorPtr PositFunctionByTable::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui)
 	{
 		int width, wES;
 		string f;
-		UserInterface::parseString(args, "f", &f);
-		UserInterface::parseInt(args, "width", &width);
-		UserInterface::parseInt(args, "wES", &wES);
+		ui.parseString(args, "f", &f);
+		ui.parseInt(args, "width", &width);
+		ui.parseInt(args, "wES", &wES);
 		return new PositFunctionByTable(parentOp, target, f, width, wES);
 	}
 
-	void PositFunctionByTable::registerFactory()
-	{
-		UserInterface::add("PositFunctionByTable", // name
-				   "Evaluator of function f using a table.",
-				   "Posit",
-				   "",
-				   "f(string): function to be evaluated between double-quotes, for instance \"exp(x*x)\";\
+	template <>
+	OperatorFactory op_factory<PositFunctionByTable>(){return factoryBuilder<PositFunctionByTable>({
+	    "PositFunctionByTable", // name
+	    "Evaluator of function f using a table.",
+	    "Posit",
+	    "",
+	    "f(string): function to be evaluated between double-quotes, for instance \"exp(x*x)\";\
                                     width(int): size of the Posit;	\
                                     wES(int): size of the Posit's exponent.",
-				   "This operator uses a table to store function values.",
-				   PositFunctionByTable::parseArguments
-				   ) ;
-	}
+	    "This operator uses a table to store function values."});}
 }

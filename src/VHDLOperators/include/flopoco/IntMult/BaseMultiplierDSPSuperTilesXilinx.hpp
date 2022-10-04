@@ -8,6 +8,8 @@
 #include <gmpxx.h>
 #include <mpfr.h>
 
+#include "flopoco/IntMult/IntMultiplier.hpp"
+#include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/IntMult/BaseMultiplierCategory.hpp"
 #include "flopoco/Operator.hpp"
 #include "flopoco/Tables/Table.hpp"
@@ -77,10 +79,7 @@ namespace flopoco {
 		Operator *generateOperator(Operator *parentOp, Target *target, Parametrization const & params) const final;
 
         /** Factory method */
-        static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
-        /** Register the factory */
-        static void registerFactory();
-
+        static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
 
     private:
         TILE_SHAPE shape;

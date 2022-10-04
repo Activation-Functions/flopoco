@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "flopoco/FixFilters/FixFIR.hpp"
+#include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/Operator.hpp"
 #include "flopoco/utils.hpp"
 
@@ -21,8 +22,7 @@ namespace flopoco{
 		virtual ~FixRootRaisedCosine();
 
 		/** Factory method */
-		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
-		static void registerFactory();
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
 		static TestList unitTest(int index);
 
 	private: 

@@ -1,5 +1,7 @@
 
 #include "flopoco/BitHeap/Compressor.hpp"
+#include "flopoco/InterfacedOperator.hpp"
+#include "flopoco/UserInterface.hpp"
 #include <string>
 
 using namespace std;
@@ -257,7 +259,7 @@ namespace flopoco{
 		//getSignalByName("R")->setCriticalPathContribution(getTarget()->logicDelay(wIn));
 		double cpDelay;
 
-		if(UserInterface::pipelineActive_) {
+		if(UserInterface::getUserInterface().pipelineActive_) {
 			cpDelay = getTarget()->tableDelay(wIn, wOut, true);
 		} else {
 			cpDelay = 0; //set delay to zero to prevent from being pipelined
@@ -394,13 +396,13 @@ namespace flopoco{
 	}
 
 
-	OperatorPtr Compressor::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+	OperatorPtr Compressor::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 		string in;
 		bool compactView_;
 		vector<int> heights_;
 
-		UserInterface::parseString(args, "columnHeights", &in);
-		UserInterface::parseBoolean(args, "compactView", &compactView_);
+		ui.parseString(args, "columnHeights", &in);
+		ui.parseBoolean(args, "compactView", &compactView_);
 
 		// tokenize the string, with ',' as a separator
 		stringstream ss(in);
@@ -415,16 +417,14 @@ namespace flopoco{
 		return new Compressor(parentOp, target, heights_, compactView_);
 	}
 
-	void Compressor::registerFactory(){
-		UserInterface::add("Compressor", // name
-				"A basic compressor.",
-				"BasicInteger", // categories
-				"",
-				"columnHeights(string): comma separated list of heights for the columns of the compressor, \
+	template <>
+	OperatorFactory op_factory<Compressor>(){return factoryBuilder<Compressor>({
+	    "Compressor", // name
+	    "A basic compressor.",
+	    "BasicInteger", // categories
+	    "",
+	    "columnHeights(string): comma separated list of heights for the columns of the compressor, \
 in decreasing order of the weight. For example, columnHeights=\"2,3\" produces a (2,3:4) GPC; \
 				compactView(bool)=false: whether the VHDL code is printed in a more compact way, or not",
-				"",
-				Compressor::parseArguments
-		) ;
-	}
-}
+	    ""});}
+} // namespace flopoco

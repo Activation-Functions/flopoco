@@ -188,15 +188,15 @@ namespace flopoco{
 
 
 	
-	OperatorPtr FPLog::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+	OperatorPtr FPLog::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 		int wE;
-		UserInterface::parseStrictlyPositiveInt(args, "wE", &wE);
+		ui.parseStrictlyPositiveInt(args, "wE", &wE);
 		int wF;
-		UserInterface::parseStrictlyPositiveInt(args, "wF", &wF);
+		ui.parseStrictlyPositiveInt(args, "wF", &wF);
 		int method;
-		UserInterface::parseInt(args, "method", &method);
+		ui.parseInt(args, "method", &method);
 		int inTableSize;
-		UserInterface::parseInt(args, "inTableSize", &inTableSize);
+		ui.parseInt(args, "inTableSize", &inTableSize);
 		if(method==0)
 			return new FPLogIterative(parentOp, target, wE, wF, inTableSize);
 		else if(method==1)
@@ -209,23 +209,20 @@ namespace flopoco{
 			}
 	}
 
-
-
-	
-	void FPLog::registerFactory(){
-		UserInterface::add("FPLog", // name
-											 "Floating-point logarithm",
-											 "ElementaryFunctions", // categories
-											 "",
-											 "wE(int): exponent size in bits; \
-                        wF(int): mantissa size in bits; \
-                        method(int)=0: 0 for iterative, 1 for polynomial; \
-                        inTableSize(int)=0: The input size to the tables of the iterative method, in bits, between 6 and 16. 0 choses a a sensible value",
-											 "For details on the technique used, see <a href=\"bib/flopoco.html#DetDinPuj2007:Arith\">this article</a> and <a href=\"bib/flopoco.html#2010-RR-FPLog\">this research report</a>.",
-											 FPLog::parseArguments,
-											 FPLog::unitTest
-											 ) ;
-
-	}
-
+	template <>
+	OperatorFactory op_factory<FPLog>(){return factoryBuilder<FPLog>({
+	    "FPLog", // name
+	    "Floating-point logarithm",
+	    "ElementaryFunctions", // categories
+	    "",
+	    "wE(int): exponent size in bits; "
+            "wF(int): mantissa size in bits; "
+	    	"method(int)=0: 0 for iterative, 1 for polynomial; "
+	    	"inTableSize(int)=0: The input size to the tables of the iterative "
+	    			"method, in bits, between 6 and 16. 0 choses a a sensible value",
+	    "For details on the technique used, see <a "
+	    "href=\"bib/flopoco.html#DetDinPuj2007:Arith\">this article</a> "
+	    "and <a href=\"bib/flopoco.html#2010-RR-FPLog\">this research "
+	    "report</a>."
+	});}
 }

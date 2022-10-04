@@ -35,13 +35,13 @@ namespace flopoco{
 
 	FixHalfSine::~FixHalfSine(){}
 
-	OperatorPtr FixHalfSine::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+	OperatorPtr FixHalfSine::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 		int lsbIn;
-		UserInterface::parseInt(args, "lsbIn", &lsbIn);
+		ui.parseInt(args, "lsbIn", &lsbIn);
 		int lsbOut;
-		UserInterface::parseInt(args, "lsbOut", &lsbOut);
+		ui.parseInt(args, "lsbOut", &lsbOut);
 		int n;
-		UserInterface::parseStrictlyPositiveInt(args, "n", &n);
+		ui.parseStrictlyPositiveInt(args, "n", &n);
 		OperatorPtr tmpOp = new FixHalfSine(parentOp, target, lsbIn, lsbOut, n);
 		return tmpOp;
 	}
@@ -75,22 +75,19 @@ namespace flopoco{
 		return testStateList;
 	}
 
-
-	
-	void FixHalfSine::registerFactory(){
-		UserInterface::add("FixHalfSine", // name
-											 "A generator of fixed-point Half-Sine filters, for inputs between -1 and 1",
-											 "FiltersEtc", // categories
-											 "",
-											 "lsbIn(int): position of the LSB of the input, e.g. -15 for a 16-bit signed input;\
+	template <>
+	OperatorFactory op_factory<FixHalfSine>(){return factoryBuilder<FixHalfSine>({
+	    "FixHalfSine", // name
+	    "A generator of fixed-point Half-Sine filters, for inputs between "
+	    "-1 and 1",
+	    "FiltersEtc", // categories
+	    "",
+	    "lsbIn(int): position of the LSB of the input, e.g. -15 for a 16-bit signed input;\
 											  lsbOut(int): position of the LSB of the output;\
                         n(int): filter order (number of taps will be 2n)",
-											 "For more details, see <a href=\"bib/flopoco.html#DinIstoMas2014-SOPCJR\">this article</a>.",
-											 FixHalfSine::parseArguments,
-											 FixHalfSine::unitTest
-											 ) ;
-	}
-
+	    "For more details, see <a "
+	    "href=\"bib/flopoco.html#DinIstoMas2014-SOPCJR\">this "
+	    "article</a>."});}
 }
 
 

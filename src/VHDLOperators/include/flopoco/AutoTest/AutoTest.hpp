@@ -3,26 +3,23 @@
 
 #include <stdio.h>
 #include <string>
+#include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/UserInterface.hpp"
-
-using namespace std;
 
 namespace flopoco{
 
-	class AutoTest
+	class AutoTest 
 	{
 
 	public:
 
-		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , std::vector<std::string> &args, UserInterface& ui);
 
-		static void registerFactory();
-
-		AutoTest(string opName, bool testDependences = false);
+		AutoTest(std::string opName, bool testDependences = false);
 
 	private:
 
-		string defaultTestBenchSize(map<string,string> * unitTestParam);
+		string defaultTestBenchSize(std::map<std::string, std::string> * unitTestParam);
 
 	};
 };

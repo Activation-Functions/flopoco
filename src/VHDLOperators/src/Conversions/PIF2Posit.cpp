@@ -163,24 +163,24 @@ namespace flopoco {
 	}
 
 
-	OperatorPtr PIF2Posit::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+	OperatorPtr PIF2Posit::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 		int width, es;
-		UserInterface::parseInt(args, "width", &width);
-		UserInterface::parseInt(args, "wES", &es);
+		ui.parseInt(args, "width", &width);
+		ui.parseInt(args, "wES", &es);
 		return new PIF2Posit(target, parentOp, width, es);
 	}
-	
-	void PIF2Posit::registerFactory() {
-		UserInterface::add("PIF2Posit", // name
-				   "Converts Posit Intermediate Format to Posits", // description, string
-				   "Conversions", // category, from the list defined in UserInterface.cpp
-				   "", //seeAlso
-				   "width(int): The size of the posit; \
+
+	template <>
+	OperatorFactory op_factory<PIF2Posit>(){return factoryBuilder<PIF2Posit>({
+	    "PIF2Posit",				    // name
+	    "Converts Posit Intermediate Format to Posits", // description,
+		"Conversions", // category, from the list defined in
+			           // UserInterface.cpp
+	    "",		   // sseeAlso
+	    "width(int): The size of the posit; \
                         wES(int): The exponent size (for the posit)",
-				   // More documentation for the HTML pages. If you want to link to your blog, it is here.
-				   "",
-				   PIF2Posit::parseArguments
-				   ) ;
-	}
-  
+	    // More documentation for the HTML pages. If you want to link to
+	    // your blog, it is here.
+	    ""});}
+
 }//namespace

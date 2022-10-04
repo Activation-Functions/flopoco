@@ -983,25 +983,22 @@ namespace flopoco{
 		}
 	}
 
-	OperatorPtr IEEEFMA::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+	OperatorPtr IEEEFMA::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 		int wE, wF;
-		UserInterface::parseStrictlyPositiveInt(args, "wE", &wE); 
-		UserInterface::parseStrictlyPositiveInt(args, "wF", &wF);
+		ui.parseStrictlyPositiveInt(args, "wE", &wE); 
+		ui.parseStrictlyPositiveInt(args, "wF", &wF);
 		return new IEEEFMA(parentOp, target, wE, wF);
 	}
 
-	void IEEEFMA::registerFactory(){
-		UserInterface::add("IEEEFMA", // name
-											 "A correctly rounded floating-point FMA.",
-											 "BasicFloatingPoint",
-											 "", //seeAlso
-											 "wE(int): exponent size in bits; \
+	template <>
+	OperatorFactory op_factory<IEEEFMA>(){return factoryBuilder<IEEEFMA>({
+	    "IEEEFMA", // name
+	    "A correctly rounded floating-point FMA.",
+	    "BasicFloatingPoint",
+	    "", // seeAlso
+	    "wE(int): exponent size in bits; \
 			wF(int): mantissa size in bits;",
-											 "",
-											 IEEEFMA::parseArguments,
-											 IEEEFMA::unitTest
-											 ) ;
-	}
+	    ""});}
 
 	TestList IEEEFMA::unitTest(int index)
 	{

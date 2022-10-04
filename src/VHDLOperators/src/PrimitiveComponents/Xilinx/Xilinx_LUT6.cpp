@@ -76,16 +76,16 @@ namespace flopoco
       setGeneric("init", init, 64);
   }
 
-  OperatorPtr XilinxLUT::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args)
+  OperatorPtr XilinxLUT::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui)
   {
     if (target->getVendor() != "Xilinx")
       throw std::runtime_error("Can't build xilinx primitive on non xilinx target");
 
     string variant;
-    UserInterface::parseString(args, "variant", &variant);
+    ui.parseString(args, "variant", &variant);
 
     string init;
-    UserInterface::parseString(args, "init", &init);
+    ui.parseString(args, "init", &init);
 
     if(variant == "LUT6")
       return new Xilinx_LUT6(parentOp, target, init);
@@ -101,17 +101,14 @@ namespace flopoco
       throw std::runtime_error("Unknown variant: " + variant);
   }
 
-  void XilinxLUT::registerFactory()
-  {
-    UserInterface::add("XilinxLUT", // name
-                        "Provides variants of Xilinx LUT primitives.", // description, string
-                        "Primitives", // category, from the list defined in UserInterface.cpp
-                        "",
-                       "variant(string): The LUT variant (LUT6, LUT6_2, etc.);\
-                         init(string): The LUT content;",
-                       "",
-                       XilinxLUT::parseArguments
-    );
-  }
+  template <>
+  OperatorFactory op_factory<XilinxLUT>(){return factoryBuilder<XilinxLUT>({
+      "XilinxLUT",				     // name
+      "Provides variants of Xilinx LUT primitives.", // description, string
+      "Primitives", // category, from the list defined in UserInterface.cpp
+      "",
+      "variant(string): The LUT variant (LUT6, LUT6_2, etc.);\
+       init(string): The LUT content;",
+      ""});}
 
 }//namespace

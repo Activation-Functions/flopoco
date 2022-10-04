@@ -215,15 +215,15 @@ namespace flopoco{
 
 	OperatorPtr FPMultKaratsuba::parseArguments(OperatorPtr parentOp, Target *target, const vector<string> &args) {
 		int wE;
-		UserInterface::parseStrictlyPositiveInt(args, "wE", &wE);
+		ui.parseStrictlyPositiveInt(args, "wE", &wE);
 		int wF_in;
-		UserInterface::parseStrictlyPositiveInt(args, "wF_in", &wF_in);
+		ui.parseStrictlyPositiveInt(args, "wF_in", &wF_in);
 		int wF_out;
-		UserInterface::parseStrictlyPositiveInt(args, "wF_out", &wF_out);
+		ui.parseStrictlyPositiveInt(args, "wF_out", &wF_out);
 		bool norm;
-		UserInterface::parseBoolean(args, "norm", &norm);
+		ui.parseBoolean(args, "norm", &norm);
 		bool correctRounding;
-		UserInterface::parseBoolean(args, "correctRounding", &correctRounding);
+		ui.parseBoolean(args, "correctRounding", &correctRounding);
 		return new FPMultKaratsuba(target, wE, wF, wE, wF, wE, wF, norm);
 	}
 

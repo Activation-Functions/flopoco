@@ -2,7 +2,9 @@
 #define FixSOPC_HPP
 
 #include "flopoco/BitHeap/BitHeap.hpp"
+#include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/Operator.hpp"
+#include "flopoco/UserInterface.hpp"
 #include "flopoco/utils.hpp"
 
 /*  All flopoco operators and utility functions are declared within
@@ -72,11 +74,7 @@ namespace flopoco{
 		pair<mpz_class,mpz_class> computeSOPCForEmulate(vector<mpz_class> x);
 
 		// User-interface stuff
-		/** Factory method - these are for internal use, by default FixSOPC should not be listed in Interfaced.txt */
-		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
-		static OperatorPtr parseArgumentsFull(OperatorPtr parentOp, Target *target , vector<string> &args);
 		static TestList unitTest(int index);
-		static void registerFactory();
 
 	protected:
 		int n;							        /**< number of products, also size of the vectors coeff, msbIn and lsbIn */
@@ -100,7 +98,15 @@ namespace flopoco{
 		BitHeap* bitHeap;    			 /**< The heap of weighted bits that will be used to do the additions */
 	};
 
+	struct FixSOPCInterfaced  {
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
+		static TestList unitTest(int index);
+	};
 
+
+	struct FixSOPCFullInterfaced  {
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
+	};
 }
 
 #endif

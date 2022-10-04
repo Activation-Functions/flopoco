@@ -162,24 +162,21 @@ namespace flopoco {
 	}
 
 
-	OperatorPtr Posit2PIF::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+	OperatorPtr Posit2PIF::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 		int width, es;
-		UserInterface::parseInt(args, "width", &width);
-		UserInterface::parseInt(args, "wES", &es); 
+		ui.parseInt(args, "width", &width);
+		ui.parseInt(args, "wES", &es); 
 		return new Posit2PIF(target, parentOp, width, es);
 	}
-	
-	void Posit2PIF::registerFactory() {
-		UserInterface::add("Posit2PIF", // name
-				   "Converts Posits to Posit Intermediate Format", // description, string
-				   "Conversions", // category, from the list defined in UserInterface.cpp
-				   "", //seeAlso
-				   "width(int): The input size; \
+
+	template <>
+	OperatorFactory op_factory<Posit2PIF>(){return factoryBuilder<Posit2PIF>({
+	    "Posit2PIF",
+	    "Converts Posits to Posit Intermediate Format",
+	    "Conversions",
+	    "",
+	    "width(int): The input size; \
                         wES(int): The exponent size",
-				   // More documentation for the HTML pages. If you want to link to your blog, it is here.
-				   "",
-				   Posit2PIF::parseArguments
-				   ) ;
-	}
-  
+	    ""});}
+
 }//namespace

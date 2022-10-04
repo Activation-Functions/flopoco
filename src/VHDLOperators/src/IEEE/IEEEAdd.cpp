@@ -548,24 +548,21 @@ namespace flopoco{
 		return testStateList;
 	}
 
-	OperatorPtr IEEEAdd::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+	OperatorPtr IEEEAdd::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 		int wE;
-		UserInterface::parseStrictlyPositiveInt(args, "wE", &wE);
+		ui.parseStrictlyPositiveInt(args, "wE", &wE);
 		int wF;
-		UserInterface::parseStrictlyPositiveInt(args, "wF", &wF);
+		ui.parseStrictlyPositiveInt(args, "wF", &wF);
 		return new IEEEAdd(parentOp, target, wE, wF);
 	}
 
-	void IEEEAdd::registerFactory(){
-		UserInterface::add("IEEEAdd", // name
-											 "A single-path floating-point adder.",
-											 "BasicFloatingPoint", // categories
-											 "",
-											 "wE(int): exponent size in bits; \
-											 wF(int): mantissa size in bits;",
-											 "",
-											 IEEEAdd::parseArguments,
-											 IEEEAdd::unitTest
-											 ) ;
-	}
+	template <>
+	OperatorFactory op_factory<IEEEAdd>(){return factoryBuilder<IEEEAdd>({
+	    "IEEEAdd", // name
+	    "A single-path floating-point adder.",
+	    "BasicFloatingPoint", // categories
+	    "",
+	    "wE(int): exponent size in bits; \
+		 wF(int): mantissa size in bits;",
+	    ""});}
 }

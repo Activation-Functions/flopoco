@@ -4,9 +4,11 @@
 #include <sstream>
 #include <gmp.h>
 #include <gmpxx.h>
-#include "flopoco/Operator.hpp"
+
+#include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/IntAddSubCmp/IntAdder.hpp"
 #include "flopoco/IntMult//IntMultiplier.hpp"
+#include "flopoco/Operator.hpp"
 
 namespace flopoco{
 
@@ -32,10 +34,7 @@ namespace flopoco{
 		void emulate(TestCase* tc);
 
 		/** Factory method that parses arguments and calls the constructor */
-		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
-
-		/** Factory register method */ 
-		static void registerFactory();
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
 
 	protected:
 		int wIn;                         /**< the width of X and Y */

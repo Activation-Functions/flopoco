@@ -9,12 +9,14 @@
 #include <time.h>
 #include <vector>
 
+#include "flopoco/UserInterface.hpp"
 #include "gmp.h"
 #include <gmpxx.h>
 #include "mpfr.h"
 
-#include "flopoco/Operator.hpp"
 #include "flopoco/BitHeap/BitHeap.hpp"
+#include "flopoco/InterfacedOperator.hpp"
+#include "flopoco/Operator.hpp"
 
 #include "flopoco/utils.hpp"
 
@@ -47,12 +49,7 @@ namespace flopoco
 		/**
 		 * Factory method
 		 */
-		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
-
-		/**
-		 * Register the factory
-		 */
-		static void registerFactory();
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args, UserInterface& ui);
 
 	public:
 		BitHeap *bitheap;                /**< the heights of the columns */

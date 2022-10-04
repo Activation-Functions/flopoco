@@ -187,13 +187,13 @@ namespace flopoco{
 	}
 
 
-	OperatorPtr FPSquare::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+	OperatorPtr FPSquare::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 		int wE;
-		UserInterface::parseStrictlyPositiveInt(args, "wE", &wE);
+		ui.parseStrictlyPositiveInt(args, "wE", &wE);
 		int wF_in;
-		UserInterface::parseStrictlyPositiveInt(args, "wF_in", &wF_in);
+		ui.parseStrictlyPositiveInt(args, "wF_in", &wF_in);
 		int wF_out;
-		UserInterface::parseStrictlyPositiveInt(args, "wF_out", &wF_out);
+		ui.parseStrictlyPositiveInt(args, "wF_out", &wF_out);
 		return new FPSquare(target, wE, wF_in, wF_out);
 	}
 

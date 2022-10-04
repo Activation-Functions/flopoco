@@ -156,7 +156,7 @@ namespace flopoco
         }
         Operator *op = new TableOperator(this, target, val, "MultTable", wsx+wsy, wR);
         op->setShared();
-        UserInterface::addToGlobalOpList(op);
+        UserInterface::getUserInterface().addToGlobalOpList(op);
 
         vhdl << declare(0.0,"Xtable",wsx+wsy) << " <= Y & X;" << endl;
 
@@ -201,38 +201,35 @@ namespace flopoco
 
     }
 
-    OperatorPtr BaseMultiplierIrregularLUTXilinx::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args)
+    OperatorPtr BaseMultiplierIrregularLUTXilinx::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui)
     {
         int wS;
         bool isSignedX, isSignedY;
-        UserInterface::parseStrictlyPositiveInt(args, "wS", &wS);
-        UserInterface::parseBoolean(args,"xSigned", &isSignedX);
-        UserInterface::parseBoolean(args,"ySigned", &isSignedY);
+        ui.parseStrictlyPositiveInt(args, "wS", &wS);
+        ui.parseBoolean(args,"xSigned", &isSignedX);
+        ui.parseBoolean(args,"ySigned", &isSignedY);
 
         return new BaseMultiplierIrregularLUTXilinxOp(parentOp,target, isSignedX, isSignedY, (BaseMultiplierIrregularLUTXilinx::TILE_SHAPE)wS, get_wX((BaseMultiplierIrregularLUTXilinx::TILE_SHAPE)wS), get_wY((BaseMultiplierIrregularLUTXilinx::TILE_SHAPE)wS));
     }
 
-    void BaseMultiplierIrregularLUTXilinx::registerFactory(){
-        UserInterface::add("BaseMultiplierIrregularLUTXilinx", // name
-                           "Implements a non rectangular LUT multiplier from a set that yields a relatively high efficiency compared to recangular LUT multipliers \n"
-            "  _ _     _        _ _       _     _ _ _    _ _      _ _     _\n"
-            " |_|_|_  |_|_     |_|_|_    |_|_  |_|_|_|  |_|_|_   |_|_|   |_|_\n"
-            " |_|_|_| |_|_|_     |_|_|   |_|_|   |_|_|  |_|_|_|  |_|_|   |_|_|\n"
-            " |_|_|_|   |_|_|              |_|                     |_|   |_|_|\n"
-            " shape 1  shape 2 shape 3 shape 4 shape 5  shape 6 shape 7  shape 8\n"
+    template <>
+    OperatorFactory op_factory<BaseMultiplierIrregularLUTXilinx>(){return factoryBuilder<BaseMultiplierIrregularLUTXilinx>({
+	"BaseMultiplierIrregularLUTXilinx", // name
+	"Implements a non rectangular LUT multiplier from a set that yields a "
+	"relatively high efficiency compared to recangular LUT multipliers \n"
+	"  _ _     _        _ _       _     _ _ _    _ _      _ _     _\n"
+	" |_|_|_  |_|_     |_|_|_    |_|_  |_|_|_|  |_|_|_   |_|_|   |_|_\n"
+	" |_|_|_| |_|_|_     |_|_|   |_|_|   |_|_|  |_|_|_|  |_|_|   |_|_|\n"
+	" |_|_|_|   |_|_|              |_|                     |_|   |_|_|\n"
+	" shape 1  shape 2 shape 3 shape 4 shape 5  shape 6 shape 7  shape 8\n"
 
-                           ,
-                           "BasicInteger", // categories
-                           "",
-                           "wS(int): shape ID;\
+	,
+	"BasicInteger", // categories
+	"",
+	"wS(int): shape ID;\
                             xSigned(bool)=false: input X can be signed or unsigned;\
                             ySigned(bool)=false: input Y can be signed or unsigned;",
-                           "",
-                           BaseMultiplierIrregularLUTXilinx::parseArguments,
-                           BaseMultiplierIrregularLUTXilinxOp::unitTest
-        ) ;
-
-    }
+	""});}
 
     int BaseMultiplierIrregularLUTXilinx::ownLUTCost(int x_anchor, int y_anchor, int wMultX, int wMultY, bool signedIO) {
         bool signedX = signedIO && (wMultX == x_anchor+wX);

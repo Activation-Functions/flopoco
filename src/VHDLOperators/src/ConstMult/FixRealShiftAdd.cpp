@@ -22,6 +22,7 @@ I don't really understand
 
 */
 #include "flopoco/ConstMult/FixRealShiftAdd.hpp"
+#include "flopoco/InterfacedOperator.hpp"
 
 #if defined(HAVE_PAGLIB) && defined(HAVE_RPAGLIB) && defined(HAVE_SCALP)
 
@@ -418,20 +419,18 @@ namespace flopoco{
 		return false;
 	}
 
-
-
-	OperatorPtr FixRealShiftAdd::parseArguments(OperatorPtr parentOp, Target* target, std::vector<std::string> &args)
+	OperatorPtr FixRealShiftAdd::parseArguments(OperatorPtr parentOp, Target* target, std::vector<std::string> &args, UserInterface& ui)
 	{
 		int lsbIn, lsbOut, msbIn;
 		bool signedIn;
 		double targetUlpError;
 		string constant;
-		UserInterface::parseInt(args, "lsbIn", &lsbIn);
-		UserInterface::parseString(args, "constant", &constant);
-		UserInterface::parseInt(args, "lsbOut", &lsbOut);
-		UserInterface::parseInt(args, "msbIn", &msbIn);
-		UserInterface::parseBoolean(args, "signedIn", &signedIn);
-		UserInterface::parseFloat(args, "targetUlpError", &targetUlpError);	
+		ui.parseInt(args, "lsbIn", &lsbIn);
+		ui.parseString(args, "constant", &constant);
+		ui.parseInt(args, "lsbOut", &lsbOut);
+		ui.parseInt(args, "msbIn", &msbIn);
+		ui.parseBoolean(args, "signedIn", &signedIn);
+		ui.parseFloat(args, "targetUlpError", &targetUlpError);	
 		return new FixRealShiftAdd(
 													parentOp,
 													target, 
@@ -444,25 +443,23 @@ namespace flopoco{
 													);
 	}
 
-
-	void flopoco::FixRealShiftAdd::registerFactory()	{
-		UserInterface::add(
-				"FixRealShiftAdd",
-				"Table based real multiplier. Output size is computed",
-				"ConstMultDiv",
-				"",
-				"signedIn(bool): 0=unsigned, 1=signed; \
+	template <>
+	OperatorFactory op_factory<flopoco::FixRealShiftAdd>(){return factoryBuilder<flopoco::FixRealShiftAdd>({
+	    "FixRealShiftAdd",
+	    "Table based real multiplier. Output size is computed",
+	    "ConstMultDiv",
+	    "",
+	    "signedIn(bool): 0=unsigned, 1=signed; \
 				msbIn(int): weight associated to most significant bit (including sign bit);\
 				lsbIn(int): weight associated to least significant bit;\
 				lsbOut(int): weight associated to output least significant bit; \
 				constant(string): constant given in arbitrary-precision decimal, or as a Sollya expression, e.g \"log(2)\"; \
 				targetUlpError(real)=1.0: required precision on last bit. Should be strictly greater than 0.5 and lesser than 1;",
-				"This variant of shift-and-add multiplier is briefly described in <a href=\"bib/flopoco.html#deDinechinEtAl2019-Arith-KCMvsSA\">this article</a>.<br> Special constants, such as 0 or powers of two, are handled efficiently.",
-				FixRealShiftAdd::parseArguments
-				// Unplugged for now because it entails too long running times 
-				//, 				FixRealShiftAdd::unitTest 
-		);
-	}
+	    "This variant of shift-and-add multiplier is briefly described in "
+	    "<a "
+	    "href=\"bib/flopoco.html#deDinechinEtAl2019-Arith-KCMvsSA\">this "
+	    "article</a>.<br> Special constants, such as 0 or powers of two, "
+	    "are handled efficiently."});}
 }//namespace
 #else // we need the factory but we need it to be empty
 namespace flopoco{

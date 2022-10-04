@@ -6,8 +6,10 @@
 #include <mpfr.h>
 #include <gmpxx.h>
 
+#include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/Operator.hpp"
 #include "flopoco/TestBenches/FPNumber.hpp"
+#include "flopoco/UserInterface.hpp"
 
 namespace flopoco{
 
@@ -28,21 +30,15 @@ namespace flopoco{
 		 */
 		~InputIEEE();
 
-
-
 		// overloading functions from Operator
-
 		void emulate(TestCase * tc);
 		void buildStandardTestCases(TestCaseList* tcl);
 
 		/** Factory method that parses arguments and calls the constructor */
-		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args, UserInterface& ui);
 
 		/** Generate unit tests */
 		static TestList unitTest(int index);
-
-		/** Factory register method */ 
-		static void registerFactory();
 
 	private:
 		/** The width of the exponent for the input X */

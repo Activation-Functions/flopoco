@@ -34,15 +34,15 @@ namespace flopoco{
 
 	FixRootRaisedCosine::~FixRootRaisedCosine(){}
 
-	OperatorPtr FixRootRaisedCosine::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+	OperatorPtr FixRootRaisedCosine::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 		int lsbIn;
-		UserInterface::parseInt(args, "lsbIn", &lsbIn);
+		ui.parseInt(args, "lsbIn", &lsbIn);
 		int lsbOut;
-		UserInterface::parseInt(args, "lsbOut", &lsbOut);
+		ui.parseInt(args, "lsbOut", &lsbOut);
 		int n;
-		UserInterface::parseStrictlyPositiveInt(args, "n", &n);
+		ui.parseStrictlyPositiveInt(args, "n", &n);
 		double alpha;
-		UserInterface::parseFloat(args, "alpha", &alpha);	
+		ui.parseFloat(args, "alpha", &alpha);	
 		OperatorPtr tmpOp = new FixRootRaisedCosine(parentOp, target, lsbIn, lsbOut, n, alpha);
 		return tmpOp;
 	}
@@ -79,23 +79,19 @@ namespace flopoco{
 		return testStateList;
 	}
 
-
-	
-	void FixRootRaisedCosine::registerFactory(){
-		UserInterface::add("FixRootRaisedCosine", // name
-											 "A generator of fixed-point Root-Raised Cosine filters, for inputs between -1 and 1",
-											 "FiltersEtc", // categories
-											 "",
-											 "alpha(real): roll-off factor, between 0 and 1;\
+	template <>
+	OperatorFactory
+	    op_factory<FixRootRaisedCosine>(){return factoryBuilder<FixRootRaisedCosine>({
+		"FixRootRaisedCosine", // name
+		"A generator of fixed-point Root-Raised Cosine filters, for "
+		"inputs between -1 and 1",
+		"FiltersEtc", // categories
+		"",
+		"alpha(real): roll-off factor, between 0 and 1;\
 											  lsbIn(int): position of the LSB of the input, e.g. -15 for a 16-bit signed input; \
 											  lsbOut(int): position of the LSB of the output;\
                         n(int): filter order (number of taps will be 2n+1)",
-											 "",
-											 FixRootRaisedCosine::parseArguments,
-											 FixRootRaisedCosine::unitTest
-											 ) ;
-	}
-
+		""});}
 }
 
 

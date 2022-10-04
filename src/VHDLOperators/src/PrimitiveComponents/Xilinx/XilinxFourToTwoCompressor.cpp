@@ -1,6 +1,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include "flopoco/UserInterface.hpp"
 #include "gmp.h"
 #include "mpfr.h"
 #include <vector>
@@ -209,32 +210,29 @@ namespace flopoco{
     }
 
 
-    OperatorPtr XilinxFourToTwoCompressor::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args )
+    OperatorPtr XilinxFourToTwoCompressor::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui)
     {
         if( target->getVendor() != "Xilinx" )
             throw std::runtime_error( "Can't build xilinx primitive on non xilinx target" );
 
         int wOut;
         bool useLastColumn;
-        UserInterface::parseInt(args,"wOut",&wOut );
-        UserInterface::parseBoolean(args,"useLastColumn",&useLastColumn );
+        ui.parseInt(args,"wOut",&wOut );
+        ui.parseBoolean(args,"useLastColumn",&useLastColumn );
 
         return new XilinxFourToTwoCompressor(parentOp, target, wOut, useLastColumn);
     }
 
-    void XilinxFourToTwoCompressor::registerFactory()
-    {
-        UserInterface::add( "XilinxFourToTwoCompressor", // name
-                            "An efficient 4:2 compressor build of xilinx primitives.", // description, string
-                            "Primitives", // category, from the list defined in UserInterface.cpp
-                            "",
-                            "wOut(int): The wordsize of the 4:2 compressor;\
+    template <>
+    OperatorFactory op_factory<XilinxFourToTwoCompressor>(){return factoryBuilder<XilinxFourToTwoCompressor>({
+	"XilinxFourToTwoCompressor",				   // name
+	"An efficient 4:2 compressor build of xilinx primitives.", // description,
+								   // string
+	"Primitives", // category, from the list defined in UserInterface.cpp
+	"",
+	"wOut(int): The wordsize of the 4:2 compressor;\
                             useLastColumn(bool)=0: if the 4:2 compressor should additonally compress two bits in the last column, this should be set to true;",
-                            "",
-                            XilinxFourToTwoCompressor::parseArguments
-                            );
-    }
-
+	""});}
 
     void BasicXilinxFourToTwoCompressor::calc_widths(int wIn, vector<int> &heights, vector<int> &outHeights){
         vector<int> comp_inputs, comp_outputs;

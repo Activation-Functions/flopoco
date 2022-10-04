@@ -606,13 +606,13 @@ namespace flopoco{
 		return tc;
 	}
 	
-	OperatorPtr FPLargeAcc::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+	OperatorPtr FPLargeAcc::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 		int wEX, wFX, MaxMSBX, MSBA, LSBA;
-		UserInterface::parseStrictlyPositiveInt(args, "wEX", &wEX); 
-		UserInterface::parseStrictlyPositiveInt(args, "wFX", &wFX);
-		UserInterface::parseInt(args, "MaxMSBX", &MaxMSBX);
-		UserInterface::parseInt(args, "MSBA", &MSBA);
-		UserInterface::parseInt(args, "LSBA", &LSBA);
+		ui.parseStrictlyPositiveInt(args, "wEX", &wEX); 
+		ui.parseStrictlyPositiveInt(args, "wFX", &wFX);
+		ui.parseInt(args, "MaxMSBX", &MaxMSBX);
+		ui.parseInt(args, "MSBA", &MSBA);
+		ui.parseInt(args, "LSBA", &LSBA);
 		return new FPLargeAcc(target, wEX, wFX, MaxMSBX, MSBA, LSBA);
 	}
 

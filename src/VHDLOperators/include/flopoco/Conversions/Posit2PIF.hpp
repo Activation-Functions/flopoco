@@ -2,6 +2,7 @@
 #define POSIT2PIF_HPP
 
 
+#include "flopoco/InterfacedOperator.hpp"
 /* Each Operator declared within the flopoco framework has 
    to inherit the class Operator and overload some functions listed below*/
 #include "flopoco/Operator.hpp"
@@ -23,17 +24,10 @@ namespace flopoco {
   public:        
     Posit2PIF(Target* target, Operator* parentOp, int widthI, int wES);
     
-    // destructor
-    // ~Posit2PIF();
-    
     void emulate(TestCase * tc);
     static void computePIFWidths(int const widthI, int const wES, int* wE, int* wF);
-    
-    
-    static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
-    
-    
-    static void registerFactory();
+
+    static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
     
   private:
     int wE_;

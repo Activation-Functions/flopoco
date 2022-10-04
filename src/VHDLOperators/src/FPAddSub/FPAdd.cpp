@@ -191,14 +191,14 @@ namespace flopoco{
 
 
 	
-	OperatorPtr FPAdd::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+	OperatorPtr FPAdd::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 		int wE, wF;
 		bool sub, dualPath, onlyPositiveIO;
-		UserInterface::parseStrictlyPositiveInt(args, "wE", &wE); 
-		UserInterface::parseStrictlyPositiveInt(args, "wF", &wF);
-		UserInterface::parseBoolean(args, "sub", &sub);
-		UserInterface::parseBoolean(args, "dualPath", &dualPath);
-		UserInterface::parseBoolean(args, "onlyPositiveIO", &onlyPositiveIO);
+		ui.parseStrictlyPositiveInt(args, "wE", &wE); 
+		ui.parseStrictlyPositiveInt(args, "wF", &wF);
+		ui.parseBoolean(args, "sub", &sub);
+		ui.parseBoolean(args, "dualPath", &dualPath);
+		ui.parseBoolean(args, "onlyPositiveIO", &onlyPositiveIO);
 
 		if(onlyPositiveIO && !dualPath)
 		{
@@ -246,22 +246,20 @@ namespace flopoco{
 
 		return testStateList;
 	}
-
-	void FPAdd::registerFactory(){
-		UserInterface::add("FPAdd", // name
-			"A correctly rounded floating-point adder.",
-			"BasicFloatingPoint",
-			"", //seeAlso
-			"wE(int): exponent size in bits; \
+	template <>
+	OperatorFactory op_factory<FPAdd>(){return factoryBuilder<FPAdd>({
+	    "FPAdd", // name
+	    "A correctly rounded floating-point adder.",
+	    "BasicFloatingPoint",
+	    "", // seeAlso
+	    "wE(int): exponent size in bits; \
 			wF(int): mantissa size in bits; \
 			sub(bool)=false: implement a floating-point subtractor instead of an adder;\
 			dualPath(bool)=false: use a dual-path algorithm, more expensive but shorter latency;\
 			onlyPositiveIO(bool)=false: optimize for only positive input and output numbers;",
-			"Single-path is lower hardware, longer latency than dual-path.<br> The difference between single-path and dual-path is well explained in textbooks such as Ercegovac and Lang's <em>Digital Arithmetic</em>, or Muller et al's <em>Handbook of floating-point arithmetic.</em>",
-			FPAdd::parseArguments,
-			FPAdd::unitTest
-			) ;
-	}
-
-
+	    "Single-path is lower hardware, longer latency than dual-path.<br> "
+	    "The difference between single-path and dual-path is well "
+	    "explained in textbooks such as Ercegovac and Lang's <em>Digital "
+	    "Arithmetic</em>, or Muller et al's <em>Handbook of floating-point "
+	    "arithmetic.</em>"});}
 }

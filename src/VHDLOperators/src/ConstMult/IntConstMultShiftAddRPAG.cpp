@@ -11,6 +11,7 @@
   All rights reserved.
 
 */
+#include "flopoco/UserInterface.hpp"
 #if defined(HAVE_PAGLIB) && defined(HAVE_RPAGLIB) && defined(HAVE_SCALP)
 
 #include <iostream>
@@ -130,14 +131,14 @@ namespace flopoco{
 		return testStateList;
 	}
 
-    OperatorPtr flopoco::IntConstMultShiftAddRPAG::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args ) {
+    OperatorPtr flopoco::IntConstMultShiftAddRPAG::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
         int wIn, epsilon;
 
-        UserInterface::parseStrictlyPositiveInt( args, "wIn", &wIn );
-		UserInterface::parsePositiveInt( args, "epsilon", &epsilon );
+        ui.parseStrictlyPositiveInt( args, "wIn", &wIn );
+		ui.parsePositiveInt( args, "epsilon", &epsilon );
 
 		string	constStr;
-		UserInterface::parseString(args, "constant", &constStr);
+		ui.parseString(args, "constant", &constStr);
 		try {
 			mpz_class constant(constStr);
 			return new IntConstMultShiftAddRPAG(parentOp, target, wIn, constant, false, epsilon);
@@ -148,30 +149,18 @@ namespace flopoco{
 		}
 
     }
-
-    void flopoco::IntConstMultShiftAddRPAG::registerFactory() {
-
-        UserInterface::add( "IntConstMultShiftAddRPAG", // name
-                            "Integer constant multiplication using shift and add using the RPAG algorithm", // description, string
-                            "ConstMultDiv", // category, from the list defined in UserInterface.cpp
-                            "", //seeAlso
-                            "wIn(int): Input word size; \
+	
+    template <>
+    OperatorFactory op_factory<IntConstMultShiftAddRPAG>(){return factoryBuilder<IntConstMultShiftAddRPAG>({
+	"IntConstMultShiftAddRPAG", // name
+	"Integer constant multiplication using shift and add using the RPAG "
+	"algorithm",	// description, string
+	"ConstMultDiv", // category, from the list defined in UserInterface.cpp
+	"",		// seeAlso
+	"wIn(int): Input word size; \
                             constant(int): constant; \
                             epsilon(int)=0: Allowable error for truncated constant multipliers;",
-                            "Nope.",
-                            IntConstMultShiftAddRPAG::parseArguments,
-														IntConstMultShiftAddRPAG::unitTest
-                          ) ;
-    }
-
+	"Nope."});}
 }
-#else
-
-#include "flopoco/ConstMult/IntConstMultShiftAddRPAG.hpp"
-namespace flopoco
-{
-	void IntConstMultShiftAddRPAG::registerFactory() { }
-}
-
 #endif //defined(HAVE_PAGLIB) && defined(HAVE_RPAGLIB)
 

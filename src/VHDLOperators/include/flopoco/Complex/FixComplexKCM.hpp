@@ -7,6 +7,7 @@
 #include "gmp.h"
 #include "mpfr.h"
 
+#include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/Operator.hpp"
 #include "flopoco/utils.hpp"
 
@@ -60,9 +61,8 @@ namespace flopoco {
 
 
 		/* Standard factory stuff */
-		static OperatorPtr parseArguments(OperatorPtr parentOp, Target* target,	vector<string>& args );
-		static void registerFactory();
-
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target* target,	vector<string>& args, UserInterface& ui);
+		
 		int get_MSBout();
 		
 	private:

@@ -424,17 +424,17 @@ namespace flopoco {
 	}
 
 
-	OperatorPtr VaryingPiecewisePolyApprox::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args)
+	OperatorPtr VaryingPiecewisePolyApprox::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui)
 	{
 		string f;
 		double ta;
 		int lsIn;
 		int lsOut;
 
-		UserInterface::parseString(args, "f", &f);
-		UserInterface::parseFloat(args, "targetAcc", &ta);
-		UserInterface::parseInt(args, "lsbIn", &lsIn);
-		UserInterface::parseInt(args, "lsbOut", &lsOut);
+		ui.parseString(args, "f", &f);
+		ui.parseFloat(args, "targetAcc", &ta);
+		ui.parseInt(args, "lsbIn", &lsIn);
+		ui.parseInt(args, "lsbOut", &lsOut);
 
 		VaryingPiecewisePolyApprox *ppa = new VaryingPiecewisePolyApprox(f, ta, lsIn, lsOut);
 		cout << "Accuracy is " << ppa->approxErrorBound << " ("<< log2(ppa->approxErrorBound) << " bits)";
@@ -442,24 +442,19 @@ namespace flopoco {
 		return NULL;
 	}
 
-
-
-	void VaryingPiecewisePolyApprox::registerFactory()
-	{
-		UserInterface::add("VaryingPiecewisePolyApprox", // name
-				   "Helper/Debug feature, does not generate VHDL. Uniformly segmented piecewise polynomial approximation of function f, accurate to targetAcc on [0,1)",
-				   "FunctionApproximation",
-				   "",
-				   "\
-f(string): function to be evaluated between double-quotes, for instance \"exp(x*x)\"; \
-targetAcc(real): the target approximation errror of the polynomial WRT the function;\
-lsbIn(int): input of x;\
-lsbOut(int): output of f(x)",
-				   "",
-				   VaryingPiecewisePolyApprox::parseArguments
-				   ) ;
-	}
-
-
+	template <>
+	OperatorFactory
+	    op_factory<VaryingPiecewisePolyApprox>(){return factoryBuilder<VaryingPiecewisePolyApprox>({
+		"VaryingPiecewisePolyApprox", // name
+		"Helper/Debug feature, does not generate VHDL. Uniformly "
+		"segmented piecewise polynomial approximation of function f, "
+		"accurate to targetAcc on [0,1)",
+		"FunctionApproximation",
+		"",
+		"f(string): function to be evaluated between double-quotes, for instance \"exp(x*x)\"; \
+		 targetAcc(real): the target approximation errror of the polynomial WRT the function;\
+		 lsbIn(int): input of x;\
+		 lsbOut(int): output of f(x)",
+		""});}
 
 } //namespace

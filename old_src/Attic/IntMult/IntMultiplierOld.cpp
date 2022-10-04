@@ -2075,11 +2075,11 @@ namespace flopoco {
 	OperatorPtr IntMultiplier::parseArguments(OperatorPtr parentOp, Target *target, std::vector<std::string> &args) {
 		int wX,wY, wOut ;
 		bool signedIO,superTile;
-		UserInterface::parseStrictlyPositiveInt(args, "wX", &wX);
-		UserInterface::parseStrictlyPositiveInt(args, "wY", &wY);
-		UserInterface::parsePositiveInt(args, "wOut", &wOut);
-		UserInterface::parseBoolean(args, "signedIO", &signedIO);
-		UserInterface::parseBoolean(args, "superTile", &superTile);
+		ui.parseStrictlyPositiveInt(args, "wX", &wX);
+		ui.parseStrictlyPositiveInt(args, "wY", &wY);
+		ui.parsePositiveInt(args, "wOut", &wOut);
+		ui.parseBoolean(args, "signedIO", &signedIO);
+		ui.parseBoolean(args, "superTile", &superTile);
 		return new IntMultiplier(target, wX, wY, wOut, signedIO, emptyDelayMap, superTile);
 	}
 

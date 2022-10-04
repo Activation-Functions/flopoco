@@ -5,6 +5,8 @@
 /* header of libraries to manipulate multiprecision numbers
    There will be used in the emulate function to manipulate arbitrary large
    entries */
+#include "flopoco/InterfacedOperator.hpp"
+#include "flopoco/UserInterface.hpp"
 #include "gmp.h"
 #include "mpfr.h"
 
@@ -14,9 +16,25 @@
 using namespace std;
 namespace flopoco {
 
+	/* Filling the different fields that are used to 
+	*/
+	template<>
+	OperatorFactory op_factory<TutorialOperator>(){return factoryBuilder<TutorialOperator>({
+		/*Name:         */ "TutorialOperator",
+		/*Description:  */ "An heavily commented example operator to start with FloPoCo.",
+		/*Category:     */ "Miscellaneous", //from the list defined in UserInterface.cpp
+		/*See also:     */ "",
+		// Now comes the parameter description string.
+		// Respect its syntax because it will be used to generate the parser and the docs
+		// Syntax is: a semicolon-separated list of parameterDescription;
+		// where parameterDescription is parameterName (parameterType)[=defaultValue]: parameterDescriptionString 
+		"param0(int)=16: A first parameter, here used as the input size; \
+         param1(int): A second parameter, here used as the output size",
+		// More documentation for the HTML pages. If you want to link to your blog, it is here.
+	    "Feel free to experiment with its code, it will not break anything in FloPoCo. <br> Also see the developper manual in the doc/ directory of FloPoCo.",
+		});}
 
-
-
+	
 	TutorialOperator::TutorialOperator(OperatorPtr parentOp, Target* target, int param0_, int param1_) : Operator(parentOp, target), param0(param0_), param1(param1_) {
 		/* constructor of the TutorialOperator
 		   Target is the targeted FPGA : Stratix, Virtex ... (see Target.hpp for more information)
@@ -130,28 +148,10 @@ namespace flopoco {
 
 
 
-	OperatorPtr TutorialOperator::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+	OperatorPtr TutorialOperator::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 		int param0, param1;
-		UserInterface::parseInt(args, "param0", &param0); // param0 has a default value, this method will recover it if it doesnt't find it in args, 
-		UserInterface::parseInt(args, "param1", &param1); 
+		ui.parseInt(args, "param0", &param0); // param0 has a default value, this method will recover it if it doesnt't find it in args, 
+		ui.parseInt(args, "param1", &param1); 
 		return new TutorialOperator(parentOp, target, param0, param1);
 	}
-	
-	void TutorialOperator::registerFactory(){
-		UserInterface::add("TutorialOperator", // name
-											 "An heavily commented example operator to start with FloPoCo.", // description, string
-											 "Miscellaneous", // category, from the list defined in UserInterface.cpp
-											 "", //seeAlso
-											 // Now comes the parameter description string.
-											 // Respect its syntax because it will be used to generate the parser and the docs
-											 // Syntax is: a semicolon-separated list of parameterDescription;
-											 // where parameterDescription is parameterName (parameterType)[=defaultValue]: parameterDescriptionString 
-											 "param0(int)=16: A first parameter, here used as the input size; \
-                        param1(int): A second parameter, here used as the output size",
-											 // More documentation for the HTML pages. If you want to link to your blog, it is here.
-											 "Feel free to experiment with its code, it will not break anything in FloPoCo. <br> Also see the developper manual in the doc/ directory of FloPoCo.",
-											 TutorialOperator::parseArguments
-											 ) ;
-	}
-
 }//namespace

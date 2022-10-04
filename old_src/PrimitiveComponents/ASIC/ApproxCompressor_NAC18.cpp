@@ -68,12 +68,12 @@ namespace flopoco{
     }
 
 
-    OperatorPtr ApproxCompressor_NAC18::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args)
+    OperatorPtr ApproxCompressor_NAC18::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui)
     {
         string in;
         vector<int> heights;
 
-        UserInterface::parseString(args, "columnHeights", &in);
+        ui.parseString(args, "columnHeights", &in);
 
         // tokenize the string, with ':' as a separator
         stringstream ss(in);

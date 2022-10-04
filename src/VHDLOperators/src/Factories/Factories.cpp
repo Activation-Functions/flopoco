@@ -14,20 +14,21 @@
 
 */
 #include "flopoco/UserInterface.hpp"
+#include "flopoco/InterfacedOperator.hpp"
 
 namespace flopoco{
+
 #define FLOPOCO_OPERATOR(op)	\
-class op {	\
-public:\
-	static void registerFactory();\
-};
+class op; \
+template<>\
+OperatorFactory op_factory<op>();
 #include "flopoco/Operators.def"
 #undef FLOPOCO_OPERATOR
 	
 void UserInterface::registerFactories()
 {
 	try {
-        #define FLOPOCO_OPERATOR(op) op::registerFactory();
+        #define FLOPOCO_OPERATOR(op) registerFactory(op_factory<op>());
         #include "flopoco/Operators.def"
         #undef FLOPOCO_OPERATOR
 		} catch (const std::exception &e) {

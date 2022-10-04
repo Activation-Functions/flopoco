@@ -9,6 +9,7 @@
 #include <mpfr.h>
 
 #include "flopoco/BitHeap/BitHeap.hpp"
+#include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/IntMult/BaseMultiplierCategory.hpp"
 #include "flopoco/Operator.hpp"
 #include "flopoco/Tables/Table.hpp"
@@ -55,9 +56,7 @@ namespace flopoco {
         Operator *generateOperator(Operator *parentOp, Target *target, Parametrization const & params) const final;
 
         /** Factory method */
-        static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
-        /** Register the factory */
-        static void registerFactory();
+        static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
 
         static int gcd(int a, int b) { return b == 0 ? a : gcd(b, a % b);}
     private:

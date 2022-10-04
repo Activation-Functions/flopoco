@@ -969,15 +969,15 @@ namespace flopoco{
 
 
 
-		OperatorPtr FPExp::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+		OperatorPtr FPExp::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 			int wE, wF, k, d, g;
 			bool fullInput;
-			UserInterface::parseStrictlyPositiveInt(args, "wE", &wE); 
-			UserInterface::parseStrictlyPositiveInt(args, "wF", &wF);
-			UserInterface::parsePositiveInt(args, "k", &k);
-			UserInterface::parsePositiveInt(args, "d", &d);
-			UserInterface::parseInt(args, "g", &g);
-			UserInterface::parseBoolean(args, "fullInput", &fullInput);
+			ui.parseStrictlyPositiveInt(args, "wE", &wE); 
+			ui.parseStrictlyPositiveInt(args, "wF", &wF);
+			ui.parsePositiveInt(args, "k", &k);
+			ui.parsePositiveInt(args, "d", &d);
+			ui.parseInt(args, "g", &g);
+			ui.parseBoolean(args, "fullInput", &fullInput);
 			return new FPExp(parentOp, target, wE, wF, k, d, g, fullInput);
 		}
 
@@ -1027,25 +1027,23 @@ namespace flopoco{
 		return testStateList;
 	}
 
-	void FPExp::registerFactory(){
-		UserInterface::add("FPExp", // name
-			"A faithful floating-point exponential function.",
-			"ElementaryFunctions",
-			"", // seeAlso
-			"wE(int): exponent size in bits; \
+	template <>
+	OperatorFactory op_factory<FPExp>(){return factoryBuilder<FPExp>({
+	    "FPExp", // name
+	    "A faithful floating-point exponential function.",
+	    "ElementaryFunctions",
+	    "", // seeAlso
+	    "wE(int): exponent size in bits; \
 			wF(int): mantissa size in bits;  \
 			d(int)=0: degree of the polynomial. 0 choses a sensible default.; \
 			k(int)=0: input size to the range reduction table, should be between 5 and 15. 0 choses a sensible default.;\
 			g(int)=-1: number of guard bits;\
 			fullInput(bool)=0: input a mantissa of wF+wE+g bits (useful mostly for FPPow)",
-			"Parameter d and k control the DSP/RamBlock tradeoff. In both cases, a value of 0 choses a sensible default. Parameter g is mostly for internal use.<br> For all the details, see <a href=\"bib/flopoco.html#DinechinPasca2010-FPT\">this article</a>.",
-			FPExp::parseArguments,
-			FPExp::unitTest
-			) ;
-	}
-
-
-
+	    "Parameter d and k control the DSP/RamBlock tradeoff. In both "
+	    "cases, a value of 0 choses a sensible default. Parameter g is "
+	    "mostly for internal use.<br> For all the details, see <a "
+	    "href=\"bib/flopoco.html#DinechinPasca2010-FPT\">this "
+	    "article</a>."});}
 }
 
 

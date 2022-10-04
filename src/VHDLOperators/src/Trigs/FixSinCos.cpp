@@ -190,19 +190,19 @@ namespace flopoco{
 
 
 		
-	OperatorPtr FixSinCos::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+	OperatorPtr FixSinCos::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 		int lsb;
 		int method;
 		int wA;
 		// TODO test if wIn!=wOut works for CORDIC
-		UserInterface::parseInt(args, "wA", &wA); 
-		UserInterface::parseInt(args, "lsb", &lsb); 
+		ui.parseInt(args, "wA", &wA); 
+		ui.parseInt(args, "lsb", &lsb); 
 		if(lsb>=0) {
-			cerr << " ERROR in FixSinCos::parseArguments: lsb should be negative" << endl<<  UserInterface::getFactoryByName("FixSinCos") -> getFullDoc();
+			cerr << " ERROR in FixSinCos::parseArguments: lsb should be negative" << endl<<  ui.getFactoryByName("FixSinCos").getFullDoc();
 			exit(EXIT_FAILURE);
 		}
 		
-		UserInterface::parseInt(args, "method", &method);
+		ui.parseInt(args, "method", &method);
 		if(method==0)
 			return new FixSinCosPoly(parentOp, target, lsb, wA);
 		else if (method==1)
@@ -210,24 +210,23 @@ namespace flopoco{
 		else if (method==2)
 			return new FixSinCosCORDIC(parentOp, target, -lsb+1, -lsb+1, 1);  // reduced iteration
 		else {
-			cerr << " ERROR in FixSinCos::parseArguments: Wrong method number" << endl<<  UserInterface::getFactoryByName("FixSinCos") -> getFullDoc();
+			cerr << " ERROR in FixSinCos::parseArguments: Wrong method number" << endl<<  ui.getFactoryByName("FixSinCos").getFullDoc();
 			exit(EXIT_FAILURE);
 		}
 	}
 
-
-	void FixSinCos::registerFactory(){
-		UserInterface::add("FixSinCos", // name
-											 "Computes (1-2^(-w)) sin(pi*x) and (1-2^(-w)) cos(pi*x) for x in -[1,1[",
-											 "ElementaryFunctions",
-											 "", // seeAlso
-											 "lsb(int): weight of the LSB of the input and outputs; \
-                        method(int)=0: 0 for table- and mult-based, 1 for traditional CORDIC, 2 for reduced-iteration CORDIC; \
-                        wA(int)=0: input size to the table. 0 choses a sensible value matching the target block RAM size.",
-											 "For a fixed-point 2's complement input x in [-1,1[, evaluates (1-2^(lsbIn))*{sin,cos}(pi*x). <br>For more details, see <a href=\"bib/flopoco.html#DinIstSer2013-HEART-SinCos\">this article</a>.",
-											 FixSinCos::parseArguments,
-											 FixSinCos::unitTest
-											 ) ;
-	
-	}
+	template <>
+	OperatorFactory op_factory<FixSinCos>(){return factoryBuilder<FixSinCos>({
+	    "FixSinCos", // name
+	    "Computes (1-2^(-w)) sin(pi*x) and (1-2^(-w)) cos(pi*x) for x in "
+	    "-[1,1[",
+	    "ElementaryFunctions",
+	    "", // seeAlso
+	    "lsb(int): weight of the LSB of the input and outputs; \
+         method(int)=0: 0 for table- and mult-based, 1 for traditional CORDIC, 2 for reduced-iteration CORDIC; \
+         wA(int)=0: input size to the table. 0 choses a sensible value matching the target block RAM size.",
+	    "For a fixed-point 2's complement input x in [-1,1[, evaluates "
+	    "(1-2^(lsbIn))*{sin,cos}(pi*x). <br>For more details, see <a "
+	    "href=\"bib/flopoco.html#DinIstSer2013-HEART-SinCos\">this "
+	    "article</a>."});}
 }

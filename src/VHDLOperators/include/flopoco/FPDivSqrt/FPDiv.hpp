@@ -6,6 +6,7 @@
 #include <mpfr.h>
 #include <gmpxx.h>
 
+#include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/Operator.hpp"
 #include "flopoco/TestBenches/FPNumber.hpp"
 
@@ -57,10 +58,7 @@ namespace flopoco{
 
 		// User-interface stuff
 		/** Factory method */
-		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args);
-		static void registerFactory();
-
-
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
 		
 	private:
 		/** The width of the exponent for the input X */
@@ -90,7 +88,7 @@ namespace flopoco{
 		static void computeNbBit(int radix, int digitSet);
 	public:
 		static void registerFactory();
-		static OperatorPtr NbBitsMinParseArguments(OperatorPtr parentOp, Target *target, vector<string> &args);
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
 	};
 
 }

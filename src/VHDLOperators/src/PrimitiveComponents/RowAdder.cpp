@@ -217,21 +217,18 @@ namespace flopoco {
     RowAdder::~RowAdder() {
     }
 
-    OperatorPtr RowAdder::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+    OperatorPtr RowAdder::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
         int wIn;
-        UserInterface::parseInt(args, "wIn", &wIn);
+        ui.parseInt(args, "wIn", &wIn);
         return new RowAdder(parentOp, target, wIn);
     }
 
-    void RowAdder::registerFactory() {
-        UserInterface::add("RowAdder", // name
-                           "Row adder for cormpression.", // description, string
-                           "Primitives", // category, from the list defined in UserInterface.cpp
-                           "",
-                           "wIn(int): input width of the row adder",
-                           "",
-                           RowAdder::parseArguments
-        );
-    }
-
+    template <>
+    OperatorFactory op_factory<RowAdder>(){return factoryBuilder<RowAdder>({
+	"RowAdder",		       // name
+	"Row adder for cormpression.", // description, string
+	"Primitives", // category, from the list defined in UserInterface.cpp
+	"",
+	"wIn(int): input width of the row adder",
+	""});}
 }

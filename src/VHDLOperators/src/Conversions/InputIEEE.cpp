@@ -400,14 +400,14 @@ namespace flopoco{
 		tcl->add(tc);
 	}
 	
-	OperatorPtr InputIEEE::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+	OperatorPtr InputIEEE::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 		int wEIn, wFIn, wEOut, wFOut;
 		 bool flushToZero=true;
-		UserInterface::parseStrictlyPositiveInt(args, "wEIn", &wEIn); 
-		UserInterface::parseStrictlyPositiveInt(args, "wFIn", &wFIn);
-		UserInterface::parseStrictlyPositiveInt(args, "wEOut", &wEOut); 
-		UserInterface::parseStrictlyPositiveInt(args, "wFOut", &wFOut);
-		//UserInterface::parseBoolean(args, "flushToZero", &flushToZero);
+		ui.parseStrictlyPositiveInt(args, "wEIn", &wEIn); 
+		ui.parseStrictlyPositiveInt(args, "wFIn", &wFIn);
+		ui.parseStrictlyPositiveInt(args, "wEOut", &wEOut); 
+		ui.parseStrictlyPositiveInt(args, "wFOut", &wFOut);
+		//ui.parseBoolean(args, "flushToZero", &flushToZero);
 		return new InputIEEE(parentOp, target, wEIn, wFIn, wEOut, wFOut, flushToZero);
 	}
 
@@ -439,18 +439,17 @@ namespace flopoco{
 		return testStateList;
 	}
 
-	void InputIEEE::registerFactory(){
-		UserInterface::add("InputIEEE", // name
-											 "Conversion from IEEE-754-like to FloPoCo floating-point formats. Subnormals are all flushed to zero at the moment.",
-											 "Conversions",
-											 "", // seeAlso
-											 "wEIn(int): input exponent size in bits;\
+	template <>
+	OperatorFactory op_factory<InputIEEE>(){return factoryBuilder<InputIEEE>({
+	    "InputIEEE", // name
+	    "Conversion from IEEE-754-like to FloPoCo floating-point formats. "
+	    "Subnormals are all flushed to zero at the moment.",
+	    "Conversions",
+	    "", // seeAlso
+	    "wEIn(int): input exponent size in bits;\
                         wFIn(int): input mantissa size in bits;\
                         wEOut(int): output exponent size in bits;\
                         wFOut(int): output mantissa size in bits",
-											 "", // htmldoc
-											 InputIEEE::parseArguments,
-											 InputIEEE::unitTest
-											 ) ;
-	}
+	    "" // htmldoc
+	});}
 }

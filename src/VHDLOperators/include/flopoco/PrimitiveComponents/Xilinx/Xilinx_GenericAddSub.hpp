@@ -1,6 +1,7 @@
 #ifndef Xilinx_GenericAddSub_H
 #define Xilinx_GenericAddSub_H
 
+#include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/Operator.hpp"
 #include "flopoco/utils.hpp"
 
@@ -27,13 +28,9 @@ namespace flopoco {
 		// destructor
 		~Xilinx_GenericAddSub();
 		
-		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args);
-
-		static void registerFactory();
-		// Operator interface
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
 	
-		virtual void emulate(TestCase *tc);
-		
+		virtual void emulate(TestCase *tc);		
 	};
 
 

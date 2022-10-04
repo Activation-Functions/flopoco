@@ -1,20 +1,18 @@
 #ifndef FPADD_HPP
 #define FPADD_HPP
+#include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/Operator.hpp"
 #include "FPAddSinglePath.hpp"
 #include "FPAddDualPath.hpp"
 
 
 namespace flopoco{
-	class FPAdd{
+	class FPAdd  {
 	public:
 		/** Factory method that parses arguments and calls the constructor */
-		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
 
 		static TestList unitTest(int index);
-
-		/** Factory register method */ 
-		static void registerFactory();
 
 		/** emulate() function to be shared by various implementations */
 		static void emulate(TestCase * tc, int wE, int wF, bool subtract);

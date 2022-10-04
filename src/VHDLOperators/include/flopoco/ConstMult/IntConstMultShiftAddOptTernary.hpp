@@ -20,9 +20,11 @@
 #include <gmpxx.h>
 #include <cstdlib>
 
+#include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/Operator.hpp"
 #include "flopoco/IntAddSubCmp/IntAdder.hpp"
 #include "IntConstMultShiftAdd.hpp"
+#include "flopoco/UserInterface.hpp"
 
 namespace flopoco{
 
@@ -32,8 +34,7 @@ namespace flopoco{
 	public:
         IntConstMultShiftAddOptTernary(Operator* parentOp, Target* target, int wIn, int coeff, bool syncInOut=true);
 
-        static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args );
-        static void registerFactory();
+        static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
 
 	private:
 		int coeff;  /**< The constant */

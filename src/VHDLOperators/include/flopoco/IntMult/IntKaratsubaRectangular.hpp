@@ -1,8 +1,9 @@
 #ifndef IntKaratsuba_HPP
 #define IntKaratsuba_HPP
 
-#include "flopoco/Operator.hpp"
 #include "flopoco/BitHeap/BitHeap.hpp"
+#include "flopoco/InterfacedOperator.hpp"
+#include "flopoco/Operator.hpp"
 
 namespace flopoco{
 
@@ -20,10 +21,8 @@ namespace flopoco{
 		void emulate(TestCase* tc);
 
         /** Factory method */
-        static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
-        /** Register the factory */
-        static void registerFactory();
-
+        static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
+     
 		static TestList unitTest(int index);
 
     protected:

@@ -428,13 +428,13 @@ namespace flopoco {
 		return -1;
 	}
 
-	OperatorPtr IntAdderAlternative::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+	OperatorPtr IntAdderAlternative::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 		int wIn;
-		UserInterface::parseStrictlyPositiveInt(args, "wIn", &wIn);
+		ui.parseStrictlyPositiveInt(args, "wIn", &wIn);
 		int optimizeType;
-		UserInterface::parsePositiveInt(args, "optimizeType", &optimizeType);
+		ui.parsePositiveInt(args, "optimizeType", &optimizeType);
 		bool srl;
-		UserInterface::parseBoolean(args, "srl", &srl);
+		ui.parseBoolean(args, "srl", &srl);
 		return new IntAdderAlternative(target, wIn, emptyDelayMap, optimizeType, srl);
 	}
 

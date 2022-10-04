@@ -322,35 +322,35 @@ namespace flopoco{
 	}
 
 
-	OperatorPtr FixFunctionByPiecewisePoly::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+	OperatorPtr FixFunctionByPiecewisePoly::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 		int lsbIn, lsbOut, d;
 		string f;
 		double approxErrorBudget;
-		UserInterface::parseString(args, "f", &f);
-		UserInterface::parseInt(args, "lsbIn", &lsbIn);
-		UserInterface::parseInt(args, "lsbOut", &lsbOut);
-		UserInterface::parsePositiveInt(args, "d", &d);
-		UserInterface::parseFloat(args, "approxErrorBudget", &approxErrorBudget);
+		ui.parseString(args, "f", &f);
+		ui.parseInt(args, "lsbIn", &lsbIn);
+		ui.parseInt(args, "lsbOut", &lsbOut);
+		ui.parsePositiveInt(args, "d", &d);
+		ui.parseFloat(args, "approxErrorBudget", &approxErrorBudget);
 		return new FixFunctionByPiecewisePoly(parentOp, target, f, lsbIn, lsbOut, d, true, approxErrorBudget);
 	}
 
-	void FixFunctionByPiecewisePoly::registerFactory(){
-		UserInterface::add("FixFunctionByPiecewisePoly", // name
-											 "Evaluator of function f on [0,1), using a piecewise polynomial of degree d with Horner scheme.",
-											 "FunctionApproximation",
-											 "",
-											 "f(string): function to be evaluated between double-quotes, for instance \"exp(x*x)\";\
+	template <>
+	OperatorFactory op_factory<FixFunctionByPiecewisePoly>(){return factoryBuilder<FixFunctionByPiecewisePoly>({
+	    "FixFunctionByPiecewisePoly", // name
+	    "Evaluator of function f on [0,1), using a piecewise polynomial of "
+	    "degree d with Horner scheme.",
+	    "FunctionApproximation",
+	    "",
+	    "f(string): function to be evaluated between double-quotes, for instance \"exp(x*x)\";\
 						lsbIn(int): weight of input LSB, for instance -8 for an 8-bit input;\
 						lsbOut(int): weight of output LSB;\
 						d(int): degree of the polynomial;\
 						approxErrorBudget(real)=0.25: error budget in ulp for the approximation, between 0 and 0.5",
-											 "This operator uses a table for coefficients, and Horner evaluation with truncated multipliers sized just right.<br>For more details, see <a href=\"bib/flopoco.html#DinJolPas2010-poly\">this article</a>.",
-											 FixFunctionByPiecewisePoly::parseArguments,
-											 FixFunctionByPiecewisePoly::unitTest
-											 ) ;
-
-	}
-
+	    "This operator uses a table for coefficients, and Horner "
+	    "evaluation with truncated multipliers sized just right.<br>For "
+	    "more details, see <a "
+	    "href=\"bib/flopoco.html#DinJolPas2010-poly\">this article</a>.",
+	});}
 }
 
 

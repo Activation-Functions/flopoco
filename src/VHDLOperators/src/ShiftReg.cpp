@@ -1,6 +1,9 @@
 #include <iostream>
 #include <sstream>
 
+#include "flopoco/InterfacedOperator.hpp"
+#include "flopoco/Operator.hpp"
+#include "flopoco/UserInterface.hpp"
 #include "gmp.h"
 #include "mpfr.h"
 
@@ -50,12 +53,12 @@ namespace flopoco {
 	};
 
 
-	OperatorPtr ShiftReg::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+	OperatorPtr ShiftReg::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 		int w_, n_, rescode;
 
-		UserInterface::parseStrictlyPositiveInt(args, "w", &w_);
-		UserInterface::parseStrictlyPositiveInt(args, "n", &n_);
-		UserInterface::parsePositiveInt(args, "reset", &rescode);
+		ui.parseStrictlyPositiveInt(args, "w", &w_);
+		ui.parseStrictlyPositiveInt(args, "n", &n_);
+		ui.parsePositiveInt(args, "reset", &rescode);
 
 		Signal::ResetType resetType_ = Signal::noReset;
 		if(rescode==1) resetType_ = Signal::syncReset;
@@ -63,19 +66,15 @@ namespace flopoco {
 		return new ShiftReg(parentOp, target, w_, n_, resetType_);
 	}
 
-
-	void ShiftReg::registerFactory(){
-		UserInterface::add("ShiftReg", // name
-											 "A plain shift register implementation.",
-											 "ShiftersLZOCs",
-											 "", //seeAlso
-											 "w(int): the size of the input; \
+	template <>
+	OperatorFactory op_factory<ShiftReg>(){return factoryBuilder<ShiftReg>({
+	    "ShiftReg", // name
+	    "A plain shift register implementation.",
+	    "ShiftersLZOCs",
+	    "", // seeAlso
+	    "w(int): the size of the input; \
 						            n(int): the number of stages in the shift register, also the number of outputs;\
                         reset(int)=0: the reset type (0 for none, 1 for synchronous, 2 for asynchronous)",
-											 "",
-											 ShiftReg::parseArguments
-											 ) ;
-	}
-
+	    ""});}
 }
 	

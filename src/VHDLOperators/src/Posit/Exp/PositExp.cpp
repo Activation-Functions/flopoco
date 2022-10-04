@@ -144,21 +144,20 @@ namespace flopoco{
 
 
 
-         OperatorPtr PositExp::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+         OperatorPtr PositExp::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 			int width, wES, k, d, g;
-			UserInterface::parseStrictlyPositiveInt(args, "width", &width); 
-			UserInterface::parsePositiveInt(args, "wES", &wES);
-			UserInterface::parsePositiveInt(args, "k", &k);
-			UserInterface::parsePositiveInt(args, "d", &d);
-			UserInterface::parseInt(args, "g", &g);
+			ui.parseStrictlyPositiveInt(args, "width", &width); 
+			ui.parsePositiveInt(args, "wES", &wES);
+			ui.parsePositiveInt(args, "k", &k);
+			ui.parsePositiveInt(args, "d", &d);
+			ui.parseInt(args, "g", &g);
 			return new PositExp(parentOp, target, width, wES, k, d, g);
 		}
 
-
-	
-
-	void PositExp::registerFactory(){
-		UserInterface::add("PositExp", // name
+		template <>
+		OperatorFactory
+		    op_factory<PositExp>(){return factoryBuilder<PositExp>({
+			"PositExp", // name
 			"A faithful posit exponential function.",
 			"Posit",
 			"", // seeAlso
@@ -167,13 +166,12 @@ namespace flopoco{
 			d(int)=0: degree of the polynomial. 0 choses a sensible default.; \
 			k(int)=0: input size to the range reduction table, should be between 5 and 15. 0 choses a sensible default.;\
 			g(int)=-1: number of guard bits",
-			"Parameter d and k control the DSP/RamBlock tradeoff. In both cases, a value of 0 choses a sensible default. Parameter g is mostly for internal use.<br> For all the details, see <a href=\"bib/flopoco.html#DinechinPasca2010-FPT\">this article</a>.",
-			PositExp::parseArguments
-			) ;
-	}
-
-
-
+			"Parameter d and k control the DSP/RamBlock tradeoff. "
+			"In both cases, a value of 0 choses a sensible "
+			"default. Parameter g is mostly for internal use.<br> "
+			"For all the details, see <a "
+			"href=\"bib/flopoco.html#DinechinPasca2010-FPT\">this "
+			"article</a>."});}
 }
 
 

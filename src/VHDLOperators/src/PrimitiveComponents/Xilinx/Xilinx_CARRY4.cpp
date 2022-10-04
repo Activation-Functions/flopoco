@@ -35,7 +35,7 @@ namespace flopoco
   */
   }
 
-  OperatorPtr Xilinx_CARRY4::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args)
+  OperatorPtr Xilinx_CARRY4::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui)
   {
     if (target->getVendor() != "Xilinx")
       throw std::runtime_error("Can't build xilinx primitive on non xilinx target");
@@ -43,15 +43,12 @@ namespace flopoco
     return new Xilinx_CARRY4(parentOp, target);
   }
 
-  void Xilinx_CARRY4::registerFactory()
-  {
-    UserInterface::add("XilinxCARRY4", // name
-                       "Provides the Xilinx CARRY4 primitive.", // description, string
-                       "Primitives", // category, from the list defined in UserInterface.cpp
-                       "",
-                       "",
-                       "",
-                       Xilinx_CARRY4::parseArguments
-    );
-  }
+  template <>
+  OperatorFactory op_factory<Xilinx_CARRY4>(){return factoryBuilder<Xilinx_CARRY4>({
+      "XilinxCARRY4",			       // name
+      "Provides the Xilinx CARRY4 primitive.", // description, string
+      "Primitives", // category, from the list defined in UserInterface.cpp
+      "",
+      "",
+      ""});}
 }//namespace

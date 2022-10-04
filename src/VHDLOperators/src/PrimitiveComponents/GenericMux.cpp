@@ -87,23 +87,21 @@ namespace flopoco {
 		// please fill me with regression tests or corner case tests!
 	}
 
-  OperatorPtr GenericMux::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+  OperatorPtr GenericMux::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
     int wIn, inputCount;
-    UserInterface::parseStrictlyPositiveInt(args, "wIn", &wIn);
-    UserInterface::parseStrictlyPositiveInt(args, "inputCount", &inputCount);
+    ui.parseStrictlyPositiveInt(args, "wIn", &wIn);
+    ui.parseStrictlyPositiveInt(args, "inputCount", &inputCount);
     return new GenericMux(parentOp, target, (unsigned int) wIn, (unsigned int) inputCount);
   }
 
-  void GenericMux::registerFactory() {
-    UserInterface::add("GenericMux",
-    "A Multiplexer",
-    "ShiftersLZOCs",
-    "",
-    "wIn(int): input word size; \
+  template <>
+  OperatorFactory op_factory<GenericMux>(){return factoryBuilder<GenericMux>({
+      "GenericMux",
+      "A Multiplexer",
+      "ShiftersLZOCs",
+      "",
+      "wIn(int): input word size; \
     inputCount(int): the number of data inputs (NOT counting the select input!)",
-    "",
-    GenericMux::parseArguments);
-  }
-
+      ""});}
 
 }//namespace

@@ -235,15 +235,15 @@ namespace flopoco{
 	}
 
 	
-	OperatorPtr IntConstantComparator::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+	OperatorPtr IntConstantComparator::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 		int w, flags, method;
 		string c;
-		UserInterface::parseStrictlyPositiveInt(args, "w", &w);
-		UserInterface::parseString(args, "c", &c);
+		ui.parseStrictlyPositiveInt(args, "w", &w);
+		ui.parseString(args, "c", &c);
 		mpz_class mpc(c); // TODO catch exceptions here?
 
-		UserInterface::parseStrictlyPositiveInt(args, "flags", &flags);
-		UserInterface::parseInt(args, "method", &method);
+		ui.parseStrictlyPositiveInt(args, "flags", &flags);
+		ui.parseInt(args, "method", &method);
 		return new IntConstantComparator(parentOp, target, w, mpc, flags, method);
 	}
 
@@ -284,21 +284,17 @@ namespace flopoco{
 		return testStateList;
 	}
 
-	
-	void IntConstantComparator::registerFactory(){
-		UserInterface::add("IntConstantComparator", // name
-			"An integer comparator.",
-			"BasicInteger",
-			"", //seeAlso
-			"w(int): size in bits of integers to be compared;\
+	template <>
+	OperatorFactory
+	    op_factory<IntConstantComparator>(){return factoryBuilder<IntConstantComparator>({
+		"IntConstantComparator", // name
+		"An integer comparator.",
+		"BasicInteger",
+		"", // seeAlso
+		"w(int): size in bits of integers to be compared;\
 			c(int): constant;\
 			flags(int)=7: if bit 0 set output  X<C, if bit 1 set output X=C, if bit 2 set output  X>C;\
 			method(int)=-1: method to be used, for experimental purpose (-1: automatic, 0: symmetric, 1: asymmetric where gt is computed out of lt and eq, 2: binary tree) (plainVHDL option also supported);",
-			"Outputs up to 3 mutually exclusive signals:  XltC (less than, strictly), XeqC (equal), XgtC (greater than, strictly)",
-			IntConstantComparator::parseArguments,
-			IntConstantComparator::unitTest
-			) ;
-	}
-
-
+		"Outputs up to 3 mutually exclusive signals:  XltC (less than, "
+		"strictly), XeqC (equal), XgtC (greater than, strictly)"});}
 }

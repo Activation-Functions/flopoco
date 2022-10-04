@@ -192,14 +192,14 @@ namespace flopoco{
 
 
 
-	OperatorPtr OutputIEEE::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+	OperatorPtr OutputIEEE::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 		int wEIn, wFIn, wEOut, wFOut;
 		bool onlyPositiveZeroes;
-		UserInterface::parseStrictlyPositiveInt(args, "wEIn", &wEIn);
-		UserInterface::parseStrictlyPositiveInt(args, "wFIn", &wFIn);
-		UserInterface::parseStrictlyPositiveInt(args, "wEOut", &wEOut);
-		UserInterface::parseStrictlyPositiveInt(args, "wFOut", &wFOut);
-		UserInterface::parseBoolean(args, "onlyPositiveZeroes", &onlyPositiveZeroes);
+		ui.parseStrictlyPositiveInt(args, "wEIn", &wEIn);
+		ui.parseStrictlyPositiveInt(args, "wFIn", &wFIn);
+		ui.parseStrictlyPositiveInt(args, "wEOut", &wEOut);
+		ui.parseStrictlyPositiveInt(args, "wFOut", &wFOut);
+		ui.parseBoolean(args, "onlyPositiveZeroes", &onlyPositiveZeroes);
 		return new OutputIEEE(parentOp, target, wEIn, wFIn, wEOut, wFOut, onlyPositiveZeroes);
 	}
 
@@ -235,21 +235,18 @@ namespace flopoco{
 
 		return testStateList;
 	}
-
-	void OutputIEEE::registerFactory(){
-		UserInterface::add("OutputIEEE", // name
-						   "Conversion from FloPoCo to IEEE-754-like floating-point formats.",
-						   "Conversions",
-						   "", // seeAlso
-						   "wEIn(int): input exponent size in bits; \
+	
+	template <>
+	OperatorFactory op_factory<OutputIEEE>(){return factoryBuilder<OutputIEEE>({
+	    "OutputIEEE", // name
+	    "Conversion from FloPoCo to IEEE-754-like floating-point formats.",
+	    "Conversions",
+	    "", // seeAlso
+	    "wEIn(int): input exponent size in bits; \
                         wFIn(int): input mantissa size in bits;\
                         wEOut(int): output exponent size in bits; \
                         wFOut(int): output mantissa size in bits;\
                         onlyPositiveZeroes(bool)=false: when true, normalize +0 and -0 to +0",
-						   "", // htmldoc
-						   OutputIEEE::parseArguments,
-						   OutputIEEE::unitTest
-		) ;
-	}
+	    ""});}
 }
 

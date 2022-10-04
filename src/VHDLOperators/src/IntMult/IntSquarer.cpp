@@ -25,6 +25,7 @@
 #include "flopoco/BitHeap/BitHeap.hpp"
 #include "flopoco/IntMult/IntSquarer.hpp"
 #include "flopoco/Operator.hpp"
+#include "flopoco/UserInterface.hpp"
 #include "flopoco/utils.hpp"
 
 using namespace std;
@@ -458,34 +459,28 @@ returns: an integer pext that defines the position of the last column
 	}
 
 
-	OperatorPtr IntSquarer::parseArguments(OperatorPtr parentOp, Target *target, std::vector<std::string> &args) {
+	OperatorPtr IntSquarer::parseArguments(OperatorPtr parentOp, Target *target, std::vector<std::string> &args, UserInterface& ui) {
 		int wIn, wOut, maxDSP;
 		bool signedIn;
 		string method;
-		UserInterface::parseStrictlyPositiveInt(args, "wIn", &wIn);
-		UserInterface::parseInt(args, "wOut", &wOut);
-		UserInterface::parseBoolean(args, "signedIn", &signedIn);
-		UserInterface::parseString(args, "method", &method);
-		UserInterface::parseInt(args, "maxDSP", &maxDSP);
+		ui.parseStrictlyPositiveInt(args, "wIn", &wIn);
+		ui.parseInt(args, "wOut", &wOut);
+		ui.parseBoolean(args, "signedIn", &signedIn);
+		ui.parseString(args, "method", &method);
+		ui.parseInt(args, "maxDSP", &maxDSP);
 		return new IntSquarer(parentOp,target, wIn, signedIn, wOut, method, maxDSP);
 	}
 
-
-	
-	void IntSquarer::registerFactory(){
-		UserInterface::add("IntSquarer", // name
-											 "An integer squarer.",
-											 "BasicInteger", // category
-											 "", // see also
-											 "wIn(int): size of input in bits;\
-						            wOut(int)=0: size of the output if you want a truncated squarer. 0 for exact (full) squarer; \
-                                    method(string)=schoolbook: squarer design method, schoolbook (standard) or optimal; \
-                                    maxDSP(int)=0: limit DSPs, 0 (standard) or allow more; \
-						            signedIn(bool)=false: inputs can be signed or unsigned (output always unsigned);", // This string will be parsed
-											 "", // no particular extra doc needed
-											 IntSquarer::parseArguments
-											 ) ;
-	}
-
-
+	template <>
+	OperatorFactory op_factory<IntSquarer>(){return factoryBuilder<IntSquarer>({
+	    "IntSquarer", // name
+	    "An integer squarer.",
+	    "BasicInteger", // category
+	    "",		    // see also
+	    "wIn(int): size of input in bits;\
+		 wOut(int)=0: size of the output if you want a truncated squarer. 0 for exact (full) squarer; \
+         method(string)=schoolbook: squarer design method, schoolbook (standard) or optimal; \
+         maxDSP(int)=0: limit DSPs, 0 (standard) or allow more; \
+		 signedIn(bool)=false: inputs can be signed or unsigned (output always unsigned);", // This string will be parsed
+	    ""});}
 }

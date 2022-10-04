@@ -237,10 +237,10 @@ namespace flopoco{
 	}
 
 	
-	OperatorPtr FixSinOrCos::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+	OperatorPtr FixSinOrCos::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 		int wE, degree;
-		UserInterface::parseStrictlyPositiveInt(args, "w", &w); 
-		UserInterface::parseInt(args, "degree", &degree);
+		ui.parseStrictlyPositiveInt(args, "w", &w); 
+		ui.parseInt(args, "degree", &degree);
 		return new FixSinOrCos(target, w, degree);
 	}
 

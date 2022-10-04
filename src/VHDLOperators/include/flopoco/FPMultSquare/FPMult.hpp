@@ -6,9 +6,10 @@
 #include <mpfr.h>
 #include <gmpxx.h>
 
-#include "flopoco/Operator.hpp"
+#include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/IntMult//IntMultiplier.hpp"
 #include "flopoco/IntAddSubCmp/IntAdder.hpp"
+#include "flopoco/Operator.hpp"
 
 namespace flopoco{
 
@@ -45,9 +46,7 @@ namespace flopoco{
 		
 		// User-interface stuff
 		/** Factory method */
-		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
-
-		static void registerFactory();
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
 
 	protected:
 

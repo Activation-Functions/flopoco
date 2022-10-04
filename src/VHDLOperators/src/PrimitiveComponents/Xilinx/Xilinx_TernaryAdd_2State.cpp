@@ -5,6 +5,7 @@
 /* header of libraries to manipulate multiprecision numbers
    There will be used in the emulate function to manipulate arbitraly large
    entries */
+#include "flopoco/UserInterface.hpp"
 #include "gmp.h"
 #include "mpfr.h"
 
@@ -364,31 +365,30 @@ namespace flopoco {
         }
         
     }
-	OperatorPtr Xilinx_TernaryAdd_2State::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args ){
+	OperatorPtr Xilinx_TernaryAdd_2State::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui){
 		if( target->getVendor() != "Xilinx" )
 			throw std::runtime_error( "Can't build xilinx primitive on non xilinx target" );
 
 		int wIn;
 		int bitmask,bitmask2;
-		UserInterface::parseInt(args,"wIn",&wIn );
-		UserInterface::parseInt(args,"AddSubBitMask",&bitmask);
-		UserInterface::parseInt(args,"AddSubBitMask2",&bitmask2);
+		ui.parseInt(args,"wIn",&wIn );
+		ui.parseInt(args,"AddSubBitMask",&bitmask);
+		ui.parseInt(args,"AddSubBitMask2",&bitmask2);
 		return new Xilinx_TernaryAdd_2State(parentOp,target,wIn,bitmask,bitmask2);
 	}
 
-	void Xilinx_TernaryAdd_2State::registerFactory(){
-		 UserInterface::add( "XilinxTernaryAddSub", // name
-                             "A ternary adder subtractor build of xilinx primitives.", // description, string
-                             "Primitives", // category, from the list defined in UserInterface.cpp
-                             "",
-                             "wIn(int): The wordsize of the adder; \
+	template <>
+	OperatorFactory op_factory<Xilinx_TernaryAdd_2State>(){return factoryBuilder<Xilinx_TernaryAdd_2State>({
+	    "XilinxTernaryAddSub",				      // name
+	    "A ternary adder subtractor build of xilinx primitives.", // description,
+								      // string
+	    "Primitives", // category, from the list defined in
+			  // UserInterface.cpp
+	    "",
+	    "wIn(int): The wordsize of the adder; \
                              AddSubBitMask(int)=0: First bitmask for input negation; \
                              AddSubBitMask2(int)=-1: Second bitmask for configurable input negation;",
-                             "",
-                             Xilinx_TernaryAdd_2State::parseArguments,
-							 Xilinx_TernaryAdd_2State::unitTest
-		 );
-	 }
+	    ""});}
 
 	void Xilinx_TernaryAdd_2State::emulate(TestCase *tc){
 		mpz_class x = tc->getInputValue("x_i");

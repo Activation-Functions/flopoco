@@ -1,5 +1,6 @@
 #include "flopoco/PrimitiveComponents/Xilinx/Xilinx_Comparator.hpp"
 #include "flopoco/PrimitiveComponents/Xilinx/Xilinx_CARRY4.hpp"
+#include "flopoco/UserInterface.hpp"
 
 namespace flopoco {
 	Xilinx_Comparator::Xilinx_Comparator(Operator *parentOp, Target *target, int wIn, ComparatorType type ) : Operator( parentOp,target ) , m_type( type ) {
@@ -304,12 +305,12 @@ namespace flopoco {
         }
     }
 
-    OperatorPtr Xilinx_Comparator::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args )
+    OperatorPtr Xilinx_Comparator::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui)
     {
         int wIn;
         std::string typestr;
-        UserInterface::parseInt( args, "wIn", &wIn );
-        UserInterface::parseString( args, "type", &typestr );
+        ui.parseInt( args, "wIn", &wIn );
+        ui.parseString( args, "type", &typestr );
         Xilinx_Comparator::ComparatorType type = Xilinx_Comparator::getTypeFromString( typestr );
 
         if( type == ComparatorType_invalid ) {
@@ -320,17 +321,15 @@ namespace flopoco {
 		return new Xilinx_Comparator( parentOp, target, wIn, type );
     }
 
-    void Xilinx_Comparator::registerFactory() {
-        UserInterface::add( "XilinxComparator", // name
-                            "A comparator build of xilinx primitives.", // description, string
-                            "Primitives", // category, from the list defined in UserInterface.cpp
-                            "", //seeAlso
-                            // where parameterDescription is parameterName (parameterType)[=defaultValue]: parameterDescriptionString
-                            "wIn (int): Wordsize of comparator inputs; \
+    template <>
+    OperatorFactory op_factory<Xilinx_Comparator>(){return factoryBuilder<Xilinx_Comparator>({
+	"XilinxComparator",			    // name
+	"A comparator build of xilinx primitives.", // description, string
+	"Primitives", // category, from the list defined in UserInterface.cpp
+	"",	      // seeAlso
+	// where parameterDescription is parameterName
+	// (parameterType)[=defaultValue]: parameterDescriptionString
+	"wIn (int): Wordsize of comparator inputs; \
                              type (string): Type of comparator ( gt,ge,lt,le,eq,ne )",
-                            "Nope.",
-                            Xilinx_Comparator::parseArguments
-                          ) ;
-    }
-
+	"Nope."});}
 }

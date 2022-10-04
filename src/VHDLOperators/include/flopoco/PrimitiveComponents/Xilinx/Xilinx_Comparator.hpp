@@ -1,8 +1,10 @@
 #ifndef XILINX_COMPARATOR_HPP
 #define XILINX_COMPARATOR_HPP
 
+#include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/Operator.hpp"
 #include "flopoco/PrimitiveComponents/Xilinx/Xilinx_LUT6.hpp"
+#include "flopoco/UserInterface.hpp"
 #include "flopoco/utils.hpp"
 
 
@@ -36,10 +38,7 @@ namespace flopoco {
         static ComparatorType getTypeFromString( const std::string &typestr );
 
         /** Factory method that parses arguments and calls the constructor */
-        static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args );
-
-        /** Factory register method */
-        static void registerFactory();
+        static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args, UserInterface& ui);
     };
 }
 #endif // XILINX_COMPARATOR_H

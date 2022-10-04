@@ -1,8 +1,9 @@
 #pragma once
 
+#include "flopoco/BitHeap/Compressor.hpp"
+#include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/Operator.hpp"
 #include "flopoco/utils.hpp"
-#include "flopoco/BitHeap/Compressor.hpp"
 
 namespace flopoco
 {
@@ -16,10 +17,8 @@ namespace flopoco
         XilinxGPC(Operator *parentOp, Target * target, vector<int> heights);
 
 		/** Factory method */
-		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
-		/** Register the factory */
-		static void registerFactory();
-
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
+		
 	public:
         void emulate(TestCase *tc, vector<int> heights);
 

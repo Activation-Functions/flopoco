@@ -1,6 +1,7 @@
 #ifndef Xilinx_CARRY4_H
 #define Xilinx_CARRY4_H
 
+#include "flopoco/InterfacedOperator.hpp"
 #include "Xilinx_Primitive.hpp"
 
 namespace flopoco
@@ -14,12 +15,7 @@ namespace flopoco
     // constructor, defined there with two parameters (default value 0 for each)
     Xilinx_CARRY4(Operator *parentOp, Target *target);
 
-    // destructor
-    ~Xilinx_CARRY4()
-    {};
-
-    static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args);
-    static void registerFactory();
+    static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
 
   };
 }//namespace

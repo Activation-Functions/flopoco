@@ -441,18 +441,18 @@ namespace flopoco{
 		return testStateList;
 	}
 
-	OperatorPtr FixRealKCM::parseArguments(OperatorPtr parentOp, Target* target, std::vector<std::string> &args)
+	OperatorPtr FixRealKCM::parseArguments(OperatorPtr parentOp, Target* target, std::vector<std::string> &args, UserInterface& ui)
 	{
 		int lsbIn, lsbOut, msbIn;
 		bool signedIn;
 		double targetUlpError;
 		string constant;
-		UserInterface::parseInt(args, "lsbIn", &lsbIn);
-		UserInterface::parseString(args, "constant", &constant);
-		UserInterface::parseInt(args, "lsbOut", &lsbOut);
-		UserInterface::parseInt(args, "msbIn", &msbIn);
-		UserInterface::parseBoolean(args, "signedIn", &signedIn);
-		UserInterface::parseFloat(args, "targetUlpError", &targetUlpError);	
+		ui.parseInt(args, "lsbIn", &lsbIn);
+		ui.parseString(args, "constant", &constant);
+		ui.parseInt(args, "lsbOut", &lsbOut);
+		ui.parseInt(args, "msbIn", &msbIn);
+		ui.parseBoolean(args, "signedIn", &signedIn);
+		ui.parseFloat(args, "targetUlpError", &targetUlpError);	
 		return new FixRealKCM(
 													parentOp,
 													target, 

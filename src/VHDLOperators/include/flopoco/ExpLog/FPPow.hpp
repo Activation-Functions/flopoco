@@ -3,6 +3,7 @@
 #include <vector>
 #include <sstream>
 
+#include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/Operator.hpp"
 #include "flopoco/ShiftersEtc/LZOC.hpp"
 #include "flopoco/ShiftersEtc/Normalizer.hpp"
@@ -28,8 +29,7 @@ namespace flopoco{
 
 		// User-interface stuff
 		/** Factory method */
-		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
-		static void registerFactory();
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
 
 		int wE, wF;
 

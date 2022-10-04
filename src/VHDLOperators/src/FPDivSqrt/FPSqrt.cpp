@@ -310,13 +310,13 @@ namespace flopoco{
 			return tc;
 		}
 
-		OperatorPtr FPSqrt::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+		OperatorPtr FPSqrt::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 			int wE;
-			UserInterface::parseStrictlyPositiveInt(args, "wE", &wE);
+			ui.parseStrictlyPositiveInt(args, "wE", &wE);
 			int wF;
-			UserInterface::parseStrictlyPositiveInt(args, "wF", &wF);
+			ui.parseStrictlyPositiveInt(args, "wF", &wF);
 			int method;
-			UserInterface::parsePositiveInt(args, "method", &method);
+			ui.parsePositiveInt(args, "method", &method);
 			return new FPSqrt(parentOp, target, wE, wF, method);
 		}
 
@@ -350,18 +350,14 @@ namespace flopoco{
 		return testStateList;
 	}
 
-	void FPSqrt::registerFactory(){
-			UserInterface::add("FPSqrt", // name
-												 "A correctly rounded floating-point square root function.",
-												 "BasicFloatingPoint", // categories
-												 "",
-												 "wE(int): exponent size in bits; \
+	template <>
+	OperatorFactory op_factory<FPSqrt>(){return factoryBuilder<FPSqrt>({
+	    "FPSqrt", // name
+	    "A correctly rounded floating-point square root function.",
+	    "BasicFloatingPoint", // categories
+	    "",
+	    "wE(int): exponent size in bits; \
 wF(int): mantissa size in bits; \
 method(int)=1: 0 for plain restoring, 1 for nonrestoring method",
-												 "",
-												 FPSqrt::parseArguments,
-												 FPSqrt::unitTest
-												 ) ;
-
-		}
+	    ""});}
 	}

@@ -164,11 +164,11 @@ namespace flopoco{
 		tc->addExpectedOutput("R", svR);
 	}
 
-	OperatorPtr IntComparatorSpecific::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+	OperatorPtr IntComparatorSpecific::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 		int wIn;
-		UserInterface::parseStrictlyPositiveInt(args, "wIn", &wIn);
+		ui.parseStrictlyPositiveInt(args, "wIn", &wIn);
 		int type;
-		UserInterface::parseStrictlyPositiveInt(args, "type", &type);
+		ui.parseStrictlyPositiveInt(args, "type", &type);
 		return new IntComparatorSpecific(target, wIn, type);
 	}
 

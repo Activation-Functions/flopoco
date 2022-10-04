@@ -243,25 +243,22 @@ namespace flopoco{
 	}
 
 	
-	OperatorPtr IntDualAddSub::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+	OperatorPtr IntDualAddSub::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 		int wIn;
-		UserInterface::parseStrictlyPositiveInt(args, "wIn", &wIn);
+		ui.parseStrictlyPositiveInt(args, "wIn", &wIn);
 		int opType;
-		UserInterface::parsePositiveInt(args, "opType", &opType);
+		ui.parsePositiveInt(args, "opType", &opType);
 		return new IntDualAddSub(parentOp, target, wIn, opType);
 	}
 
-	void IntDualAddSub::registerFactory(){
-		UserInterface::add("IntDualAddSub", // name
-											 "Pipelined dual adder/subtractor",
-											 "BasicInteger", // category
-											 "",
-											 "wIn(int): input size in bits;\
+	template <>
+	OperatorFactory
+	    op_factory<IntDualAddSub>(){return factoryBuilder<IntDualAddSub>({
+		"IntDualAddSub", // name
+		"Pipelined dual adder/subtractor",
+		"BasicInteger", // category
+		"",
+		"wIn(int): input size in bits;\
 opType(int): 1=compute X-Y and X+Y, 2=compute X-Y and Y-X;",
-											 "",
-											 IntDualAddSub::parseArguments,
-											 IntDualAddSub::unitTest
-											 ) ;
-
-	}
+		""});}
 }

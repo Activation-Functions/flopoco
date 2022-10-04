@@ -2,11 +2,12 @@
 #define SHIFTREG_HPP
 
 #include "flopoco/Operator.hpp"
+#include "flopoco/InterfacedOperator.hpp"
+#include "flopoco/UserInterface.hpp"
 #include "flopoco/utils.hpp"
 
 namespace flopoco{ 
 
-	
 	class ShiftReg : public Operator {
 	  
 		public:
@@ -27,10 +28,7 @@ namespace flopoco{
 
 
 			/** Factory method that parses arguments and calls the constructor */
-			static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
-
-			/** Factory register method */
-			static void registerFactory();
+			static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args, UserInterface& ui);
 
 	  	private:
 			int w; // input and output size

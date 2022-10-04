@@ -4,6 +4,7 @@
 #include "flopoco/BitHeap/BitHeap.hpp"
 #include "flopoco/ConstMult/FixRealConstMult.hpp"
 #include "flopoco/Tables/Table.hpp"
+#include "flopoco/UserInterface.hpp"
 
 
 
@@ -21,7 +22,7 @@ namespace flopoco{
 
 	class FixRealKCMTable;
 
-	class FixRealKCM : public FixRealConstMult
+	class FixRealKCM : public FixRealConstMult 
 	{
 	public:
 
@@ -118,9 +119,7 @@ namespace flopoco{
 
 		// Overloading the virtual functions of Operator
 
-		static OperatorPtr parseArguments(OperatorPtr parentOp, Target* target, vector<string>& args			);
-
-		static void registerFactory();
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target* target, vector<string>& args, UserInterface& ui);
 
 		bool addRoundBit; /**< If false, do not add the round bit to the bit heap: somebody else will */
 		double errorInUlps; /**< These are ulps at position lsbOut-g. 0 if the KCM is exact, 0.5 if it has one table, more if there are more tables. computed by init(). */
@@ -129,9 +128,6 @@ namespace flopoco{
 		bool constantRoundsToZeroInTheStandaloneCase; // in the virtual case, it will depend on how many guard bits are added
 		bool constantIsPowerOfTwo;
 		int extraBitForNegativePowerOfTwo;
-;
-
-
 
 		/** The heap of weighted bits that will be used to do the additions */
 		BitHeap*	bitHeap;

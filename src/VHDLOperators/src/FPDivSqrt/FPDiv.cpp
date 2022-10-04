@@ -954,13 +954,13 @@ rox P						or wi is 26 bits long
 
 	}
 
-	OperatorPtr FPDiv::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+	OperatorPtr FPDiv::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 		int wE;
-		UserInterface::parseStrictlyPositiveInt(args, "wE", &wE);
+		ui.parseStrictlyPositiveInt(args, "wE", &wE);
 		int wF;
-		UserInterface::parseStrictlyPositiveInt(args, "wF", &wF);
+		ui.parseStrictlyPositiveInt(args, "wF", &wF);
 		int srt;
-		UserInterface::parsePositiveInt(args, "srt", &srt);
+		ui.parsePositiveInt(args, "srt", &srt);
 		return new FPDiv(parentOp, target, wE, wF, srt);
 	}
 
@@ -1004,47 +1004,35 @@ rox P						or wi is 26 bits long
 		return testStateList;
 	}
 
+	template <>
+	OperatorFactory op_factory<FPDiv>(){return factoryBuilder<FPDiv>({
+	    "FPDiv", // name
+	    "A correctly rounded floating-point division.",
+	    "BasicFloatingPoint", // categories
+	    "http://www.cs.ucla.edu/digital_arithmetic/files/ch5.pdf",
+	    "wE(int): exponent size in bits; \
+		 wF(int): mantissa size in bits;\
+		 srt(int)=42: Can be 42, 43 or 87 so far. Default 42 means radix 4 with digits between -2 and 2. Other choices may have a better area/speed trade-offs",
+	    "The algorithm used here is the division by digit recurrence "
+	    "(SRT). In radix 4, we use a maximally redundant digit set. In "
+	    "radix 8, we use split-digits in [-7,7], and a bit of prescaling."});}
 
-
-	void FPDiv::registerFactory(){
-		UserInterface::add("FPDiv", // name
-											 "A correctly rounded floating-point division.",
-											 "BasicFloatingPoint", // categories
-											 "http://www.cs.ucla.edu/digital_arithmetic/files/ch5.pdf",
-											 "wE(int): exponent size in bits; \
-wF(int): mantissa size in bits;\
-srt(int)=42: Can be 42, 43 or 87 so far. Default 42 means radix 4 with digits between -2 and 2. Other choices may have a better area/speed trade-offs",
-											"The algorithm used here is the division by digit recurrence (SRT). In radix 4, we use a maximally redundant digit set. In radix 8, we use split-digits in [-7,7], and a bit of prescaling.",
-											 FPDiv::parseArguments,
-											 FPDiv::unitTest
-
-											 ) ;
-
-	}
-
-
-
-	
-	OperatorPtr SRTDivNbBitsMin::NbBitsMinParseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+	OperatorPtr SRTDivNbBitsMin::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 		int radix, digitSet;
-		UserInterface::parseStrictlyPositiveInt(args, "radix", &radix);
-		UserInterface::parseStrictlyPositiveInt(args, "alpha", &digitSet);
+		ui.parseStrictlyPositiveInt(args, "radix", &radix);
+		ui.parseStrictlyPositiveInt(args, "alpha", &digitSet);
 		computeNbBit(radix, digitSet);
 		return NULL;
 	}
 
-	void SRTDivNbBitsMin::registerFactory(){
-		UserInterface::add("SRTDivNbBitsMin", // name
-											 "A SRT design tool",
-											 "Miscellaneous", // categories
-											 "",
-											 "radix(int): It has to be 2^n; \
+	template <>
+	OperatorFactory
+	    op_factory<SRTDivNbBitsMin>(){return factoryBuilder<SRTDivNbBitsMin>({
+		"SRTDivNbBitsMin", // name
+		"A SRT design tool",
+		"Miscellaneous", // categories
+		"",
+		"radix(int): It has to be 2^n; \
 alpha(int): digit set is [-alpha, alpha]",
-											 "",
-											 SRTDivNbBitsMin::NbBitsMinParseArguments
-											 ) ;
-
-	}
-
-
+		""});}
 }

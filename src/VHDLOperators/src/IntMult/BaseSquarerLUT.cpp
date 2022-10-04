@@ -3,6 +3,7 @@
 #include "flopoco/PrimitiveComponents/Xilinx/Xilinx_LUT_compute.hpp"
 #include "flopoco/Tables/Table.hpp"
 #include "flopoco/Tables/TableOperator.hpp"
+#include "flopoco/UserInterface.hpp"
 
 namespace flopoco
 {
@@ -19,7 +20,7 @@ namespace flopoco
 
         addInput("X", wIn);
         addOutput("R", wR);
-
+        auto& ui = UserInterface::getUserInterface();
         if(wIn == 1){
             vhdl << tab << "R <= X;" << endl;
         } else if (target->getVendor() != "Xilinx" && 1 < wIn && wIn < 6){
@@ -31,7 +32,7 @@ namespace flopoco
             }
             Operator *opH = new TableOperator(this, target, tabH, "SquareTable", wIn, wR-2);
             opH->setShared();
-            UserInterface::addToGlobalOpList(opH);
+            ui.addToGlobalOpList(opH);
             vhdl << declare(0.0,"XtableH",wIn) << " <= X;" << endl;
             inPortMap("X", "XtableH");
             outPortMap("Y", "Y1H");
@@ -138,7 +139,7 @@ namespace flopoco
             }
             Operator *opH = new TableOperator(this, target, tabH, "SquareTable", wIn, 6-((isSigned)?1:0));
             opH->setShared();
-            UserInterface::addToGlobalOpList(opH);
+            ui.addToGlobalOpList(opH);
             vhdl << declare(0.0,"XtableH",wIn) << " <= X;" << endl;
             inPortMap("X", "XtableH");
             outPortMap("Y", "Y1H");
@@ -147,7 +148,7 @@ namespace flopoco
 
             Operator *opM = new TableOperator(this, target, tabM, "SquareTable", 5, 4);
             opM->setShared();
-            UserInterface::addToGlobalOpList(opM);
+            ui.addToGlobalOpList(opM);
             vhdl << declare(0.0,"XtableM",5) << " <= X(4 downto 0);" << endl;
             inPortMap("X", "XtableM");
             outPortMap("Y", "Y1M");
@@ -163,7 +164,7 @@ namespace flopoco
             }
             Operator *op = new TableOperator(this, target, val, "SquareTable", wIn, wR);
             op->setShared();
-            UserInterface::addToGlobalOpList(op);
+            ui.addToGlobalOpList(op);
 
             vhdl << declare(0.0,"Xtable",wIn) << " <= X;" << endl;
 
@@ -186,28 +187,27 @@ namespace flopoco
         return r;
     }
 
-    OperatorPtr BaseSquarerLUT::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args)
+    OperatorPtr BaseSquarerLUT::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui)
     {
         int wIn;
         bool singedness;
 
-        UserInterface::parseStrictlyPositiveInt(args, "wIn", &wIn);
-        UserInterface::parseBoolean(args, "isSigned", &singedness);
+        ui.parseStrictlyPositiveInt(args, "wIn", &wIn);
+        ui.parseBoolean(args, "isSigned", &singedness);
 
         return new BaseSquarerLUTOp(parentOp,target, singedness, singedness, wIn);
     }
 
-    void BaseSquarerLUT::registerFactory(){
-        UserInterface::add("IntSquarerLUT", // name
-                           "Implements a LUT squarer by simply tabulating all results in the LUT, should only be used for very small word sizes",
-                           "BasicInteger", // categories
-                           "",
-                           "wIn(int): size of the input XxX; isSigned(bool): signedness of the input",
-                           "",
-                           BaseSquarerLUT::parseArguments,
-                           BaseSquarerLUTOp::unitTest
-                           ) ;
-    }
+    template <>
+    OperatorFactory op_factory<BaseSquarerLUT>(){return factoryBuilder<BaseSquarerLUT>({
+	"IntSquarerLUT", // name
+	"Implements a LUT squarer by simply tabulating all results in the LUT, "
+	"should only be used for very small word sizes",
+	"BasicInteger", // categories
+	"",
+	"wIn(int): size of the input XxX; isSigned(bool): signedness of the "
+	"input",
+	""});}
 
     double BaseSquarerLUT::getLUTCost(int x_anchor, int y_anchor, int wMultX, int wMultY, bool signedIO) {
         int wInMax = (signedIO)?(-1)*(1<<(wIn-1)):(1<<wIn)-1;

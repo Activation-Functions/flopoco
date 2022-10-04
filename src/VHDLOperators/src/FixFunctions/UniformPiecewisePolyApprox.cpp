@@ -419,15 +419,15 @@ namespace flopoco{
 	}
 
 
-	OperatorPtr UniformPiecewisePolyApprox::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args)
+	OperatorPtr UniformPiecewisePolyApprox::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui)
 	{
 		string f;
 		double ta;
 		int d;
 
-		UserInterface::parseString(args, "f", &f);
-		UserInterface::parseFloat(args, "targetAcc", &ta);
-		UserInterface::parseInt(args, "d", &d);
+		ui.parseString(args, "f", &f);
+		ui.parseFloat(args, "targetAcc", &ta);
+		ui.parseInt(args, "d", &d);
 
 		UniformPiecewisePolyApprox *ppa = new UniformPiecewisePolyApprox(f, ta, d);
 		cout << "Accuracy is " << ppa->approxErrorBound << " ("<< log2(ppa->approxErrorBound) << " bits)";
@@ -435,23 +435,18 @@ namespace flopoco{
 		return NULL;
 	}
 
-
-
-	void UniformPiecewisePolyApprox::registerFactory()
-	{
-		UserInterface::add("UniformPiecewisePolyApprox", // name
-											 "Helper/Debug feature, does not generate VHDL. Uniformly segmented piecewise polynomial approximation of function f, accurate to targetAcc on [0,1)",
-											 "FunctionApproximation",
-											 "",
-											 "\
-f(string): function to be evaluated between double-quotes, for instance \"exp(x*x)\";\
-targetAcc(real): the target approximation errror of the polynomial WRT the function;\
-d(int): the degree to use",
-											 "",
-											 UniformPiecewisePolyApprox::parseArguments
-											 ) ;
-	}
-
-
+	template <>
+	OperatorFactory
+	    op_factory<UniformPiecewisePolyApprox>(){return factoryBuilder<UniformPiecewisePolyApprox>({
+		"UniformPiecewisePolyApprox", // name
+		"Helper/Debug feature, does not generate VHDL. Uniformly "
+		"segmented piecewise polynomial approximation of function f, "
+		"accurate to targetAcc on [0,1)",
+		"FunctionApproximation",
+		"",
+		"f(string): function to be evaluated between double-quotes, for instance \"exp(x*x)\";\
+		 targetAcc(real): the target approximation errror of the polynomial WRT the function;\
+         d(int): the degree to use",
+		""});}
 
 } //namespace

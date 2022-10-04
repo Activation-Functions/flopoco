@@ -8,8 +8,10 @@
 #include <mpfr.h>
 
 #include "flopoco/FixFunctions/FixFunction.hpp"
+#include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/Operator.hpp"
 #include "flopoco/Tables/DifferentialCompression.hpp"
+#include "flopoco/UserInterface.hpp"
 
 using namespace std;
 
@@ -42,8 +44,7 @@ namespace flopoco
 		void buildStandardTestCases(TestCaseList* tcl);
 		void emulate(TestCase * tc);
 		static TestList unitTest(int index);
-		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args);
-		static void registerFactory();
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
 
 	private:
 

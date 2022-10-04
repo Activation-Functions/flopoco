@@ -3,8 +3,11 @@
 #include <gmp.h>
 #include <mpfr.h>
 #include <gmpxx.h>
+
+#include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/Operator.hpp"
 #include "IntConstMult.hpp"
+#include "flopoco/UserInterface.hpp"
 
 
 namespace flopoco{
@@ -76,11 +79,14 @@ namespace flopoco{
 		mpfr_t mpY;
 
 		void fillTestCase(mpz_class a[]);
+	};
 
-		//Interface stuff
-		static void registerFactory(); // registers FPConstMult and FPConstMultRational
-		static OperatorPtr parse(OperatorPtr parentOp, Target* target, vector<string>& args);
-		static OperatorPtr parseRational(OperatorPtr parentOp, Target* target, vector<string>& args);
+	struct FPConstMultInterfaced  {
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target* target, vector<string>& args, UserInterface& ui);
+	};
+
+	struct FPConstMultRationalInterfaced  {
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target* target, vector<string>& args, UserInterface& ui);
 	};
 
 }

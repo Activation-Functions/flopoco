@@ -11,6 +11,7 @@
 #include "flopoco/IntMult/MultiplierBlock.hpp"
 #include "flopoco/IntMult/MultiplierTileCollection.hpp"
 #include "flopoco/IntMult/TilingStrategy.hpp"
+#include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/Operator.hpp"
 #include "flopoco/Tables/Table.hpp"
 #include "flopoco/utils.hpp"
@@ -40,10 +41,7 @@ namespace flopoco {
 		void buildStandardTestCases(TestCaseList* tcl);
 
 		/** Factory method that parses arguments and calls the constructor */
-		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
-
-		/** Factory register method */
-		static void registerFactory();
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
 
 		/**
 		 * @brief Compute the size required to store the untruncated product of inputs of a given width

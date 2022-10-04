@@ -1,6 +1,7 @@
 #ifndef INTCONSTMULTOPT_HPP
 #define INTCONSTMULTOPT_HPP
 
+#include "flopoco/UserInterface.hpp"
 #if defined(HAVE_PAGLIB) && defined(HAVE_OSCM) && defined(HAVE_SCALP)
 
 #include <vector>
@@ -10,6 +11,7 @@
 #include <gmpxx.h>
 #include <cstdlib>
 
+#include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/Operator.hpp"
 #include "flopoco/IntAddSubCmp/IntAdder.hpp"
 #include "flopoco/ConstMult/IntConstMultShiftAdd.hpp"
@@ -38,8 +40,7 @@ namespace flopoco{
 //        void buildStandardTestCases(TestCaseList* tcl);
 		static TestList unitTest(int index);
 
-        static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args );
-        static void registerFactory();
+        static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
 	private:
         int coeff;  /**< The constant */
         int wIn;

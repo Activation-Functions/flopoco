@@ -29,7 +29,7 @@ find_package(ScaLP)
 #detect PAG suite
 include(PAGSuite)
 
-ADD_LIBRARY(FloPoCoLib STATIC
+ADD_LIBRARY(FloPoCoLib SHARED
 ${CMAKE_CURRENT_BINARY_DIR}/VHDLLexer.cpp
 )
 

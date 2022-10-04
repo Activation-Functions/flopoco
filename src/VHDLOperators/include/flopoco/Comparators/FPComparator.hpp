@@ -1,6 +1,9 @@
 #ifndef FPCOMPARATPOR_HPP
 #define FPCOMPARATPOR_HPP
+
+#include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/Operator.hpp"
+#include "flopoco/UserInterface.hpp"
 
 
 namespace flopoco{
@@ -21,12 +24,9 @@ namespace flopoco{
 		~FPComparator();
 
 		/** Factory method that parses arguments and calls the constructor */
-		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args, UserInterface& ui);
 
 		static TestList unitTest(int index);
-
-		/** Factory register method */ 
-		static void registerFactory();
 
 		/** emulate() function  */
 		void emulate(TestCase * tc);

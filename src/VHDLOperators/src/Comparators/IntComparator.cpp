@@ -1,4 +1,5 @@
 #include "flopoco/Comparators/IntComparator.hpp"
+#include "flopoco/UserInterface.hpp"
 
 
 using namespace std;
@@ -243,11 +244,11 @@ namespace flopoco{
 	}
 
 	
-	OperatorPtr IntComparator::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+	OperatorPtr IntComparator::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 		int w, flags, method;
-		UserInterface::parseStrictlyPositiveInt(args, "w", &w); 
-		UserInterface::parseStrictlyPositiveInt(args, "flags", &flags);
-		UserInterface::parseInt(args, "method", &method);
+		ui.parseStrictlyPositiveInt(args, "w", &w); 
+		ui.parseStrictlyPositiveInt(args, "flags", &flags);
+		ui.parseInt(args, "method", &method);
 		return new IntComparator(parentOp, target, w, flags, method);
 	}
 
@@ -283,20 +284,16 @@ namespace flopoco{
 		return testStateList;
 	}
 
-	
-	void IntComparator::registerFactory(){
-		UserInterface::add("IntComparator", // name
-			"An integer comparator.",
-			"BasicInteger",
-			"", //seeAlso
-			"w(int): size in bits of integers to be compared;\
+	template <>
+	OperatorFactory
+	    op_factory<IntComparator>(){return factoryBuilder<IntComparator>({
+		"IntComparator", // name
+		"An integer comparator.",
+		"BasicInteger",
+		"", // seeAlso
+		"w(int): size in bits of integers to be compared;\
 			flags(int)=7: if bit 0 set output  X<Y, if bit 1 set output X=Y, if bit 2 set output  X>Y;\
 			method(int)=-1: method to be used, for experimental purpose (-1: automatic, 0: symmetric, 1: asymmetric where gt is computed out of lt and eq, 2: binary tree, 3: two-level minimum latency);",
-			"Outputs up to 3 mutually exclusive signals:  XltY (less than, strictly), XeqY (equal), XgtY (greater than, strictly)",
-			IntComparator::parseArguments,
-			IntComparator::unitTest
-			) ;
-	}
-
-
+		"Outputs up to 3 mutually exclusive signals:  XltY (less than, "
+		"strictly), XeqY (equal), XgtY (greater than, strictly)"});}
 }

@@ -7,6 +7,7 @@
 #include <gmp.h>
 #include <gmpxx.h>
 
+#include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/IntMult/BaseMultiplierCategory.hpp"
 #include "flopoco/Operator.hpp"
 #include "flopoco/Tables/Table.hpp"
@@ -34,9 +35,7 @@ namespace flopoco {
         bool signSupY() override {return true;}
 
 		/** Factory method */
-        static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
-        /** Register the factory */
-        static void registerFactory();
+        static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
         static TestList unitTest(int index);
 
 		Operator *generateOperator(

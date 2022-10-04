@@ -1092,27 +1092,27 @@ namespace flopoco {
         }
     }
 
-    OperatorPtr FixIIRShiftAdd::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+    OperatorPtr FixIIRShiftAdd::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
         int msbIn;
-        UserInterface::parseInt(args, "msbIn", &msbIn);
+        ui.parseInt(args, "msbIn", &msbIn);
         int lsbIn;
-        UserInterface::parseInt(args, "lsbIn", &lsbIn);
+        ui.parseInt(args, "lsbIn", &lsbIn);
         int lsbOut;
-        UserInterface::parseInt(args, "lsbOut", &lsbOut);
+        ui.parseInt(args, "lsbOut", &lsbOut);
         int shifta;
-        UserInterface::parseInt(args, "shifta", &shifta);
+        ui.parseInt(args, "shifta", &shifta);
         int shiftb;
-        UserInterface::parseInt(args, "shiftb", &shiftb);
+        ui.parseInt(args, "shiftb", &shiftb);
         double H;
-        UserInterface::parseFloat(args, "H", &H);
+        ui.parseFloat(args, "H", &H);
         double Heps;
-        UserInterface::parseFloat(args, "Heps", &Heps);
+        ui.parseFloat(args, "Heps", &Heps);
         int guardBits;
-        UserInterface::parseInt(args, "guardbits", &guardBits);
+        ui.parseInt(args, "guardbits", &guardBits);
         vector<string> coeffb;
         vector<string> coeffa;
         string in;
-        UserInterface::parseString(args, "coeffb", &in);
+        ui.parseString(args, "coeffb", &in);
         stringstream ssa(in);
         while( ssa.good() )	{
             string substr;
@@ -1120,7 +1120,7 @@ namespace flopoco {
             coeffb.push_back( substr );
         }
 
-        UserInterface::parseString(args, "coeffa", &in);
+        ui.parseString(args, "coeffa", &in);
         stringstream ssb(in);
         while( ssb.good() )	{
             string substr;
@@ -1129,13 +1129,13 @@ namespace flopoco {
         }
 
         string method;
-        UserInterface::parseString(args, "method", &method);
+        ui.parseString(args, "method", &method);
 
         string grapha;
-        UserInterface::parseString(args, "grapha", &grapha);
+        ui.parseString(args, "grapha", &grapha);
 
         string graphb;
-        UserInterface::parseString(args, "graphb", &graphb);
+        ui.parseString(args, "graphb", &graphb);
 
         return new FixIIRShiftAdd(parentOp, target, lsbIn, lsbOut, msbIn, guardBits, coeffb, coeffa, shifta, shiftb, method, grapha, graphb, H, Heps);
     }
@@ -1701,12 +1701,14 @@ namespace flopoco {
         return testStateList;
     }
 
-    void FixIIRShiftAdd::registerFactory(){
-        UserInterface::add("FixIIRShiftAdd",
-                           "An Infinite Impulse Response filter generator using IntConstMultShiftAdd (optional).",
-                           "FiltersEtc", // categories
-                           "",
-                           "msbIn(int): input most significant bit;\
+    template <>
+    OperatorFactory op_factory<FixIIRShiftAdd>(){return factoryBuilder<FixIIRShiftAdd>({
+	"FixIIRShiftAdd",
+	"An Infinite Impulse Response filter generator using "
+	"IntConstMultShiftAdd (optional).",
+	"FiltersEtc", // categories
+	"",
+	"msbIn(int): input most significant bit;\
                         lsbIn(int): input least significant bit;\
                         lsbOut(int): output least significant bit;\
                         H(real)=0: worst-case peak gain. if 0, it will be computed by the WCPG library;\
@@ -1720,11 +1722,7 @@ namespace flopoco {
                         grapha(string)=emptya: graph in rpag format for coeffa;\
                         graphb(string)=emptyb: graph in rpag format for coeffb;\
                         ",
-                           "",
-                           FixIIRShiftAdd::parseArguments,
-                           FixIIRShiftAdd::unitTest
-        ) ;
-    }
+	""});}
 
     int64_t FixIIRShiftAdd::getIndexCoeff(int64_t* coeff, int64_t arrayLength, int64_t val)
     {

@@ -1,6 +1,7 @@
 #ifndef Xilinx_LUT6_H
 #define Xilinx_LUT6_H
 
+#include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/PrimitiveComponents/Xilinx/Xilinx_Primitive.hpp"
 
 #include "flopoco/PrimitiveComponents/Xilinx/Xilinx_LUT_compute.hpp"
@@ -21,8 +22,7 @@ namespace flopoco
   public:
     XilinxLUT(Operator *parentOp, Target *target, int inport_cnt=6);
 
-    static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args);
-    static void registerFactory();
+    static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
   };
 
   class Xilinx_LUT6 : public XilinxLUT

@@ -36,6 +36,7 @@
 
 */
 
+#include "flopoco/UserInterface.hpp"
 #include <cassert>
 #include <cstdlib>
 #include <fstream>
@@ -138,7 +139,7 @@ namespace flopoco{
 		else{
 			subComponentList_.push_back(op);
 			if(op->isShared() )
-				UserInterface::addToGlobalOpList(op);
+				UserInterface::getUserInterface().addToGlobalOpList(op);
 		}
 	}
 
@@ -1003,9 +1004,10 @@ namespace flopoco{
 		//define its cycle, critical path and contribution to the critical path
 		s->setCycle(0);
 		s->setCriticalPath(0.0);
-		if(UserInterface::pipelineActive_) {
+		auto& ui = UserInterface::getUserInterface();
+		if(ui.pipelineActive_) {
 			s->setCriticalPathContribution(criticalPathContribution);
-			if(UserInterface::allRegistersWithAsyncReset) {
+			if(ui.allRegistersWithAsyncReset) {
 				s->setResetType(Signal::asyncReset);				
 			}
 		}
@@ -1126,11 +1128,11 @@ namespace flopoco{
 
 
 	void Operator::disablePipelining(){
-		UserInterface::pipelineActive_=false;
+		UserInterface::getUserInterface().pipelineActive_=false;
 	}
 
 	void Operator::enablePipelining(){
-		UserInterface::pipelineActive_=true;
+		UserInterface::getUserInterface().pipelineActive_=true;
 	}
 
 
@@ -1506,7 +1508,7 @@ namespace flopoco{
 
 	OperatorPtr Operator::newInstance(string opName, string instanceName, string parameters, string inPortMaps, string outPortMaps, string inPortMapsCst)
 	{
-		OperatorFactoryPtr instanceOpFactory = UserInterface::getFactoryByName(opName);
+		OperatorFactory& instanceOpFactory = UserInterface::getUserInterface().getFactoryByName(opName);
 		OperatorPtr instance = nullptr;
 		vector<string> parametersVector;
 		string portName, signalName, mapping;
@@ -1541,7 +1543,7 @@ namespace flopoco{
 			REPORT(LogLevel::DEBUG, i);
 		}
 		//create the operator
-		instance = instanceOpFactory->parseArguments(this, target_, parametersVector);
+		instance = instanceOpFactory.parseArguments(this, target_, parametersVector, UserInterface::getUserInterface());
 
 		REPORT(LogLevel::DEBUG, "   newInstance("<< opName << ", " << instanceName <<"): after factory call" );
 
@@ -3738,8 +3740,9 @@ namespace flopoco{
 		REPORT(LogLevel::DEBUG, "Entering outputVHDLToFile");
 
 		//build a copy of the global oplist hidden in UserInterface (if it exists):
-		for (unsigned i=0; i<UserInterface::globalOpList.size(); i++)
-			oplist.push_back(UserInterface::globalOpList[i]);
+		auto& ui = UserInterface::getUserInterface();
+		for (unsigned i=0; i<ui.globalOpList.size(); i++)
+			oplist.push_back(ui.globalOpList[i]);
 		// add self (and all its subcomponents) to this list
 		oplist.push_back(this);
 		// generate the code

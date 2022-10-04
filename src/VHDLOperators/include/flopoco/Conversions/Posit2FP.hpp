@@ -1,10 +1,12 @@
 #ifndef POSIT2FP_HPP
 #define POSIT2FP_HPP
 
+#include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/Operator.hpp"
+#include "flopoco/UserInterface.hpp"
 
 namespace flopoco {
-	class Posit2FP : public Operator
+	class Posit2FP : public Operator 
 	{
 	public:
 		/**
@@ -18,8 +20,7 @@ namespace flopoco {
 		void emulate(TestCase* tc);
 		static void computeFloatWidths(int const widthI, int const eS, int* wE, int* wF);
 		
-		static OperatorPtr parseArguments(OperatorPtr parentOp, Target* target, vector<string> &args);
-		static void registerFactory();
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target* target, vector<string> &args, UserInterface& ui);
 
 	private:
 		int wE_;

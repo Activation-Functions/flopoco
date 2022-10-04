@@ -5,6 +5,7 @@
 /* header of libraries to manipulate multiprecision numbers
    There will be used in the emulate function to manipulate arbitraly large
    entries */
+#include "flopoco/UserInterface.hpp"
 #include "gmp.h"
 #include "mpfr.h"
 
@@ -311,15 +312,15 @@ namespace flopoco {
 
 	Xilinx_GenericAddSub::~Xilinx_GenericAddSub() {}
 
-	OperatorPtr Xilinx_GenericAddSub::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args ){
+	OperatorPtr Xilinx_GenericAddSub::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui){
 		if( target->getVendor() != "Xilinx" )
 			throw std::runtime_error( "Can't build xilinx primitive on non xilinx target" );
 
 		int wIn,mode;
 		bool dss;
-		UserInterface::parseInt(args,"wIn",&wIn );
-		UserInterface::parseInt(args,"mode",&mode);
-		UserInterface::parseBoolean(args,"dss",&dss);
+		ui.parseInt(args,"wIn",&wIn );
+		ui.parseInt(args,"mode",&mode);
+		ui.parseBoolean(args,"dss",&dss);
 
 		if( dss ){
 			return new Xilinx_GenericAddSub(parentOp, target,wIn,dss);
@@ -330,19 +331,20 @@ namespace flopoco {
 		}
 	}
 
-	void Xilinx_GenericAddSub::registerFactory(){
-		UserInterface::add( "XilinxAddSub", // name
-		                    "An adder/subtractor build of xilinx primitives.", // description, string
-		                    "Primitives", // category, from the list defined in UserInterface.cpp
-		                    "",
-		                    "wIn(int): The wordsize of the adder;" \
-		                    "mode(int)=0: Bitmask for input negation, removes configurability;" \
-		                    "dss(bool)=false: Creates configurable adder with possibility to substract both inputs "\
-		                    "at same time;",
-		                    "",
-		                    Xilinx_GenericAddSub::parseArguments
-		                    );
-	}
+	template <>
+	OperatorFactory op_factory<Xilinx_GenericAddSub>(){return factoryBuilder<Xilinx_GenericAddSub>({
+	    "XilinxAddSub",				       // name
+	    "An adder/subtractor build of xilinx primitives.", // description,
+							       // string
+	    "Primitives", // category, from the list defined in
+			  // UserInterface.cpp
+	    "",
+	    "wIn(int): The wordsize of the adder;"
+	    "mode(int)=0: Bitmask for input negation, removes configurability;"
+	    "dss(bool)=false: Creates configurable adder with possibility to "
+	    "substract both inputs "
+	    "at same time;",
+	    ""});}
 
 	void Xilinx_GenericAddSub::emulate(TestCase *tc)
 	{

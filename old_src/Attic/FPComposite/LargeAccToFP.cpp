@@ -250,12 +250,12 @@ namespace flopoco{
 		return tc;
 	}
 
-	OperatorPtr LargeAccToFP::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+	OperatorPtr LargeAccToFP::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 		int MSBA, LSBA, wE_out, wF_out;
-		UserInterface::parseStrictlyPositiveInt(args, "wE_out", &wE_out); 
-		UserInterface::parseStrictlyPositiveInt(args, "wF_out", &wF_out);
-		UserInterface::parseInt(args, "MSBA", &MSBA);
-		UserInterface::parseInt(args, "LSBA", &LSBA);
+		ui.parseStrictlyPositiveInt(args, "wE_out", &wE_out); 
+		ui.parseStrictlyPositiveInt(args, "wF_out", &wF_out);
+		ui.parseInt(args, "MSBA", &MSBA);
+		ui.parseInt(args, "LSBA", &LSBA);
 		return new LargeAccToFP(target, MSBA, LSBA, wE_out, wF_out);
 	}
 

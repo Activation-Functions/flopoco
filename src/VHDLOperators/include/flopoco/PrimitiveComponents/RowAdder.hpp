@@ -7,18 +7,20 @@
 #include <string>
 #include <vector>
 
+#include "flopoco/UserInterface.hpp"
 #include "gmp.h"
 #include <gmpxx.h>
 #include "mpfr.h"
 
 #include "flopoco/BitHeap/Compressor.hpp"
+#include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/Operator.hpp"
 #include "flopoco/utils.hpp"
 
 
 namespace flopoco
 {
-    class RowAdder : public Compressor //: public VariableColumnCompressor
+    class RowAdder : public Compressor
     {
     public:
         /** constructor **/
@@ -28,8 +30,7 @@ namespace flopoco
         /** destructor**/
         ~RowAdder();
 
-        static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args );
-        static void registerFactory();
+        static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
         static void calc_widths(int wIn, int type, vector<int> &heights, vector<int> &outHeights);
 
     protected:

@@ -6,6 +6,7 @@
 #include <mpfr.h>
 #include <gmpxx.h>
 
+#include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/Operator.hpp"
 #include "flopoco/TestBenches/FPNumber.hpp"
 
@@ -39,10 +40,7 @@ namespace flopoco{
 	  TestCase* buildRandomTestCase(int i);
 
 		/** Factory method that parses arguments and calls the constructor */
-		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
-
-		/** Factory register method */ 
-		static void registerFactory();
+	  static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
 
    private:
 

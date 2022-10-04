@@ -329,9 +329,9 @@ vhdl << instance(compOne, join("cmpO",j) );
 
 	}
 
-	OperatorPtr LongIntAdderCmpAddIncGen1::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+	OperatorPtr LongIntAdderCmpAddIncGen1::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 		int wIn;
-		UserInterface::parseStrictlyPositiveInt(args, "wIn", &wIn);
+		ui.parseStrictlyPositiveInt(args, "wIn", &wIn);
 		return new LongIntAdderCmpAddIncGen1(target, wIn);
 	}
 

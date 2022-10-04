@@ -378,9 +378,9 @@ vhdl << tab << declare(join("nsX",j,"_1_l",l-1), cSize[j],true) << " <= not("<<j
 
 	}
 
-	OperatorPtr LongIntAdderCmpCmpAddGen1::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+	OperatorPtr LongIntAdderCmpCmpAddGen1::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 		int wIn;
-		UserInterface::parseStrictlyPositiveInt(args, "wIn", &wIn);
+		ui.parseStrictlyPositiveInt(args, "wIn", &wIn);
 		return new LongIntAdderCmpCmpAddGen1(target, wIn);
 	}
 

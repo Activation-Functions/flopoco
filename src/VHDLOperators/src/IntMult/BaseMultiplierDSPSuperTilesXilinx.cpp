@@ -380,32 +380,31 @@ BaseMultiplierDSPSuperTilesXilinxOp::BaseMultiplierDSPSuperTilesXilinxOp(Operato
     addInput("Y", BaseMultiplierDSPSuperTilesXilinx::get_wY(shape), true);
 }
 
-OperatorPtr BaseMultiplierDSPSuperTilesXilinx::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args)
+OperatorPtr BaseMultiplierDSPSuperTilesXilinx::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui)
 {
     int shape;
 	bool xIsSigned,yIsSigned,isPipelined;
-    UserInterface::parseStrictlyPositiveInt(args, "shape", &shape);
-	UserInterface::parseBoolean(args,"xIsSigned",&xIsSigned);
-	UserInterface::parseBoolean(args,"yIsSigned",&yIsSigned);
-	UserInterface::parseBoolean(args,"isPipelined",&isPipelined);
+    ui.parseStrictlyPositiveInt(args, "shape", &shape);
+	ui.parseBoolean(args,"xIsSigned",&xIsSigned);
+	ui.parseBoolean(args,"yIsSigned",&yIsSigned);
+	ui.parseBoolean(args,"isPipelined",&isPipelined);
 
 	return new BaseMultiplierDSPSuperTilesXilinxOp(parentOp,target,xIsSigned,yIsSigned,(TILE_SHAPE)shape,isPipelined);
 }
 
-void BaseMultiplierDSPSuperTilesXilinx::registerFactory()
-{
-    UserInterface::add( "BaseMultiplierDSPSuperTilesXilinx", // name
-                        "Implements a DSP block commonly found in FPGAs incl. pre-adders and post-adders computing R = (X1+X2) * Y + Z",
-                        "BasicInteger", // categories
-                        "",
-                        "shape(int): Shape ID (1-12) of the DSP-Superblock;\
+template <>
+OperatorFactory
+    op_factory<BaseMultiplierDSPSuperTilesXilinx>(){return factoryBuilder<BaseMultiplierDSPSuperTilesXilinx>({
+	"BaseMultiplierDSPSuperTilesXilinx", // name
+	"Implements a DSP block commonly found in FPGAs incl. pre-adders and "
+	"post-adders computing R = (X1+X2) * Y + Z",
+	"BasicInteger", // categories
+	"",
+	"shape(int): Shape ID (1-12) of the DSP-Superblock;\
                         isPipelined(bool)=0: use pipelining;\
 						xIsSigned(bool)=0: input X is signed;\
 						yIsSigned(bool)=0: input Y is signed;",
-                       "",
-                       BaseMultiplierDSPSuperTilesXilinx::parseArguments
-                       ) ;
-}
+	""});}
 
 void BaseMultiplierDSPSuperTilesXilinxOp::emulate(TestCase * tc) {
 	mpz_class sx = tc->getInputValue("X");

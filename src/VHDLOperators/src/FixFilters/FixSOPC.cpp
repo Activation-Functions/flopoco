@@ -1,5 +1,6 @@
 #include <iostream>
 #include <sstream>
+#include "flopoco/UserInterface.hpp"
 #include "gmp.h"
 #include "mpfr.h"
 
@@ -348,69 +349,67 @@ namespace flopoco{
 		tc->addExpectedOutput ("R", results.second);
 	}
 
-	OperatorPtr FixSOPC::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+	OperatorPtr FixSOPCInterfaced::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 		int lsbIn;
-		UserInterface::parseInt(args, "lsbIn", &lsbIn);
+		ui.parseInt(args, "lsbIn", &lsbIn);
 		int lsbOut;
-		UserInterface::parseInt(args, "lsbOut", &lsbOut);
+		ui.parseInt(args, "lsbOut", &lsbOut);
 
 		vector<string> coeffs;
-		UserInterface::parseColonSeparatedStringList( args, "coeff", &coeffs);
+		ui.parseColonSeparatedStringList( args, "coeff", &coeffs);
 		
 		return new FixSOPC(parentOp, target, lsbIn, lsbOut, coeffs);
 	}
 
 
-	OperatorPtr FixSOPC::parseArgumentsFull(OperatorPtr parentOp, Target *target, vector<string> &args) {
+	OperatorPtr FixSOPCFullInterfaced::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 
 		vector<int> msbIn;
-		UserInterface::parseColonSeparatedIntList(args, "msbIn", &msbIn);
+		ui.parseColonSeparatedIntList(args, "msbIn", &msbIn);
 
 		vector<int> lsbIn;
-		UserInterface::parseColonSeparatedIntList(args, "lsbIn", &lsbIn);
+		ui.parseColonSeparatedIntList(args, "lsbIn", &lsbIn);
 
 		int msbOut;
-		UserInterface::parseInt(args, "msbOut", &msbOut);
+		ui.parseInt(args, "msbOut", &msbOut);
 
 		int lsbOut;
-		UserInterface::parseInt(args, "lsbOut", &lsbOut);
+		ui.parseInt(args, "lsbOut", &lsbOut);
 
 		vector<string> coeffs;
-		UserInterface::parseColonSeparatedStringList( args, "coeff", &coeffs);
+		ui.parseColonSeparatedStringList( args, "coeff", &coeffs);
 		
 		return new FixSOPC(parentOp, target, msbIn, lsbIn, msbOut, lsbOut, coeffs);
 	}
 
+	TestList FixSOPCInterfaced::unitTest(int index) {
+		return FixSOPC::unitTest(index);
+	}
 
-
-
-	
-	void FixSOPC::registerFactory(){
-		UserInterface::add("FixSOPC", // name
-											 "A fix-point Sum of Product by Constants.",
-											 "FiltersEtc", // categories
-											 "",
-											 "lsbIn(int): input's last significant bit;\
+	template <>
+	OperatorFactory
+	    op_factory<FixSOPCInterfaced>(){return factoryBuilder<FixSOPCInterfaced>({
+		"FixSOPC", // name
+		"A fix-point Sum of Product by Constants.",
+		"FiltersEtc", // categories
+		"",
+		"lsbIn(int): input's last significant bit;\
                         lsbOut(int): output's last significant bit;\
                         coeff(string): colon-separated list of real coefficients using Sollya syntax. Example: coeff=\"1.234567890123:sin(3*pi/8)\"",
-											 "",
-											 FixSOPC::parseArguments,
-											 FixSOPC::unitTest
-											 ) ;
-		UserInterface::add("FixSOPCfull", // name
-											 "A fix-point Sum of Product by Constants (detailed interface).",
-											 "FiltersEtc", // categories
-											 "",
-											 "msbIn(string): colon-separated string of ints, input's last significant bit;\
+		""});}
+
+	template <>
+	OperatorFactory op_factory<FixSOPCFullInterfaced>(){return factoryBuilder<FixSOPCFullInterfaced>({
+	    "FixSOPCfull", // name
+	    "A fix-point Sum of Product by Constants (detailed interface).",
+	    "FiltersEtc", // categories
+	    "",
+	    "msbIn(string): colon-separated string of ints, input's last significant bit;\
                         lsbIn(string): colon-separated string of ints, input's last significant bit;\
                         msbOut(int): output's most significant bit;\
                         lsbOut(int): output's last significant bit;\
                         coeff(string): colon-separated list of real coefficients using Sollya syntax. Example: coeff=\"1.234567890123:sin(3*pi/8)\"",
-											 "",
-											 FixSOPC::parseArgumentsFull
-											 ) ;
-	}
-
+	    ""});}
 
 	// please fill me with regression tests or corner case tests
 	void FixSOPC::buildStandardTestCases(TestCaseList * tcl) {

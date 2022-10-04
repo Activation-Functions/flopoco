@@ -3,9 +3,11 @@
 #include <vector>
 #include <sstream>
 
+#include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/Operator.hpp"
 #include "FixComplexKCM.hpp" 
 #include "FixComplexR2Butterfly.hpp" 
+#include "flopoco/UserInterface.hpp"
 	//#include "ComplexOperators/IntComplexAdder.hpp"
 
 //#include "ComplexTwiddleMult.hpp"  //A sub module to multiply complex input by complex twidlle factor
@@ -24,7 +26,7 @@ namespace flopoco{
 	 * the integer, respectively fractionary parts.
 	 * NOTE: the size n of the FFT must be a power of 2
 	 */
-	class FixFFTFullyPA : public Operator
+	class FixFFTFullyPA : public Operator 
 	{
 	public:
 		FixFFTFullyPA(
@@ -54,9 +56,8 @@ namespace flopoco{
 		int computeGuardBits(int N);
 
 
-		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
-		static void registerFactory();
-
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
+	
 	private:
 		int msbin;
 		int lsbin;

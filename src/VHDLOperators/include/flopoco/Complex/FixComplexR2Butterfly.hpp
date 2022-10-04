@@ -3,6 +3,7 @@
 #include <vector>
 #include <sstream>
 
+#include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/Operator.hpp"
 #include "FixComplexKCM.hpp" 
 #include "FixComplexAdder.hpp" 
@@ -48,8 +49,7 @@ namespace flopoco{
 		void emulate(TestCase * tc);
 
 
-		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
-		static void registerFactory();
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args, UserInterface& ui);
 
 	private:
 		int msbin;

@@ -469,39 +469,41 @@ namespace flopoco{
 		return intTemp;
 	} */
 
-	OperatorPtr FixComplexR2Butterfly::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+	OperatorPtr FixComplexR2Butterfly::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 		int msbin;
-		UserInterface::parseInt(args, "msbin", &msbin);
+		ui.parseInt(args, "msbin", &msbin);
 		int lsbin;
-		UserInterface::parseInt(args, "lsbin", &lsbin);
+		ui.parseInt(args, "lsbin", &lsbin);
 		int msbout;
-		UserInterface::parseInt(args, "msbout", &msbout);
+		ui.parseInt(args, "msbout", &msbout);
 		int lsbout;
-		UserInterface::parseInt(args, "lsbout", &lsbout);
+		ui.parseInt(args, "lsbout", &lsbout);
 		string Twiddle_re;
-		UserInterface::parseString(args, "Twiddle_re", &Twiddle_re);
+		ui.parseString(args, "Twiddle_re", &Twiddle_re);
 		string Twiddle_im;
-		UserInterface::parseString(args, "Twiddle_im", &Twiddle_im);
+		ui.parseString(args, "Twiddle_im", &Twiddle_im);
 		bool signedIn;
-		UserInterface::parseBoolean(args, "signedIn", &signedIn);
+		ui.parseBoolean(args, "signedIn", &signedIn);
 		bool bypassmult;
-		UserInterface::parseBoolean(args, "bypassmult", &bypassmult);
+		ui.parseBoolean(args, "bypassmult", &bypassmult);
 		bool decimation;
-		UserInterface::parseBoolean(args, "decimation", &decimation);
+		ui.parseBoolean(args, "decimation", &decimation);
 		bool extrabit;
-		UserInterface::parseBoolean(args, "extrabit", &extrabit);
+		ui.parseBoolean(args, "extrabit", &extrabit);
 		bool laststage;
-		UserInterface::parseBoolean(args, "laststage", &laststage);
+		ui.parseBoolean(args, "laststage", &laststage);
 
 		return new FixComplexR2Butterfly(parentOp, target, msbin, lsbin, msbout, lsbout, Twiddle_re, Twiddle_im, signedIn, bypassmult, decimation, extrabit, laststage);
 	}
-	
-	void FixComplexR2Butterfly::registerFactory(){
-		UserInterface::add("FixComplexR2Butterfly", // name
-											 "A Complex Radix-2 Butterfly.",
-											 "Complex", // categories
-											 "",
-											 "msbin(int): integer input most significant bit;\
+
+	template <>
+	OperatorFactory
+	    op_factory<FixComplexR2Butterfly>(){return factoryBuilder<FixComplexR2Butterfly>({
+		"FixComplexR2Butterfly", // name
+		"A Complex Radix-2 Butterfly.",
+		"Complex", // categories
+		"",
+		"msbin(int): integer input most significant bit;\
 							lsbin(int): integer input least significant bit;\
 							msbout(int): integer output most significant bit;\
 							lsbout(int): integer output least significant bit;\
@@ -512,12 +514,7 @@ namespace flopoco{
 							decimation(bool)=true: if true(default) DIF, else DIT FFT ;\
 							extrabit(bool)=true: if true (default) add one extra bit in fixcomplexkcm msbout, else no extra bit ;\
 							laststage(bool)=false: if false (default) is not last stage, if true, last stage of FFT",
-						 	"See the developper manual in the doc/ directory of FloPoCo.", 
-			 				FixComplexR2Butterfly::parseArguments
-							) ;
-
-	}
-
+		"See the developper manual in the doc/ directory of FloPoCo."});}
 }
 
 

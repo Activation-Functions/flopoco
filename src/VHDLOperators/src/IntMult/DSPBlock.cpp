@@ -175,28 +175,27 @@ void DSPBlock::buildStandardTestCases(TestCaseList* tcl)
 }
 */
 
-OperatorPtr DSPBlock::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args)
+OperatorPtr DSPBlock::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui)
 {
 	int wX,wY,wZ;
 	bool usePostAdder, usePreAdder, preAdderSubtracts;
 	bool isPipelined;
 	bool xIsSigned,yIsSigned;
-	UserInterface::parseStrictlyPositiveInt(args, "wX", &wX);
-	UserInterface::parseStrictlyPositiveInt(args, "wY", &wY);
-	UserInterface::parsePositiveInt(args, "wZ", &wZ);
-	UserInterface::parseBoolean(args, "isPipelined", &isPipelined);
-	UserInterface::parseBoolean(args,"usePostAdder",&usePostAdder);
-	UserInterface::parseBoolean(args,"usePreAdder",&usePreAdder);
-	UserInterface::parseBoolean(args,"xIsSigned",&xIsSigned);
-	UserInterface::parseBoolean(args,"yIsSigned",&yIsSigned);
-	UserInterface::parseBoolean(args,"preAdderSubtracts",&preAdderSubtracts);
+	ui.parseStrictlyPositiveInt(args, "wX", &wX);
+	ui.parseStrictlyPositiveInt(args, "wY", &wY);
+	ui.parsePositiveInt(args, "wZ", &wZ);
+	ui.parseBoolean(args, "isPipelined", &isPipelined);
+	ui.parseBoolean(args,"usePostAdder",&usePostAdder);
+	ui.parseBoolean(args,"usePreAdder",&usePreAdder);
+	ui.parseBoolean(args,"xIsSigned",&xIsSigned);
+	ui.parseBoolean(args,"yIsSigned",&yIsSigned);
+	ui.parseBoolean(args,"preAdderSubtracts",&preAdderSubtracts);
 
 	return new DSPBlock(parentOp,target,wX,wY,xIsSigned,yIsSigned,isPipelined,wZ,usePostAdder,usePreAdder,preAdderSubtracts);
 }
 
-void DSPBlock::registerFactory()
-{
-	UserInterface::add( "DSPBlock", // name
+template <>
+    OperatorFactory op_factory<DSPBlock>(){return factoryBuilder<DSPBlock>({"DSPBlock", // name
 						"Implements a DSP block commonly found in FPGAs incl. pre-adders and post-adders computing R = (X1+X2) * Y + Z",
 						"BasicInteger", // categories
 						"",
@@ -209,10 +208,7 @@ void DSPBlock::registerFactory()
 						usePostAdder(bool)=0: use post-adders;\
 						usePreAdder(bool)=0: use pre-adders;\
 						preAdderSubtracts(bool)=0: if true, the pre-adder performs a pre-subtraction;",
-					   "",
-					   DSPBlock::parseArguments
-					   ) ;
-}
+					   ""});}
 
 
 }   //end namespace flopoco

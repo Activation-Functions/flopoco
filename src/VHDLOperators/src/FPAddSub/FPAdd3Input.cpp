@@ -404,11 +404,11 @@ FPAdd3Input::FPAdd3Input(Target* target, int wE, int wF, map<string, double> inp
 		mpfr_clears(x, y, r, NULL);
 	}
 
-		OperatorPtr FPAdd3Input::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+		OperatorPtr FPAdd3Input::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 		int wE;
-		UserInterface::parseStrictlyPositiveInt(args, "wE", &wE);
+		ui.parseStrictlyPositiveInt(args, "wE", &wE);
 		int wF;
-		UserInterface::parseStrictlyPositiveInt(args, "wF", &wF);
+		ui.parseStrictlyPositiveInt(args, "wF", &wF);
 		return new FPAdd3Input(target, wE, wF);
 	}
 

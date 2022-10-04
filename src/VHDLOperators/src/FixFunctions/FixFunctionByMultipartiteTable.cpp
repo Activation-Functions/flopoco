@@ -803,34 +803,41 @@ namespace flopoco
 
 
 
-	OperatorPtr FixFunctionByMultipartiteTable::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+	OperatorPtr FixFunctionByMultipartiteTable::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 		string f;
 		bool signedIn;
 		int lsbIn, lsbOut, nbTO;
-		UserInterface::parseString(args, "f", &f);
-		UserInterface::parsePositiveInt(args, "nbTO", &nbTO);
-		UserInterface::parseInt(args, "lsbIn", &lsbIn);
-		UserInterface::parseInt(args, "lsbOut", &lsbOut);
-		UserInterface::parseBoolean(args, "signedIn", &signedIn);
+		ui.parseString(args, "f", &f);
+		ui.parsePositiveInt(args, "nbTO", &nbTO);
+		ui.parseInt(args, "lsbIn", &lsbIn);
+		ui.parseInt(args, "lsbOut", &lsbOut);
+		ui.parseBoolean(args, "signedIn", &signedIn);
 		return new FixFunctionByMultipartiteTable(parentOp, target, f, nbTO, signedIn, lsbIn, lsbOut);
 	}
 
-	void FixFunctionByMultipartiteTable::registerFactory(){
-		UserInterface::add("FixFunctionByMultipartiteTable", // name
-											 "A function evaluator using the multipartite method.",
-											 "FunctionApproximation", // category
-											 "",
-						   "f(string): function to be evaluated between double-quotes, for instance \"exp(x*x)\";\
-signedIn(bool): if true the function input range is [-1,1), if false it is [0,1);\
-lsbIn(int): weight of input LSB, for instance -8 for an 8-bit input;\
-lsbOut(int): weight of output LSB;\
-nbTO(int)=0: number of Tables of Offsets, between 1 (bipartite) to 4 or 5 for large input sizes -- 0: let the tool choose",
-
-											 "This operator uses the multipartite table method as introduced in <a href=\"http://perso.citi-lab.fr/fdedinec/recherche/publis/2005-TC-Multipartite.pdf\">this article</a>, with the improvement described in <a href=\"http://ieeexplore.ieee.org/xpls/abs_all.jsp?arnumber=6998028&tag=1\">this article</a>. ",
-											 FixFunctionByMultipartiteTable::parseArguments,
-											 FixFunctionByMultipartiteTable::unitTest
-											 ) ;
-
-	}
+	template <>
+	OperatorFactory op_factory<FixFunctionByMultipartiteTable>(){return factoryBuilder<FixFunctionByMultipartiteTable>({
+	    "FixFunctionByMultipartiteTable", // name
+	    "A function evaluator using the multipartite method.",
+	    "FunctionApproximation", // category
+	    "",
+	    "f(string): function to be evaluated between double-quotes, for "
+	    			"instance \"exp(x*x)\";"
+	    "signedIn(bool): if true the function input range is [-1,1), if "
+	    				"false it is [0,1);"
+	    "lsbIn(int): weight of input LSB, for instance -8 for an 8-bit "
+	    			"input;"
+	    "lsbOut(int): weight of output LSB;"
+	    "nbTO(int)=0: number of Tables of Offsets, between 1 (bipartite) "
+	    			  "to 4 or 5 for large input sizes."
+					  " -- 0: let the tool choose",
+	    "This operator uses the multipartite table method as introduced in "
+	    "<a "
+	    "href=\"http://perso.citi-lab.fr/fdedinec/recherche/publis/"
+	    "2005-TC-Multipartite.pdf\">this article</a>, with the improvement "
+	    "described in <a "
+	    "href=\"http://ieeexplore.ieee.org/xpls/"
+	    "abs_all.jsp?arnumber=6998028&tag=1\">this article</a>. "
+	});}
 }
 

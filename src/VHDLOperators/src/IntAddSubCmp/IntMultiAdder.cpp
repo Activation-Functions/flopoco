@@ -143,35 +143,30 @@ namespace flopoco{
 		return testStateList;
 	}
 
-	OperatorPtr IntMultiAdder::parseArguments(OperatorPtr parentOp, Target* target, std::vector<std::string> &args)
+	OperatorPtr IntMultiAdder::parseArguments(OperatorPtr parentOp, Target* target, std::vector<std::string> &args, UserInterface& ui)
 	{
 		int wIn, n, wOut;
 		bool signedIn;
-		UserInterface::parseInt(args, "wIn", &wIn);
-		UserInterface::parseInt(args, "n", &n);
-		UserInterface::parseBoolean(args, "signedIn", &signedIn);
-		UserInterface::parseInt(args, "wOut", &wOut);
+		ui.parseInt(args, "wIn", &wIn);
+		ui.parseInt(args, "n", &n);
+		ui.parseBoolean(args, "signedIn", &signedIn);
+		ui.parseInt(args, "wOut", &wOut);
 		return new IntMultiAdder(parentOp, target, wIn, n, signedIn, wOut);
 	}
 
-	void IntMultiAdder::registerFactory()
-	{
-		UserInterface::add(
-				"IntMultiAdder",
-				"A component adding n integers, bitheap based. If wIn=1 it is also a population count",
-				"BasicInteger",
-				"",
-				"signedIn(bool): 0=unsigned, 1=signed; \
+	template <>
+	OperatorFactory
+	    op_factory<IntMultiAdder>(){return factoryBuilder<IntMultiAdder>({
+		"IntMultiAdder",
+		"A component adding n integers, bitheap based. If wIn=1 it is "
+		"also a population count",
+		"BasicInteger",
+		"",
+		"signedIn(bool): 0=unsigned, 1=signed; \
 			  n(int): number of inputs to add;\
 			  wIn(int): input size in bits;\
 			  wOut(int)=0: output size in bits -- if 0, wOut is computed to be large enough to represent the result;",
-				"",
-				IntMultiAdder::parseArguments,
-				IntMultiAdder::unitTest
-		);
-	}
-
-	
+		""});}
 }
 
 

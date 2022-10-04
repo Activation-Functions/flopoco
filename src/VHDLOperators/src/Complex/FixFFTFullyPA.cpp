@@ -1259,38 +1259,37 @@ const int TWIDDLEIM = -1;
 		}
 	}
 
-
-
-
-	OperatorPtr FixFFTFullyPA::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+	OperatorPtr FixFFTFullyPA::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 		int msbin;
-		UserInterface::parseInt(args, "msbin", &msbin);
+		ui.parseInt(args, "msbin", &msbin);
 		int lsbin;
-		UserInterface::parseInt(args, "lsbin", &lsbin);
+		ui.parseInt(args, "lsbin", &lsbin);
 		int msbout;
-		UserInterface::parseInt(args, "msbout", &msbout);
+		ui.parseInt(args, "msbout", &msbout);
 		int lsbout;
-		UserInterface::parseInt(args, "lsbout", &lsbout);
+		ui.parseInt(args, "lsbout", &lsbout);
 		int N;
-		UserInterface::parseInt(args, "N", &N);
+		ui.parseInt(args, "N", &N);
 		int radix;
-		UserInterface::parseInt(args, "radix", &radix);
+		ui.parseInt(args, "radix", &radix);
 		bool signedIn;
-		UserInterface::parseBoolean(args, "signedIn", &signedIn);
+		ui.parseBoolean(args, "signedIn", &signedIn);
 		bool decimation;
-		UserInterface::parseBoolean(args, "decimation", &decimation);
+		ui.parseBoolean(args, "decimation", &decimation);
 		bool revbitorder;
-		UserInterface::parseBoolean(args, "revbitorder", &revbitorder);
+		ui.parseBoolean(args, "revbitorder", &revbitorder);
 
 		return new FixFFTFullyPA(parentOp, target, msbin, lsbin, msbout, lsbout, N, radix, signedIn, decimation, revbitorder);
 	}
-	
-	void FixFFTFullyPA::registerFactory(){
-		UserInterface::add("FixFFTFullyPA", // name
-											 "A Complex Radix-2 Butterfly.",
-											 "Complex", // categories
-											 "",
-											 "msbin(int): integer input most significant bit;\
+
+	template <>
+	OperatorFactory
+	    op_factory<FixFFTFullyPA>(){return factoryBuilder<FixFFTFullyPA>({
+		"FixFFTFullyPA", // name
+		"A Complex Radix-2 Butterfly.",
+		"Complex", // categories
+		"",
+		"msbin(int): integer input most significant bit;\
 							lsbin(int): integer input least significant bit;\
 							msbout(int): integer output most significant bit;\
 							lsbout(int): integer output least significant bit;\
@@ -1300,12 +1299,8 @@ const int TWIDDLEIM = -1;
 							decimation(bool)=true: if true(default) DIF, else DIT FFT;\
 							revbitorder(bool)=true: if true(default) reverse bit order output, else no change",
 
-						 	"See the developper manual in the doc/ directory of FloPoCo.",
-			 				FixFFTFullyPA::parseArguments
-							) ;
-
-	}
-
+		"See the developper manual in the doc/ directory of FloPoCo.",
+	    });}
 }
 
 

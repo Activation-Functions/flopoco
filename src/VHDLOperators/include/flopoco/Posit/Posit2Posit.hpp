@@ -1,3 +1,7 @@
+#ifndef POSIT2POSIT_HPP
+#define POSIT2POSIT_HPP
+
+#include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/Operator.hpp"
 #include "flopoco/utils.hpp"
 
@@ -20,10 +24,7 @@ namespace flopoco {
 		void buildStandardTestCases(TestCaseList* tcl);
 
 
-		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
-
-		/** Factory register method */ 
-		static void registerFactory();
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
 	private:
 	  int widthI_;
 	  int wES_;
@@ -32,3 +33,4 @@ namespace flopoco {
 
 
 }//namespace
+#endif

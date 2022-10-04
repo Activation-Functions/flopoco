@@ -25,6 +25,7 @@
 
 #include "flopoco/Operator.hpp"
 #include "flopoco/ShiftersEtc/Shifters.hpp"
+#include "flopoco/UserInterface.hpp"
 #include "flopoco/utils.hpp"
 
 using namespace std;
@@ -228,37 +229,30 @@ namespace flopoco{
 
 
 
-	OperatorPtr Shifter::parseArguments(OperatorPtr parentOp, Target *target, std::vector<std::string> &args) {
+	OperatorPtr Shifter::parseArguments(OperatorPtr parentOp, Target *target, std::vector<std::string> &args, UserInterface& ui) {
 		int wX, wR, maxShift;
 		bool dirArg, computeSticky, inputPadBit;
-		UserInterface::parseStrictlyPositiveInt(args, "wX", &wX);
-		UserInterface::parseInt(args, "wR", &wR);
-		UserInterface::parseStrictlyPositiveInt(args, "maxShift", &maxShift);
-		UserInterface::parseBoolean(args, "dir", &dirArg);
-		UserInterface::parseBoolean(args, "computeSticky", &computeSticky);
-		UserInterface::parseBoolean(args, "inputPadBit", &inputPadBit);
+		ui.parseStrictlyPositiveInt(args, "wX", &wX);
+		ui.parseInt(args, "wR", &wR);
+		ui.parseStrictlyPositiveInt(args, "maxShift", &maxShift);
+		ui.parseBoolean(args, "dir", &dirArg);
+		ui.parseBoolean(args, "computeSticky", &computeSticky);
+		ui.parseBoolean(args, "inputPadBit", &inputPadBit);
 		ShiftDirection dir = (dirArg?Shifter::Right:Shifter::Left);
 		return new Shifter(parentOp, target, wX, maxShift, dir, wR, computeSticky, inputPadBit);
 	}
 
-
-
-	void Shifter::registerFactory(){
-		UserInterface::add("Shifter", // name
-											 "A flexible shifter.",
-											 "ShiftersLZOCs",
-											 "",
-											 "wX(int): input size in bits;\
-											  maxShift(int): maximum shift distance in bits;\
-											  dir(bool): 0=left, 1=right;	\
-											  wR(int)=-1: size of the shifted output , -1 means computed, will be equal to wX+maxShift;\
-											  computeSticky(bool)=false: if true and wR<wX+maxShift, shifted-out bits are ORed into a sticky bit;\
-											  inputPadBit(bool)=false: if true, add an input bit used for left-padding, as in sign extension",
-											 "", // no particular extra doc needed
-											 Shifter::parseArguments
-											 ) ;
-
-	}
-
-
+	template <>
+	OperatorFactory op_factory<Shifter>(){return factoryBuilder<Shifter>({
+	    "Shifter", // name
+	    "A flexible shifter.",
+	    "ShiftersLZOCs",
+	    "",
+	    "wX(int): input size in bits;\
+		 maxShift(int): maximum shift distance in bits;\
+		 dir(bool): 0=left, 1=right;	\
+		 wR(int)=-1: size of the shifted output , -1 means computed, will be equal to wX+maxShift;\
+		 computeSticky(bool)=false: if true and wR<wX+maxShift, shifted-out bits are ORed into a sticky bit;\
+		 inputPadBit(bool)=false: if true, add an input bit used for left-padding, as in sign extension",
+	    ""});}
 }

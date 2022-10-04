@@ -39,30 +39,24 @@ namespace flopoco{
 
 
 	
-	OperatorPtr Fix2DNorm::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {		
+	OperatorPtr Fix2DNorm::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {		
 		int msb,lsb, method;
-		UserInterface::parseInt(args, "msb", &msb);
-		UserInterface::parseInt(args, "lsb", &lsb);
-		UserInterface::parseInt(args, "method", &method);
+		ui.parseInt(args, "msb", &msb);
+		ui.parseInt(args, "lsb", &lsb);
+		ui.parseInt(args, "method", &method);
 		//select the method
 		return new Fix2DNorm(parentOp, target, msb, lsb);
 			
 	}
 
-	void Fix2DNorm::registerFactory(){
-		UserInterface::add("Fix2DNorm", // name
-											 "Computes sqrt(x*x+y*y)",
-											 "CompositeFixPoint",
-											 "", // seeAlso
-											 "msb(int): weight of the MSB of both inputs and outputs; lsb(int): weight of the LSB of both inputs and outputs; \
-                        method(int)=-1: technique to use, -1 selects a sensible default",
-											 "",
-											 Fix2DNorm::parseArguments
-											 ) ;
-		
-	}
-
-
-
+	template <>
+	OperatorFactory op_factory<Fix2DNorm>(){return factoryBuilder<Fix2DNorm>({
+	    "Fix2DNorm", // name
+	    "Computes sqrt(x*x+y*y)",
+	    "CompositeFixPoint",
+	    "", // seeAlso
+	    "msb(int): weight of the MSB of both inputs and outputs; lsb(int): weight of the LSB of both inputs and outputs; \
+         method(int)=-1: technique to use, -1 selects a sensible default",
+	    ""});}
 }
 

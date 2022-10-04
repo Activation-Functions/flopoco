@@ -1,6 +1,7 @@
 #ifndef Xilinx_TernaryAdd_2State_H
 #define Xilinx_TernaryAdd_2State_H
 
+#include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/Operator.hpp"
 #include "flopoco/PrimitiveComponents/Xilinx/Xilinx_LUT_compute.hpp"
 #include "flopoco/utils.hpp"
@@ -20,12 +21,8 @@ namespace flopoco {
         void computeState();
         string computeLUT();
 
-	    static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args);
+	    static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
 
-	    static void registerFactory();
-	    
-        // Operator interface
-	    
 	    virtual void emulate(TestCase *tc);
 		static TestList unitTest(int index);
     };

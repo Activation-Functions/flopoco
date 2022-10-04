@@ -1,7 +1,9 @@
 #ifndef  IntConstMultShiftAdd_HPP
 #define IntConstMultShiftAdd_HPP
 
+#include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/Operator.hpp"
+#include "flopoco/UserInterface.hpp"
 
 #if defined(HAVE_PAGLIB)
 //&& defined(HAVE_RPAGLIB) && defined(HAVE_SCALP)
@@ -35,16 +37,14 @@ namespace flopoco {
 
         void emulate(TestCase * tc);
         void buildStandardTestCases(TestCaseList* tcl);
-				static TestList unitTest(int index);
+		static TestList unitTest(int index);
         struct output_signal_info{
         string signal_name;
         vector<vector<int64_t> > output_factors;
         int wordsize;};
         list<output_signal_info>& GetOutputList();
 
-        static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args );
-		
-        static void registerFactory();
+        static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
 
     protected:
         int wIn;

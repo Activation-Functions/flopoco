@@ -1,5 +1,3 @@
-/* every operator here is present in the interface,
- iff it has the class method registerFactory*/
 
 FLOPOCO_OPERATOR(AutoTest)
 FLOPOCO_OPERATOR(Compressor)
@@ -13,7 +11,8 @@ FLOPOCO_OPERATOR(IntAdder)
 FLOPOCO_OPERATOR(IntDualAddSub)
 FLOPOCO_OPERATOR(IntMultiAdder)
 FLOPOCO_OPERATOR(IntConstMult)
-FLOPOCO_OPERATOR(FPConstMult)
+FLOPOCO_OPERATOR(FPConstMultInterfaced)
+FLOPOCO_OPERATOR(FPConstMultRationalInterfaced)
 FLOPOCO_OPERATOR(IntConstDiv)
 FLOPOCO_OPERATOR(DSPBlock)
 FLOPOCO_OPERATOR(IntMultiplier)
@@ -49,7 +48,8 @@ FLOPOCO_OPERATOR(InputIEEE)
 
 FLOPOCO_OPERATOR(IEEEAdd)
 FLOPOCO_OPERATOR(IEEEFMA)
-FLOPOCO_OPERATOR(FixSOPC)
+FLOPOCO_OPERATOR(FixSOPCInterfaced)
+FLOPOCO_OPERATOR(FixSOPCFullInterfaced)
 FLOPOCO_OPERATOR(FixFIR)
 FLOPOCO_OPERATOR(FixHalfSine)
 FLOPOCO_OPERATOR(FixRootRaisedCosine)

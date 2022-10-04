@@ -22,7 +22,9 @@
 #include "flopoco/ConstMult/IntConstMultShiftAdd.hpp"
 #include "flopoco/ConstMult/IntConstMultShiftAddOptTernary.hpp"
 #include "flopoco/ConstMult/tscm_solutions.hpp"
+#include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/Operator.hpp"
+#include "flopoco/UserInterface.hpp"
 #include "flopoco/utils.hpp"
 
 using namespace std;
@@ -90,31 +92,29 @@ namespace flopoco{
 
 	}
 
-    OperatorPtr flopoco::IntConstMultShiftAddOptTernary::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args ) {
+    OperatorPtr flopoco::IntConstMultShiftAddOptTernary::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
         int wIn, constant;
 
-        UserInterface::parseInt( args, "wIn", &wIn );
-        UserInterface::parseInt( args, "constant", &constant );
+        ui.parseInt( args, "wIn", &wIn );
+        ui.parseInt( args, "constant", &constant );
 
         return new IntConstMultShiftAddOptTernary(parentOp, target, wIn, constant, false);
     }
 }
 #endif
 
-namespace flopoco{
-    void flopoco::IntConstMultShiftAddOptTernary::registerFactory() {
-
-#if defined(HAVE_PAGLIB) && defined(HAVE_OSCM)
-        UserInterface::add( "IntConstMultShiftAddOptTernary", // name
-                            "Integer constant multiplication using shift and ternary additions in an optimal way (i.e., with minimum number of ternary adders). Works for coefficients up to 4194303 (22 bit)", // description, string
-                            "ConstMultDiv", // category, from the list defined in UserInterface.cpp
-                            "", //seeAlso
-                            "wIn(int): Input word size; \
+namespace flopoco {
+	template <>
+	OperatorFactory op_factory<IntConstMultShiftAddOptTernary>(){return factoryBuilder<IntConstMultShiftAddOptTernary>({
+	    "IntConstMultShiftAddOptTernary", // name
+	    "Integer constant multiplication using shift and ternary additions "
+	    "in an optimal way (i.e., with minimum number of ternary adders). "
+	    "Works for coefficients up to 4194303 (22 bit)", // description,
+							     // string
+	    "ConstMultDiv", // category, from the list defined in
+			    // UserInterface.cpp
+	    "",		    // seeAlso
+	    "wIn(int): Input word size; \
                             constant(int): constant;",
-                            "Nope.",
-                            IntConstMultShiftAddOptTernary::parseArguments
-                          ) ;
-#endif
-    }
+	    "Nope."});}
 }
-

@@ -58,7 +58,7 @@ IntMultiplierLUT::IntMultiplierLUT(Operator *parentOp, Target* target, int wX, i
 	}
 	Operator *op = new TableOperator(this, target, val, "MultTable", wX+wY, wR);
 	op->setShared();
-	UserInterface::addToGlobalOpList(op);
+	UserInterface::getUserInterface().addToGlobalOpList(op);
 
 	vhdl << tab << "R <= Y1;" << endl;
 	vhdl << instance(op, "TableMult");
@@ -103,27 +103,25 @@ mpz_class IntMultiplierLUT::function(int yx)
 
 }
 
-OperatorPtr IntMultiplierLUT::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args)
+OperatorPtr IntMultiplierLUT::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui)
 {
 	int wX,wY;
 
-	UserInterface::parseStrictlyPositiveInt(args, "wX", &wX);
-	UserInterface::parseStrictlyPositiveInt(args, "wY", &wY);
+	ui.parseStrictlyPositiveInt(args, "wX", &wX);
+	ui.parseStrictlyPositiveInt(args, "wY", &wY);
 
 	return new IntMultiplierLUT(parentOp,target,wX,wY);
 }
 
-void IntMultiplierLUT::registerFactory(){
-	UserInterface::add("IntMultiplierLUT", // name
-					   "Implements a LUT multiplier by simply tabulating all results in the LUT, should only be used for very small word sizes",
-					   "BasicInteger", // categories
-					   "",
-					   "wX(int): size of input X;wY(int): size of input Y",
-					   "",
-					   IntMultiplierLUT::parseArguments,
-					   IntMultiplierLUT::unitTest
-	) ;
-}
+template <>
+OperatorFactory op_factory<IntMultiplierLUT>(){return factoryBuilder<IntMultiplierLUT>({
+    "IntMultiplierLUT", // name
+    "Implements a LUT multiplier by simply tabulating all results in the LUT, "
+    "should only be used for very small word sizes",
+    "BasicInteger", // categories
+    "",
+    "wX(int): size of input X;wY(int): size of input Y",
+    ""});}
 
 void IntMultiplierLUT::emulate(TestCase* tc)
 {

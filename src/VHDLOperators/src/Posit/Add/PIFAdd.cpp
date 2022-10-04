@@ -154,22 +154,20 @@ namespace flopoco{
 
 
 	
-  OperatorPtr PIFAdd::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+  OperatorPtr PIFAdd::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
     int wE, wF;
-    UserInterface::parseStrictlyPositiveInt(args, "wE", &wE); 
-    UserInterface::parseStrictlyPositiveInt(args, "wF", &wF);
+    ui.parseStrictlyPositiveInt(args, "wE", &wE); 
+    ui.parseStrictlyPositiveInt(args, "wF", &wF);
     return new PIFAdd(target, parentOp, wE, wF);
   }
-  
-  void PIFAdd::registerFactory(){
-    UserInterface::add("PIFAdd", // name
-		       "A correctly rounded posit intermediate format adder.",
-		       "BasicPIF",
-		       "", //seeAlso
-		       "wF(int): mantissa size in bits; \
+
+  template <>
+  OperatorFactory op_factory<PIFAdd>(){return factoryBuilder<PIFAdd>({
+      "PIFAdd", // name
+      "A correctly rounded posit intermediate format adder.",
+      "BasicPIF",
+      "", // seeAlso
+      "wF(int): mantissa size in bits; \
                          wE(int): exponent size in bits;",
-		       "",
-		       PIFAdd::parseArguments
-		       ) ;
-  }
+      ""});}
 }

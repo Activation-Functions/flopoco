@@ -10,6 +10,7 @@
 #include "flopoco/FixConstant.hpp"
 #include "flopoco/FixFunctions/BasicPolyApprox.hpp"
 #include "flopoco/FixFunctions/FixFunction.hpp"
+#include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/Operator.hpp" // mostly for reporting
 
 using namespace std;
@@ -22,7 +23,7 @@ namespace flopoco{
 	 * polynomial approximation to a fixed-point function over [0,1]
 	*/
 
-	class VaryingPiecewisePolyApprox {
+	class VaryingPiecewisePolyApprox  {
 	public:
 
 		/**
@@ -37,9 +38,7 @@ namespace flopoco{
 
 		virtual ~VaryingPiecewisePolyApprox();
 
-		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args);
-
-		static void registerFactory();
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
 
 		/**
 		 * get the bits of coeff of degree d of polynomial number i

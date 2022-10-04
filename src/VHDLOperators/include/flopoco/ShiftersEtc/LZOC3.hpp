@@ -5,6 +5,8 @@
 #include <gmp.h>
 #include <mpfr.h>
 #include <gmpxx.h>
+
+#include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/Operator.hpp"
 #include "flopoco/Tables/TableOperator.hpp"
 
@@ -13,7 +15,7 @@ namespace flopoco{
 	/** The Leading zero counter class.
 	 * Recursive structure with intlog2(wIn) stages.
 	 */
-	class LZOC3 : public Operator{
+	class LZOC3 : public Operator {
 
 	public:
 		/** The LZOC3 constructor
@@ -71,10 +73,7 @@ namespace flopoco{
 
 	public:
 		/** Factory method that parses arguments and calls the constructor */
-		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
-
-		/** Factory register method */
-		static void registerFactory();
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
 	};
 
 }

@@ -67,30 +67,28 @@ namespace flopoco{
 		emulate_fixfunction(*f, tc, true /* correct rounding */);
 	}
 
-	OperatorPtr FixFunctionByTable::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args)
+	OperatorPtr FixFunctionByTable::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui)
 	{
 		bool signedIn;
 		int lsbIn, lsbOut;
 		string f;
-		UserInterface::parseString(args, "f", &f);
-		UserInterface::parseBoolean(args, "signedIn", &signedIn);
-		UserInterface::parseInt(args, "lsbIn", &lsbIn);
-		UserInterface::parseInt(args, "lsbOut", &lsbOut);
+		ui.parseString(args, "f", &f);
+		ui.parseBoolean(args, "signedIn", &signedIn);
+		ui.parseInt(args, "lsbIn", &lsbIn);
+		ui.parseInt(args, "lsbOut", &lsbOut);
 		return new FixFunctionByTable(parentOp, target, f, signedIn, lsbIn, lsbOut);
 	}
 
-	void FixFunctionByTable::registerFactory()
-	{
-		UserInterface::add("FixFunctionByTable", // name
-											 "Evaluator of function f on [0,1) or [-1,1), depending on signedIn, using a table.",
-											 "FunctionApproximation",
-											 "",
-											 "f(string): function to be evaluated between double-quotes, for instance \"exp(x*x)\";\
-signedIn(bool): if true the function input range is [-1,1), if false it is [0,1);\
-lsbIn(int): weight of input LSB, for instance -8 for an 8-bit input;\
-lsbOut(int): weight of output LSB;",
-											 "This operator uses a table to store function values.",
-											 FixFunctionByTable::parseArguments
-											 ) ;
-	}
+	template <>
+	OperatorFactory op_factory<FixFunctionByTable>(){return factoryBuilder<FixFunctionByTable>({
+	    "FixFunctionByTable", // name
+	    "Evaluator of function f on [0,1) or [-1,1), depending on "
+	    "signedIn, using a table.",
+	    "FunctionApproximation",
+	    "",
+	    "f(string): function to be evaluated between double-quotes, for instance \"exp(x*x)\";\
+			signedIn(bool): if true the function input range is [-1,1), if false it is [0,1);\
+			lsbIn(int): weight of input LSB, for instance -8 for an 8-bit input;\
+			lsbOut(int): weight of output LSB;",
+	    "This operator uses a table to store function values."});}
 }

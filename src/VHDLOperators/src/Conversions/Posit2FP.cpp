@@ -4,6 +4,7 @@
 #include "flopoco/ShiftersEtc/Normalizer.hpp"
 #include "flopoco/TestBenches/PositNumber.hpp"
 #include "flopoco/TestBenches/IEEENumber.hpp"
+#include "flopoco/UserInterface.hpp"
 
 using namespace std;
 
@@ -108,25 +109,21 @@ namespace flopoco{
 	}
 
 	OperatorPtr Posit2FP::parseArguments(Operator* parentOp, Target *target, 
-			std::vector<std::string> & args)
+			std::vector<std::string> & args, UserInterface& ui)
 	{
 		int width, es;
-		UserInterface::parseStrictlyPositiveInt(args, "width", &width);
-		UserInterface::parsePositiveInt(args, "es", &es);
+		ui.parseStrictlyPositiveInt(args, "width", &width);
+		ui.parsePositiveInt(args, "es", &es);
 		return new Posit2FP(parentOp, target, width, es);
 	}
-	
-	void Posit2FP::registerFactory()
-	{
-		UserInterface::add("Posit2FP",
-				"Convert Posit to floating point",
-				"Conversions",
-				"",
-				"width(int): total size of the encoding;\
-				es(int): exponent field length;",
-				"",
-				Posit2FP::parseArguments
-			);
-	}
 
+	template <>
+	OperatorFactory op_factory<Posit2FP>(){return factoryBuilder<Posit2FP>({
+	    "Posit2FP",
+	    "Convert Posit to floating point",
+	    "Conversions",
+	    "",
+	    "width(int): total size of the encoding;\
+				es(int): exponent field length;",
+	    ""});}
 }

@@ -6,12 +6,13 @@
 #include <mpfr.h>
 #include <gmpxx.h>
 
+#include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/Operator.hpp"
 #include "flopoco/TestBenches/FPNumber.hpp"
 
 namespace flopoco{
 	/** The FPSqrt class */
-	class FPSqrt : public Operator
+	class FPSqrt : public Operator, public InterfacedOperator<FPSqrt>
 	{
 	public:
 		/**
@@ -41,11 +42,8 @@ namespace flopoco{
 		void buildStandardTestCases(TestCaseList* tcl);
 
 		// User-interface stuff
-		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
 		static TestList unitTest(int index);
-
-		static void registerFactory();
-
 
 	private:
 		/** The width of the exponent for the input X */

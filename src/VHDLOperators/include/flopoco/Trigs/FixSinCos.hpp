@@ -1,6 +1,7 @@
 #ifndef _FIXSINCOS_H
 #define _FIXSINCOS_H
 
+#include "flopoco/InterfacedOperator.hpp"
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -22,19 +23,12 @@ namespace flopoco{
 	
 		~FixSinCos();
 
-	
-
-	
-	
 		void emulate(TestCase * tc);
 	
 		void buildStandardTestCases(TestCaseList * tcl);
 	
 		/** Factory method that parses arguments and calls the constructor */
-		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
-
-		/** Factory register method */ 
-		static void registerFactory();
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
 	
 		static TestList unitTest(int index);
 

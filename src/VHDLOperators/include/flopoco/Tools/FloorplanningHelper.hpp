@@ -23,7 +23,6 @@
 #include <string>
 #include <sstream>
 #include <cstdlib>
-#include "flopoco/Operator.hpp"
 #include "flopoco/utils.hpp"
 #include "flopoco/Tools/ResourceEstimationHelper.hpp"
 

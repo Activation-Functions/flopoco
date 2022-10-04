@@ -28,24 +28,6 @@ namespace flopoco
 	//	const char* defaultFPGA="Zynq7000";
 	const char* defaultFPGA="kintex7";
 
-	// Allocation of the global objects
-	string UserInterface::outputFileName;
-	string UserInterface::entityName=""; // used for the -name option
-	string UserInterface::targetFPGA;
-	double UserInterface::targetFrequencyMHz;
-	bool   UserInterface::clockEnable;
-	bool   UserInterface::useHardMult;
-	bool   UserInterface::registerLargeTables;
-	bool   UserInterface::tableCompression;
-	bool   UserInterface::plainVHDL;
-	bool   UserInterface::generateFigures;
-	double UserInterface::unusedHardMultThreshold;
-	bool   UserInterface::useTargetOptimizations;
-	string   UserInterface::compression;
-	string   UserInterface::tiling;
-	string UserInterface::ilpSolver;
-	int    UserInterface::ilpTimeout;
-	bool   UserInterface::allRegistersWithAsyncReset;
 #if 0 // Shall we resurrect all this some day?
 	int    UserInterface::resourceEstimation;
 	bool   UserInterface::floorplanning;
@@ -54,6 +36,10 @@ namespace flopoco
 #endif
 	string UserInterface::depGraphDrawing="";
 
+	UserInterface& UserInterface::getUserInterface() {
+		static UserInterface ui{};
+		return ui;
+	}
 
 	const vector<pair<string,string>> UserInterface::categories = []()->vector<pair<string,string>>{
 		vector<pair<string,string>> v;
@@ -168,21 +154,22 @@ namespace flopoco
 	void UserInterface::main(int argc, char* argv[]) {
 		try {
 			sollya_lib_init();
-			initialize();
+			auto& ui = getUserInterface();
+			ui.initialize();
 
 			// TODO refactor more elegantly
 
 			// This creates all the Operators and the dependency graph.
-			buildAll(argc, argv);
+			ui.buildAll(argc, argv);
 
 			if(depGraphDrawing != "no")
 			{
 				mkdir("dot", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-				drawDotDiagram(UserInterface::globalOpList);
+				ui.drawDotDiagram(ui.globalOpList);
 			}
 
-			outputVHDL();
-			finalReport(cerr);
+			ui.outputVHDL();
+			ui.finalReport(cerr);
 			sollya_lib_close();
 		}
 		catch (string e) {
@@ -225,19 +212,6 @@ namespace flopoco
 		//	parseBoolean(args, "", &  );
 	}
 
-
-
-	// Global objects: factory list
-	vector<pair<string,OperatorFactoryPtr>> UserInterface::factoryList;
-
-	vector<OperatorPtr>  UserInterface::globalOpList;  /**< Level-0 operators. Each of these can have sub-operators */
-
-	vector<vector<OperatorPtr>>  UserInterface::globalOpListStack;
-
-	int UserInterface::pipelineActive_;
-
-
-
 	void UserInterface::pushAndClearGlobalOpList() {
 		globalOpListStack.push_back(globalOpList);
 		globalOpList.clear();
@@ -273,7 +247,7 @@ namespace flopoco
 
 	void UserInterface::outputVHDLToFile(ofstream& file){
 		set<string> alreadyOutput; // to avoid redundant output
-		outputVHDLToFile(UserInterface::globalOpList, file, alreadyOutput);
+		outputVHDLToFile(getUserInterface().globalOpList, file, alreadyOutput);
 	}
 
 
@@ -334,24 +308,22 @@ namespace flopoco
 	}
 
 
-	void UserInterface::registerFactory(OperatorFactoryPtr factory)	{
-		//		if(factoryList.find(factory->name())!=factoryList.end())
-		//			throw string("OperatorFactory - Factory with name '"+factory->name()+" has already been registered.");
-		factoryList.push_back(make_pair(factory->name(), factory));
+	void UserInterface::registerFactory(OperatorFactory const & factory)	{
+		factoryList.emplace_back(factory.name(), factory);
 	}
 
 	unsigned UserInterface::getFactoryCount() {
 		return factoryList.size();
 	}
 
-	OperatorFactoryPtr UserInterface::getFactoryByIndex(unsigned i)
+	OperatorFactory& UserInterface::getFactoryByIndex(unsigned i)
 	{
 		return UserInterface::factoryList[i].second;
 	}
 
-	OperatorFactoryPtr UserInterface::getFactoryByName(string operatorName)	{
+	OperatorFactory& UserInterface::getFactoryByName(string operatorName)	{
 		std::transform(operatorName.begin(), operatorName.end(), operatorName.begin(), ::tolower);
-		for(auto it: UserInterface::factoryList) {
+		for(auto& it: UserInterface::factoryList) {
 			string lowerCaseFactoryName = it.first;
 			std::transform(lowerCaseFactoryName.begin(), lowerCaseFactoryName.end(), lowerCaseFactoryName.begin(), ::tolower);
 			if (lowerCaseFactoryName == operatorName)
@@ -499,12 +471,10 @@ namespace flopoco
 				target->setTilingMethod(tiling);
 
 				// Now build the operator
-				OperatorFactoryPtr fp = getFactoryByName(opName);
-				if (fp==NULL){
-					throw( "Can't find the operator factory for " + opName) ;
-				}
+				OperatorFactory& fact = getFactoryByName(opName);
+
 				// Call the constructor at last (through the factory)
-				OperatorPtr op = fp->parseArguments(nullptr, target, opParams);
+				OperatorPtr op = fact.parseArguments(nullptr, target, opParams, *this);
 				if(op!=NULL)	{// Some factories don't actually create an operator
 					if(entityName!="") {
 						op->changeName(entityName);
@@ -599,7 +569,7 @@ namespace flopoco
 
 	void UserInterface::throwMissingArgError(string opname, string key){
 				throw (opname +": argument " + key + " not provided, and there doesn't seem to be a default value."
-							 +"\n" +  getFactoryByName(opname) -> getFullDoc());
+							 +"\n" +  getFactoryByName(opname).getFullDoc());
 
 	}
 
@@ -609,7 +579,7 @@ namespace flopoco
 			if(genericOption)
 				return; // do nothing
 			// key not given, use default value
-			val = getFactoryByName(args[0])->getDefaultParamVal(key);
+			val = getFactoryByName(args[0]).getDefaultParamVal(key);
 			if (val=="")
 				throwMissingArgError(args[0], key);
 		}
@@ -622,7 +592,7 @@ namespace flopoco
 			if(genericOption)
 				return; // do nothing
 			// key not given, use default value
-			val = getFactoryByName(args[0])->getDefaultParamVal(key);
+			val = getFactoryByName(args[0]).getDefaultParamVal(key);
 			if (val=="")
 				throwMissingArgError(args[0], key);
 		}
@@ -640,7 +610,7 @@ namespace flopoco
 			if(genericOption)
 				return; // do nothing
 			// key not given, use default value
-			val = getFactoryByName(args[0])->getDefaultParamVal(key);
+			val = getFactoryByName(args[0]).getDefaultParamVal(key);
 			if (val=="")
 				throwMissingArgError(args[0], key);
 		}
@@ -658,7 +628,7 @@ namespace flopoco
 			if(genericOption)
 				return; // do nothing
 			// key not given, use default value
-			val = getFactoryByName(args[0])->getDefaultParamVal(key);
+			val = getFactoryByName(args[0]).getDefaultParamVal(key);
 			if (val=="")
 				throwMissingArgError(args[0], key);
 		}
@@ -675,7 +645,7 @@ namespace flopoco
 			if(genericOption)
 				return; // do nothing
 			// key not given, use default value
-			val = getFactoryByName(args[0])->getDefaultParamVal(key);
+			val = getFactoryByName(args[0]).getDefaultParamVal(key);
 			if (val=="")
 				throwMissingArgError(args[0], key);
 		}
@@ -701,7 +671,7 @@ namespace flopoco
 			if(genericOption)
 				return; // do nothing
 			// key not given, use default value
-			val = getFactoryByName(args[0])->getDefaultParamVal(key);
+			val = getFactoryByName(args[0]).getDefaultParamVal(key);
 			if (val=="")
 				throwMissingArgError(args[0], key);
 		}
@@ -729,7 +699,7 @@ namespace flopoco
 				return; // option not found, but it was an option, so do nothing
 			}
 			else {			// key not given, use default value
-				val = getFactoryByName(args[0])->getDefaultParamVal(key);
+				val = getFactoryByName(args[0]).getDefaultParamVal(key);
 				if (val=="")
 					throwMissingArgError(args[0], key);
 			}
@@ -754,7 +724,7 @@ namespace flopoco
 				return; // do nothing
 			// key not given, use default value (except if it is an initial option)
 			if(args[0] != "$$initialOptions$$") {
-					val = getFactoryByName(args[0])->getDefaultParamVal(key);
+					val = getFactoryByName(args[0]).getDefaultParamVal(key);
 					if (val=="")
 						throwMissingArgError(args[0], key);
 			}
@@ -768,20 +738,6 @@ namespace flopoco
 		else
 			throw (args[0] +": expecting strictly positive value for " + key + ", got " + val );
 	}
-
-
-	void UserInterface::add( string name,
-													 string description, /**< for the HTML doc and the detailed help */
-													 string category,
-													 string seeAlso,
-													 string parameterList, /**< semicolon-separated list of parameters, each being name(type)[=default]:short_description  */
-													 string extraHTMLDoc, /**< Extra information to go to the HTML doc, for instance links to articles or details on the algorithms */
-													 parser_func_t parser,
-													 unitTest_func_t unitTest	 ) {
-		OperatorFactoryPtr factory(new OperatorFactory(name, description, category, seeAlso, parameterList, extraHTMLDoc, parser, unitTest));
-		UserInterface::registerFactory(factory);
-	}
-
 
 #if 0
 	const int outputToHTML=1;
@@ -836,9 +792,9 @@ namespace flopoco
 			string catDesc =  catIt.second;
 			s <<COLOR_BOLD_MAGENTA_NORMAL << "========"<< catDesc << "========"<< COLOR_NORMAL << endl;
 			for(auto it: UserInterface::factoryList) {
-				OperatorFactoryPtr f =  it.second;
-				if(cat == f->m_category)
-					s << f -> getFullDoc();
+				OperatorFactory& f =  it.second;
+				if(cat == f.m_category)
+					s << f.getFullDoc();
 			}
 		}
 		return s.str();
@@ -869,9 +825,9 @@ namespace flopoco
 			string catDesc =  catIt.second;
 			file << "<h3>" << catDesc << "</h3>" << endl;
 			for(auto it: UserInterface::factoryList) {
-				OperatorFactoryPtr f =  it.second;
-				if(cat == f->m_category)
-				 file << f -> getHTMLDoc();
+				OperatorFactory& f =  it.second;
+				if(cat == f.m_category)
+				 file << f.getHTMLDoc();
 			}
 		}
 		file << "</body>" << endl;
@@ -896,17 +852,16 @@ namespace flopoco
 			string cat =  catIt.first;
 
 			for(auto it: UserInterface::factoryList) {
-				OperatorFactoryPtr f =  it.second;
-				if(cat == f->m_category)
+				OperatorFactory& f =  it.second;
+				if(cat == f.m_category)
 				{
 					if(!firstOperator)
 						file << "," << endl;
 					else
 						firstOperator = false;
 
-					file << "\t\"" << f->name() << "\" : {" << endl;
-					file << f->getJSONDescription();
-
+					file << "\t\"" << f.name() << "\" : {" << endl;
+					file << f.getJSONDescription();
 					file << "\t}";
 				}
 			}
@@ -952,14 +907,14 @@ namespace flopoco
 			file << "\t\"" << catDesc << "\": [";
 			bool firstOperator=true;
 			for(auto it: UserInterface::factoryList) {
-				OperatorFactoryPtr f =  it.second;
-				if(cat == f->m_category)
+				OperatorFactory& f =  it.second;
+				if(cat == f.m_category)
 				{
 					if(!firstOperator)
 						file << ", ";
 					else
 						firstOperator = false;
-					file << "\"" << f->name() << "\"";
+					file << "\"" << f.name() << "\"";
 				}
 			}
 			file << "]";
@@ -989,11 +944,11 @@ namespace flopoco
 		string operatorList;
 		{
 		for(auto it: UserInterface::factoryList) {
-			OperatorFactoryPtr f =  it.second;
+			OperatorFactory& f =  it.second;
 
-				file << f->getOperatorFunctions();
+				file << f.getOperatorFunctions();
 				file << endl;
-				operatorList += f->name();
+				operatorList += f.name();
 				//				if(it + 1 != factoryList.end())
 				operatorList += " ";
 			}
@@ -1480,8 +1435,8 @@ namespace flopoco
 	}
 
 
-	OperatorPtr OperatorFactory::parseArguments(OperatorPtr parentOp, Target* target, vector<string> &args	)	{
-		return m_parser(parentOp, target, args);
+	OperatorPtr OperatorFactory::parseArguments(OperatorPtr parentOp, Target* target, vector<string> &args, UserInterface& ui)	{
+		return m_parser(parentOp, target, args, ui);
 	}
 
 

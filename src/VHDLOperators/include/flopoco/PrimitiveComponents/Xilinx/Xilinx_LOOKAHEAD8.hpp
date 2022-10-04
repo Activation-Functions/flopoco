@@ -1,6 +1,7 @@
 #ifndef Xilinx_LOOKAHEAD8_H
 #define Xilinx_LOOKAHEAD8_H
 
+#include "flopoco/InterfacedOperator.hpp"
 #include "Xilinx_Primitive.hpp"
 
 namespace flopoco {
@@ -26,9 +27,7 @@ namespace flopoco {
           std::string signame_out, int rlow_in = 0, int rlow_out = 0
         );
 
-        static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args);
-        static void registerFactory();
-
+        static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
         static OperatorPtr newInstanceForVectorConnections(
            Operator *parentOp, std::string instname, std::string params,
            std::string signame_cyx, std::string signame_prop,

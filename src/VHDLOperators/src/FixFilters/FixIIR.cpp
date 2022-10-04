@@ -421,20 +421,20 @@ namespace flopoco {
 
 
 	
-	OperatorPtr FixIIR::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+	OperatorPtr FixIIR::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 		int lsbIn;
-		UserInterface::parseInt(args, "lsbIn", &lsbIn);
+		ui.parseInt(args, "lsbIn", &lsbIn);
 		int lsbOut;
-		UserInterface::parseInt(args, "lsbOut", &lsbOut);
+		ui.parseInt(args, "lsbOut", &lsbOut);
 		double h;
-		UserInterface::parseFloat(args, "H", &h);
+		ui.parseFloat(args, "H", &h);
 		double heps;
-		UserInterface::parseFloat(args, "Heps", &heps);
+		ui.parseFloat(args, "Heps", &heps);
 		vector<string> inputa;
 		string in;
-		UserInterface::parseString(args, "coeffa", &in);
+		ui.parseString(args, "coeffa", &in);
 		bool buildWorstCaseTestBench;
-		UserInterface::parseBoolean(args, "buildWorstCaseTestBench", &buildWorstCaseTestBench);
+		ui.parseBoolean(args, "buildWorstCaseTestBench", &buildWorstCaseTestBench);
 		
 		// tokenize a string, thanks Stack Overflow
 		stringstream ss(in);
@@ -445,7 +445,7 @@ namespace flopoco {
 			}
 
 		vector<string> inputb;
-		UserInterface::parseString(args, "coeffb", &in);
+		ui.parseString(args, "coeffb", &in);
 		stringstream ssb(in);
 		while( ssb.good() )	{
 				string substr;
@@ -490,24 +490,18 @@ namespace flopoco {
 	return testStateList;
 	}
 
-
-	
-	void FixIIR::registerFactory(){
-		UserInterface::add("FixIIR", // name
-											 "A fix-point Infinite Impulse Response filter generator.",
-											 "FiltersEtc", // categories
-											 "",
-											 "lsbIn(int): input least significant bit;\
+	template <>
+	OperatorFactory op_factory<FixIIR>(){return factoryBuilder<FixIIR>({
+	    "FixIIR", // name
+	    "A fix-point Infinite Impulse Response filter generator.",
+	    "FiltersEtc", // categories
+	    "",
+	    "lsbIn(int): input least significant bit;\
                         lsbOut(int): output least significant bit;\
                         H(real)=0: worst-case peak gain. if 0, it will be computed by the WCPG library;\
                         Heps(real)=0: worst-case peak gain of the feedback loop. if 0, it will be computed by the WCPG library;\
                         coeffa(string): colon-separated list of real coefficients using Sollya syntax. Example: coeffa=\"1.234567890123:sin(3*pi/8)\";\
                         coeffb(string): colon-separated list of real coefficients using Sollya syntax. Example: coeffb=\"1.234567890123:sin(3*pi/8)\";\
                         buildWorstCaseTestBench(bool)=false: if true, the TestBench for this IIR will begin with a stimulation by the worst-case input signal",
-											 "",
-											 FixIIR::parseArguments,
-											 FixIIR::unitTest
-											 ) ;
-	}
-
+	    ""});}
 }

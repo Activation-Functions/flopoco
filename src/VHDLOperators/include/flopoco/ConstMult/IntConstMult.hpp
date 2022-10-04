@@ -7,6 +7,7 @@
 #include <gmpxx.h>
 #include <cstdlib>
 
+#include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/Operator.hpp"
 #include "ShiftAddOp.hpp"
 #include "ShiftAddDag.hpp"
@@ -56,10 +57,7 @@ namespace flopoco{
 		int rsize;
 		ShiftAddDag* implementation;
 
-
 		int getArea(); 
-
-		
 
 		// Overloading the virtual functions of Operator
 
@@ -68,14 +66,9 @@ namespace flopoco{
 
 
 		/** Factory method that parses arguments and calls the constructor */
-		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
 
 		static TestList unitTest(int index);
-
-		/** Factory register method */ 
-		static void registerFactory();
-
-
 		
 		/** @brief Recodes input n; returns the number of non-zero bits */
 		int recodeBooth(mpz_class n, int* BoothCode);

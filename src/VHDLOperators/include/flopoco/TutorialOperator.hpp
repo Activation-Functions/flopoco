@@ -1,8 +1,10 @@
 /* Each Operator declared within the flopoco framework has 
    to inherit the class Operator and overload some functions listed below*/
 #include "flopoco/Operator.hpp"
-
+/* This contains the mixin to get the operator registered by the user interface */
+#include "flopoco/InterfacedOperator.hpp"
 /* This file contains a lot of useful functions to manipulate vhdl */
+#include "flopoco/UserInterface.hpp"
 #include "flopoco/utils.hpp"
 
 /*  All flopoco operators and utility functions are declared within
@@ -46,10 +48,7 @@ namespace flopoco {
 		// TestCase* buildRandomTestCase(int i);
 
 		/** Factory method that parses arguments and calls the constructor */
-		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
-
-		/** Factory register method */ 
-		static void registerFactory();
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args, UserInterface& ui);
 	};
 
 

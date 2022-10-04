@@ -133,30 +133,28 @@ namespace flopoco {
         return false;
     }
 
-    OperatorPtr BaseMultiplierDSPKaratsuba::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args)
+    OperatorPtr BaseMultiplierDSPKaratsuba::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui)
     {
         int wX, wY, n;
-        UserInterface::parseStrictlyPositiveInt(args, "wX", &wX);
-        UserInterface::parseStrictlyPositiveInt(args, "wY", &wY);
-        UserInterface::parseStrictlyPositiveInt(args, "n", &n);
+        ui.parseStrictlyPositiveInt(args, "wX", &wX);
+        ui.parseStrictlyPositiveInt(args, "wY", &wY);
+        ui.parseStrictlyPositiveInt(args, "n", &n);
 
         return new BaseMultiplierDSPKaratsubaOp(parentOp,target, wX, wY, n);
     }
 
-    void BaseMultiplierDSPKaratsuba::registerFactory()
-    {
-        UserInterface::add("BaseMultiplierDSPKaratsuba", // name
-                           "Implements the Karatsuba pattern with DSPs where certain multipliers can be omitted to save DSPs",
-                           "BasicInteger", // categories
-                           "",
-                           "wX(int): size of input X of a single DSP-block;\
+    template <>
+    OperatorFactory
+	op_factory<BaseMultiplierDSPKaratsuba>(){return factoryBuilder<BaseMultiplierDSPKaratsuba>({
+	    "BaseMultiplierDSPKaratsuba", // name
+	    "Implements the Karatsuba pattern with DSPs where certain "
+	    "multipliers can be omitted to save DSPs",
+	    "BasicInteger", // categories
+	    "",
+	    "wX(int): size of input X of a single DSP-block;\
                         wY(int): size of input Y of a single DSP-block;\
 						n(int): size of pattern and number of DSP substitutions;",
-                           "",
-                           BaseMultiplierDSPKaratsuba::parseArguments//,
-                           //BaseMultiplierDSPKaratsuba::unitTest
-        ) ;
-    }
+	    ""});}
 
     int BaseMultiplierDSPKaratsuba::ownLUTCost(int x_anchor, int y_anchor, int wMultX, int wMultY, bool signedIO) {
         int add_bits = 0;

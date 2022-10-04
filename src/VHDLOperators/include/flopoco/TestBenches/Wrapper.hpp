@@ -1,6 +1,5 @@
 #ifndef WRAPPER_HPP
 #define WRAPPER_HPP
-#include "Wrapper.hpp"
 
 /**
  * A wrapper is a VHDL entity that places registers before and after
@@ -9,6 +8,7 @@
  * is connected to nothing.
  **/
 
+#include "flopoco/InterfacedOperator.hpp"
 namespace flopoco{
 
 	class Wrapper : public Operator
@@ -29,12 +29,7 @@ namespace flopoco{
 		/**
 		 * Factory method that parses arguments and calls the constructor
 		 */
-		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args);
-
-		/**
-		 * Factory register method
-		 */
-		static void registerFactory();
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
 
 	private:
 		Operator* op_; /**< The operator to wrap */

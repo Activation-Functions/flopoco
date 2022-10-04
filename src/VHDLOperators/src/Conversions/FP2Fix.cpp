@@ -245,32 +245,29 @@ namespace flopoco{
 
 
 		
-	OperatorPtr FP2Fix::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+	OperatorPtr FP2Fix::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 		int wE, wF, MSB, LSB;
 		bool signedO, trunc;
-		UserInterface::parseStrictlyPositiveInt(args, "wE", &wE); 
-		UserInterface::parseStrictlyPositiveInt(args, "wF", &wF);
-		UserInterface::parseBoolean(args, "signed", &signedO);
-		UserInterface::parseInt(args, "MSB", &MSB); 
-		UserInterface::parseInt(args, "LSB", &LSB); 
-		UserInterface::parseBoolean(args, "trunc", &trunc);
+		ui.parseStrictlyPositiveInt(args, "wE", &wE); 
+		ui.parseStrictlyPositiveInt(args, "wF", &wF);
+		ui.parseBoolean(args, "signed", &signedO);
+		ui.parseInt(args, "MSB", &MSB); 
+		ui.parseInt(args, "LSB", &LSB); 
+		ui.parseBoolean(args, "trunc", &trunc);
 		return new FP2Fix(parentOp, target,  signedO, MSB, LSB, wE, wF, trunc);
 	}
 
-	void FP2Fix::registerFactory(){
-		UserInterface::add("FP2Fix", // name
-											 "Conversion from FloPoCo floating-point to fixed-point.",
-											 "Conversions",
-											 "", // seeAlso
-											 "wE(int): input exponent size in bits;\
+	template <>
+	OperatorFactory op_factory<FP2Fix>(){return factoryBuilder<FP2Fix>({
+	    "FP2Fix", // name
+	    "Conversion from FloPoCo floating-point to fixed-point.",
+	    "Conversions",
+	    "", // seeAlso
+	    "wE(int): input exponent size in bits;\
                         wF(int): input mantissa size in bits;\
                         signed(bool)=true: can be false if all numbers will be positive;\
                         MSB(int): weight of the MSB of the output;\
                         LSB(int): weight of LSB of the output;\
                         trunc(bool)=true: true means truncated (cheaper), false means rounded",
-											 "", // htmldoc
-											 FP2Fix::parseArguments
-											 ) ;
-	}
-
+	    ""});}
 }

@@ -2,9 +2,11 @@
 #define FixFunctionBySimplePoly_HPP
 #include <vector>
 
+#include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/Operator.hpp"
 #include "flopoco/FixFunctions/FixFunction.hpp"
 #include "flopoco/FixFunctions/BasicPolyApprox.hpp"
+#include "flopoco/UserInterface.hpp"
 
 namespace flopoco{
 
@@ -40,9 +42,7 @@ namespace flopoco{
 
 		static TestList unitTest(int index);
 
-		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args);
-
-		static void registerFactory();
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
 
 	private:
 		FixFunction *f;

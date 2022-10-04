@@ -5,6 +5,8 @@
 #include <gmp.h>
 #include <mpfr.h>
 #include <gmpxx.h>
+
+#include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/Operator.hpp"
 
 
@@ -17,7 +19,7 @@ namespace flopoco{
 
 	 If wIn is a power of two, we may count up to 
 	 */
-	class LZOC : public Operator{
+	class LZOC : public Operator {
 
 	public:
 		/** The LZOC constructor
@@ -47,10 +49,7 @@ namespace flopoco{
 
 	public:
 		/** Factory method that parses arguments and calls the constructor */
-		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
-
-		/** Factory register method */ 
-		static void registerFactory();
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
 	};
 
 }

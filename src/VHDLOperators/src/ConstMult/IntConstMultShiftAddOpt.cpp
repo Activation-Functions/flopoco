@@ -11,6 +11,8 @@
   All rights reserved.
 
 */
+#include "flopoco/InterfacedOperator.hpp"
+#include "flopoco/UserInterface.hpp"
 #if defined(HAVE_PAGLIB) && defined(HAVE_OSCM) && defined(HAVE_SCALP)
 
 #include <iostream>
@@ -250,30 +252,26 @@ namespace flopoco{
 	}
 
 
-    OperatorPtr flopoco::IntConstMultShiftAddOpt::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args ) {
+    OperatorPtr flopoco::IntConstMultShiftAddOpt::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
         int wIn, constant, epsilon;
 
-        UserInterface::parseInt( args, "wIn", &wIn );
-		UserInterface::parseInt( args, "constant", &constant );
-		UserInterface::parseInt( args, "epsilon", &epsilon );
+        ui.parseInt( args, "wIn", &wIn );
+		ui.parseInt( args, "constant", &constant );
+		ui.parseInt( args, "epsilon", &epsilon );
 
         return new IntConstMultShiftAddOpt(parentOp, target, wIn, constant, false, epsilon);
     }
 
-    void flopoco::IntConstMultShiftAddOpt::registerFactory() {
-
-        UserInterface::add( "IntConstMultShiftAddOpt", // name
+	template<>
+	OperatorFactory op_factory<IntConstMultShiftAddOpt>(){return factoryBuilder<IntConstMultShiftAddOpt>({"IntConstMultShiftAddOpt", // name
                             "Integer constant multiplication using shift and add in an optimal way (i.e., with minimum number of adders). Works for coefficients up to " + std::to_string(MAX_SCM_CONST) + " (19 bit)", // description, string
                             "ConstMultDiv", // category, from the list defined in UserInterface.cpp
                             "", //seeAlso
                             "wIn(int): Input word size; \
                             constant(int): constant; \
                             epsilon(int)=0: Allowable error for truncated constant multipliers;",
-                            "Nope.",
-                            IntConstMultShiftAddOpt::parseArguments,
-							IntConstMultShiftAddOpt::unitTest
-                          ) ;
-    }
+                            "Nope."
+    });}
 
 }
 #else

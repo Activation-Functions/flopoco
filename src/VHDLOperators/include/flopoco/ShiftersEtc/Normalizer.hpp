@@ -7,6 +7,7 @@
 #include <gmpxx.h>
 #include <mpfr.h>
 
+#include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/utils.hpp"
 #include "flopoco/Operator.hpp"
 
@@ -68,18 +69,12 @@ namespace flopoco{
 		 * @return the number of bits of the count
 		 */
 		int getCountWidth() const;
-	
-	
-	
-	
+
 		void emulate(TestCase* tc);
 
 
-				/** Factory method that parses arguments and calls the constructor */
-		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
-
-		/** Factory register method */ 
-		static void registerFactory();
+		/** Factory method that parses arguments and calls the constructor */
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
 
 	private:
 	

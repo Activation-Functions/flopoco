@@ -176,9 +176,9 @@ namespace flopoco{
 		tc->addExpectedOutput("Cout",cout);
 	}
 
-	OperatorPtr CarryGenerationCircuit::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+	OperatorPtr CarryGenerationCircuit::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 		int wIn;
-		UserInterface::parseStrictlyPositiveInt(args, "wIn", &wIn);
+		ui.parseStrictlyPositiveInt(args, "wIn", &wIn);
 		return new CarryGenerationCircuit(target, wIn);
 	}
 

@@ -22,6 +22,7 @@
 
 #include "flopoco/ConstMult/IntConstDiv.hpp"
 #include "flopoco/ConstMult/IntConstMult.hpp"
+#include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/Tables/TableOperator.hpp"
 
 
@@ -677,16 +678,16 @@ namespace flopoco{
 
 
 
-	OperatorPtr IntConstDiv::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+	OperatorPtr IntConstDiv::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 		int wIn, arch, alpha;
 		vector<int> divisors;
 		bool computeQuotient, computeRemainder;
-		UserInterface::parseStrictlyPositiveInt(args, "wIn", &wIn); 
-		UserInterface::parseColonSeparatedIntList(args, "d", &divisors);
-		UserInterface::parseInt(args, "alpha", &alpha);
-		UserInterface::parsePositiveInt(args, "arch", &arch);
-		UserInterface::parseBoolean(args, "computeQuotient",  &computeQuotient);
-		UserInterface::parseBoolean(args, "computeRemainder", &computeRemainder);
+		ui.parseStrictlyPositiveInt(args, "wIn", &wIn); 
+		ui.parseColonSeparatedIntList(args, "d", &divisors);
+		ui.parseInt(args, "alpha", &alpha);
+		ui.parsePositiveInt(args, "arch", &arch);
+		ui.parseBoolean(args, "computeQuotient",  &computeQuotient);
+		ui.parseBoolean(args, "computeRemainder", &computeRemainder);
 		
 		if(divisors.size()==1) {
 			return new IntConstDiv(parentOp, target, wIn, divisors[0], alpha, arch, computeQuotient, computeRemainder);
@@ -696,22 +697,22 @@ namespace flopoco{
 		}
 	}
 
-	void IntConstDiv::registerFactory(){
-		UserInterface::add("IntConstDiv", // name
-											 "Integer divider by a small constant.",
-											 "ConstMultDiv",
-											 "", // seeAlso
-											 "wIn(int): input size in bits; \
+	template <>
+	OperatorFactory op_factory<IntConstDiv>(){return factoryBuilder<IntConstDiv>({
+	    "IntConstDiv", // name
+	    "Integer divider by a small constant.",
+	    "ConstMultDiv",
+	    "", // seeAlso
+	    "wIn(int): input size in bits; \
 											 d(intlist): integer to divide by. Either a small integer, or a colon-separated list of small integers, in which case a composite divider by the product is built;  \
 											 arch(int)=0: architecture used -- 0 for linear-time, 1 for log-time, 2 for multiply-and-add by the reciprocal; \
 											 computeQuotient(bool)=true: if true, the architecture outputs the quotient; \
 											 computeRemainder(bool)=true: if true, the architecture outputs the remainder; \
 											 alpha(int)=-1: Algorithm uses radix 2^alpha. -1 choses a sensible default.",
-											 "This operator is described, for arch=0, in <a href=\"bib/flopoco.html#dedinechin:2012:ensl-00642145:1\">this article</a>, and for arch=1, in <a href=\"bib/flopoco.html#UgurdagEtAl2016\">this article</a>.", // TODO Add recip arch
-											 IntConstDiv::parseArguments,
-											 IntConstDiv::unitTest
-											 ) ;
-	}
+	    "This operator is described, for arch=0, in <a "
+	    "href=\"bib/flopoco.html#dedinechin:2012:ensl-00642145:1\">this "
+	    "article</a>, and for arch=1, in <a "
+	    "href=\"bib/flopoco.html#UgurdagEtAl2016\">this article</a>."
 
-	
+	});}
 }

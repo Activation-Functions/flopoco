@@ -571,29 +571,24 @@ namespace flopoco{
 		return tc;
 	}
 
-	OperatorPtr FPPow::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+	OperatorPtr FPPow::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 		int wE;
-		UserInterface::parseStrictlyPositiveInt(args, "wE", &wE);
+		ui.parseStrictlyPositiveInt(args, "wE", &wE);
 		int wF;
-		UserInterface::parseStrictlyPositiveInt(args, "wF", &wF);
+		ui.parseStrictlyPositiveInt(args, "wF", &wF);
 		int type;
-		UserInterface::parsePositiveInt(args, "type", &type);
+		ui.parsePositiveInt(args, "type", &type);
 		return new FPPow(parentOp, target, wE, wF, type);
 	}
-
-	void FPPow::registerFactory(){
-		UserInterface::add("FPPow", // name
-											 "A floating-point power function.",
-											 "ElementaryFunctions", // categories
-											 "",
-											 "wE(int): exponent size in bits for both inputs; \
-wF(int): mantissa size in bits for both inputs; \
-type(int)=0: 0 for pow, 1 for the powr function introduced in IEEE754-2008",
-											 "",
-											 FPPow::parseArguments
-											 ) ;
-
-	}
-
-
+	template <>
+	OperatorFactory op_factory<FPPow>(){return factoryBuilder<FPPow>({
+	    "FPPow", // name
+	    "A floating-point power function.",
+	    "ElementaryFunctions", // categories
+	    "",
+	    "wE(int): exponent size in bits for both inputs; \
+			wF(int): mantissa size in bits for both inputs; \
+			type(int)=0: 0 for pow, 1 for the powr function introduced in IEEE754-2008",
+	    ""
+	});}
 }

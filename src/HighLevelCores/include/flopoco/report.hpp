@@ -31,7 +31,8 @@ namespace flopoco {
    * @param lvl 
    * @param action 
    */
-  auto external_log = [](LogLevel lvl, auto action){
+  template<typename T>
+  void external_log(LogLevel lvl, T action){
     if (is_log_lvl_enabled(lvl)){
         action();
     }
@@ -39,7 +40,8 @@ namespace flopoco {
 
   LogLevel get_log_lvl();
 
-  auto report = [](LogLevel lvl, std::string_view message, auto filename, auto line, auto funcname) {
+  template<typename T1, typename T2, typename T3>
+  void report (LogLevel lvl, std::string_view message, T1 filename, T2 line, T3 funcname) {
     if (is_log_lvl_enabled(lvl)) {
         std::ostream& out = (lvl < 0) ? std::cerr : std::cout;
         out << "> (" << filename << ":" << line <<" (" << funcname << ")): " << message << std::endl;

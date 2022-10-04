@@ -172,9 +172,9 @@ namespace flopoco{
 	{
 		int wE, wF;
 		string constant;
-		UserInterface::parseStrictlyPositiveInt(args, "wE", &wE);
-		UserInterface::parseStrictlyPositiveInt(args, "wF", &wF);
-		UserInterface::parseString(args, "constant", &constant);
+		ui.parseStrictlyPositiveInt(args, "wE", &wE);
+		ui.parseStrictlyPositiveInt(args, "wF", &wF);
+		ui.parseString(args, "constant", &constant);
 		return new FPRealKCM(target, wE, wF, constant);
 	}
 

@@ -7,10 +7,12 @@
 #include <gmp.h>
 #include <gmpxx.h>
 
+#include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/IntMult/BaseMultiplier.hpp"
 #include "flopoco/Operator.hpp"
 #include "flopoco/Tables/Table.hpp"
 #include "flopoco/Target.hpp"
+#include "flopoco/UserInterface.hpp"
 
 
 namespace flopoco
@@ -69,9 +71,7 @@ namespace flopoco
 		/** Factory method */
 		static OperatorPtr parseArguments(OperatorPtr parentOp,
 						  Target *target,
-						  vector<string> &args);
-		/** Register the factory */
-		static void registerFactory();
+						  vector<string> &args, UserInterface& ui);
 
 	private:
 		bool xIsSigned_;

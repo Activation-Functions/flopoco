@@ -27,8 +27,10 @@
 #include <sollya.h>
 
 #include "flopoco/ConstMult/FPConstMult.hpp"
+#include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/Operator.hpp"
 #include "flopoco/TestBenches/FPNumber.hpp"
+#include "flopoco/UserInterface.hpp"
 #include "flopoco/utils.hpp"
 
 using namespace std;
@@ -710,73 +712,80 @@ namespace flopoco{
 
 
 	
-	OperatorPtr FPConstMult::parse(OperatorPtr parentOp, Target* target, vector<string>& args)
+	OperatorPtr FPConstMultInterfaced::parseArguments(OperatorPtr parentOp, Target* target, vector<string>& args, UserInterface& ui)
 	{
 		int wE_in, wE_out, wF_in, wF_out, cst_width;
 		string constant;
 
-		UserInterface::parseStrictlyPositiveInt(args, "wE", &wE_in);
-		UserInterface::parseInt(args, "wEout", &wE_out);
+		ui.parseStrictlyPositiveInt(args, "wE", &wE_in);
+		ui.parseInt(args, "wEout", &wE_out);
 		if(-1==wE_out)
 			wE_out=wE_in;
-		UserInterface::parseStrictlyPositiveInt(args, "wF", &wF_in);
-		UserInterface::parseInt(args, "wFout", &wF_out);
+		ui.parseStrictlyPositiveInt(args, "wF", &wF_in);
+		ui.parseInt(args, "wFout", &wF_out);
 		if(-1==wF_out)
 			wF_out=wF_in;
 		
-		UserInterface::parsePositiveInt(args, "cst_width", &cst_width);
-		UserInterface::parseString(args, "constant", &constant);
+		ui.parsePositiveInt(args, "cst_width", &cst_width);
+		ui.parseString(args, "constant", &constant);
 
 		return new FPConstMult(parentOp, target, wE_in, wF_in, wE_out, wF_out, cst_width, constant);
 	}
 
-	OperatorPtr FPConstMult::parseRational(OperatorPtr parentOp, Target* target, vector<string>& args)
+	OperatorPtr FPConstMultRationalInterfaced::parseArguments(OperatorPtr parentOp, Target* target, vector<string>& args, UserInterface& ui)
 	{
 		int wE_in, wE_out, wF_in, wF_out, a, b;
 
-		UserInterface::parseStrictlyPositiveInt(args, "wE", &wE_in);
-		UserInterface::parseInt(args, "wEout", &wE_out);
+		ui.parseStrictlyPositiveInt(args, "wE", &wE_in);
+		ui.parseInt(args, "wEout", &wE_out);
 		if(-1==wE_out)
 			wE_out=wE_in;
-		UserInterface::parseStrictlyPositiveInt(args, "wF", &wF_in);
-		UserInterface::parseInt(args, "wFout", &wF_out);
+		ui.parseStrictlyPositiveInt(args, "wF", &wF_in);
+		ui.parseInt(args, "wFout", &wF_out);
 		if(-1==wF_out)
 			wF_out=wF_in;
-		UserInterface::parseStrictlyPositiveInt(args, "a", &a);
-		UserInterface::parseStrictlyPositiveInt(args, "b", &b);
+		ui.parseStrictlyPositiveInt(args, "a", &a);
+		ui.parseStrictlyPositiveInt(args, "b", &b);
 
 		return new FPConstMult(parentOp, target, wE_in, wF_in, wE_out, wF_out, a, b);
 	}
 
-	void FPConstMult::registerFactory()
-	{
-		UserInterface::add(
-					"FPConstMult", 
-					"Floating-point constant multiplier using the shift-and-add approach.",
-					"ConstMultDiv",
-					"",
-					"wE(int): input exponent width, also output exponent width if weOut=-1;"
-					"wF(int): input significand width, also output significand width if wFOut=-1;"
-					"constant(string): constant in sollya formalism (e.g. \"cos(3*pi/2)\" or \"13176795b-22\");"
-					"wEout(int)=-1: output exponent width, -1 means same as wE;"
-					"wFout(int)=-1: output significand width, -1 means same as wF;"
-					"cst_width(int)=0:constant precision. If set to zero, the actual width will be computed in order to get a faithful result.",
-					"An early version of the technique used is described in  <a href=\"bib/flopoco.html#BrisebarreMullerDinechin2008:ASAP\">this article</a>.",
-					parse
-				);
-		UserInterface::add(
-					"FPConstMultRational", 
-					"Correctly rounded floating-point multiplier by a rational constant.",
-					"ConstMultDiv",
-					"",
-					"wE(int): input exponent width, also output exponent width if weOut=-1;"
-					"wF(int): input significand width, also output significand width if wFOut=-1;"
-					"a(int): numerator;"
-					"b(int): denominator"
-					"wEout(int)=-1: output exponent width, -1 means same as wE;"
-					"wFout(int)=-1: output significand width, -1 means same as wF;",
-					"The technique used is described in  <a href=\"bib/flopoco.html#Dinechin2012-TCASII\">this article</a>.",
-					parseRational
-				);
-	}
+	template <>
+	OperatorFactory op_factory<FPConstMultInterfaced>(){return factoryBuilder<FPConstMultInterfaced>({
+	    "FPConstMult",
+	    "Floating-point constant multiplier using the shift-and-add "
+	    "approach.",
+	    "ConstMultDiv",
+	    "",
+	    "wE(int): input exponent width, also output exponent width if "
+	    "weOut=-1;"
+	    "wF(int): input significand width, also output significand width "
+	    "if wFOut=-1;"
+	    "constant(string): constant in sollya formalism (e.g. "
+	    "\"cos(3*pi/2)\" or \"13176795b-22\");"
+	    "wEout(int)=-1: output exponent width, -1 means same as wE;"
+	    "wFout(int)=-1: output significand width, -1 means same as wF;"
+	    "cst_width(int)=0:constant precision. If set to zero, the actual "
+	    "width will be computed in order to get a faithful result.",
+	    "An early version of the technique used is described in  <a "
+	    "href=\"bib/flopoco.html#BrisebarreMullerDinechin2008:ASAP\">this "
+	    "article</a>."});}
+
+	template <>
+	OperatorFactory op_factory<FPConstMultRationalInterfaced>(){return factoryBuilder<FPConstMultRationalInterfaced>({
+	    "FPConstMultRational",
+	    "Correctly rounded floating-point multiplier by a rational "
+	    "constant.",
+	    "ConstMultDiv",
+	    "",
+	    "wE(int): input exponent width, also output exponent width if "
+	    "weOut=-1;"
+	    "wF(int): input significand width, also output significand width "
+	    "if wFOut=-1;"
+	    "a(int): numerator;"
+	    "b(int): denominator"
+	    "wEout(int)=-1: output exponent width, -1 means same as wE;"
+	    "wFout(int)=-1: output significand width, -1 means same as wF;",
+	    "The technique used is described in  <a "
+	    "href=\"bib/flopoco.html#Dinechin2012-TCASII\">this article</a>."});}
 }

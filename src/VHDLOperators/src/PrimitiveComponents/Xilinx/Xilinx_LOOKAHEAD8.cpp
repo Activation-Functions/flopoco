@@ -6,6 +6,7 @@
 /* header of libraries to manipulate multiprecision numbers
    There will be used in the emulate function to manipulate arbitraly large
    entries */
+#include "flopoco/UserInterface.hpp"
 #include "gmp.h"
 #include "mpfr.h"
 
@@ -72,7 +73,7 @@ namespace flopoco {
 
 
     OperatorPtr Xilinx_LOOKAHEAD8::parseArguments(
-      OperatorPtr parentOp, Target *target, vector<string> &args
+      OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui
     ) {
 
       if (target->getVendor() != "Xilinx") {
@@ -82,37 +83,34 @@ namespace flopoco {
       }
 
       string lookb;
-      UserInterface::parseString(args, "lookb", &lookb);
+      ui.parseString(args, "lookb", &lookb);
 
       string lookd;
-      UserInterface::parseString(args, "lookd", &lookd);
+      ui.parseString(args, "lookd", &lookd);
 
       string lookf;
-      UserInterface::parseString(args, "lookf", &lookf);
+      ui.parseString(args, "lookf", &lookf);
 
       string lookh;
-      UserInterface::parseString(args, "lookh", &lookh);
+      ui.parseString(args, "lookh", &lookh);
 
       return new Xilinx_LOOKAHEAD8(parentOp, target,
         lookb, lookd, lookf, lookh
       );
     }
 
-
-    void Xilinx_LOOKAHEAD8::registerFactory() {
-      UserInterface::add("XilinxLOOKAHEAD8", // name
-         "Provides the Xilinx LOOKAHEAD8 primitive introduced by Versal.", // description, string
-         "Primitives", // category, from the list defined in UserInterface.cpp
-         "",
-         "lookb(string)=FALSE: lookahead generic \"bool\" param (Values: \"TRUE\" | \"FALSE\");\
+    template <>
+    OperatorFactory op_factory<Xilinx_LOOKAHEAD8>(){return factoryBuilder<Xilinx_LOOKAHEAD8>({
+  "XilinxLOOKAHEAD8", // name
+	"Provides the Xilinx LOOKAHEAD8 primitive introduced by Versal.", // description,
+									  // string
+	"Primitives", // category, from the list defined in UserInterface.cpp
+	"",
+	"lookb(string)=FALSE: lookahead generic \"bool\" param (Values: \"TRUE\" | \"FALSE\");\
           lookd(string)=FALSE: lookahead generic \"bool\" param (Values: \"TRUE\" | \"FALSE\");\
           lookf(string)=FALSE: lookahead generic \"bool\" param (Values: \"TRUE\" | \"FALSE\");\
           lookh(string)=FALSE: lookahead generic \"bool\" param (Values: \"TRUE\" | \"FALSE\")",
-         "",
-         Xilinx_LOOKAHEAD8::parseArguments
-      );
-    }
-
+	""});}
 
     OperatorPtr Xilinx_LOOKAHEAD8::newInstanceForVectorConnections(
       Operator *parentOp, std::string instname, std::string params,

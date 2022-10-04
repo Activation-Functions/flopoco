@@ -3,7 +3,11 @@
 
 
 /* This file contains a lot of useful functions to manipulate vhdl */
+#include "flopoco/UserInterface.hpp"
 #include "flopoco/utils.hpp"
+
+
+#include "flopoco/InterfacedOperator.hpp"
 
 /* Each Operator declared within the flopoco framework has 
    to inherit the class Operator and overload some functions listed below*/
@@ -18,7 +22,7 @@
 namespace flopoco {
   
   // new operator class declaration
-  class PIF2Posit : public Operator {
+  class PIF2Posit : public Operator  {
     
   public:        
     PIF2Posit(Target* target, Operator* parentOp, int widthO, int wES);
@@ -30,10 +34,7 @@ namespace flopoco {
     static void computePIFWidths(int const widthO, int const wES, int* wE, int* wF);
     
     
-    static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
-    
-    
-    static void registerFactory();
+    static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
     
   private:
     int wE_;

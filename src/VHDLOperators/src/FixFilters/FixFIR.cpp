@@ -2,6 +2,7 @@
 #include <iomanip>
 #include <sstream>
 
+#include "flopoco/UserInterface.hpp"
 #include "gmp.h"
 #include "mpfr.h"
 #include "sollya.h"
@@ -221,10 +222,11 @@ namespace flopoco {
 		if(symmetry!=0){
 			// For the emulate() computation we need to build the standard SOPC that doesn't exploit symmetry
 			// TODO get rid of its svg output...
-			UserInterface::pushAndClearGlobalOpList();
+			auto& ui = UserInterface::getUserInterface();
+			ui.pushAndClearGlobalOpList();
 			refFixSOPC = new FixSOPC(nullptr, getTarget(), lsbIn, msbOut, lsbOut, coeff);
 			REPORT(LogLevel::DETAIL, "Created reference SOPC called " << refFixSOPC->getName() );
-			UserInterface::popGlobalOpList();
+			ui.popGlobalOpList();
 		}
 		else {
 			refFixSOPC = fixSOPC;
@@ -267,38 +269,36 @@ namespace flopoco {
 
 	};
 
-	OperatorPtr FixFIR::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+	OperatorPtr FixFIR::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 		int lsbIn;
-		UserInterface::parseInt(args, "lsbIn", &lsbIn);
+		ui.parseInt(args, "lsbIn", &lsbIn);
 		int lsbOut;
-		UserInterface::parseInt(args, "lsbOut", &lsbOut);
+		ui.parseInt(args, "lsbOut", &lsbOut);
 		int symmetry;
-		UserInterface::parseInt(args, "symmetry", &symmetry);
+		ui.parseInt(args, "symmetry", &symmetry);
 		bool rescale;
-		UserInterface::parseBoolean(args, "rescale", &rescale);
+		ui.parseBoolean(args, "rescale", &rescale);
 		vector<string> coeffs;
-		UserInterface::parseColonSeparatedStringList(args, "coeff", &coeffs);
+		ui.parseColonSeparatedStringList(args, "coeff", &coeffs);
 
 		OperatorPtr tmpOp = new FixFIR(parentOp, target, lsbIn, lsbOut, coeffs, symmetry, rescale);
 
 		return tmpOp;
 	}
 
-	void FixFIR::registerFactory(){
-		UserInterface::add("FixFIR", // name
-											 "A fix-point Finite Impulse Filter generator.",
-											 "FiltersEtc", // categories
-											 "",
-											 "lsbIn(int): integer size in bits;\
+	template <>
+	OperatorFactory op_factory<FixFIR>(){return factoryBuilder<FixFIR>({
+	    "FixFIR", // name
+	    "A fix-point Finite Impulse Filter generator.",
+	    "FiltersEtc", // categories
+	    "",
+	    "lsbIn(int): integer size in bits;\
 											 lsbOut(int): integer size in bits;								\
            						 symmetry(int)=0: 0 for normal filter, 1 for symmetric, -1 for antisymmetric. If not 0, only the first half of the coeff list is used.; \
                        rescale(bool)=false: If true, divides all coefficients by 1/sum(|coeff|);\
                        coeff(string): colon-separated list of real coefficients using Sollya syntax. Example: coeff=\"1.234567890123:sin(3*pi/8)\"",
-											 "For more details, see <a href=\"bib/flopoco.html#DinIstoMas2014-SOPCJR\">this article</a>.",
-											 FixFIR::parseArguments
-											 ) ;
-	}
-
-
+	    "For more details, see <a "
+	    "href=\"bib/flopoco.html#DinIstoMas2014-SOPCJR\">this "
+	    "article</a>."});}
 }
 

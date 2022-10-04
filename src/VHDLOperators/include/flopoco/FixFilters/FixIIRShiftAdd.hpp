@@ -6,7 +6,7 @@
 #define FLOPOCO_FIXIIRSHIFTADD_H
 
 #endif //FLOPOCO_FIXIIRSHIFTADD_H
-
+#include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/Operator.hpp"
 #include "flopoco/utils.hpp"
 
@@ -50,9 +50,8 @@ namespace flopoco{
 
         // User-interface stuff
         /** Factory method */
-        static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
+        static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
         static TestList unitTest(int index);
-        static void registerFactory();
 
     private:
         int lsbIn;					/**< weight of the LSB in the input, considered as a signed number in (-1,1) */

@@ -16,7 +16,7 @@ namespace flopoco
 		ApproxCompressor_NAC18(Operator *parentOp, Target * target, vector<int> heights);
 
 		/** Factory method */
-		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args, UserInterface& ui);
 		/** Register the factory */
 		static void registerFactory();
 

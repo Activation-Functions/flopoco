@@ -325,16 +325,16 @@ namespace flopoco {
         build();
     }
 
-	OperatorPtr GenericLut::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+	OperatorPtr GenericLut::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
     std::string entityName;
     std::vector<int> inputValues,outputValues;
     std::map<unsigned int, unsigned int> valueMap;
     int wIn, wOut;
-    UserInterface::parseStrictlyPositiveInt(args, "wIn", &wIn);
-    UserInterface::parseStrictlyPositiveInt(args, "wOut", &wOut);
-    UserInterface::parseString(args, "entityName", &entityName);
-    UserInterface::parseColonSeparatedIntList(args, "inputValues", &inputValues);
-    UserInterface::parseColonSeparatedIntList(args, "outputValues", &outputValues);
+    ui.parseStrictlyPositiveInt(args, "wIn", &wIn);
+    ui.parseStrictlyPositiveInt(args, "wOut", &wOut);
+    ui.parseString(args, "entityName", &entityName);
+    ui.parseColonSeparatedIntList(args, "inputValues", &inputValues);
+    ui.parseColonSeparatedIntList(args, "outputValues", &outputValues);
     if(inputValues.size() == outputValues.size()) {
         for(unsigned int i=0; i<inputValues.size(); ++i) {
             valueMap[(unsigned int)inputValues[i]] = (unsigned int)outputValues[i];
@@ -343,20 +343,17 @@ namespace flopoco {
 		return new GenericLut(parentOp,target,entityName,valueMap,(unsigned int)wIn,(unsigned int)wOut);
 	}
 
-	void GenericLut::registerFactory() {
-      UserInterface::add("GenericLut", // name
-                         "A simple look up table.",
-                         "ShiftersLZOCs", // category
-                         "", // see also
-                         "wIn(int): input word size;\
-                        wOut(int): output word size;\
-                        entityName(string): unique name for the LUT;\
-                        inputValues(string): colon seperated list of (unsigned) ints specifying the inputs for the LUT;\
-                        outputValues(string): colon seperated list of (unsigned) ints specifying the corrisponding outputs",
-                         "", // no particular extra doc needed
-                         GenericLut::parseArguments,
-                         nullptr
-      );
-	}
+	template <>
+	OperatorFactory op_factory<GenericLut>(){return factoryBuilder<GenericLut>({
+	    "GenericLut", // name
+	    "A simple look up table.",
+	    "ShiftersLZOCs", // category
+	    "",		     // see also
+	    "wIn(int): input word size;\
+         wOut(int): output word size;\
+         entityName(string): unique name for the LUT;\
+         inputValues(string): colon seperated list of (unsigned) ints specifying the inputs for the LUT;\
+         outputValues(string): colon seperated list of (unsigned) ints specifying the corrisponding outputs",
+	    ""});}
 
 }//namespace

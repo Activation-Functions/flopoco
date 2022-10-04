@@ -242,30 +242,32 @@ void IntKaratsubaRectangular::emulate(TestCase* tc){
     tc->addExpectedOutput("R", svR);
 }
 
-OperatorPtr IntKaratsubaRectangular::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args)
+OperatorPtr IntKaratsubaRectangular::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui)
 {
     int wX,wY;
 	bool useKaratsuba,useRectangularTiles;
 
-    UserInterface::parseStrictlyPositiveInt(args, "wX", &wX);
-	UserInterface::parseStrictlyPositiveInt(args, "wY", &wY);
-	UserInterface::parseBoolean(args, "useKaratsuba", &useKaratsuba);
-	UserInterface::parseBoolean(args, "useRectangularTiles", &useRectangularTiles);
+    ui.parseStrictlyPositiveInt(args, "wX", &wX);
+	ui.parseStrictlyPositiveInt(args, "wY", &wY);
+	ui.parseBoolean(args, "useKaratsuba", &useKaratsuba);
+	ui.parseBoolean(args, "useRectangularTiles", &useRectangularTiles);
 
 	return new IntKaratsubaRectangular(parentOp,target,wX,wY,useKaratsuba,useRectangularTiles);
 }
 
-void IntKaratsubaRectangular::registerFactory(){
-    UserInterface::add("IntKaratsubaRectangular", // name
-                       "Implements a large unsigned Multiplier using rectangular shaped tiles as appears for Xilinx FPGAs. Currently limited to specific, hand-optimized sizes",
-                       "BasicInteger", // categories
-                       "",
-					   "wX(int): size of input X;wY(int): size of input Y;useKaratsuba(bool)=1: Uses Karatsuba when set to 1, instead a standard tiling without sharing is used.;useRectangularTiles(bool)=1: Uses rectangular tiles when set to 1, otherwise quadratic tiles are used",
-                       "",
-					   IntKaratsubaRectangular::parseArguments,
-					   IntKaratsubaRectangular::unitTest
-                       ) ;
-}
+template <>
+OperatorFactory op_factory<IntKaratsubaRectangular>(){return factoryBuilder<IntKaratsubaRectangular>({
+    "IntKaratsubaRectangular", // name
+    "Implements a large unsigned Multiplier using rectangular shaped tiles as "
+    "appears for Xilinx FPGAs. Currently limited to specific, hand-optimized "
+    "sizes",
+    "BasicInteger", // categories
+    "",
+    "wX(int): size of input X;wY(int): size of input Y;useKaratsuba(bool)=1: "
+    "Uses Karatsuba when set to 1, instead a standard tiling without sharing "
+    "is used.;useRectangularTiles(bool)=1: Uses rectangular tiles when set to "
+    "1, otherwise quadratic tiles are used",
+    ""});}
 
 TestList IntKaratsubaRectangular::unitTest(int index)
 {

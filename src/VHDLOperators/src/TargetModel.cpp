@@ -5,6 +5,8 @@
 /* header of libraries to manipulate multiprecision numbers
    There will be used in the emulate function to manipulate arbitraly large
    entries */
+#include "flopoco/InterfacedOperator.hpp"
+#include "flopoco/UserInterface.hpp"
 #include "gmp.h"
 #include "mpfr.h"
 
@@ -48,30 +50,30 @@ namespace flopoco {
 		}
 	};
 
-
-
-
-
-	OperatorPtr TargetModel::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+	OperatorPtr TargetModel::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 		 int type;
-		 UserInterface::parseInt(args, "type", &type); // param0 has a default value, this method will recover it if it doesnt't find it in args, 
+		 ui.parseInt(args, "type", &type); // param0 has a default value, this method will recover it if it doesnt't find it in args, 
 		 return new TargetModel(target, type);
 	}
-	
-	void TargetModel::registerFactory(){
-		UserInterface::add("TargetModel", // name
-											 "A dummy operator useful when designing a new Target", // description, string
-											 "Miscellaneous", // category, from the list defined in UserInterface.cpp
-											 "", //seeAlso
-											 // Now comes the parameter description string.
-											 // Respect its syntax because it will be used to generate the parser and the docs
-											 // Syntax is: a semicolon-separated list of parameterDescription;
-											 // where parameterDescription is parameterName (parameterType)[=defaultValue]: parameterDescriptionString 
-											 "type(int)=0: when 0, build an adder of size 32",
-											 // More documentation for the HTML pages. If you want to link to your blog, it is here.
-											 "This operator is for FloPoCo developers only. <br> Synthesize this operator, then look at its critical path. <br> Also see Target.hpp.",
-											 TargetModel::parseArguments
-											 ) ;
-	}
+
+	template <>
+	OperatorFactory op_factory<TargetModel>(){return factoryBuilder<TargetModel>({
+	    "TargetModel",					   // name
+	    "A dummy operator useful when designing a new Target", // description,
+								   // string
+	    "Miscellaneous", // category, from the list defined in
+			     // UserInterface.cpp
+	    "",		     // seeAlso
+	    // Now comes the parameter description string.
+	    // Respect its syntax because it will be used to generate the parser
+	    // and the docs Syntax is: a semicolon-separated list of
+	    // parameterDescription; where parameterDescription is parameterName
+	    // (parameterType)[=defaultValue]: parameterDescriptionString
+	    "type(int)=0: when 0, build an adder of size 32",
+	    // More documentation for the HTML pages. If you want to link to
+	    // your blog, it is here.
+	    "This operator is for FloPoCo developers only. <br> Synthesize "
+	    "this operator, then look at its critical path. <br> Also see "
+	    "Target.hpp."});}
 
 }//namespace

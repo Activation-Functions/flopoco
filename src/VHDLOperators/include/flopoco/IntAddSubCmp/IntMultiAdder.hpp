@@ -1,7 +1,9 @@
 #ifndef INTMULTIADDER_HPP
 #define INTMULTIADDER_HPP
-#include "flopoco/Operator.hpp"
 #include "flopoco/BitHeap/BitHeap.hpp"
+#include "flopoco/InterfacedOperator.hpp"
+#include "flopoco/Operator.hpp"
+#include "flopoco/UserInterface.hpp"
 
 
 
@@ -26,11 +28,9 @@ namespace flopoco{
 
 		void emulate(TestCase* tc);
 
-		static OperatorPtr parseArguments(OperatorPtr parentOp, Target* target, vector<string>& args			);
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target* target, vector<string>& args, UserInterface& ui);
 
 		static TestList unitTest(int index);
-
-		static void registerFactory();
 		
 
 	private:

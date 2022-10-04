@@ -1,5 +1,9 @@
-#include "flopoco/Operator.hpp"
+#ifndef BASESQUARERLUT_HPP
+#define BASESQUARERLUT_HPP
+
 #include "BaseMultiplierCategory.hpp"
+#include "flopoco/InterfacedOperator.hpp"
+#include "flopoco/Operator.hpp"
 
 namespace flopoco
 {
@@ -37,9 +41,8 @@ namespace flopoco
                 Operator *generateOperator(Operator *parentOp, Target *target, Parametrization const & params) const final;
 
                 /** Factory method */
-                static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
-                /** Register the factory */
-                static void registerFactory();
+                static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
+
     private:
         int wIn, wR;
 
@@ -59,3 +62,4 @@ namespace flopoco
     };
 
 }
+#endif

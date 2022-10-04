@@ -4,8 +4,10 @@
 #include <vector>
 #include <gmp.h>
 #include <gmpxx.h>
-#include "flopoco/utils.hpp"
+
+#include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/Operator.hpp"
+#include "flopoco/utils.hpp"
 
 namespace flopoco {
 
@@ -49,9 +51,7 @@ namespace flopoco {
 
 		// User-interface stuff
 		/** Factory method */
-		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
-
-		static void registerFactory();
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
 
 	protected:
 		int wIn;                                    /**< the width for X, Y and R*/

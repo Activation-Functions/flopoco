@@ -105,22 +105,20 @@ namespace flopoco{
 
 
 	
-  OperatorPtr PositAdd::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+  OperatorPtr PositAdd::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
     int width, wES;
-    UserInterface::parseStrictlyPositiveInt(args, "width", &width); 
-    UserInterface::parsePositiveInt(args, "wES", &wES);
+    ui.parseStrictlyPositiveInt(args, "width", &width); 
+    ui.parsePositiveInt(args, "wES", &wES);
     return new PositAdd(target, parentOp, width, wES);
   }
-  
-  void PositAdd::registerFactory(){
-    UserInterface::add("PositAdd", // name
-		       "A correctly rounded posit adder.",
-		       "Posit",
-		       "", //seeAlso
-		       "width(int): posit size in bits; \
+
+  template <>
+  OperatorFactory op_factory<PositAdd>(){return factoryBuilder<PositAdd>({
+      "PositAdd", // name
+      "A correctly rounded posit adder.",
+      "Posit",
+      "", // seeAlso
+      "width(int): posit size in bits; \
                          wES(int): exponent size in bits;",
-		       "",
-		       PositAdd::parseArguments
-		       ) ;
-  }
+      ""});}
 }

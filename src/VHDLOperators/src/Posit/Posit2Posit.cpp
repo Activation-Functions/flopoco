@@ -71,23 +71,21 @@ namespace flopoco {
 
 
 
-	OperatorPtr Posit2Posit::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+	OperatorPtr Posit2Posit::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 		int width, wES;
-		UserInterface::parseInt(args, "width", &width); 
-		UserInterface::parseInt(args, "wES", &wES); 
+		ui.parseInt(args, "width", &width); 
+		ui.parseInt(args, "wES", &wES); 
 		return new Posit2Posit(target, parentOp, width, wES);
 	}
-	
-	void Posit2Posit::registerFactory(){
-		UserInterface::add("Posit2Posit",
-				   "This should do nothing",
-				   "Conversions",
-				   "",
-				   "width(int): The size of the posit; \
+
+	template <>
+	OperatorFactory op_factory<Posit2Posit>(){return factoryBuilder<Posit2Posit>({
+	    "Posit2Posit",
+	    "This should do nothing",
+	    "Conversions",
+	    "",
+	    "width(int): The size of the posit; \
                                    wES(int): The width of the exponent",
-				   "",
-				   Posit2Posit::parseArguments
-				   ) ;
-	}
+	    ""});}
 
 }//namespace

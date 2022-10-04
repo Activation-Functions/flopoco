@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 
+#include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/Operator.hpp"
 #include "flopoco/PrimitiveComponents/BooleanEquation.hpp"
 #include "flopoco/utils.hpp"
@@ -27,9 +28,7 @@ namespace flopoco {
 		// destructor
         ~GenericLut() {};
 
-			static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args);
-
-			static void registerFactory();
+			static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
 	};
 
 

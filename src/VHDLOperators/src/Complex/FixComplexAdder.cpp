@@ -367,41 +367,40 @@ namespace flopoco {
 
 
 
-	OperatorPtr FixComplexAdder::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+	OperatorPtr FixComplexAdder::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 		int msbin;
-		UserInterface::parseInt(args, "msbin", &msbin);
+		ui.parseInt(args, "msbin", &msbin);
 		int lsbin;
-		UserInterface::parseInt(args, "lsbin", &lsbin);
+		ui.parseInt(args, "lsbin", &lsbin);
 		int msbout;
-		UserInterface::parseInt(args, "msbout", &msbout);
+		ui.parseInt(args, "msbout", &msbout);
 		int lsbout;
-		UserInterface::parseInt(args, "lsbout", &lsbout);
+		ui.parseInt(args, "lsbout", &lsbout);
 		bool signedIn;
-		UserInterface::parseBoolean(args, "signedIn", &signedIn);
+		ui.parseBoolean(args, "signedIn", &signedIn);
 		bool addorsub;
-		UserInterface::parseBoolean(args, "addorsub", &addorsub);
+		ui.parseBoolean(args, "addorsub", &addorsub);
 		bool laststage;
-		UserInterface::parseBoolean(args, "laststage", &laststage);
+		ui.parseBoolean(args, "laststage", &laststage);
 
 		return new FixComplexAdder(parentOp, target, msbin, lsbin, msbout, lsbout, signedIn, addorsub, laststage);
 	}
-	
-	void FixComplexAdder::registerFactory(){
-		UserInterface::add("FixComplexAdder", // name
-											 "A Complex adder subtractor.",
-											 "Complex", // categories
-											 "",
-											 "msbin(int): integer input most significant bit;\
+
+	template <>
+	OperatorFactory
+	    op_factory<FixComplexAdder>(){return factoryBuilder<FixComplexAdder>({
+		"FixComplexAdder", // name
+		"A Complex adder subtractor.",
+		"Complex", // categories
+		"",
+		"msbin(int): integer input most significant bit;\
 							lsbin(int): integer input least significant bit;\
 							msbout(int): integer output most significant bit;\
 							lsbout(int): integer output least significant bit;\
 							signedIn(bool)=true: if false calculation will be unsigned ;\
 							addorsub(bool)=true: if false subtraction on the inputs ;\
 							laststage(bool)=false: if true: last stage of FFT",
-						 	"See the developper manual in the doc/ directory of FloPoCo.",
-			 				FixComplexAdder::parseArguments
-							) ;
-
-	}
+		"See the developper manual in the doc/ directory of FloPoCo.",
+	    });}
 
 }//namespace

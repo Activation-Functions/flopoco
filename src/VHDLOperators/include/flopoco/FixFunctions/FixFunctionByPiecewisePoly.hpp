@@ -9,6 +9,7 @@
 
 #include "flopoco/FixFunctions/FixFunction.hpp"
 #include "flopoco/FixFunctions/UniformPiecewisePolyApprox.hpp"
+#include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/Operator.hpp"
 
 namespace flopoco{
@@ -50,10 +51,7 @@ namespace flopoco{
 		static TestList unitTest(int index);
 
 		/** Factory method that parses arguments and calls the constructor */
-		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
-
-		/** Factory register method */ 
-		static void registerFactory();
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
 
 	private:
 		int degree;

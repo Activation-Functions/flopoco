@@ -25,6 +25,7 @@ All rights reserved.
 #include "flopoco/ConstMult/IntConstMult.hpp"
 #include "flopoco/ConstMult/ShiftAddDag.hpp"
 #include "flopoco/ConstMult/ShiftAddOp.hpp"
+#include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/Operator.hpp"
 #include "flopoco/utils.hpp"
 //#include "rigo.h"
@@ -1694,27 +1695,25 @@ namespace flopoco{
 
 
 
-	OperatorPtr IntConstMult::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+	OperatorPtr IntConstMult::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 		int wIn;
 		string	n;
-		UserInterface::parseStrictlyPositiveInt(args, "wIn", &wIn); 
-		UserInterface::parseString(args, "n", &n);
+		ui.parseStrictlyPositiveInt(args, "wIn", &wIn); 
+		ui.parseString(args, "n", &n);
 		mpz_class nz(n); // TODO catch exceptions here?
 		return new IntConstMult(parentOp, target, wIn, nz);
 	}
 
-	void IntConstMult::registerFactory(){
-		UserInterface::add("IntConstMult", // name
-			"Integer multiplier of an unsigned number by a constant using a shift-and-add tree.",
-			"ConstMultDiv",
-											 "FixRealKCM,IntConstDiv", // seeAlso
-											 "wIn(int): input size in bits; \
+	template <>
+	OperatorFactory op_factory<IntConstMult>(){return factoryBuilder<IntConstMult>({
+	    "IntConstMult", // name
+	    "Integer multiplier of an unsigned number by a constant using a "
+	    "shift-and-add tree.",
+	    "ConstMultDiv",
+	    "FixRealKCM,IntConstDiv", // seeAlso
+	    "wIn(int): input size in bits; \
 											 n(int): constant to multiply by",
-											 "An early version of this operator is described in <a href=\"bib/flopoco.html#BrisebarreMullerDinechin2008:ASAP\">this article</a>.",
-											 IntConstMult::parseArguments,
-											 IntConstMult::unitTest
-											 ) ;
-	}
-
-	
+	    "An early version of this operator is described in <a "
+	    "href=\"bib/flopoco.html#BrisebarreMullerDinechin2008:ASAP\">this "
+	    "article</a>."});}
 }

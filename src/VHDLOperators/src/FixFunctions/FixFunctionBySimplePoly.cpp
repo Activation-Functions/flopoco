@@ -252,38 +252,33 @@ namespace flopoco{
 
 
 	
-	OperatorPtr FixFunctionBySimplePoly::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args)
+	OperatorPtr FixFunctionBySimplePoly::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui)
 	{
 		string f;
 		bool signedIn;
 		int lsbIn, lsbOut;
 
-		UserInterface::parseString(args, "f", &f);
-		UserInterface::parseBoolean(args, "signedIn", &signedIn);
-		UserInterface::parseInt(args, "lsbIn", &lsbIn);
-		UserInterface::parseInt(args, "lsbOut", &lsbOut);
+		ui.parseString(args, "f", &f);
+		ui.parseBoolean(args, "signedIn", &signedIn);
+		ui.parseInt(args, "lsbIn", &lsbIn);
+		ui.parseInt(args, "lsbOut", &lsbOut);
 
 		return new FixFunctionBySimplePoly(parentOp, target, f, signedIn, lsbIn, lsbOut);
 	}
 
-
-
-	
-	void FixFunctionBySimplePoly::registerFactory()
-	{
-		UserInterface::add("FixFunctionBySimplePoly",
-						   "Evaluator of function f on [0,1) or [-1,1), using a single polynomial with Horner scheme",
-						   "FunctionApproximation",
-						   "",
-						   "f(string): function to be evaluated between double-quotes, for instance \"exp(x*x)\";\
-signedIn(bool)=true: if true the function input range is [-1,1), if false it is [0,1);\
-lsbIn(int): weight of input LSB, for instance -8 for an 8-bit input;\
-lsbOut(int): weight of output LSB;\
-",
-						   "This operator uses a table for coefficients, and Horner evaluation with truncated multipliers sized just right.<br>For more details, see <a href=\"bib/flopoco.html#DinJolPas2010-poly\">this article</a>.",
-											 FixFunctionBySimplePoly::parseArguments,
-											 FixFunctionBySimplePoly::unitTest
-											 );
-	}
-
+	template <>
+	OperatorFactory op_factory<FixFunctionBySimplePoly>(){return factoryBuilder<FixFunctionBySimplePoly>({
+	    "FixFunctionBySimplePoly",
+	    "Evaluator of function f on [0,1) or [-1,1), using a single "
+	    "polynomial with Horner scheme",
+	    "FunctionApproximation",
+	    "",
+	    "f(string): function to be evaluated between double-quotes, for instance \"exp(x*x)\";\
+			signedIn(bool)=true: if true the function input range is [-1,1), if false it is [0,1);\
+			lsbIn(int): weight of input LSB, for instance -8 for an 8-bit input;\
+			lsbOut(int): weight of output LSB;",
+	    "This operator uses a table for coefficients, and Horner "
+	    "evaluation with truncated multipliers sized just right.<br>For "
+	    "more details, see <a "
+	    "href=\"bib/flopoco.html#DinJolPas2010-poly\">this article</a>."});}
 }

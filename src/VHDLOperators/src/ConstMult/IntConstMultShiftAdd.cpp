@@ -1,4 +1,6 @@
 #include "flopoco/ConstMult/IntConstMultShiftAdd.hpp"
+#include "flopoco/InterfacedOperator.hpp"
+#include "flopoco/UserInterface.hpp"
 
 #if defined(HAVE_PAGLIB)
 
@@ -919,7 +921,7 @@ void IntConstMultShiftAdd::printAdditionalNodeInfo(map<adder_graph_base_node_t *
     REPORT(LogLevel::VERBOSE, nodeInfoString.str())
 }
 
-	OperatorPtr flopoco::IntConstMultShiftAdd::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args )
+	OperatorPtr flopoco::IntConstMultShiftAdd::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui)
 {
 	if (target->getVendor() != "Xilinx")
 		throw std::runtime_error("Can't build xilinx primitive on non xilinx target");
@@ -929,14 +931,14 @@ void IntConstMultShiftAdd::printAdditionalNodeInfo(map<adder_graph_base_node_t *
 	bool sync_inout, sync_muxes, pipeline;
 	int epsilon;
 
-	UserInterface::parseInt(args, "wIn", &wIn);
-	UserInterface::parseString(args, "graph", &graph);
-	UserInterface::parseString( args, "truncations", &truncations);
-	UserInterface::parseBoolean(args, "pipeline", &pipeline);
-	UserInterface::parseInt(args, "epsilon", &epsilon);
-	UserInterface::parseBoolean(args, "sync_inout", &sync_inout);
-	UserInterface::parseBoolean(args, "sync_muxes", &sync_muxes);
-	UserInterface::parseInt(args, "sync_every", &sync_every);
+	ui.parseInt(args, "wIn", &wIn);
+	ui.parseString(args, "graph", &graph);
+	ui.parseString( args, "truncations", &truncations);
+	ui.parseBoolean(args, "pipeline", &pipeline);
+	ui.parseInt(args, "epsilon", &epsilon);
+	ui.parseBoolean(args, "sync_inout", &sync_inout);
+	ui.parseBoolean(args, "sync_muxes", &sync_muxes);
+	ui.parseInt(args, "sync_every", &sync_every);
 
 	if (truncations == "\"\"") {
 		truncations = "";
@@ -951,25 +953,24 @@ void IntConstMultShiftAdd::printAdditionalNodeInfo(map<adder_graph_base_node_t *
 
 
 namespace flopoco {
-    void flopoco::IntConstMultShiftAdd::registerFactory()
-    {
-#if defined(HAVE_PAGLIB) && defined(HAVE_RPAGLIB)
-      UserInterface::add( "IntConstMultShiftAdd", // name
-                          "A component for building constant multipliers based on pipelined adder graphs (PAGs).", // description, string
-                          "ConstMultDiv", // category, from the list defined in UserInterface.cpp
-                          "",
-                          "wIn(int): Wordsize of pag inputs; \
+	template <>
+	OperatorFactory
+	    op_factory<IntConstMultShiftAdd>(){return factoryBuilder<IntConstMultShiftAdd>({
+		"IntConstMultShiftAdd", // name
+		"A component for building constant multipliers based on "
+		"pipelined adder graphs (PAGs).", // description, string
+		"ConstMultDiv", // category, from the list defined in
+				// UserInterface.cpp
+		"",
+		"wIn(int): Wordsize of pag inputs; \
                           graph(string): Realization string of the pag; \
                           epsilon(int)=0: Allowable error for truncated constant multipliers; \
                           pipeline(bool)=true: Enable pipelining of the pag; \
                           sync_inout(bool)=true: Enable pipeline registers for input and output stage; \
                           sync_muxes(bool)=true: Enable counting mux-only stages as full stage; \
                           sync_every(int)=1: Count of stages after which will be pipelined;"
-						  "truncations(string)=\"\": provides the truncations for subvalues", //format: const1,stage:trunc_input_0,trunc_input_1,...;const2,stage:trunc_input_0,trunc_input_1,...;...",
-                          "",
-                          IntConstMultShiftAdd::parseArguments,
-                          IntConstMultShiftAdd::unitTest
-      );
-#endif // HAVE_SCALP and HAVE_PAGLIB
-    }
+		"truncations(string)=\"\": provides the truncations for "
+		"subvalues", // format:
+			     // const1,stage:trunc_input_0,trunc_input_1,...;const2,stage:trunc_input_0,trunc_input_1,...;...",
+		""});}
 }//namespace

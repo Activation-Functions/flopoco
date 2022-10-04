@@ -1,6 +1,8 @@
 #ifndef INTCOMPARATPOR_HPP
 #define INTCOMPARATPOR_HPP
+#include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/Operator.hpp"
+#include "flopoco/UserInterface.hpp"
 
 
 namespace flopoco{
@@ -21,16 +23,12 @@ namespace flopoco{
 		~IntComparator();
 
 		/** Factory method that parses arguments and calls the constructor */
-		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args, UserInterface& ui);
 
 		static TestList unitTest(int index);
 
-		/** Factory register method */ 
-		static void registerFactory();
-
 		/** emulate() function  */
 		void emulate(TestCase * tc);
-
 
 		/** Regression tests */
 		void buildStandardTestCases(TestCaseList* tcl);

@@ -503,14 +503,14 @@ rattrapper les erreurs sur guess degree des fonctions très méchantes
 	}
 
 
-	OperatorPtr FixFunctionByVaryingPiecewisePoly::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+	OperatorPtr FixFunctionByVaryingPiecewisePoly::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 		int lsbIn, lsbOut;
 		string f;
 		double approxErrorBudget;
-		UserInterface::parseString(args, "f", &f);
-		UserInterface::parseInt(args, "lsbIn", &lsbIn);
-		UserInterface::parseInt(args, "lsbOut", &lsbOut);
-		UserInterface::parseFloat(args, "approxErrorBudget", &approxErrorBudget);
+		ui.parseString(args, "f", &f);
+		ui.parseInt(args, "lsbIn", &lsbIn);
+		ui.parseInt(args, "lsbOut", &lsbOut);
+		ui.parseFloat(args, "approxErrorBudget", &approxErrorBudget);
 		return new FixFunctionByVaryingPiecewisePoly(parentOp, target, f, lsbIn, lsbOut, true, approxErrorBudget);
 	}
 

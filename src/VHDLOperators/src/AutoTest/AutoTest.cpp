@@ -1,4 +1,5 @@
 #include "flopoco/AutoTest/AutoTest.hpp"
+#include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/UserInterface.hpp"
 
 #include <vector>
@@ -10,36 +11,34 @@
 namespace flopoco
 {
 
-	OperatorPtr AutoTest::parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args)
+	OperatorPtr AutoTest::parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args, UserInterface& ui)
 	{
 		string opName;
 		bool testDependences;
-		UserInterface::parseBoolean(args, "Dependences", &testDependences);
-		UserInterface::parseString(args, "Operator", &opName);
+		ui.parseBoolean(args, "Dependences", &testDependences);
+		ui.parseString(args, "Operator", &opName);
 
 		AutoTest AutoTest(opName,testDependences);
 
 		return nullptr;
 	}
 
-	void AutoTest::registerFactory()
-	{
-		UserInterface::add("AutoTest", // name
-			"A tester for operators.",
-			"AutoTest",
-			"", //seeAlso
-			"Operator(string): name of the operator to test, All if we need to test all the operators;\
-			Dependences(bool)=false: test the operator's dependences;",
-			"",
-			AutoTest::parseArguments
-			) ;
-	}
+	template<>
+	OperatorFactory op_factory<AutoTest>(){return factoryBuilder<AutoTest>({
+		"AutoTest", // name
+		"A tester for operators.",
+		"AutoTest",
+		"", //seeAlso
+		"Operator(string): name of the operator to test, All if we need to test all the operators;\
+		Dependences(bool)=false: test the operator's dependences;",
+		""
+	});}
 
 	AutoTest::AutoTest(string opName, bool testDependences)
 	{
 		system("src/AutoTest/initTests.sh");
+		UserInterface& ui = UserInterface::getUserInterface();
 
-		OperatorFactoryPtr opFact;	
 		string commandLine;
 		string commandLineTestBench;
 		set<string> testedOperator;
@@ -78,18 +77,18 @@ namespace flopoco
 		if(allOpTest)
 		{
 				// We get the operators' names to add them in the testedOperator set
-			unsigned nbFactory = UserInterface::getFactoryCount();
+			unsigned nbFactory = ui.getFactoryCount();
 
 			for (unsigned i=0; i<nbFactory ; i++)	{
-				opFact = UserInterface::getFactoryByIndex(i);
-				if(opFact->name() != "AutoTest")
-					testedOperator.insert(opFact->name());
+				auto facto = ui.getFactoryByIndex(i);
+				if(facto.name() != "AutoTest")
+					testedOperator.insert(facto.name());
 			}
 		}
 		else
 		{
-			opFact = UserInterface::getFactoryByName(opName);
-			testedOperator.insert(opFact->name());
+			auto& opFact = ui.getFactoryByName(opName);
+			testedOperator.insert(opFact.name());
 
 				// Do we check for dependences ?
 			if(testDependences)		// All this has never been properly tested, I don't remember why it is here at all
@@ -98,13 +97,13 @@ namespace flopoco
 					// Add dependences to the set testedOperator
 					// Then we do the same on all Operator in the set testedOperator
 
-				unsigned nbFactory = UserInterface::getFactoryCount();
+				unsigned nbFactory = ui.getFactoryCount();
 				set<string> allOperator;
 
 				for (unsigned i=0; i<nbFactory ; i++)
 				{
-					opFact = UserInterface::getFactoryByIndex(i);
-					allOperator.insert(opFact->name());
+					opFact = ui.getFactoryByIndex(i);
+					allOperator.insert(opFact.name());
 				}
 
 				for(auto op: testedOperator)
@@ -147,11 +146,11 @@ namespace flopoco
 		for(auto op: testedOperator)	{
 			testsDone = false;
 			system(("src/AutoTest/initOpTest.sh " + op).c_str());
-			opFact = UserInterface::getFactoryByName(op);
+			auto& opFact = ui.getFactoryByName(op);
 			// First we run the unitTest for each tested Operator
 			if(doUnitTest)			{
 				unitTestList.clear();
-				unitTestList = opFact->unitTestGenerator(-1);
+				unitTestList = opFact.unitTestGenerator(-1);
 				// Do the unitTestsParamList contains nothing, meaning the unitTest method is not implemented 
 				if(unitTestList.size() != 0 )		{
 					testsDone = true;
@@ -163,9 +162,9 @@ namespace flopoco
 						commandLineTestBench = "";
 						unitTestParam.clear();
 						// Fetch all parameters and default values for readability
-						paramNames = opFact->param_names();
+						paramNames = opFact.param_names();
 						for(auto param :  paramNames)					{
-							string defaultValue = opFact->getDefaultParamVal(param);
+							string defaultValue = opFact.getDefaultParamVal(param);
 							unitTestParam.insert(make_pair(param,defaultValue));
 						}
 
@@ -203,7 +202,7 @@ namespace flopoco
 			if(doRandomTest)		{
 				unitTestList.clear();
 				unitTestParam.clear();
-				unitTestList = opFact->unitTestGenerator(0);
+				unitTestList = opFact.unitTestGenerator(0);
 
 				// Do the unitTestsParamList contains nothing, meaning the unitTest method is not implemented 
 				if(unitTestList.size() != 0 )
@@ -219,10 +218,10 @@ namespace flopoco
 						unitTestParam.clear();
 
 						// Fetch all parameters and default values for readability
-						paramNames = opFact->param_names();
+						paramNames = opFact.param_names();
 						for(auto param : paramNames)
 						{
-							string defaultValue = opFact->getDefaultParamVal(param);
+							string defaultValue = opFact.getDefaultParamVal(param);
 							unitTestParam.insert(make_pair(param,defaultValue));
 						}
 

@@ -9,9 +9,11 @@
 #include <stdio.h>
 #include <string>
 
+#include "flopoco/UserInterface.hpp"
 #include "gmp.h"
 #include "mpfr.h"
 
+#include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/Operator.hpp"
 #include "flopoco/utils.hpp"
 
@@ -72,9 +74,7 @@ namespace flopoco
 
 		// User-interface stuff
 		/** Factory method */
-		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
-		/** Register the factory */
-		static void registerFactory();
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args, UserInterface& ui);
 
 	public:
 		vector<int> heights;                /**< the heights of the columns */

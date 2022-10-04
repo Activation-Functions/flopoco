@@ -1,5 +1,7 @@
 
 #include "flopoco/BitHeap/BitHeapTest.hpp"
+#include "flopoco/InterfacedOperator.hpp"
+#include "flopoco/UserInterface.hpp"
 
 
 using namespace std;
@@ -79,33 +81,31 @@ namespace flopoco{
 	}
 
 
-	OperatorPtr BitheapTest::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+	OperatorPtr BitheapTest::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 		int msb_, lsb_, nbInputs_, weight_;
 		bool isSigned_;
 
-		UserInterface::parseInt(args, "msb", &msb_);
-		UserInterface::parseInt(args, "lsb", &lsb_);
-		UserInterface::parseInt(args, "nbInputs", &nbInputs_);
-		UserInterface::parseBoolean(args, "isSigned", &isSigned_);
-		UserInterface::parseInt(args, "weight", &weight_);
+		ui.parseInt(args, "msb", &msb_);
+		ui.parseInt(args, "lsb", &lsb_);
+		ui.parseInt(args, "nbInputs", &nbInputs_);
+		ui.parseBoolean(args, "isSigned", &isSigned_);
+		ui.parseInt(args, "weight", &weight_);
 
 		return new BitheapTest(target, msb_, lsb_, nbInputs_, isSigned_, weight_);
 	}
 
-	void BitheapTest::registerFactory(){
-		UserInterface::add("BitheapTest", // name
-				"A random test generator for the bitheap.",
-				"BasicInteger", // categories
-				"",
-				"msb(int): the msb of the bitheap; \
+	template <>
+	OperatorFactory op_factory<BitheapTest>(){return factoryBuilder<BitheapTest>({
+	    "BitheapTest", // name
+	    "A random test generator for the bitheap.",
+	    "BasicInteger", // categories
+	    "",
+	    "msb(int): the msb of the bitheap; \
 				lsb(int): the lsb of the bitheap; \
 				nbInputs(int): the number of signals to add to the bitheap; \
 				isSigned(bool): the signness of the bitheap;\
 				weight(int): the weight of the inputs in the bitheap;",
-				"",
-				BitheapTest::parseArguments
-		) ;
-	}
+	    ""});}
 }
 
 

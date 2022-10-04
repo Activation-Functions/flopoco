@@ -19,13 +19,15 @@
 #include <mpfr.h>
 #include <gmpxx.h>
 
+#include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/Operator.hpp"
 #include "flopoco/TestBenches/FPNumber.hpp"
+#include "flopoco/UserInterface.hpp"
 
 namespace flopoco{
 
 	/** The OutputIEEE class */
-	class OutputIEEE : public Operator
+	class OutputIEEE : public Operator 
 	{
 	public:
 		/**
@@ -44,8 +46,6 @@ namespace flopoco{
 		 */
 		~OutputIEEE();
 
-
-
 		/**
 		 * @brief Emulate the operator. This function overload the method from Operator.
 		 * @param tc a TestCase partially filled with input values
@@ -53,14 +53,10 @@ namespace flopoco{
 		void emulate(TestCase * tc);
 
 		/** Factory method that parses arguments and calls the constructor */
-		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
 
 		/** Generate unit tests */
 		static TestList unitTest(int index);
-
-		/** Factory register method */ 
-		static void registerFactory();
-
 
 	private:
 		/** The width of the exponent for the input X */

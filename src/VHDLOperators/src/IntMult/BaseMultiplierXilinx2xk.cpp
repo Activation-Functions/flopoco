@@ -46,33 +46,31 @@ int BaseMultiplierXilinx2xk::ownLUTCost(int x_anchor, int y_anchor, int wMultX, 
     return luts;
 }
 
-OperatorPtr BaseMultiplierXilinx2xk::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args)
+OperatorPtr BaseMultiplierXilinx2xk::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui)
 {
     int wX, wY;
 	bool xIsSigned,yIsSigned;
-    UserInterface::parseStrictlyPositiveInt(args, "wX", &wX);
-    UserInterface::parseStrictlyPositiveInt(args, "wY", &wY);
-	UserInterface::parseBoolean(args,"xIsSigned",&xIsSigned);
-	UserInterface::parseBoolean(args,"yIsSigned",&yIsSigned);
+    ui.parseStrictlyPositiveInt(args, "wX", &wX);
+    ui.parseStrictlyPositiveInt(args, "wY", &wY);
+	ui.parseBoolean(args,"xIsSigned",&xIsSigned);
+	ui.parseBoolean(args,"yIsSigned",&yIsSigned);
 
 	return new BaseMultiplierXilinx2xkOp(parentOp,target,xIsSigned,yIsSigned, wX, wY);
 }
 
-void BaseMultiplierXilinx2xk::registerFactory()
-{
-    UserInterface::add("BaseMultiplierXilinx2xk", // name
-                        "Implements a 2xY-LUT-Multiplier that can be realized efficiently on some Xilinx-FPGAs",
-                       "BasicInteger", // categories
-                        "",
-                       "wX(int): size of input X;\
+template <>
+OperatorFactory
+    op_factory<BaseMultiplierXilinx2xk>(){return factoryBuilder<BaseMultiplierXilinx2xk>({
+	"BaseMultiplierXilinx2xk", // name
+	"Implements a 2xY-LUT-Multiplier that can be realized efficiently on "
+	"some Xilinx-FPGAs",
+	"BasicInteger", // categories
+	"",
+	"wX(int): size of input X;\
                         wY(int): size of input Y;\
 						xIsSigned(bool)=0: input X is signed;\
 						yIsSigned(bool)=0: input Y is signed;",
-                       "",
-                       BaseMultiplierXilinx2xk::parseArguments
-//                       ,BaseMultiplierXilinx2xk::unitTest
-    ) ;
-}
+	""});}
 
 void BaseMultiplierXilinx2xkOp::emulate(TestCase* tc)
 {

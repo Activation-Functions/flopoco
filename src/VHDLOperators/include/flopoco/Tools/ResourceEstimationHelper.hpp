@@ -14,6 +14,7 @@
 #ifndef RESOURCESTIMATIONHELPER_HPP
 #define RESOURCESTIMATIONHELPER_HPP
 
+#include "flopoco/Signal.hpp"
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -23,14 +24,14 @@
 #include <string>
 #include <sstream>
 #include <cstdlib>
-#include "flopoco/Operator.hpp"
 #include "flopoco/utils.hpp"
 
 using namespace std;
 
 namespace flopoco{
 
-
+class Operator;
+class Target;
 	class ResourceEstimationHelper
 	{
 	public:

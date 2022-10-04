@@ -25,6 +25,7 @@
 
 #include "flopoco/Operator.hpp"
 #include "flopoco/TestBenches/TestBench.hpp"
+#include "flopoco/TestBenches/TestCase.hpp"
 #include "flopoco/utils.hpp"
 
 using namespace std;
@@ -681,17 +682,17 @@ namespace flopoco{
 
 
 
-	OperatorPtr TestBench::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+	OperatorPtr TestBench::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 		int n;
 		bool file;
 
-		if(UserInterface::globalOpList.empty()){
+		if(ui.globalOpList.empty()){
 			throw(string("TestBench has no operator to wrap (it should come after the operator it wraps)"));
 		}
 
-		UserInterface::parseInt(args, "n", &n);
-		UserInterface::parseBoolean(args, "file", &file);
-		Operator* toWrap = UserInterface::globalOpList.back();
+		ui.parseInt(args, "n", &n);
+		ui.parseBoolean(args, "file", &file);
+		Operator* toWrap = ui.globalOpList.back();
 		Operator* newOp = new TestBench(target, toWrap, n, file);
 		// the instance in newOp has added toWrap as a subcomponent of newOp,
 		// so we may remove it from globalOpList
@@ -699,17 +700,13 @@ namespace flopoco{
 		return newOp;
 	}
 
-	void TestBench::registerFactory(){
-		UserInterface::add("TestBench", // name
-											 "Behavorial test bench for the preceding operator.",
-											 "TestBenches",
-											 "fixed-point function evaluator; fixed-point", // categories
-											 "n(int)=-2: number of random tests. If n=-2, an exhaustive test is generated (use only for small operators);\
-                        file(bool)=true:Inputs and outputs are stored in file test.input (lower VHDL compilation time). If false, they are stored in the VHDL;",
-											 "",
-											 TestBench::parseArguments
-											 ) ;
-
-	}
-
+	template <>
+	OperatorFactory op_factory<TestBench>(){return factoryBuilder<TestBench>({
+	    "TestBench", // name
+	    "Behavorial test bench for the preceding operator.",
+	    "TestBenches",
+	    "fixed-point function evaluator; fixed-point", // categories
+	    "n(int)=-2: number of random tests. If n=-2, an exhaustive test is generated (use only for small operators);\
+         file(bool)=true:Inputs and outputs are stored in file test.input (lower VHDL compilation time). If false, they are stored in the VHDL;",
+	    ""});}
 }

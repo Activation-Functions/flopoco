@@ -21,6 +21,7 @@
 #include <mpfr.h>
 #include <gmpxx.h>
 
+#include "flopoco/UserInterface.hpp"
 #include "flopoco/utils.hpp"
 #include "flopoco/Operator.hpp"
 #include "flopoco/ShiftersEtc/LZOC.hpp"
@@ -171,26 +172,20 @@ namespace flopoco{
 	}
 
 
-	OperatorPtr LZOC::parseArguments(OperatorPtr parentOp, Target *target, std::vector<std::string> &args) {
+	OperatorPtr LZOC::parseArguments(OperatorPtr parentOp, Target *target, std::vector<std::string> &args, UserInterface& ui) {
 		int wIn,countType;
-		UserInterface::parseStrictlyPositiveInt(args, "wIn", &wIn);
-		UserInterface::parseInt(args, "countType", &countType);
+		ui.parseStrictlyPositiveInt(args, "wIn", &wIn);
+		ui.parseInt(args, "countType", &countType);
 		return new LZOC(parentOp, target, wIn, countType);
 	}
 
-
-
-	
-	void LZOC::registerFactory(){
-		UserInterface::add("LZOC", // name
-											 "A leading zero or one counter. The output size is computed.",
-											 "ShiftersLZOCs", // category
-											 "",
-											 "wIn(int): input size in bits;\
-                        countType(int)=-1:  0 means count zeroes, 1 means count ones, -1 means add an input that defines what to count", // This string will be parsed
-											 "", // no particular extra doc needed
-											 LZOC::parseArguments
-											 ) ;
-		
-	}
+	template <>
+	OperatorFactory op_factory<LZOC>(){return factoryBuilder<LZOC>({
+	    "LZOC", // name
+	    "A leading zero or one counter. The output size is computed.",
+	    "ShiftersLZOCs", // category
+	    "",
+	    "wIn(int): input size in bits;\
+         countType(int)=-1:  0 means count zeroes, 1 means count ones, -1 means add an input that defines what to count", // This string will be parsed
+	    ""});}
 }

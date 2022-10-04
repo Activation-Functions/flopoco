@@ -21,6 +21,7 @@
 #include <mpfr.h>
 #include <gmpxx.h>
 
+#include "flopoco/UserInterface.hpp"
 #include "flopoco/utils.hpp"
 #include "flopoco/Operator.hpp"
 #include "flopoco/ShiftersEtc/Normalizer.hpp"
@@ -229,34 +230,28 @@ namespace flopoco{
 
 	
 
-	OperatorPtr Normalizer::parseArguments(OperatorPtr parentOp, Target *target, std::vector<std::string> &args) {
+	OperatorPtr Normalizer::parseArguments(OperatorPtr parentOp, Target *target, std::vector<std::string> &args, UserInterface& ui) {
 		int wX, wR, maxShift, countType;
 		bool computeSticky;
-		UserInterface::parseStrictlyPositiveInt(args, "wX", &wX);
-		UserInterface::parseStrictlyPositiveInt(args, "wR", &wR);
-		UserInterface::parseStrictlyPositiveInt(args, "maxShift", &maxShift);
-		UserInterface::parseBoolean(args, "computeSticky", &computeSticky);
-		UserInterface::parseInt(args, "countType", &countType);
+		ui.parseStrictlyPositiveInt(args, "wX", &wX);
+		ui.parseStrictlyPositiveInt(args, "wR", &wR);
+		ui.parseStrictlyPositiveInt(args, "maxShift", &maxShift);
+		ui.parseBoolean(args, "computeSticky", &computeSticky);
+		ui.parseInt(args, "countType", &countType);
 		return new Normalizer(parentOp, target, wX, wR, maxShift, computeSticky, countType);
 	}
 
-
-	
-	void Normalizer::registerFactory(){
-		UserInterface::add("Normalizer", // name
-											 "A combined leading zero/one counter and left shifter, useful for floating-point normalization.",
-											 "ShiftersLZOCs",  // category
-											 "", // see also
-											 "wX(int): input size in bits;\
-                        wR(int): output size in bits, with wR <= wX;\
-                        maxShift(int): how many bits to count, with maxShift<= wX ;\
-                        computeSticky(bool)=false: if true and wR<wX, a sticky bit is computed out of the discarded bits;\
-                        countType(int)=-1:  0 to count zeroes, 1 to count ones, -1 to have a dynamic OZb input that tells what to count", // This string will be parsed
-											 "", // no particular extra doc needed
-											 Normalizer::parseArguments
-											 ) ;
-		
-	}
-
-
+	template <>
+	OperatorFactory op_factory<Normalizer>(){return factoryBuilder<Normalizer>({
+	    "Normalizer", // name
+	    "A combined leading zero/one counter and left shifter, useful for "
+	    "floating-point normalization.",
+	    "ShiftersLZOCs", // category
+	    "",		     // see also
+	    "wX(int): input size in bits;\
+         wR(int): output size in bits, with wR <= wX;\
+         maxShift(int): how many bits to count, with maxShift<= wX ;\
+         computeSticky(bool)=false: if true and wR<wX, a sticky bit is computed out of the discarded bits;\
+         countType(int)=-1:  0 to count zeroes, 1 to count ones, -1 to have a dynamic OZb input that tells what to count", // This string will be parsed
+	    ""});}
 }

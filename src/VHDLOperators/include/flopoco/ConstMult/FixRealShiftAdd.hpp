@@ -1,6 +1,8 @@
 #ifndef FIXREALSHIFTADD_HPP
 #define FIXREALSHIFTADD_HPP
 
+#include "flopoco/InterfacedOperator.hpp"
+#include "flopoco/UserInterface.hpp"
 #if defined(HAVE_PAGLIB) && defined(HAVE_RPAGLIB) && defined(HAVE_SCALP)
 
 #include "FixRealConstMult.hpp"
@@ -48,14 +50,10 @@ namespace flopoco{
 		// Overloading the virtual functions of Operator
 
 
-		static OperatorPtr parseArguments(OperatorPtr parentOp, Target* target, vector<string>& args			);
-
-		static void registerFactory();
-
-
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target* target, vector<string>& args, UserInterface& ui);
 
 		/** The heap of weighted bits that will be used to do the additions */
-		BitHeap*	bitHeap;
+		BitHeap* bitHeap;
 
 		/** The input signal. */
 		string inputSignalName;

@@ -17,6 +17,7 @@
 #include <sstream>
 #include <vector>
 
+#include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/Operator.hpp"
 #include "flopoco/Tables/Table.hpp"
 #include "flopoco/Target.hpp"
@@ -67,12 +68,9 @@ namespace flopoco{
 		void emulate(TestCase * tc);
 
 		/** Factory method that parses arguments and calls the constructor */
-		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
 
 		static TestList unitTest(int index);
-
-		/** Factory register method */
-		static void registerFactory();
 
 	public:
 		int quotientSize();   /**< Size in bits of the quotient output */

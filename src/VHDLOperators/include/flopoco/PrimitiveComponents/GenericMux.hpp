@@ -1,6 +1,7 @@
 #ifndef GENERICMUX_H
 #define GENERICMUX_H
 
+#include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/Operator.hpp"
 #include "flopoco/utils.hpp"
 
@@ -46,9 +47,8 @@ namespace flopoco {
 		void emulate(TestCase * tc);
 		void buildStandardTestCases(TestCaseList* tcl);
 
-		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
 
-		static void registerFactory();
     private:
         ///
         /// \brief buildXilinx builds the Xilinx implementation of the primitive MUX

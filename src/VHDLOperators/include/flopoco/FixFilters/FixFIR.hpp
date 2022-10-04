@@ -1,6 +1,7 @@
 #ifndef FIXFIR_HPP
 #define FIXFIR_HPP
 
+#include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/FixFilters/FixSOPC.hpp"
 #include "flopoco/Operator.hpp"
 #include "flopoco/utils.hpp"
@@ -43,8 +44,7 @@ namespace flopoco{
 
 		// User-interface stuff
 		/** Factory method */
-		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
-		static void registerFactory();
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
 
 	protected:
 		/**

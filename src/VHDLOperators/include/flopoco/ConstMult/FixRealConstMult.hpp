@@ -1,7 +1,9 @@
 #ifndef FIXREALCONSTMULT_HPP
 #define FIXREALCONSTMULT_HPP
 
+#include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/Operator.hpp"
+#include "flopoco/UserInterface.hpp"
 
 namespace flopoco
 {
@@ -39,9 +41,8 @@ public:
 	 * */
 	FixRealConstMult(Operator* parentOp, Target* target);
 
-	static OperatorPtr parseArguments(OperatorPtr parentOp, Target* target, vector<string>& args			);
-	static void registerFactory();
-
+	static OperatorPtr parseArguments(OperatorPtr parentOp, Target* target, vector<string>& args, UserInterface& ui);
+	
 	void emulate(TestCase* tc);
 	static TestList unitTest(int index);
 

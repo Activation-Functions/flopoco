@@ -332,14 +332,14 @@ namespace flopoco{
 		cout <<endl;
 	}
 	
-	OperatorPtr FPDotProduct::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+	OperatorPtr FPDotProduct::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 		int wE, wFX, wFY, MaxMSBX, MSBA, LSBA;
-		UserInterface::parseStrictlyPositiveInt(args, "wE", &wE); 
-		UserInterface::parseStrictlyPositiveInt(args, "wFX", &wFX);
-		UserInterface::parsePositiveInt(args, "wFY", &wFY);
-		UserInterface::parseInt(args, "MaxMSBX", &MaxMSBX);
-		UserInterface::parseInt(args, "MSBA", &MSBA);
-		UserInterface::parseInt(args, "LSBA", &LSBA);
+		ui.parseStrictlyPositiveInt(args, "wE", &wE); 
+		ui.parseStrictlyPositiveInt(args, "wFX", &wFX);
+		ui.parsePositiveInt(args, "wFY", &wFY);
+		ui.parseInt(args, "MaxMSBX", &MaxMSBX);
+		ui.parseInt(args, "MSBA", &MSBA);
+		ui.parseInt(args, "LSBA", &LSBA);
 		return new FPDotProduct(target, wE, wFX, wFY, MaxMSBX, MSBA, LSBA);
 	}
 

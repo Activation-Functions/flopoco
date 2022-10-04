@@ -89,26 +89,24 @@ namespace flopoco{
 	Wrapper::~Wrapper() {
 	}
 
-	OperatorPtr Wrapper::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
-		if(UserInterface::globalOpList.empty()){
+	OperatorPtr Wrapper::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
+		if(ui.globalOpList.empty()){
 			throw("ERROR: Wrapper has no operator to wrap (it should come after the operator it wraps)");
 		}
 
-		Operator* toWrap = UserInterface::globalOpList.back();
-		UserInterface::globalOpList.pop_back();
+		Operator* toWrap = ui.globalOpList.back();
+		ui.globalOpList.pop_back();
 
 		return new Wrapper(target, toWrap);
 	}
 
-	void Wrapper::registerFactory(){
-			UserInterface::add("Wrapper", // name
-								 "Wraps the preceding operator between registers (for frequency testing).",
-								 "TestBenches",
-								 "fixed-point function evaluator; fixed-point", // categories
-								 "",
-								 "",
-								 Wrapper::parseArguments
-								 ) ;
-	}
-
+	template <>
+	OperatorFactory op_factory<Wrapper>(){return factoryBuilder<Wrapper>({
+	    "Wrapper", // name
+	    "Wraps the preceding operator between registers (for frequency "
+	    "testing).",
+	    "TestBenches",
+	    "fixed-point function evaluator; fixed-point", // categories
+	    "",
+	    ""});}
 }

@@ -222,14 +222,14 @@ namespace flopoco{
 		tcl->add(tc);
 	}
 
-	OperatorPtr FPConstDiv::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+	OperatorPtr FPConstDiv::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 		int wE,wF, d, dExp, alpha, arch;
-		UserInterface::parseStrictlyPositiveInt(args, "wE", &wE); 
-		UserInterface::parseStrictlyPositiveInt(args, "wF", &wF);
-		UserInterface::parseStrictlyPositiveInt(args, "d", &d);
-		UserInterface::parseInt(args, "dExp", &dExp);
-		UserInterface::parsePositiveInt(args, "arch", &arch);
-		UserInterface::parseInt(args, "alpha", &alpha);
+		ui.parseStrictlyPositiveInt(args, "wE", &wE); 
+		ui.parseStrictlyPositiveInt(args, "wF", &wF);
+		ui.parseStrictlyPositiveInt(args, "d", &d);
+		ui.parseInt(args, "dExp", &dExp);
+		ui.parsePositiveInt(args, "arch", &arch);
+		ui.parseInt(args, "alpha", &alpha);
 		return new FPConstDiv(target, wE, wF,  wE,  wF, d,  dExp, alpha, arch);
 	}
 

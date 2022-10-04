@@ -439,20 +439,20 @@ namespace flopoco {
 #endif
 	}
 
-	OperatorPtr FixComplexKCM::parseArguments(OperatorPtr parentOp, Target* target, std::vector<std::string> &args)
+	OperatorPtr FixComplexKCM::parseArguments(OperatorPtr parentOp, Target* target, std::vector<std::string> &args, UserInterface& ui)
 	{
 		int lsbIn, lsbOut, msbIn;
 		//		bool signedIn;
 		string constantIm, constantRe;
 		bool extrabit;
-		UserInterface::parseInt(args, "lsbIn", &lsbIn);
-		UserInterface::parseString(args, "constantIm", &constantIm);
-		UserInterface::parseString(args, "constantRe", &constantRe);
-		UserInterface::parseInt(args, "lsbOut", &lsbOut);
-		UserInterface::parseInt(args, "msbIn", &msbIn);
-		UserInterface::parseBoolean(args, "extrabit", &extrabit);
+		ui.parseInt(args, "lsbIn", &lsbIn);
+		ui.parseString(args, "constantIm", &constantIm);
+		ui.parseString(args, "constantRe", &constantRe);
+		ui.parseInt(args, "lsbOut", &lsbOut);
+		ui.parseInt(args, "msbIn", &msbIn);
+		ui.parseBoolean(args, "extrabit", &extrabit);
 
-		// UserInterface::parseBoolean(args, "signedIn", &signedIn);
+		// ui.parseBoolean(args, "signedIn", &signedIn);
 		return new FixComplexKCM(
 														 parentOp,
 				target, 
@@ -466,26 +466,21 @@ namespace flopoco {
 			);
 	}
 
-	void FixComplexKCM::registerFactory()
-	{
-		UserInterface::add(
-				"FixComplexKCM",
-				"Table-based complex multiplier. Inputs are two's complement. Output size is computed",
-				"ConstMultDiv",
-				"",
-				//				"signedIn(bool)=true: 0=unsigned, 1=signed;
-				"msbIn(int): weight associated to most significant bit (including sign bit);\
+	template <>
+	OperatorFactory op_factory<FixComplexKCM>(){return factoryBuilder<FixComplexKCM>({
+	    "FixComplexKCM",
+	    "Table-based complex multiplier. Inputs are two's complement. "
+	    "Output size is computed",
+	    "ConstMultDiv", "",
+	    //				"signedIn(bool)=true: 0=unsigned,
+	    //1=signed;
+	    "msbIn(int): weight associated to most significant bit (including sign bit);\
 				lsbIn(int): weight associated to least significant bit;\
 				lsbOut(int): weight associated to output least significant bit; \
 				constantRe(string): real part of the constant, given as a Sollya expression, e.g \"log(2)\"; \
 				constantIm(string): imaginary part of the constant, given as a Sollya expression, e.g \"log(2)\"; \
 				extrabit(bool)=true: do we need extra bit for addition",
-				"",
-				FixComplexKCM::parseArguments
-		);
-	}
-
-
+	    ""});}
 
 }//namespace
 

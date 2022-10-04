@@ -1,6 +1,7 @@
 #ifndef PIF2FIX_HPP
 #define PIF2FIX_HPP
 
+#include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/Operator.hpp"
 #include "flopoco/utils.hpp"
 
@@ -19,11 +20,8 @@ namespace flopoco {
     static void computePIFWidths(int const widthP, int const wES, int* wE, int* wF);
     
     
-    static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
-    
-    
-    static void registerFactory();
-    
+    static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
+
   private:
     int wE_;
     int wF_;

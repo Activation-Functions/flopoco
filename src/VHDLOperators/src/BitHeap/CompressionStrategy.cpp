@@ -23,7 +23,7 @@ namespace flopoco{
 		//no chunks already compressed
 		compressionDoneIndex = 0;
 
-		if(UserInterface::pipelineActive_) {
+		if(UserInterface::getUserInterface().pipelineActive_) {
 			//the initial delay between the soonest bit and the rest of the bits
 			//  to be compressed is equal to the delay of a basic compressor
 			compressionDelay = bitheap->op->getTarget()->tableDelay(bitheap->op->getTarget()->lutInputs() + 2, 5, true);
@@ -399,7 +399,7 @@ namespace flopoco{
 
 	unsigned CompressionStrategy::getStageOfArrivalForBit(Bit* bit){
 		return 0; //!!! This is a workaround. BitHeap compression currently does not work when bits are distributed to different stages. TODO: fix
-		if(!UserInterface::pipelineActive_) {
+		if(!UserInterface::getUserInterface().pipelineActive_) {
 			return 0;
 		}
 		//for a bit to be in stage i, its criticalPath delay has to be smaller or equal to boundaries[i].

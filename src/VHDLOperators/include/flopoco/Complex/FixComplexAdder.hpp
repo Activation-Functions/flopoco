@@ -3,6 +3,7 @@
 #include <sstream>
 #include <vector>
 
+#include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/Operator.hpp"
 #include "flopoco/utils.hpp"
 
@@ -19,8 +20,7 @@ namespace flopoco{
 
 		void emulate(TestCase * tc);
 
-		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
-		static void registerFactory();
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
 
 private:
 		int msbin;					/**< weight of the MSB in the input, considered as a signed number in (-1,1) */

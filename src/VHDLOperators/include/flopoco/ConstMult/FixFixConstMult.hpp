@@ -1,7 +1,9 @@
 #ifndef FIXFIXCONSTMULT_HPP
 #define FIXFIXCONSTMULT_HPP
 
+#include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/Operator.hpp"
+#include "flopoco/UserInterface.hpp"
 
 namespace flopoco
 {
@@ -30,11 +32,9 @@ namespace flopoco
 		 */
 		FixFixConstMult(OperatorPtr parentOp, Target *target, bool signedIn_, int msbIn_, int lsbIn_, int lsbOut_, string constant_, double targetUlpError_);
 
-		static OperatorPtr parseArguments(OperatorPtr parentOp, Target* target, vector<string>& args			);
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target* target, vector<string>& args, UserInterface& ui);
 
 		static TestList unitTest(int index);
-
-		static void registerFactory();
 	};
 
 }

@@ -1,4 +1,6 @@
 #include "flopoco/Comparators/FPComparator.hpp"
+#include "flopoco/InterfacedOperator.hpp"
+#include "flopoco/UserInterface.hpp"
 
 
 using namespace std;
@@ -264,19 +266,16 @@ namespace flopoco{
 		tcl->add(tc);
 
 	}
-
 	
-	OperatorPtr FPComparator::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args) {
+	OperatorPtr FPComparator::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 		int wE, wF,flags, method;
-		UserInterface::parseStrictlyPositiveInt(args, "wE", &wE); 
-		UserInterface::parseStrictlyPositiveInt(args, "wF", &wF);
-		UserInterface::parseStrictlyPositiveInt(args, "flags", &flags);
-		UserInterface::parseInt(args, "method", &method);
+		ui.parseStrictlyPositiveInt(args, "wE", &wE); 
+		ui.parseStrictlyPositiveInt(args, "wF", &wF);
+		ui.parseStrictlyPositiveInt(args, "flags", &flags);
+		ui.parseInt(args, "method", &method);
 		return new FPComparator(parentOp, target, wE, wF, flags, method);
 	}
 
-
-	
 	TestList FPComparator::unitTest(int index)
 	{
 		// the static list of mandatory tests
@@ -318,21 +317,22 @@ namespace flopoco{
 		return testStateList;
 	}
 
-	
-	void FPComparator::registerFactory(){
-		UserInterface::add("FPComparator", // name
-			"An IEEE-like floating-point comparator.",
-			"BasicFloatingPoint",
-			"", //seeAlso
-			"wE(int): exponent size in bits; \
+	template <>
+	OperatorFactory op_factory<FPComparator>(){return factoryBuilder<FPComparator>({
+	    "FPComparator", // name
+	    "An IEEE-like floating-point comparator.",
+	    "BasicFloatingPoint",
+	    "", // seeAlso
+	    "wE(int): exponent size in bits; \
 			wF(int): mantissa size in bits;\
 			flags(int)=31:  generate XltY output if bit 0 set, XeqY if bit 1, XgtY if bit 2, XleY if bit 3, XgeY if bit 4;\
 			method(int)=-1: method to be used in the IntComparator, see IntComparator;",
-			"Outputs up to 4 mutually exclusive signals: unordered (when one input is NaN), XltY (less than, strictly), XeqY (equal), XsgtY (greater than, strictly). Also two derived signals XleY (less or equal) and XgeY (greater or equal). unordered is set iff at least one of the inputs is NaN. The other ones behave as expected on two non-NaN values, with the IEEE 754 conventions: +0 = -0; +infinity = +infinity; -infinity = -infinity. The flags argument controls which signal is generated.; ",
-			FPComparator::parseArguments,
-			FPComparator::unitTest
-			) ;
-	}
-
-
+	    "Outputs up to 4 mutually exclusive signals: unordered (when one "
+	    "input is NaN), XltY (less than, strictly), XeqY (equal), XsgtY "
+	    "(greater than, strictly). Also two derived signals XleY (less or "
+	    "equal) and XgeY (greater or equal). unordered is set iff at least "
+	    "one of the inputs is NaN. The other ones behave as expected on "
+	    "two non-NaN values, with the IEEE 754 conventions: +0 = -0; "
+	    "+infinity = +infinity; -infinity = -infinity. The flags argument "
+	    "controls which signal is generated.; "});}
 }

@@ -1,6 +1,7 @@
 #ifndef FIXIIR_HPP
 #define FIXIIR_HPP
 
+#include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/BitHeap/BitHeap.hpp"
 #include "flopoco/Operator.hpp"
 #include "flopoco/utils.hpp"
@@ -28,9 +29,8 @@ namespace flopoco{
 
 		// User-interface stuff
 		/** Factory method */
-		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args);
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
 		static TestList unitTest(int index);
-		static void registerFactory();
 
 	private:
 		void computeImpulseResponse(); // evaluates the filter on an impulsion

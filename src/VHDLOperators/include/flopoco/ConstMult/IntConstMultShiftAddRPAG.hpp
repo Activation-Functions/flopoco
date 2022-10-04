@@ -12,8 +12,6 @@
 #ifndef INTCONSTMULTOPT_HPP
 #define INTCONSTMULTOPT_HPP
 
-#if defined(HAVE_PAGLIB) && defined(HAVE_RPAGLIB) && defined(HAVE_SCALP)
-
 #include <sstream>
 #include <gmp.h>
 #include <mpfr.h>
@@ -21,11 +19,13 @@
 #include <cstdlib>
 #include <cstdint> //for int64_t
 
+#include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/Operator.hpp"
 #include "IntConstMultShiftAdd.hpp"
+#include "flopoco/UserInterface.hpp"
+
+#if defined(HAVE_PAGLIB) && defined(HAVE_RPAGLIB) && defined(HAVE_SCALP)
 #include "pagsuite/rpag.h"
-
-
 
 namespace flopoco{
 
@@ -36,18 +36,11 @@ namespace flopoco{
         IntConstMultShiftAddRPAG(Operator* parentOp, Target* target, int wIn, mpz_class coeffMpz, bool syncInOut=true, int epsilon=0);
 
 		static TestList unitTest(int index);
-        static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args );
-        static void registerFactory();
+        static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
 	private:
         stringstream adderGraph;
-#else
-namespace flopoco{
-	class IntConstMultShiftAddRPAG
-	{
-	public:
-		static void registerFactory();
-#endif //defined(HAVE_PAGLIB) && defined(HAVE_RPAGLIB)
 	};
 }
+#endif // Have paglib etc.
 
 #endif

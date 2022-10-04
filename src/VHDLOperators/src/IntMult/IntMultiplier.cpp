@@ -33,6 +33,7 @@
 #include "flopoco/IntMult/TilingStrategyOptimalILP.hpp"
 #include "flopoco/IntMult/TilingStrategyXGreedy.hpp"
 #include "flopoco/Operator.hpp"
+#include "flopoco/UserInterface.hpp"
 #include "flopoco/utils.hpp"
 
 using namespace std;
@@ -847,60 +848,58 @@ namespace flopoco {
 
 
 
-	OperatorPtr IntMultiplier::parseArguments(OperatorPtr parentOp, Target *target, std::vector<std::string> &args) {
+	OperatorPtr IntMultiplier::parseArguments(OperatorPtr parentOp, Target *target, std::vector<std::string> &args, UserInterface& ui) {
 		int wX,wY, wOut, maxDSP;
 		bool signedIO,superTile, use2xk, useirregular, useLUT, useDSP, useKaratsuba, optiTrunc, minStages, squarer;
 		double dspOccupationThreshold=0.0;
 		int beamRange = 0;
 
-		UserInterface::parseStrictlyPositiveInt(args, "wX", &wX);
-		UserInterface::parseStrictlyPositiveInt(args, "wY", &wY);
-		UserInterface::parsePositiveInt(args, "wOut", &wOut);
-		UserInterface::parseBoolean(args, "signedIO", &signedIO);
-		UserInterface::parseBoolean(args, "superTile", &superTile);
-		UserInterface::parseBoolean(args, "use2xk", &use2xk);
-		UserInterface::parseBoolean(args, "useirregular", &useirregular);
-		UserInterface::parseBoolean(args, "useLUT", &useLUT);
-		UserInterface::parseBoolean(args, "useDSP", &useDSP);
-		UserInterface::parseBoolean(args, "useKaratsuba", &useKaratsuba);
-		UserInterface::parseFloat(args, "dspThreshold", &dspOccupationThreshold);
-		UserInterface::parseInt(args, "maxDSP", &maxDSP);
-        UserInterface::parseBoolean(args, "optiTrunc", &optiTrunc);
-        UserInterface::parseBoolean(args, "minStages", &minStages);
-		UserInterface::parsePositiveInt(args, "beamRange", &beamRange);
-		UserInterface::parseBoolean(args, "squarer", &squarer);
+		ui.parseStrictlyPositiveInt(args, "wX", &wX);
+		ui.parseStrictlyPositiveInt(args, "wY", &wY);
+		ui.parsePositiveInt(args, "wOut", &wOut);
+		ui.parseBoolean(args, "signedIO", &signedIO);
+		ui.parseBoolean(args, "superTile", &superTile);
+		ui.parseBoolean(args, "use2xk", &use2xk);
+		ui.parseBoolean(args, "useirregular", &useirregular);
+		ui.parseBoolean(args, "useLUT", &useLUT);
+		ui.parseBoolean(args, "useDSP", &useDSP);
+		ui.parseBoolean(args, "useKaratsuba", &useKaratsuba);
+		ui.parseFloat(args, "dspThreshold", &dspOccupationThreshold);
+		ui.parseInt(args, "maxDSP", &maxDSP);
+        ui.parseBoolean(args, "optiTrunc", &optiTrunc);
+        ui.parseBoolean(args, "minStages", &minStages);
+		ui.parsePositiveInt(args, "beamRange", &beamRange);
+		ui.parseBoolean(args, "squarer", &squarer);
 
 		return new IntMultiplier(parentOp, target, wX, wY, wOut, signedIO, dspOccupationThreshold, maxDSP, superTile, use2xk, useirregular, useLUT, useDSP, useKaratsuba, beamRange, optiTrunc, minStages, squarer);
 	}
 
-
-
-	void IntMultiplier::registerFactory(){
-		UserInterface::add("IntMultiplier", // name
-											 "A pipelined integer multiplier.  Also uses the global options: tiling, ilpSolver, etc",
-											 "BasicInteger", // category
-											 "", // see also
-											 "wX(int): size of input X; wY(int): size of input Y;\
-						wOut(int)=0: size of the output if you want a truncated multiplier. 0 for full multiplier;\
-						signedIO(bool)=false: inputs and outputs can be signed or unsigned;\
-						maxDSP(int)=-1: limits the number of DSP-Tiles used in Multiplier;\
-						use2xk(bool)=false: if true, attempts to use the 2xk-LUT-Multiplier with relatively high efficiency;\
-						useirregular(bool)=false: if true, attempts to use the irregular-LUT-Multipliers with higher area/lut efficiency than the rectangular versions;\
-						useLUT(bool)=true: if true, attempts to use the LUT-Multipliers for tiling;\
-						useDSP(bool)=true: if true, attempts to use the DSP-Multipliers for tiling;\
-						useKaratsuba(bool)=false: if true, attempts to use rectangular Karatsuba for tiling;\
-						superTile(bool)=false: if true, attempts to use the DSP adders to chain sub-multipliers. This may entail lower logic consumption, but higher latency.;\
-						dspThreshold(real)=0.0: threshold of relative occupation ratio of a DSP multiplier to be used or not;\
-                        optiTrunc(bool)=true: if true, considers the Truncation error dynamicly, instead of defining a hard border for tiling, like in th ARITH paper;\
-                        minStages(bool)=true: if true, minimizes stages in combined opt. of tiling an comp., otherwise try to find a sol. with less LUTs and more stages;\
-						beamRange(int)=3: range for beam search;\
-                        squarer(bool)=false: generate squarer", // This string will be parsed
-											 "", // no particular extra doc needed
-											IntMultiplier::parseArguments,
-											IntMultiplier::unitTest
-											 ) ;
-	}
-
+	template <>
+	OperatorFactory
+	    op_factory<IntMultiplier>(){return factoryBuilder<IntMultiplier>({
+		"IntMultiplier", // name
+		"A pipelined integer multiplier.  Also uses the global "
+		"options: tiling, ilpSolver, etc",
+		"BasicInteger",					// category
+		"",						// see also
+		"wX(int): size of input X; wY(int): size of input Y;\
+		 wOut(int)=0: size of the output if you want a truncated multiplier. 0 for full multiplier;\
+		 signedIO(bool)=false: inputs and outputs can be signed or unsigned;\
+		 maxDSP(int)=-1: limits the number of DSP-Tiles used in Multiplier;\
+		 use2xk(bool)=false: if true, attempts to use the 2xk-LUT-Multiplier with relatively high efficiency;\
+		 useirregular(bool)=false: if true, attempts to use the irregular-LUT-Multipliers with higher area/lut efficiency than the rectangular versions;\
+		 useLUT(bool)=true: if true, attempts to use the LUT-Multipliers for tiling;\
+		 useDSP(bool)=true: if true, attempts to use the DSP-Multipliers for tiling;\
+		 useKaratsuba(bool)=false: if true, attempts to use rectangular Karatsuba for tiling;\
+		 superTile(bool)=false: if true, attempts to use the DSP adders to chain sub-multipliers. This may entail lower logic consumption, but higher latency.;\
+		 dspThreshold(real)=0.0: threshold of relative occupation ratio of a DSP multiplier to be used or not;\
+		 optiTrunc(bool)=true: if true, considers the Truncation error dynamicly, instead of defining a hard border for tiling, like in th ARITH paper;\
+		 minStages(bool)=true: if true, minimizes stages in combined opt. of tiling an comp., otherwise try to find a sol. with less LUTs and more stages;\
+		 beamRange(int)=3: range for beam search;\
+         squarer(bool)=false: generate squarer", // This string
+								// will be
+								// parsed
+		""});}
 
 	TestList IntMultiplier::unitTest(int )
 	{
