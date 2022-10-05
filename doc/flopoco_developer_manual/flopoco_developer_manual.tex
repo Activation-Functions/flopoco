@@ -211,9 +211,9 @@ have the declaration of \verb!T! where its value is defined. Let us
 now turn this design into a pipelined one.
 
 \subsection{Adding delay information}
-A latency  may be passed as first optional argument to  \texttt{declare()}.
-  This value decribes the contribution of this VHDL statement to the critical path.
-  It is best defined using methods of \texttt{Target}.
+A latency (in seconds) may be passed as first optional argument to  \texttt{declare()}.
+  This value decribes the contribution of this VHDL statement to the critical path, and will be used to pipeline the operator (see Section~\ref{sec:pipeline} for details).
+  This latency is best defined using methods of \texttt{Target}: this way the pipeline will adapt to the target.
   See \texttt{FPAddSinglePath} for examples.
 
 \subsection{Sub-components: unique instances}
