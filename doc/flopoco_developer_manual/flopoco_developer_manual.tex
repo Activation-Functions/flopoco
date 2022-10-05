@@ -19,7 +19,7 @@
 FloPoCo \input{../../VERSION} developer manual
 }
 
-\author{Florent de Dinechin+}
+\author{Florent de Dinechin}
 
 \graphicspath{{../Figures/}}
 \pagestyle{empty}
@@ -34,9 +34,7 @@ FloPoCo \input{../../VERSION} developer manual
 
 Welcome to new developers! 
 
-The purpose of this document is to help you use FloPoCo in your own
-project (section~\ref{sec:getting-started} to \ref{sec:data-types}), and to show you how to design your own pipelined operator
-using the FloPoCo framework (sections~\ref{sec:tutorial} and \ref{sec:test-bench-gener}). 
+The purpose of this document is to help you use FloPoCo operators in other projects (section~\ref{sec:getting-started} to \ref{sec:data-types}), and to show you how to design your own pipelined operator using the FloPoCo framework (sections~\ref{sec:tutorial} and following). 
 
 \tableofcontents
 
@@ -269,7 +267,124 @@ See \texttt{FixFunctionByPiecewisePoly} for an example how to instanciate a \tex
 TODO (not repaired yet): See \texttt{FPExp} for an example of unique Table intended to fit in a block RAM.
 
 
-\section{Frequency-directed pipeline}
+\section{Test bench generation}\label{sec:test-bench-gener}
+
+\subsection{Overview}
+\texttt{\small Operator} provides one more virtual method, \texttt{\small emulate()},
+to be overloaded by each Operator. As the name indicates, this method
+provides a bit-accurate simulation of the operator.
+ 
+Once this method is available, the command\\
+ \texttt{flopoco FPAdd we=8 wf=23 TestBench n=500} \\
+produces a test bench of 500 test vectors to exercise \texttt{\small FPAdd}. 
+
+This test bench is properly synchronized if the operator under test happens to be pipelined: \texttt{\small emulate()} only has to specify the mathematical (combinatorial) functionality of the operator.
+
+The \texttt{\small emulate()} method should be considered  the specification of the behaviour of the operator.
+Therefore, as any instructor will tell you, it should be written \emph{before} the code generating the VHDL of the operator (test-driven design).
+
+
+To see examples of \texttt{emulate()} functions, see
+\begin{itemize}
+\item \texttt{IntAdder} or \texttt{IntConstDiv} for an operator with integer inputs and outputs;
+  For these, the GNU Multiple Precision library is your friend.
+\item \texttt{FixRealKCM} for an operator with fixed-point inputs and outputs;
+\item \texttt{FPAdd}  for an operator with floating-point inputs and outputs;
+  For these, your friend is the GNU MPFR library, and FloPoCo provides all the needed helper functions to convert between bit vectors and MPFR numbers.
+\end{itemize}
+
+
+\subsection{\texttt{emulate()}  internals}
+\texttt{\small emulate()} has a single argument which is a \texttt{\small TestCase}.
+This is a data-structure associating inputs to outputs.
+Upon entering \texttt{\small emulate()}, the input part is filled (probably by \texttt{\small TestBench}), and the purpose of \texttt{\small emulate()} is to fill the output part.
+\texttt{\small emulate()} is completely generic:
+Both inputs and outputs are specified as bit vectors.
+However these vectors are stored for convenience in \texttt{\small mpz\_class} numbers.
+This class is a very convenient C++ wrapper around GMP, which can almost be used as an \texttt{\small int}, but without any overflow issue.
+
+Therefore an input/output is a map of the name (which should match those defined by \texttt{\small addInput} etc.) and a \texttt{\small mpz\_class}.
+When the input/outputs are integers, this is a perfect match.
+
+When the input/outputs are floating-point numbers, the most convenient multiple-precision library is MPFR.
+However the I/Os  are nevertheless encoded as \texttt{\small mpz\_class}.
+The \texttt{\small emulate()} method therefore typically must
+\begin{itemize}
+\item convert the \texttt{\small mpz\_class} inputs to arbitrary precision floating-point numbers in the MPFR format -- this is done with the help of the \texttt{\small FPNumber} class;
+\item compute the expected results, using functions from the MPFR library;
+\item convert the resulting MPFR number into its bit vector, encoded in an \texttt{\small mpz\_class}, before completing the \texttt{\small TestCase}. 
+\end{itemize}
+This double conversion is a bit cumbersome, but may be copy-pasted from one existing operator: Imitate \texttt{\small FPAddSinglePath} or \texttt{\small FPExp}.
+
+
+\subsection{Fully and weakly specified operators}
+ Most operators should be fully specified: for a given input
+  vector, they must output a uniquely defined vector. This is the case of 
+  \texttt{\small IntAdder} above. For floating-point
+  operators, this unique output is the combination of a mathematical
+  function and a well-defined rounding mode. The bit-exact MPFR
+  library is used in this case. Imitate \texttt{\small FPAddSinglePath} in this case.
+
+ Other operators are not defined so strictly, and may have  several acceptable output values.
+ The last parameter of \texttt{\small addOutput} defines how many values this output may take.
+ An common requirement is \emph{faithful rounding}: the operator should return one of the two FP values surrounding the exact result\footnote{
+ The allowed error is twice as large as correct rounding, so a correctly rounded result on $p$ bits is as accurate as a faithful result on $p+1$ bits. 
+ However, (for reasons too long to detail here) a faithful operator may be much, much cheaper to build than a correctly rounded one.
+ In such cases it is cheaper to build a faithful operator to $p+1$ bits than a correctly rounded one to precision $p$.}
+These values may be obtained thanks to the  \emph{rounding up} and \emph{rounding down} modes supported by MPFR.
+See \texttt{\small FPExp} or \texttt{\small FPLog} for  examples in floating point, and \texttt{FixSinCos} for an example in fixed point (which is also an example where the function has two outputs).
+
+\subsection{Operator-specific test  vector generation}
+Overloading \texttt{\small emulate()} is enough for FloPoCo to be able
+to create a generic test bench using random inputs. The default random generator is uniform over the input bit vectors. It is
+often possible to perform better, more operator-specific test-case
+generation. Let us just take two examples.
+
+\begin{itemize}\item 
+  A double-precision exponential returns $+\infty$ for all inputs
+  larger than 710 and returns $0$ for all inputs smaller than
+  $-746$. In other terms, the most interesting test domain for this
+  function is when the input exponent is between $-10$ and $10$, a
+  fraction of the full double-precision exponent domain ($-1024$ to
+  $1023$). Generating uniform random 64-bit integers and using them as
+  floating-point inputs would mean testing mostly the
+  overflow/underflow logic, which is a tiny part of the operator.
+
+
+\item In a floating-point adder, if the difference between the
+  exponents of the two operands is large, the adder will simply return
+  the biggest of the two, and again this is the most probable
+  situation when taking two random operands. Here it is better to
+  generate random cases where the two operands have close
+  exponents. Besides, a big part of the adder architecture is
+  dedicated to the case when both exponents differ only by 1, and
+  random tests should be focused on this situation.
+\end{itemize}
+Such cases are managed by overloading the Operator method  \texttt{\small buildRandomTestCases()}. 
+See \texttt{FPExp.cpp} and \texttt{FPAdd.cpp} for the examples above.
+
+\subsection{Corner-cases and regression tests}
+Finally, \texttt{\small buildStandardTestCases()} allows to test corner cases which random testing has little chance to find.
+See \texttt{\small FPAdd.cpp} for examples. 
+
+Here, it is often useful to add a comment to a test case using \texttt{\small addComment}: these comments
+will show up in the VHDL generated by \texttt{\small TestBench file=false}.
+
+
+\section{Regression testing, build test }
+The command \verb!flopoco Autotest Operator=FPadd! tests FPAdd for a range of relevant parameter values.
+For each parameter vector, it reports if the FloPoCo command succeeded, if the VHDL was syntactically correct, and if the simulation of this VHDL was successful.
+
+The enumeration of the parameter vectors is defined in the (optional) static method \texttt{FPAdd::unitTest()}.
+This is a relatively recent addition to the framework, and not all operators support it, but it is strongly advised to set it up in the early steps of operator development: it helps uncover bugs that occur for specific values of the parameters.
+
+The command \verb!flopoco Autotest Operator=all! runs this test for all the operators that support it.
+It may take long...
+
+
+
+
+\section{Frequency-directed pipeline \label{sec:pipeline}}
 
 The  pipeline framework  is implemented mostly in the \texttt{Operator} and \texttt{Signal} classes, and we refer the reader to the source code for the full  details.
 More details can also be found in \cite{istoan:hal-01373937}.
@@ -424,121 +539,9 @@ If a pipeline register is inserted to account for the delay of a shared instance
 The simplest example of shared instances is currently \texttt{FPDivSqrt/FPDiv}.
 
 
-\section{Test bench generation}\label{sec:test-bench-gener}
-
-\subsection{Overview}
-\texttt{\small Operator} provides one more virtual method, \texttt{\small emulate()},
-to be overloaded by each Operator. As the name indicates, this method
-provides a bit-accurate simulation of the operator.
- 
-Once this method is available, the command\\
- \texttt{flopoco FPAdd we=8 wf=23 TestBench n=500} \\
-produces a test bench of 500 test vectors to exercise \texttt{\small FPAdd}. 
-
-This test bench is properly synchronized if the operator under test happens to be pipelined: \texttt{\small emulate()} only has to specify the mathematical (combinatorial) functionality of the operator.
-
-The \texttt{\small emulate()} method should be considered  the specification of the behaviour of the operator.
-Therefore, as any instructor will tell you, it should be written \emph{before} the code generating the VHDL of the operator (test-driven design).
 
 
-To see examples of \texttt{emulate()} functions, see
-\begin{itemize}
-\item \texttt{IntAdder} or \texttt{IntConstDiv} for an operator with integer inputs and outputs;
-  For these, the GNU Multiple Precision library is your friend.
-\item \texttt{FixRealKCM} for an operator with fixed-point inputs and outputs;
-\item \texttt{FPAdd}  for an operator with floating-point inputs and outputs;
-  For these, your friend is the GNU MPFR library, and FloPoCo provides all the needed helper functions to convert between bit vectors and MPFR numbers.
-\end{itemize}
-
-
-\subsection{\texttt{emulate()}  internals}
-\texttt{\small emulate()} has a single argument which is a \texttt{\small TestCase}.
-This is a data-structure associating inputs to outputs.
-Upon entering \texttt{\small emulate()}, the input part is filled (probably by \texttt{\small TestBench}), and the purpose of \texttt{\small emulate()} is to fill the output part.
-\texttt{\small emulate()} is completely generic:
-Both inputs and outputs are specified as bit vectors.
-However these vectors are stored for convenience in \texttt{\small mpz\_class} numbers.
-This class is a very convenient C++ wrapper around GMP, which can almost be used as an \texttt{\small int}, but without any overflow issue.
-
-Therefore an input/output is a map of the name (which should match those defined by \texttt{\small addInput} etc.) and a \texttt{\small mpz\_class}.
-When the input/outputs are integers, this is a perfect match.
-
-When the input/outputs are floating-point numbers, the most convenient multiple-precision library is MPFR.
-However the I/Os  are nevertheless encoded as \texttt{\small mpz\_class}.
-The \texttt{\small emulate()} method therefore typically must
-\begin{itemize}
-\item convert the \texttt{\small mpz\_class} inputs to arbitrary precision floating-point numbers in the MPFR format -- this is done with the help of the \texttt{\small FPNumber} class;
-\item compute the expected results, using functions from the MPFR library;
-\item convert the resulting MPFR number into its bit vector, encoded in an \texttt{\small mpz\_class}, before completing the \texttt{\small TestCase}. 
-\end{itemize}
-This double conversion is a bit cumbersome, but may be copy-pasted from one existing operator: Imitate \texttt{\small FPAddSinglePath} or \texttt{\small FPExp}.
-
-
-\subsection{Fully and weakly specified operators}
- Most operators should be fully specified: for a given input
-  vector, they must output a uniquely defined vector. This is the case of 
-  \texttt{\small IntAdder} above. For floating-point
-  operators, this unique output is the combination of a mathematical
-  function and a well-defined rounding mode. The bit-exact MPFR
-  library is used in this case. Imitate \texttt{\small FPAddSinglePath} in this case.
-
- Other operators are not defined so strictly, and may have  several acceptable output values.
- The last parameter of \texttt{\small addOutput} defines how many values this output may take.
- An common requirement is \emph{faithful rounding}: the operator should return one of the two FP values surrounding the exact result\footnote{
- The allowed error is twice as large as correct rounding, so a correctly rounded result on $p$ bits is as accurate as a faithful result on $p+1$ bits. 
- However, (for reasons too long to detail here) a faithful operator may be much, much cheaper to build than a correctly rounded one.
- In such cases it is cheaper to build a faithful operator to $p+1$ bits than a correctly rounded one to precision $p$.}
-These values may be obtained thanks to the  \emph{rounding up} and \emph{rounding down} modes supported by MPFR.
-See \texttt{\small FPExp} or \texttt{\small FPLog} for  examples in floating point, and \texttt{FixSinCos} for an example in fixed point (which is also an example where the function has two outputs).
-
-\subsection{Operator-specific test  vector generation}
-Overloading \texttt{\small emulate()} is enough for FloPoCo to be able
-to create a generic test bench using random inputs. The default random generator is uniform over the input bit vectors. It is
-often possible to perform better, more operator-specific test-case
-generation. Let us just take two examples.
-
-\begin{itemize}\item 
-  A double-precision exponential returns $+\infty$ for all inputs
-  larger than 710 and returns $0$ for all inputs smaller than
-  $-746$. In other terms, the most interesting test domain for this
-  function is when the input exponent is between $-10$ and $10$, a
-  fraction of the full double-precision exponent domain ($-1024$ to
-  $1023$). Generating uniform random 64-bit integers and using them as
-  floating-point inputs would mean testing mostly the
-  overflow/underflow logic, which is a tiny part of the operator.
-
-
-\item In a floating-point adder, if the difference between the
-  exponents of the two operands is large, the adder will simply return
-  the biggest of the two, and again this is the most probable
-  situation when taking two random operands. Here it is better to
-  generate random cases where the two operands have close
-  exponents. Besides, a big part of the adder architecture is
-  dedicated to the case when both exponents differ only by 1, and
-  random tests should be focused on this situation.
-\end{itemize}
-Such cases are managed by overloading the Operator method  \texttt{\small buildRandomTestCases()}. 
-See \texttt{FPExp.cpp} and \texttt{FPAdd.cpp} for the examples above.
-
-\subsection{Corner-cases and regression tests}
-Finally, \texttt{\small buildStandardTestCases()} allows to test corner cases which random testing has little chance to find.
-See \texttt{\small FPAdd.cpp} for examples. 
-
-Here, it is often useful to add a comment to a test case using \texttt{\small addComment}: these comments
-will show up in the VHDL generated by \texttt{\small TestBench file=false}.
-
-
-\section{Regression testing, build test }
-The command \verb!flopoco Autotest Operator=FPadd! tests FPAdd for a range of relevant parameter values.
-For each parameter vector, it reports if the FloPoCo command succeeded, if the VHDL was syntactically correct, and if the simulation of this VHDL was successful.
-
-The enumeration of the parameter vectors is defined in the (optional) static method \texttt{FPAdd::unitTest()}.
-This is a relatively recent addition to the framework, and not all operators support it, but it is strongly advised to set it up in the early steps of operator development: it helps uncover bugs that occur for specific values of the parameters.
-
-The command \verb!flopoco Autotest Operator=all! runs this test for all the operators that support it.
-It may take long...
-
-\section{Bit heaps}
+\section{Bit heaps \label{sec:bitheap}}
 
 The main interface to the developer is the  \texttt{BitHeap} class, which encapsulates all the needed data structures and methods. 
 The bits to be added to a \texttt{BitHeap} are simply  signals of the operator being generated.
