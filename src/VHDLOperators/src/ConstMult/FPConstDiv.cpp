@@ -21,10 +21,13 @@
 #include <gmp.h>
 #include <mpfr.h>
 #include <gmpxx.h>
-#include "flopoco/utils.hpp"
+
+#include "flopoco/ConstMult/FPConstDiv.hpp"
+#include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/Operator.hpp"
-#include "flopoco/FPConstDiv.hpp"
 #include "flopoco/TestBenches/FPNumber.hpp"
+#include "flopoco/UserInterface.hpp"
+#include "flopoco/utils.hpp"
 
 using namespace std;
 
@@ -34,10 +37,13 @@ namespace flopoco{
 
 	// The expert version 
 
-	FPConstDiv::FPConstDiv(Target* target, int wEIn_, int wFIn_, int wEOut_, int wFOut_, int d_, int dExp_, int alpha_, int arch):
-		Operator(target), 
-		wEIn(wEIn_), wFIn(wFIn_), wEOut(wEOut_), wFOut(wFOut_), d(d_), dExp(dExp_), alpha(alpha_)
+	FPConstDiv::FPConstDiv(OperatorPtr parentOp, Target* target, int wEIn_, int wFIn_, int wEOut_, int wFOut_, vector<int> divisors_, int dExp_, int alpha_, int arch):
+		Operator(parentOp, target), 
+		wEIn(wEIn_), wFIn(wFIn_), wEOut(wEOut_), d(1), divisors(divisors_), wFOut(wFOut_), dExp(dExp_), alpha(alpha_)
 	{
+		for(auto factor: divisors){
+			d *= factor;
+		}
 		if(wEOut==0)
 			wEOut=wEIn;
 		if(wFOut==0)
@@ -144,12 +150,31 @@ namespace flopoco{
 			vhdl << tab << declare("divIn1", intDivSize) << " <= x_sig & '0' & CONV_STD_LOGIC_VECTOR(" << h << ", " << s <<");" << endl;
 			vhdl << tab << declare(getTarget()->lutDelay(), "divIn", intDivSize) << " <= divIn1 when mltd='1' else divIn0;" << endl;
 			
-			icd = new IntConstDiv(target, intDivSize, d, alpha, arch);
+#if 0
+			icd = new IntConstDiv(parentOp,target, intDivSize, d, alpha, arch);
 			
 			inPortMap  (icd, "X", "divIn");
 			outPortMap (icd, "Q","quotient");
 			outPortMap (icd, "R","remainder");
 			vhdl << instance(icd, "sig_div");
+#else
+			// I feel silly rebuilding a string for the divisor list
+			string divisorsString="";
+			string colon="";
+			for(auto factor: divisors){
+				divisorsString+=  colon + to_string(factor) ;
+				colon=":";
+			}
+			cerr << "***** " << divisorsString;
+			newInstance("IntConstDiv",
+									"intconstdiv",
+									"wIn=" + to_string(intDivSize) + " d="+ divisorsString
+									+ " arch="+ to_string(arch) + " alpha="+ to_string(alpha) ,
+									"X=>divIn",
+									"Q=>quotient, R=>remainder");
+
+#endif
+			
 			
 			vhdl << tab << declare("r_frac", wFOut) << " <= quotient" << range(wFOut-1, 0) << ";"<<endl;
 			
@@ -223,18 +248,19 @@ namespace flopoco{
 	}
 
 	OperatorPtr FPConstDiv::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
-		int wE,wF, d, dExp, alpha, arch;
+		int wE,wF, dExp, alpha, arch;
+		vector<int> divisors;
 		ui.parseStrictlyPositiveInt(args, "wE", &wE); 
 		ui.parseStrictlyPositiveInt(args, "wF", &wF);
-		ui.parseStrictlyPositiveInt(args, "d", &d);
+		ui.parseColonSeparatedIntList(args, "d", &divisors);
 		ui.parseInt(args, "dExp", &dExp);
 		ui.parsePositiveInt(args, "arch", &arch);
 		ui.parseInt(args, "alpha", &alpha);
-		return new FPConstDiv(target, wE, wF,  wE,  wF, d,  dExp, alpha, arch);
+		return new FPConstDiv(parentOp, target, wE, wF,  wE,  wF, divisors,  dExp, alpha, arch);
 	}
 
-	void FPConstDiv::registerFactory(){
-		UserInterface::add("FPConstDiv", // name
+template<>
+OperatorDescription<FPConstDiv> op_descriptor<FPConstDiv> {"FPConstDiv", // name
 											 "Correctly rounded floating-point divider by a small constant.",
 											 "ConstMultDiv",
 											 "", // seeAlso
@@ -244,17 +270,7 @@ namespace flopoco{
                         dExp(int)=0: binary exponent of d (the operator will divide by d.2^dExp);  \
 											  arch(int)=0: architecture used for the mantissa IntConstDiv -- 0 for linear-time, 1 for log-time, 2 for multiply-and-add by the reciprocal; \
                         alpha(int)=-1: Algorithm uses radix 2^alpha. -1 choses a sensible default.",
-											 "Correct rounding to the nearest (if you want other rounding modes contact us). This operator is described in <a href=\"bib/flopoco.html#dedinechin:2012:ensl-00642145:1\">this article</a>.",
-											 FPConstDiv::parseArguments
-											 ) ;
-		
-		/* Cut because it doesn't simulate properly
-                        wEOut(int)=0: output exponent size in bits. If 0, will be equal to wE.; \
-                        wFOut(int)=0: output mantissa size in bits. If 0, will be equal to wF.; \
-		*/
-
-	}
-
-
+											 "Correct rounding to the nearest (if you want other rounding modes contact us). This operator is described in <a href=\"bib/flopoco.html#dedinechin:2012:ensl-00642145:1\">this article</a>."
+				};
 }
 

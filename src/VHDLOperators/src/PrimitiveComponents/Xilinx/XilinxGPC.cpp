@@ -480,7 +480,7 @@ BasicXilinxGPC::BasicXilinxGPC(Operator* parentOp_, Target * target, vector<int>
 	area = 4.0; //every target specific GPC uses 4 LUTs (so far)
 }
 
-Compressor* BasicXilinxGPC::getCompressor(){
+Compressor* BasicXilinxGPC::getCompressor(unsigned int middleLength){
 	compressor = new XilinxGPC(parentOp, target, heights);
 	return compressor;
 }

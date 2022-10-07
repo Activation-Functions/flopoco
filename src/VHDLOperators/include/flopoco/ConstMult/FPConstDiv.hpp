@@ -13,7 +13,7 @@ namespace flopoco{
 	{
 	public:
 		/** @brief The generic constructor */
-		FPConstDiv(Target* target, int wEIn, int wFIn, int wEOut, int wFOut, int d, int dExp=0, int alpha=-1, int arch=0);
+		FPConstDiv(OperatorPtr parentOp, Target* target, int wEIn, int wFIn, int wEOut, int wFOut, vector<int> divisors, int dExp=0, int alpha=-1, int arch=0);
 
 
 		~FPConstDiv();
@@ -38,10 +38,10 @@ namespace flopoco{
 
 
 	private:
+		vector<int> divisors; /**< d is the produt of the divisors */
 		int d; /**< The operator divides by d.2^dExp */
 		int dExp;  /**< The operator divides by d.2^dExp */
 		int alpha;
-		IntConstDiv *icd;
 		bool mantissaIsOne;
 		double dd; // the value of the actual constant in double: equal to d*2^dExp
 		/// \todo replace the above with the mpd that we have in emulate

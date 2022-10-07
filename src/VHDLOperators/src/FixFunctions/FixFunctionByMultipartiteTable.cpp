@@ -30,6 +30,7 @@
 #include "flopoco/FixFunctions/Multipartite.hpp"
 #include "flopoco/Tables/DiffCompressedTable.hpp"
 #include "flopoco/Tables/TableOperator.hpp"
+#include "flopoco/report.hpp"
 #include "flopoco/utils.hpp"
 
 /*
@@ -58,6 +59,8 @@ Bugs when wIn != wOut;
 ./flopoco FixFunctionByMultipartiteTable f="2/(1+x)" signedIn=0 compressTIV=true lsbIn=-10 lsbOut=-12
 
 */
+
+#define DUMP_TABLE_DATA 1
 
 using namespace std;
 
@@ -223,6 +226,59 @@ namespace flopoco
 				// No need to sign-extend it, it is already taken care of in the construction of the table.
 			}
 
+#if DUMP_TABLE_DATA
+		// This dumps uncompressed table data 
+		ostringstream filename;
+		filename << "mpt_"<<vhdlize(f->description) << ".dat";
+		fstream d;
+		d.open(filename.str().c_str(), ios::out);  // no precautions here, this is not prod code
+		int prevy;
+		
+		d << "i\t tiv" << " ";
+		for(int i = bestMP->toi.size()-1; i>=0;  --i)		{
+			d  << "\t "<< "to" << i;
+		}
+		d  << "\t "<< "yfull" << "\t "<< "y" << endl;
+		for(size_t x=0; x< 1<<bestMP->inputSize; x++) {
+			int A = x>>(bestMP->inputSize-bestMP->alpha); 
+			d << x << "\t " << bestMP->tiv[A];
+			int y = bestMP->tiv[A];
+			//cerr << "x=" << x ;
+
+			for(int i = bestMP->toi.size()-1; i>=0;  --i)		{
+				int Ai = x>>(bestMP->inputSize-bestMP->gammai[i]);
+				int mask = (1<< bestMP->betai[i] ) -1; 
+				int Bi = (x >> bestMP->pi[i]) & mask;
+				int Bsign = Bi >>(bestMP->betai[i]-1);
+				int Bmask =(1<< (bestMP->betai[i] -1)) -1;
+				int j;
+				if( Bsign==0) {
+					j = (Bi&Bmask) ^ Bmask;
+					j += (Ai<<(bestMP->betai[i]-1)); // the index
+					int toval = -1-bestMP->toi[i][j]; // not A +1 = -A
+					d << "\t " << toval  << " ";
+					y += toval;
+				}
+				else {
+					j = (Bi&Bmask) + (Ai<<(bestMP->betai[i]-1)); // the index
+					d << "\t " << bestMP->toi[i][j] << " ";
+					y += bestMP->toi[i][j];
+				}
+				//cerr << "    i=" << i << "  Ai=" << Ai << " Bi=" << Bi << " Bsign=" << Bsign<< " Bmask=" << Bmask  << " j=" <<j ;
+			}
+			//			 cerr << endl;
+			int yfull = y;
+			y= y>> bestMP->guardBits;
+			d << "\t" << yfull << "\t" << y << endl;
+			if (y<prevy)
+				REPORT(LogLevel::MESSAGE, "Non-monotonicity detected for x="<<x); 
+			prevy=y;
+		}
+
+		d.close();
+#endif
+		
+		// From now on, VHDL generation
 		int p = 0;
 		for(unsigned int i = 0; i < bestMP->toi.size(); ++i)		{
 			string ai = join("a", i);

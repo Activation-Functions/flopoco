@@ -1,4 +1,5 @@
 add_flopocolib_src(
+    BaseMultiplierBoothArrayXilinx.cpp
     BaseMultiplierCategory.cpp
     BaseMultiplierCollection.cpp
     BaseMultiplier.cpp

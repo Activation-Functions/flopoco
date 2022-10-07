@@ -30,7 +30,7 @@ namespace flopoco
 	public:
 		BasicXilinxGPC(Operator* parentOp_, Target * target, vector<int> heights);
 
-		virtual Compressor* getCompressor();
+		virtual Compressor* getCompressor(unsigned int middleLength);
 
 
 	};

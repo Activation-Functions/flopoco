@@ -59,6 +59,7 @@ ConstMult/FixFixConstMult
 ConstMult/IntConstMult
 ConstMult/FPConstMult
 ConstMult/IntConstDiv
+ConstMult/FPConstDiv
 ConstMult/IntConstMultShiftAdd
 ConstMult/IntConstMultShiftAddTypes
 ConstMult/IntConstMultShiftAddOpt
@@ -98,6 +99,7 @@ IntMult/BaseMultiplierDSPKaratsuba
 IntMult/TilingAndCompressionOptILP
 IntMult/IntSquarer
 IntMult/BaseSquarerLUT
+IntMult/BaseMultiplierBoothArrayXilinx
 Complex/FixComplexKCM
 Complex/FixComplexAdder
 Complex/FixComplexR2Butterfly

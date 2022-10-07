@@ -38,16 +38,18 @@ using namespace PAGSuite;
 
 namespace flopoco{
 
-    IntConstMultShiftAddRPAG::IntConstMultShiftAddRPAG(Operator* parentOp, Target* target, int wIn, mpz_class coeffMpz, bool syncInOut, int epsilon)  : IntConstMultShiftAdd(parentOp, target, wIn, "", false, syncInOut, 1000, false, epsilon)
+    IntConstMultShiftAddRPAG::IntConstMultShiftAddRPAG(Operator* parentOp, Target* target, int wIn, list<mpz_class> &coeffList, bool syncInOut, int epsilon)  : IntConstMultShiftAdd(parentOp, target, wIn, "", false, syncInOut, 1000, false, epsilon)
     {
 		srcFileName="IntConstMultShiftAddRPAG";
 
 		set<int_t> target_set;
-		int_t coeff = mpz_get_ui(coeffMpz.get_mpz_t());
-
-    	target_set.insert(coeff);
-
-		int depth = log2c_64(nonzeros(coeff));
+		int depth=-1;
+		for(auto c : coeffList)
+		{
+			int_t coeff = mpz_get_ui(c.get_mpz_t());
+			target_set.insert(coeff);
+			depth = max(depth,log2c_64(nonzeros(coeff)));
+		}
 
 		REPORT(LogLevel::DETAIL, "depth=" << depth);
 
@@ -86,7 +88,12 @@ namespace flopoco{
 		ProcessIntConstMultShiftAdd(target,adderGraph,"",epsilon);
 
         ostringstream name;
-        name << "IntConstMultRPAG_" << coeff << "_" << wIn;
+        name << "IntConstMultRPAG_";
+	for(auto t : target_set)
+	{
+		name << t << "_";
+	}
+	name << wIn;
         setName(name.str());
     }
 
@@ -137,28 +144,50 @@ namespace flopoco{
         ui.parseStrictlyPositiveInt( args, "wIn", &wIn );
 		ui.parsePositiveInt( args, "epsilon", &epsilon );
 
-		string	constStr;
-		ui.parseString(args, "constant", &constStr);
+		string constListStr;
+		ui.parseString(args, "constant", &constListStr);
+		string constStr="";
 		try {
-			mpz_class constant(constStr);
-			return new IntConstMultShiftAddRPAG(parentOp, target, wIn, constant, false, epsilon);
+			list<mpz_class> constList; // the list of constants
+
+			//parse list of constants:
+			int pos=0;
+			int nextPos;
+			do{
+				nextPos = constListStr.find(',', pos);
+				if(nextPos == string::npos) nextPos = constListStr.length();
+
+				constStr = constListStr.substr(pos, nextPos - pos);
+
+				mpz_class constant(constStr);
+				constList.push_back(constant);
+				pos = nextPos+1;
+			} while (nextPos != constListStr.length());
+
+			if(constList.size() > 0)
+			{
+				return new IntConstMultShiftAddRPAG(parentOp, target, wIn, constList, false, epsilon);
+			}
+			else
+			{
+				cerr << "Error: Empty constant list" << endl; //this should never happen
+				exit(EXIT_FAILURE);
+			}
 		}
 		catch (const std::invalid_argument &e) {
-			cerr << "Error: Invalid constant " << constStr <<endl;
+			cerr << "Error: Invalid constant " << constStr << endl;
 			exit(EXIT_FAILURE);
 		}
 
     }
-	
-    template <>
-    OperatorDescription<IntConstMultShiftAddRPAG> op_descriptor<IntConstMultShiftAddRPAG> {
-	"IntConstMultShiftAddRPAG", // name
-	"Integer constant multiplication using shift and add using the RPAG "
-	"algorithm",	// description, string
-	"ConstMultDiv", // category, from the list defined in UserInterface.cpp
-	"",		// seeAlso
-	"wIn(int): Input word size; \
-                            constant(int): constant; \
+
+   template<>
+   OperatorDescription<IntConstMultShiftAddRPAG> op_descriptor<IntConstMultShiftAddRPAG> {"IntConstMultShiftAddRPAG", // name
+                            "Integer constant multiplication using shift and add using the RPAG algorithm", // description, string
+                            "ConstMultDiv", // category, from the list defined in UserInterface.cpp
+                            "", //seeAlso
+                            "wIn(int): Input word size; \
+                            constant(string): list of constants; \
                             epsilon(int)=0: Allowable error for truncated constant multipliers;",
 	"Nope."};
 }
