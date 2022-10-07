@@ -40,13 +40,13 @@ OPTION(PAGSUITE_BUILD_NOTFOUND "Attempt to build PAGsuite if not found" ON)
 
 include(GNUInstallDirs)
 
-add_subdirectory(src/HighLevelCores)
-add_subdirectory(src/VHDLOperators)
-add_subdirectory(src/FloPoCoBin)
+add_subdirectory(code/HighLevelCores)
+add_subdirectory(code/VHDLOperators)
+add_subdirectory(code/FloPoCoBin)
 
 
 # To resurrect some day if we finish the work on FFT
-# ADD_EXECUTABLE(fftest src/Complex/fakemain)
+# ADD_EXECUTABLE(fftest code/Complex/fakemain)
 # TARGET_LINK_LIBRARIES(fftest ${MPFR_LIB} ${GMP_LIB} ${GMPXX_LIB} FloPoCoLib)
 
 #add_subdirectory(random)
