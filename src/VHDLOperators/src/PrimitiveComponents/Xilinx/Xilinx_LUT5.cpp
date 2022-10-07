@@ -81,12 +81,12 @@ namespace flopoco {
     }
 
   template <>
-  OperatorFactory op_factory<Xilinx_LUT5>(){return factoryBuilder<Xilinx_LUT5>({
+  OperatorDescription<Xilinx_LUT5> op_descriptor<Xilinx_LUT5> {
 	"Xilinx_LUT5",					// name
 	"Provides variants of Xilinx LUT5 primitives.", // description, string
 	"Primitives", // category, from the list defined in UserInterface.cpp
 	"",
 	"variant(string): The LUT variant (LUT5, LUT5_L, etc.);\
           init(string): The LUT content;",
-	""});}
+	""};
 }//namespace

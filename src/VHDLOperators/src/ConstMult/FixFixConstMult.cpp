@@ -110,8 +110,7 @@ namespace flopoco
 	}
 
 	template <>
-	OperatorFactory
-	    op_factory<FixFixConstMult>(){return factoryBuilder<FixFixConstMult>({
+	OperatorDescription<FixFixConstMult> op_descriptor<FixFixConstMult> {
 		"FixFixConstMult",
 		"Table based real multiplier. Output size is computed",
 		"ConstMultDiv",
@@ -125,5 +124,5 @@ namespace flopoco
 		"This variant of Ken Chapman's Multiplier is briefly described "
 		"in <a href=\"bib/flopoco.html#DinIstoMas2014-SOPCJR\">this "
 		"article</a>.<br> Special constants, such as 0 or powers of "
-		"two, are handled efficiently."});}
+		"two, are handled efficiently."};
 }

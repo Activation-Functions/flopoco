@@ -256,7 +256,7 @@ OperatorPtr IntKaratsubaRectangular::parseArguments(OperatorPtr parentOp, Target
 }
 
 template <>
-OperatorFactory op_factory<IntKaratsubaRectangular>(){return factoryBuilder<IntKaratsubaRectangular>({
+OperatorDescription<IntKaratsubaRectangular> op_descriptor<IntKaratsubaRectangular> {
     "IntKaratsubaRectangular", // name
     "Implements a large unsigned Multiplier using rectangular shaped tiles as "
     "appears for Xilinx FPGAs. Currently limited to specific, hand-optimized "
@@ -267,7 +267,7 @@ OperatorFactory op_factory<IntKaratsubaRectangular>(){return factoryBuilder<IntK
     "Uses Karatsuba when set to 1, instead a standard tiling without sharing "
     "is used.;useRectangularTiles(bool)=1: Uses rectangular tiles when set to "
     "1, otherwise quadratic tiles are used",
-    ""});}
+    ""};
 
 TestList IntKaratsubaRectangular::unitTest(int index)
 {

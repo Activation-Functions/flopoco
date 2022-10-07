@@ -151,7 +151,7 @@ namespace flopoco{
     }
 	
     template <>
-    OperatorFactory op_factory<IntConstMultShiftAddRPAG>(){return factoryBuilder<IntConstMultShiftAddRPAG>({
+    OperatorDescription<IntConstMultShiftAddRPAG> op_descriptor<IntConstMultShiftAddRPAG> {
 	"IntConstMultShiftAddRPAG", // name
 	"Integer constant multiplication using shift and add using the RPAG "
 	"algorithm",	// description, string
@@ -160,7 +160,7 @@ namespace flopoco{
 	"wIn(int): Input word size; \
                             constant(int): constant; \
                             epsilon(int)=0: Allowable error for truncated constant multipliers;",
-	"Nope."});}
+	"Nope."};
 }
 #endif //defined(HAVE_PAGLIB) && defined(HAVE_RPAGLIB)
 

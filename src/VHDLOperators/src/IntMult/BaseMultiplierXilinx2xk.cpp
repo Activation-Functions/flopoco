@@ -59,8 +59,7 @@ OperatorPtr BaseMultiplierXilinx2xk::parseArguments(OperatorPtr parentOp, Target
 }
 
 template <>
-OperatorFactory
-    op_factory<BaseMultiplierXilinx2xk>(){return factoryBuilder<BaseMultiplierXilinx2xk>({
+OperatorDescription<BaseMultiplierXilinx2xk> op_descriptor<BaseMultiplierXilinx2xk> {
 	"BaseMultiplierXilinx2xk", // name
 	"Implements a 2xY-LUT-Multiplier that can be realized efficiently on "
 	"some Xilinx-FPGAs",
@@ -70,7 +69,7 @@ OperatorFactory
                         wY(int): size of input Y;\
 						xIsSigned(bool)=0: input X is signed;\
 						yIsSigned(bool)=0: input Y is signed;",
-	""});}
+	""};
 
 void BaseMultiplierXilinx2xkOp::emulate(TestCase* tc)
 {

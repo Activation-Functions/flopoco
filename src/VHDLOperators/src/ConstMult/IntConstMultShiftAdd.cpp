@@ -954,8 +954,7 @@ void IntConstMultShiftAdd::printAdditionalNodeInfo(map<adder_graph_base_node_t *
 
 namespace flopoco {
 	template <>
-	OperatorFactory
-	    op_factory<IntConstMultShiftAdd>(){return factoryBuilder<IntConstMultShiftAdd>({
+	OperatorDescription<IntConstMultShiftAdd> op_descriptor<IntConstMultShiftAdd> {
 		"IntConstMultShiftAdd", // name
 		"A component for building constant multipliers based on "
 		"pipelined adder graphs (PAGs).", // description, string
@@ -972,5 +971,5 @@ namespace flopoco {
 		"truncations(string)=\"\": provides the truncations for "
 		"subvalues", // format:
 			     // const1,stage:trunc_input_0,trunc_input_1,...;const2,stage:trunc_input_0,trunc_input_1,...;...",
-		""});}
+		""};
 }//namespace

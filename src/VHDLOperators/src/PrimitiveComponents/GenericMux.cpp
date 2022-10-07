@@ -95,13 +95,13 @@ namespace flopoco {
   }
 
   template <>
-  OperatorFactory op_factory<GenericMux>(){return factoryBuilder<GenericMux>({
+  OperatorDescription<GenericMux> op_descriptor<GenericMux> {
       "GenericMux",
       "A Multiplexer",
       "ShiftersLZOCs",
       "",
       "wIn(int): input word size; \
     inputCount(int): the number of data inputs (NOT counting the select input!)",
-      ""});}
+      ""};
 
 }//namespace

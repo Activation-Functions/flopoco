@@ -463,7 +463,7 @@ void XilinxGPC::emulate(TestCase *tc, vector<int> heights) {
 }
 
 template <>
-OperatorFactory op_factory<XilinxGPC>(){return factoryBuilder<XilinxGPC>({
+OperatorDescription<XilinxGPC> op_descriptor<XilinxGPC> {
     "XilinxGPC", // name
     "Implements Xilinx optimized GPCs \
                        Available GPC sizes are: \
@@ -473,7 +473,7 @@ OperatorFactory op_factory<XilinxGPC>(){return factoryBuilder<XilinxGPC>({
     "",
     "columnHeights(string): comma separated list of heights for the columns of the compressor, \
 in decreasing order of the weight. For example, columnHeights=\"6,0,6\" produces a (6,0,6:5) GPC",
-    ""});}
+    ""};
 
 BasicXilinxGPC::BasicXilinxGPC(Operator* parentOp_, Target * target, vector<int> heights) : BasicCompressor(parentOp_,target,heights)
 {

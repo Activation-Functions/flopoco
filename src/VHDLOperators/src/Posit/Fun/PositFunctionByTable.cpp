@@ -74,7 +74,7 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorFactory op_factory<PositFunctionByTable>(){return factoryBuilder<PositFunctionByTable>({
+	OperatorDescription<PositFunctionByTable> op_descriptor<PositFunctionByTable> {
 	    "PositFunctionByTable", // name
 	    "Evaluator of function f using a table.",
 	    "Posit",
@@ -82,5 +82,5 @@ namespace flopoco{
 	    "f(string): function to be evaluated between double-quotes, for instance \"exp(x*x)\";\
                                     width(int): size of the Posit;	\
                                     wES(int): size of the Posit's exponent.",
-	    "This operator uses a table to store function values."});}
+	    "This operator uses a table to store function values."};
 }

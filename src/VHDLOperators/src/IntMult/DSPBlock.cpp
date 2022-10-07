@@ -195,7 +195,7 @@ OperatorPtr DSPBlock::parseArguments(OperatorPtr parentOp, Target *target, vecto
 }
 
 template <>
-    OperatorFactory op_factory<DSPBlock>(){return factoryBuilder<DSPBlock>({"DSPBlock", // name
+    OperatorDescription<DSPBlock> op_descriptor<DSPBlock> {"DSPBlock", // name
 						"Implements a DSP block commonly found in FPGAs incl. pre-adders and post-adders computing R = (X1+X2) * Y + Z",
 						"BasicInteger", // categories
 						"",
@@ -208,7 +208,7 @@ template <>
 						usePostAdder(bool)=0: use post-adders;\
 						usePreAdder(bool)=0: use pre-adders;\
 						preAdderSubtracts(bool)=0: if true, the pre-adder performs a pre-subtraction;",
-					   ""});}
+					   ""};
 
 
 }   //end namespace flopoco

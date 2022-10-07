@@ -291,7 +291,7 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorFactory op_factory<FPMult>(){return factoryBuilder<FPMult>({
+	OperatorDescription<FPMult> op_descriptor<FPMult> {
 	    "FPMult", // name
 	    "A floating-point multiplier. The actual FloPoCo component "
 	    "supports different input and output sizes, but this is not "
@@ -306,5 +306,5 @@ namespace flopoco{
                            wFOut(int)=0: result significand fraction size in bits (0 means wFOout=wF); \
 						   correctlyRounded(bool)=true: correct (true) or faithful (false) rounding;\
 						   dspThreshold(real)=0.0: threshold of relative occupation ratio of a DSP multiplier to be used or not", // This string will be parsed
-	    ""});}
+	    ""};
 }

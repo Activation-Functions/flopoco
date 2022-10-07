@@ -318,7 +318,7 @@ namespace flopoco {
 	}
 
 	template <>
-	OperatorFactory op_factory<FixAtan2>(){return factoryBuilder<FixAtan2>({
+	OperatorDescription<FixAtan2> op_descriptor<FixAtan2> {
 	    "FixAtan2", // name
 	    "Computes atan(X/Y) as A=(angle in radian)/pi,  so A in [-1,1).",
 	    "ElementaryFunctions",
@@ -326,5 +326,5 @@ namespace flopoco {
 	    "lsb(int): weight of the LSB of both inputs and outputs; \
          method(int): parameter select between: InvMultAtan with approximations of the corresponding degree (0..7), plain CORDIC (8), CORDIC with scaling (9), a method using surface approximation (10), Taylor approximation of order 1 (11) and 2 (12)",
 	    "For more details, see <a "
-	    "href=\"bib/flopoco.html#DinIsto2015\">this article</a>."});}
+	    "href=\"bib/flopoco.html#DinIsto2015\">this article</a>."};
 }

@@ -751,7 +751,7 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorFactory op_factory<FPConstMultInterfaced>(){return factoryBuilder<FPConstMultInterfaced>({
+	OperatorDescription<FPConstMultInterfaced> op_descriptor<FPConstMultInterfaced> {
 	    "FPConstMult",
 	    "Floating-point constant multiplier using the shift-and-add "
 	    "approach.",
@@ -769,10 +769,10 @@ namespace flopoco{
 	    "width will be computed in order to get a faithful result.",
 	    "An early version of the technique used is described in  <a "
 	    "href=\"bib/flopoco.html#BrisebarreMullerDinechin2008:ASAP\">this "
-	    "article</a>."});}
+	    "article</a>."};
 
 	template <>
-	OperatorFactory op_factory<FPConstMultRationalInterfaced>(){return factoryBuilder<FPConstMultRationalInterfaced>({
+	OperatorDescription<FPConstMultRationalInterfaced> op_descriptor<FPConstMultRationalInterfaced> {
 	    "FPConstMultRational",
 	    "Correctly rounded floating-point multiplier by a rational "
 	    "constant.",
@@ -787,5 +787,5 @@ namespace flopoco{
 	    "wEout(int)=-1: output exponent width, -1 means same as wE;"
 	    "wFout(int)=-1: output significand width, -1 means same as wF;",
 	    "The technique used is described in  <a "
-	    "href=\"bib/flopoco.html#Dinechin2012-TCASII\">this article</a>."});}
+	    "href=\"bib/flopoco.html#Dinechin2012-TCASII\">this article</a>."};
 }

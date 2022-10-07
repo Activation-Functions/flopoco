@@ -237,7 +237,7 @@ namespace flopoco{
 	}
 	
 	template <>
-	OperatorFactory op_factory<OutputIEEE>(){return factoryBuilder<OutputIEEE>({
+	OperatorDescription<OutputIEEE> op_descriptor<OutputIEEE> {
 	    "OutputIEEE", // name
 	    "Conversion from FloPoCo to IEEE-754-like floating-point formats.",
 	    "Conversions",
@@ -247,6 +247,6 @@ namespace flopoco{
                         wEOut(int): output exponent size in bits; \
                         wFOut(int): output mantissa size in bits;\
                         onlyPositiveZeroes(bool)=false: when true, normalize +0 and -0 to +0",
-	    ""});}
+	    ""};
 }
 

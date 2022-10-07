@@ -224,11 +224,11 @@ namespace flopoco {
     }
 
     template <>
-    OperatorFactory op_factory<RowAdder>(){return factoryBuilder<RowAdder>({
+    OperatorDescription<RowAdder> op_descriptor<RowAdder> {
 	"RowAdder",		       // name
 	"Row adder for cormpression.", // description, string
 	"Primitives", // category, from the list defined in UserInterface.cpp
 	"",
 	"wIn(int): input width of the row adder",
-	""});}
+	""};
 }

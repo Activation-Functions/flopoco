@@ -285,8 +285,7 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorFactory
-	    op_factory<IntComparator>(){return factoryBuilder<IntComparator>({
+	OperatorDescription<IntComparator> op_descriptor<IntComparator> {
 		"IntComparator", // name
 		"An integer comparator.",
 		"BasicInteger",
@@ -295,5 +294,5 @@ namespace flopoco{
 			flags(int)=7: if bit 0 set output  X<Y, if bit 1 set output X=Y, if bit 2 set output  X>Y;\
 			method(int)=-1: method to be used, for experimental purpose (-1: automatic, 0: symmetric, 1: asymmetric where gt is computed out of lt and eq, 2: binary tree, 3: two-level minimum latency);",
 		"Outputs up to 3 mutually exclusive signals:  XltY (less than, "
-		"strictly), XeqY (equal), XgtY (greater than, strictly)"});}
+		"strictly), XeqY (equal), XgtY (greater than, strictly)"};
 }

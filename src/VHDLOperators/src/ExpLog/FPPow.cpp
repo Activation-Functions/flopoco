@@ -581,7 +581,7 @@ namespace flopoco{
 		return new FPPow(parentOp, target, wE, wF, type);
 	}
 	template <>
-	OperatorFactory op_factory<FPPow>(){return factoryBuilder<FPPow>({
+	OperatorDescription<FPPow> op_descriptor<FPPow> {
 	    "FPPow", // name
 	    "A floating-point power function.",
 	    "ElementaryFunctions", // categories
@@ -590,5 +590,5 @@ namespace flopoco{
 			wF(int): mantissa size in bits for both inputs; \
 			type(int)=0: 0 for pow, 1 for the powr function introduced in IEEE754-2008",
 	    ""
-	});}
+	};
 }

@@ -472,7 +472,7 @@ returns: an integer pext that defines the position of the last column
 	}
 
 	template <>
-	OperatorFactory op_factory<IntSquarer>(){return factoryBuilder<IntSquarer>({
+	OperatorDescription<IntSquarer> op_descriptor<IntSquarer> {
 	    "IntSquarer", // name
 	    "An integer squarer.",
 	    "BasicInteger", // category
@@ -482,5 +482,5 @@ returns: an integer pext that defines the position of the last column
          method(string)=schoolbook: squarer design method, schoolbook (standard) or optimal; \
          maxDSP(int)=0: limit DSPs, 0 (standard) or allow more; \
 		 signedIn(bool)=false: inputs can be signed or unsigned (output always unsigned);", // This string will be parsed
-	    ""});}
+	    ""};
 }

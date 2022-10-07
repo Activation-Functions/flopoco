@@ -440,7 +440,7 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorFactory op_factory<InputIEEE>(){return factoryBuilder<InputIEEE>({
+	OperatorDescription<InputIEEE> op_descriptor<InputIEEE> {
 	    "InputIEEE", // name
 	    "Conversion from IEEE-754-like to FloPoCo floating-point formats. "
 	    "Subnormals are all flushed to zero at the moment.",
@@ -451,5 +451,5 @@ namespace flopoco{
                         wEOut(int): output exponent size in bits;\
                         wFOut(int): output mantissa size in bits",
 	    "" // htmldoc
-	});}
+	};
 }

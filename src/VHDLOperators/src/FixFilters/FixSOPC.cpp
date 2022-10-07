@@ -387,8 +387,7 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorFactory
-	    op_factory<FixSOPCInterfaced>(){return factoryBuilder<FixSOPCInterfaced>({
+	OperatorDescription<FixSOPCInterfaced> op_descriptor<FixSOPCInterfaced> {
 		"FixSOPC", // name
 		"A fix-point Sum of Product by Constants.",
 		"FiltersEtc", // categories
@@ -396,10 +395,10 @@ namespace flopoco{
 		"lsbIn(int): input's last significant bit;\
                         lsbOut(int): output's last significant bit;\
                         coeff(string): colon-separated list of real coefficients using Sollya syntax. Example: coeff=\"1.234567890123:sin(3*pi/8)\"",
-		""});}
+		""};
 
 	template <>
-	OperatorFactory op_factory<FixSOPCFullInterfaced>(){return factoryBuilder<FixSOPCFullInterfaced>({
+	OperatorDescription<FixSOPCFullInterfaced> op_descriptor<FixSOPCFullInterfaced> {
 	    "FixSOPCfull", // name
 	    "A fix-point Sum of Product by Constants (detailed interface).",
 	    "FiltersEtc", // categories
@@ -409,7 +408,7 @@ namespace flopoco{
                         msbOut(int): output's most significant bit;\
                         lsbOut(int): output's last significant bit;\
                         coeff(string): colon-separated list of real coefficients using Sollya syntax. Example: coeff=\"1.234567890123:sin(3*pi/8)\"",
-	    ""});}
+	    ""};
 
 	// please fill me with regression tests or corner case tests
 	void FixSOPC::buildStandardTestCases(TestCaseList * tcl) {

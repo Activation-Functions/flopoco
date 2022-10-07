@@ -344,7 +344,7 @@ namespace flopoco {
 	}
 
 	template <>
-	OperatorFactory op_factory<GenericLut>(){return factoryBuilder<GenericLut>({
+	OperatorDescription<GenericLut> op_descriptor<GenericLut> {
 	    "GenericLut", // name
 	    "A simple look up table.",
 	    "ShiftersLZOCs", // category
@@ -354,6 +354,6 @@ namespace flopoco {
          entityName(string): unique name for the LUT;\
          inputValues(string): colon seperated list of (unsigned) ints specifying the inputs for the LUT;\
          outputValues(string): colon seperated list of (unsigned) ints specifying the corrisponding outputs",
-	    ""});}
+	    ""};
 
 }//namespace

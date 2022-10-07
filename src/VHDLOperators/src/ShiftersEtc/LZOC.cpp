@@ -180,12 +180,12 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorFactory op_factory<LZOC>(){return factoryBuilder<LZOC>({
+	OperatorDescription<LZOC> op_descriptor<LZOC> {
 	    "LZOC", // name
 	    "A leading zero or one counter. The output size is computed.",
 	    "ShiftersLZOCs", // category
 	    "",
 	    "wIn(int): input size in bits;\
          countType(int)=-1:  0 means count zeroes, 1 means count ones, -1 means add an input that defines what to count", // This string will be parsed
-	    ""});}
+	    ""};
 }

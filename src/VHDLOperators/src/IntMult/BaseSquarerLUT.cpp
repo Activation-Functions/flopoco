@@ -199,7 +199,7 @@ namespace flopoco
     }
 
     template <>
-    OperatorFactory op_factory<BaseSquarerLUT>(){return factoryBuilder<BaseSquarerLUT>({
+    OperatorDescription<BaseSquarerLUT> op_descriptor<BaseSquarerLUT> {
 	"IntSquarerLUT", // name
 	"Implements a LUT squarer by simply tabulating all results in the LUT, "
 	"should only be used for very small word sizes",
@@ -207,7 +207,7 @@ namespace flopoco
 	"",
 	"wIn(int): size of the input XxX; isSigned(bool): signedness of the "
 	"input",
-	""});}
+	""};
 
     double BaseSquarerLUT::getLUTCost(int x_anchor, int y_anchor, int wMultX, int wMultY, bool signedIO) {
         int wInMax = (signedIO)?(-1)*(1<<(wIn-1)):(1<<wIn)-1;

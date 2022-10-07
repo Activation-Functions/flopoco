@@ -444,7 +444,7 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorFactory op_factory<flopoco::FixRealShiftAdd>(){return factoryBuilder<flopoco::FixRealShiftAdd>({
+	OperatorDescription<flopoco::FixRealShiftAdd> op_descriptor<flopoco::FixRealShiftAdd> {
 	    "FixRealShiftAdd",
 	    "Table based real multiplier. Output size is computed",
 	    "ConstMultDiv",
@@ -459,7 +459,7 @@ namespace flopoco{
 	    "<a "
 	    "href=\"bib/flopoco.html#deDinechinEtAl2019-Arith-KCMvsSA\">this "
 	    "article</a>.<br> Special constants, such as 0 or powers of two, "
-	    "are handled efficiently."});}
+	    "are handled efficiently."};
 }//namespace
 #else // we need the factory but we need it to be empty
 namespace flopoco{

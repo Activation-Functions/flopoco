@@ -252,13 +252,12 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorFactory
-	    op_factory<IntDualAddSub>(){return factoryBuilder<IntDualAddSub>({
+	OperatorDescription<IntDualAddSub> op_descriptor<IntDualAddSub> {
 		"IntDualAddSub", // name
 		"Pipelined dual adder/subtractor",
 		"BasicInteger", // category
 		"",
 		"wIn(int): input size in bits;\
 opType(int): 1=compute X-Y and X+Y, 2=compute X-Y and Y-X;",
-		""});}
+		""};
 }

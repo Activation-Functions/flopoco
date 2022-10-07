@@ -12,7 +12,7 @@
 
 namespace flopoco{
 	/** The FPSqrt class */
-	class FPSqrt : public Operator, public InterfacedOperator<FPSqrt>
+	class FPSqrt : public Operator
 	{
 	public:
 		/**

@@ -816,7 +816,7 @@ namespace flopoco
 	}
 
 	template <>
-	OperatorFactory op_factory<FixFunctionByMultipartiteTable>(){return factoryBuilder<FixFunctionByMultipartiteTable>({
+	OperatorDescription<FixFunctionByMultipartiteTable> op_descriptor<FixFunctionByMultipartiteTable> {
 	    "FixFunctionByMultipartiteTable", // name
 	    "A function evaluator using the multipartite method.",
 	    "FunctionApproximation", // category
@@ -838,6 +838,6 @@ namespace flopoco
 	    "described in <a "
 	    "href=\"http://ieeexplore.ieee.org/xpls/"
 	    "abs_all.jsp?arnumber=6998028&tag=1\">this article</a>. "
-	});}
+	};
 }
 

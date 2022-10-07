@@ -1,6 +1,7 @@
 add_flopocolib_src(
     FlopocoStream.cpp
     Instance.cpp
+    InterfacedOperator.cpp
     OperatorContext.cpp
     Operator.cpp
     ShiftReg.cpp
@@ -17,7 +18,6 @@ add_subdirectory(Complex)
 add_subdirectory(Conversions)
 add_subdirectory(ConstMult)
 add_subdirectory(ExpLog)
-add_subdirectory(Factories)
 add_subdirectory(FixFilters)
 add_subdirectory(FixFunctions)
 add_subdirectory(FPAddSub)

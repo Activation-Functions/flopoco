@@ -162,12 +162,12 @@ namespace flopoco{
   }
 
   template <>
-  OperatorFactory op_factory<PIFAdd>(){return factoryBuilder<PIFAdd>({
+  OperatorDescription<PIFAdd> op_descriptor<PIFAdd> {
       "PIFAdd", // name
       "A correctly rounded posit intermediate format adder.",
       "BasicPIF",
       "", // seeAlso
       "wF(int): mantissa size in bits; \
                          wE(int): exponent size in bits;",
-      ""});}
+      ""};
 }

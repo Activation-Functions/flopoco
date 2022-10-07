@@ -80,8 +80,7 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorFactory
-	    op_factory<FixRootRaisedCosine>(){return factoryBuilder<FixRootRaisedCosine>({
+	OperatorDescription<FixRootRaisedCosine> op_descriptor<FixRootRaisedCosine> {
 		"FixRootRaisedCosine", // name
 		"A generator of fixed-point Root-Raised Cosine filters, for "
 		"inputs between -1 and 1",
@@ -91,7 +90,7 @@ namespace flopoco{
 											  lsbIn(int): position of the LSB of the input, e.g. -15 for a 16-bit signed input; \
 											  lsbOut(int): position of the LSB of the output;\
                         n(int): filter order (number of taps will be 2n+1)",
-		""});}
+		""};
 }
 
 

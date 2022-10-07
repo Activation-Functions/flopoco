@@ -335,7 +335,7 @@ OperatorPtr FixRealConstMult::parseArguments(OperatorPtr parentOp, Target* targe
 }
 
 template <>
-OperatorFactory op_factory<FixRealConstMult>(){return factoryBuilder<FixRealConstMult>({
+OperatorDescription<FixRealConstMult> op_descriptor<FixRealConstMult> {
     "FixRealConstMult",
     "Table based real multiplier. Output size is computed",
     "ConstMultDiv",
@@ -352,5 +352,5 @@ OperatorFactory op_factory<FixRealConstMult>(){return factoryBuilder<FixRealCons
     "Shift-and-Add variant is described  in <a "
     "href=\"bib/flopoco.html#deDinechinEtAl2019-Arith-KCMvsSA\">this "
     "article</a>.<br> Special constants, such as 0 or powers of two, are "
-    "handled efficiently."});}
+    "handled efficiently."};
 }

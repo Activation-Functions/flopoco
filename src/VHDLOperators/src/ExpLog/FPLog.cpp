@@ -210,7 +210,7 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorFactory op_factory<FPLog>(){return factoryBuilder<FPLog>({
+	OperatorDescription<FPLog> op_descriptor<FPLog> {
 	    "FPLog", // name
 	    "Floating-point logarithm",
 	    "ElementaryFunctions", // categories
@@ -224,5 +224,5 @@ namespace flopoco{
 	    "href=\"bib/flopoco.html#DetDinPuj2007:Arith\">this article</a> "
 	    "and <a href=\"bib/flopoco.html#2010-RR-FPLog\">this research "
 	    "report</a>."
-	});}
+	};
 }

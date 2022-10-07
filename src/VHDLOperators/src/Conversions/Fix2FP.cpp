@@ -569,7 +569,7 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorFactory op_factory<Fix2FP>(){return factoryBuilder<Fix2FP>({
+	OperatorDescription<Fix2FP> op_descriptor<Fix2FP> {
 	    "Fix2FP", // name
 	    "Conversion from FloPoCo floating-point to fixed-point.",
 	    "Conversions",
@@ -579,5 +579,5 @@ namespace flopoco{
                         LSB(int): weight of LSB of the input;\
                         wE(int): output exponent size in bits;\
                         wF(int): output mantissa size in bits;",
-	    ""});}
+	    ""};
 }

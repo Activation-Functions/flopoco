@@ -102,13 +102,13 @@ namespace flopoco
   }
 
   template <>
-  OperatorFactory op_factory<XilinxLUT>(){return factoryBuilder<XilinxLUT>({
+  OperatorDescription<XilinxLUT> op_descriptor<XilinxLUT> {
       "XilinxLUT",				     // name
       "Provides variants of Xilinx LUT primitives.", // description, string
       "Primitives", // category, from the list defined in UserInterface.cpp
       "",
       "variant(string): The LUT variant (LUT6, LUT6_2, etc.);\
        init(string): The LUT content;",
-      ""});}
+      ""};
 
 }//namespace

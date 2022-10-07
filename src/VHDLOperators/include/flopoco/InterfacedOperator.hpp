@@ -11,17 +11,13 @@
 
 namespace flopoco {
 
-struct OperatorDescription {
-    const std::string Name;
-    const std::string Descr;
-    const std::string Category;
-    const std::string SeeAlso;
-    const std::string Parameters;
-    const std::string ExtraHTMLDoc;
+struct FactoryRegistrator {
+    static void registerFactory(OperatorFactory&& factory);
+    static void delegateRegisteredFactories(UserInterface& ui);
+    struct RecordInserter {
+        RecordInserter(OperatorFactory&& factory);
+    };
 };
-
-template<typename T>
-OperatorFactory op_factory();
 
 struct HasUnitTest {
 private:
@@ -41,23 +37,45 @@ public:
 template<typename Operator>
 static constexpr bool hasUnitTest_v = HasUnitTest::value<Operator>; 
 
-template<typename T, bool hasUnitTest = hasUnitTest_v<T>>
-struct InterfacedOperator {
-    public:
-    static OperatorPtr __parser(OperatorPtr parent, Target* target, std::vector<string> & params, UserInterface& ui) {
-        return T::parseArguments(parent, target, params, ui);
+template<typename T> struct Registrator {
+    Registrator() {
+        (void) recorder;
     }
-    static TestList __unit_test(int val) {
-        if constexpr (hasUnitTest) {
-            return T::unitTest(val);
-        } else {
-            return {};
-        }
-    }
+    private:
+    static const FactoryRegistrator::RecordInserter recorder;
 };
 
 template<typename T>
-OperatorFactory factoryBuilder(OperatorDescription descriptor){
+struct OperatorDescription {
+    const std::string Name;
+    const std::string Descr;
+    const std::string Category;
+    const std::string SeeAlso;
+    const std::string Parameters;
+    const std::string ExtraHTMLDoc;
+    OperatorDescription(const std::string &name, const std::string &descr,
+			const std::string &category, const std::string &seeAlso,
+			const std::string &parameters,
+			const std::string &extraHTMLDoc)
+	: Name{name}, Descr{descr}, Category{category}, SeeAlso{seeAlso},
+	  Parameters{parameters}, ExtraHTMLDoc{extraHTMLDoc}, registrator{}
+    {
+        (void) registrator;
+    }
+    private:
+    Registrator<T> registrator;
+};
+
+template<typename T>
+OperatorDescription<T> op_descriptor;
+
+template<typename T>
+OperatorFactory factoryBuilder(){
+    auto& descriptor = op_descriptor<T>;
+    unitTest_func_t testfunc = nullptr;
+    if constexpr (hasUnitTest_v<T>) {
+        testfunc = T::unitTest;
+    }
     return {
       descriptor.Name,
       descriptor.Descr,
@@ -65,10 +83,13 @@ OperatorFactory factoryBuilder(OperatorDescription descriptor){
       descriptor.SeeAlso,
       descriptor.Parameters,
       descriptor.ExtraHTMLDoc,
-      InterfacedOperator<T>::__parser,
-      InterfacedOperator<T>::__unit_test
+      T::parseArguments,
+      testfunc
     };
 }
+
+template <typename T>
+const FactoryRegistrator::RecordInserter Registrator<T>::recorder{factoryBuilder<T>()};
 }
 
 #endif

@@ -467,7 +467,7 @@ namespace flopoco {
 	}
 
 	template <>
-	OperatorFactory op_factory<FixComplexKCM>(){return factoryBuilder<FixComplexKCM>({
+	OperatorDescription<FixComplexKCM> op_descriptor<FixComplexKCM> {
 	    "FixComplexKCM",
 	    "Table-based complex multiplier. Inputs are two's complement. "
 	    "Output size is computed",
@@ -480,7 +480,7 @@ namespace flopoco {
 				constantRe(string): real part of the constant, given as a Sollya expression, e.g \"log(2)\"; \
 				constantIm(string): imaginary part of the constant, given as a Sollya expression, e.g \"log(2)\"; \
 				extrabit(bool)=true: do we need extra bit for addition",
-	    ""});}
+	    ""};
 
 }//namespace
 

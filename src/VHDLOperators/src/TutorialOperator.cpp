@@ -19,7 +19,7 @@ namespace flopoco {
 	/* Filling the different fields that are used to 
 	*/
 	template<>
-	OperatorFactory op_factory<TutorialOperator>(){return factoryBuilder<TutorialOperator>({
+	OperatorDescription<TutorialOperator> op_descriptor<TutorialOperator> {
 		/*Name:         */ "TutorialOperator",
 		/*Description:  */ "An heavily commented example operator to start with FloPoCo.",
 		/*Category:     */ "Miscellaneous", //from the list defined in UserInterface.cpp
@@ -32,7 +32,7 @@ namespace flopoco {
          param1(int): A second parameter, here used as the output size",
 		// More documentation for the HTML pages. If you want to link to your blog, it is here.
 	    "Feel free to experiment with its code, it will not break anything in FloPoCo. <br> Also see the developper manual in the doc/ directory of FloPoCo.",
-		});}
+		};
 
 	
 	TutorialOperator::TutorialOperator(OperatorPtr parentOp, Target* target, int param0_, int param1_) : Operator(parentOp, target), param0(param0_), param1(param1_) {

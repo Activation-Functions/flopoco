@@ -25,6 +25,7 @@
 #include <mpfr.h>
 
 #include "flopoco/FPDivSqrt/FPSqrt.hpp"
+#include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/Operator.hpp"
 #include "flopoco/utils.hpp"
 
@@ -351,7 +352,7 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorFactory op_factory<FPSqrt>(){return factoryBuilder<FPSqrt>({
+	OperatorDescription<FPSqrt> op_descriptor<FPSqrt>{
 	    "FPSqrt", // name
 	    "A correctly rounded floating-point square root function.",
 	    "BasicFloatingPoint", // categories
@@ -359,5 +360,5 @@ namespace flopoco{
 	    "wE(int): exponent size in bits; \
 wF(int): mantissa size in bits; \
 method(int)=1: 0 for plain restoring, 1 for nonrestoring method",
-	    ""});}
+	    ""};
 	}

@@ -247,7 +247,7 @@ namespace flopoco{
 		return testStateList;
 	}
 	template <>
-	OperatorFactory op_factory<FPAdd>(){return factoryBuilder<FPAdd>({
+	OperatorDescription<FPAdd> op_descriptor<FPAdd> {
 	    "FPAdd", // name
 	    "A correctly rounded floating-point adder.",
 	    "BasicFloatingPoint",
@@ -261,5 +261,5 @@ namespace flopoco{
 	    "The difference between single-path and dual-path is well "
 	    "explained in textbooks such as Ercegovac and Lang's <em>Digital "
 	    "Arithmetic</em>, or Muller et al's <em>Handbook of floating-point "
-	    "arithmetic.</em>"});}
+	    "arithmetic.</em>"};
 }

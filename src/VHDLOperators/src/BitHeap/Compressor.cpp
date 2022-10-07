@@ -418,7 +418,7 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorFactory op_factory<Compressor>(){return factoryBuilder<Compressor>({
+	OperatorDescription<Compressor> op_descriptor<Compressor> {
 	    "Compressor", // name
 	    "A basic compressor.",
 	    "BasicInteger", // categories
@@ -426,5 +426,5 @@ namespace flopoco{
 	    "columnHeights(string): comma separated list of heights for the columns of the compressor, \
 in decreasing order of the weight. For example, columnHeights=\"2,3\" produces a (2,3:4) GPC; \
 				compactView(bool)=false: whether the VHDL code is printed in a more compact way, or not",
-	    ""});}
+	    ""};
 } // namespace flopoco

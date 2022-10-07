@@ -497,8 +497,7 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorFactory
-	    op_factory<FixComplexR2Butterfly>(){return factoryBuilder<FixComplexR2Butterfly>({
+	OperatorDescription<FixComplexR2Butterfly> op_descriptor<FixComplexR2Butterfly> {
 		"FixComplexR2Butterfly", // name
 		"A Complex Radix-2 Butterfly.",
 		"Complex", // categories
@@ -514,7 +513,7 @@ namespace flopoco{
 							decimation(bool)=true: if true(default) DIF, else DIT FFT ;\
 							extrabit(bool)=true: if true (default) add one extra bit in fixcomplexkcm msbout, else no extra bit ;\
 							laststage(bool)=false: if false (default) is not last stage, if true, last stage of FFT",
-		"See the developper manual in the doc/ directory of FloPoCo."});}
+		"See the developper manual in the doc/ directory of FloPoCo."};
 }
 
 

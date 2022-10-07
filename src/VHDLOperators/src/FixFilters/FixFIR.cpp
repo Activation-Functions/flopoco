@@ -287,7 +287,7 @@ namespace flopoco {
 	}
 
 	template <>
-	OperatorFactory op_factory<FixFIR>(){return factoryBuilder<FixFIR>({
+	OperatorDescription<FixFIR> op_descriptor<FixFIR> {
 	    "FixFIR", // name
 	    "A fix-point Finite Impulse Filter generator.",
 	    "FiltersEtc", // categories
@@ -299,6 +299,6 @@ namespace flopoco {
                        coeff(string): colon-separated list of real coefficients using Sollya syntax. Example: coeff=\"1.234567890123:sin(3*pi/8)\"",
 	    "For more details, see <a "
 	    "href=\"bib/flopoco.html#DinIstoMas2014-SOPCJR\">this "
-	    "article</a>."});}
+	    "article</a>."};
 }
 

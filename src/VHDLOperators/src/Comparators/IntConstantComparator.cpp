@@ -285,8 +285,7 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorFactory
-	    op_factory<IntConstantComparator>(){return factoryBuilder<IntConstantComparator>({
+	OperatorDescription<IntConstantComparator> op_descriptor<IntConstantComparator> {
 		"IntConstantComparator", // name
 		"An integer comparator.",
 		"BasicInteger",
@@ -296,5 +295,5 @@ namespace flopoco{
 			flags(int)=7: if bit 0 set output  X<C, if bit 1 set output X=C, if bit 2 set output  X>C;\
 			method(int)=-1: method to be used, for experimental purpose (-1: automatic, 0: symmetric, 1: asymmetric where gt is computed out of lt and eq, 2: binary tree) (plainVHDL option also supported);",
 		"Outputs up to 3 mutually exclusive signals:  XltC (less than, "
-		"strictly), XeqC (equal), XgtC (greater than, strictly)"});}
+		"strictly), XeqC (equal), XgtC (greater than, strictly)"};
 }

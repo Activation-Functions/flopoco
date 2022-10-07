@@ -171,7 +171,7 @@ namespace flopoco {
 	}
 
 	template <>
-	OperatorFactory op_factory<PIF2Posit>(){return factoryBuilder<PIF2Posit>({
+	OperatorDescription<PIF2Posit> op_descriptor<PIF2Posit> {
 	    "PIF2Posit",				    // name
 	    "Converts Posit Intermediate Format to Posits", // description,
 		"Conversions", // category, from the list defined in
@@ -181,6 +181,6 @@ namespace flopoco {
                         wES(int): The exponent size (for the posit)",
 	    // More documentation for the HTML pages. If you want to link to
 	    // your blog, it is here.
-	    ""});}
+	    ""};
 
 }//namespace

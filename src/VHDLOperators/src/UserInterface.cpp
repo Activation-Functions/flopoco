@@ -4,6 +4,7 @@
 #include <iomanip>
 #include <regex>
 
+#include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/report.hpp"
 
 #include "flopoco/UserInterface.hpp"
@@ -332,6 +333,9 @@ namespace flopoco
 		throw ("No operator factory for " + operatorName);
 	}
 
+	void UserInterface::registerFactories(){
+		FactoryRegistrator::delegateRegisteredFactories(*this);
+	}
 
 	void UserInterface::initialize(){
 		registerFactories();  //implemented in Factories.cpp

@@ -1005,7 +1005,7 @@ rox P						or wi is 26 bits long
 	}
 
 	template <>
-	OperatorFactory op_factory<FPDiv>(){return factoryBuilder<FPDiv>({
+	OperatorDescription<FPDiv> op_descriptor<FPDiv> {
 	    "FPDiv", // name
 	    "A correctly rounded floating-point division.",
 	    "BasicFloatingPoint", // categories
@@ -1015,7 +1015,7 @@ rox P						or wi is 26 bits long
 		 srt(int)=42: Can be 42, 43 or 87 so far. Default 42 means radix 4 with digits between -2 and 2. Other choices may have a better area/speed trade-offs",
 	    "The algorithm used here is the division by digit recurrence "
 	    "(SRT). In radix 4, we use a maximally redundant digit set. In "
-	    "radix 8, we use split-digits in [-7,7], and a bit of prescaling."});}
+	    "radix 8, we use split-digits in [-7,7], and a bit of prescaling."};
 
 	OperatorPtr SRTDivNbBitsMin::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 		int radix, digitSet;
@@ -1026,13 +1026,12 @@ rox P						or wi is 26 bits long
 	}
 
 	template <>
-	OperatorFactory
-	    op_factory<SRTDivNbBitsMin>(){return factoryBuilder<SRTDivNbBitsMin>({
+	OperatorDescription<SRTDivNbBitsMin> op_descriptor<SRTDivNbBitsMin> {
 		"SRTDivNbBitsMin", // name
 		"A SRT design tool",
 		"Miscellaneous", // categories
 		"",
 		"radix(int): It has to be 2^n; \
 alpha(int): digit set is [-alpha, alpha]",
-		""});}
+		""};
 }

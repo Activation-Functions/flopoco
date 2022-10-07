@@ -875,8 +875,7 @@ namespace flopoco {
 	}
 
 	template <>
-	OperatorFactory
-	    op_factory<IntMultiplier>(){return factoryBuilder<IntMultiplier>({
+	OperatorDescription<IntMultiplier> op_descriptor<IntMultiplier> {
 		"IntMultiplier", // name
 		"A pipelined integer multiplier.  Also uses the global "
 		"options: tiling, ilpSolver, etc",
@@ -899,7 +898,7 @@ namespace flopoco {
          squarer(bool)=false: generate squarer", // This string
 								// will be
 								// parsed
-		""});}
+		""};
 
 	TestList IntMultiplier::unitTest(int )
 	{

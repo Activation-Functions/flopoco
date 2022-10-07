@@ -76,7 +76,7 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorFactory op_factory<FixHalfSine>(){return factoryBuilder<FixHalfSine>({
+	OperatorDescription<FixHalfSine> op_descriptor<FixHalfSine> {
 	    "FixHalfSine", // name
 	    "A generator of fixed-point Half-Sine filters, for inputs between "
 	    "-1 and 1",
@@ -87,7 +87,7 @@ namespace flopoco{
                         n(int): filter order (number of taps will be 2n)",
 	    "For more details, see <a "
 	    "href=\"bib/flopoco.html#DinIstoMas2014-SOPCJR\">this "
-	    "article</a>."});}
+	    "article</a>."};
 }
 
 

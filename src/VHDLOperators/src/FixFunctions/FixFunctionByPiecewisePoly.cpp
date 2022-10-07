@@ -335,7 +335,7 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorFactory op_factory<FixFunctionByPiecewisePoly>(){return factoryBuilder<FixFunctionByPiecewisePoly>({
+	OperatorDescription<FixFunctionByPiecewisePoly> op_descriptor<FixFunctionByPiecewisePoly> {
 	    "FixFunctionByPiecewisePoly", // name
 	    "Evaluator of function f on [0,1), using a piecewise polynomial of "
 	    "degree d with Horner scheme.",
@@ -350,7 +350,7 @@ namespace flopoco{
 	    "evaluation with truncated multipliers sized just right.<br>For "
 	    "more details, see <a "
 	    "href=\"bib/flopoco.html#DinJolPas2010-poly\">this article</a>.",
-	});}
+	};
 }
 
 

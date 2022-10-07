@@ -113,12 +113,12 @@ namespace flopoco{
   }
 
   template <>
-  OperatorFactory op_factory<PositAdd>(){return factoryBuilder<PositAdd>({
+  OperatorDescription<PositAdd> op_descriptor<PositAdd> {
       "PositAdd", // name
       "A correctly rounded posit adder.",
       "Posit",
       "", // seeAlso
       "width(int): posit size in bits; \
                          wES(int): exponent size in bits;",
-      ""});}
+      ""};
 }

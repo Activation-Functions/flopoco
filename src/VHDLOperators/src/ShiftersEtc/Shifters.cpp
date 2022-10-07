@@ -243,7 +243,7 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorFactory op_factory<Shifter>(){return factoryBuilder<Shifter>({
+	OperatorDescription<Shifter> op_descriptor<Shifter> {
 	    "Shifter", // name
 	    "A flexible shifter.",
 	    "ShiftersLZOCs",
@@ -254,5 +254,5 @@ namespace flopoco{
 		 wR(int)=-1: size of the shifted output , -1 means computed, will be equal to wX+maxShift;\
 		 computeSticky(bool)=false: if true and wR<wX+maxShift, shifted-out bits are ORed into a sticky bit;\
 		 inputPadBit(bool)=false: if true, add an input bit used for left-padding, as in sign extension",
-	    ""});}
+	    ""};
 }

@@ -267,7 +267,7 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorFactory op_factory<FixFunctionBySimplePoly>(){return factoryBuilder<FixFunctionBySimplePoly>({
+	OperatorDescription<FixFunctionBySimplePoly> op_descriptor<FixFunctionBySimplePoly> {
 	    "FixFunctionBySimplePoly",
 	    "Evaluator of function f on [0,1) or [-1,1), using a single "
 	    "polynomial with Horner scheme",
@@ -280,5 +280,5 @@ namespace flopoco{
 	    "This operator uses a table for coefficients, and Horner "
 	    "evaluation with truncated multipliers sized just right.<br>For "
 	    "more details, see <a "
-	    "href=\"bib/flopoco.html#DinJolPas2010-poly\">this article</a>."});}
+	    "href=\"bib/flopoco.html#DinJolPas2010-poly\">this article</a>."};
 }

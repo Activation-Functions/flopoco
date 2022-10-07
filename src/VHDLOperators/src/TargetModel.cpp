@@ -57,7 +57,7 @@ namespace flopoco {
 	}
 
 	template <>
-	OperatorFactory op_factory<TargetModel>(){return factoryBuilder<TargetModel>({
+	OperatorDescription<TargetModel> op_descriptor<TargetModel> {
 	    "TargetModel",					   // name
 	    "A dummy operator useful when designing a new Target", // description,
 								   // string
@@ -74,6 +74,6 @@ namespace flopoco {
 	    // your blog, it is here.
 	    "This operator is for FloPoCo developers only. <br> Synthesize "
 	    "this operator, then look at its critical path. <br> Also see "
-	    "Target.hpp."});}
+	    "Target.hpp."};
 
 }//namespace

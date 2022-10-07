@@ -155,8 +155,7 @@ namespace flopoco{
 		}
 
 		template <>
-		OperatorFactory
-		    op_factory<PositExp>(){return factoryBuilder<PositExp>({
+		OperatorDescription<PositExp> op_descriptor<PositExp> {
 			"PositExp", // name
 			"A faithful posit exponential function.",
 			"Posit",
@@ -171,7 +170,7 @@ namespace flopoco{
 			"default. Parameter g is mostly for internal use.<br> "
 			"For all the details, see <a "
 			"href=\"bib/flopoco.html#DinechinPasca2010-FPT\">this "
-			"article</a>."});}
+			"article</a>."};
 }
 
 

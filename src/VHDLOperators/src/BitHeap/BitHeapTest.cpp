@@ -95,7 +95,7 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorFactory op_factory<BitheapTest>(){return factoryBuilder<BitheapTest>({
+	OperatorDescription<BitheapTest> op_descriptor<BitheapTest> {
 	    "BitheapTest", // name
 	    "A random test generator for the bitheap.",
 	    "BasicInteger", // categories
@@ -105,7 +105,7 @@ namespace flopoco{
 				nbInputs(int): the number of signals to add to the bitheap; \
 				isSigned(bool): the signness of the bitheap;\
 				weight(int): the weight of the inputs in the bitheap;",
-	    ""});}
+	    ""};
 }
 
 

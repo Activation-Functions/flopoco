@@ -155,8 +155,7 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorFactory
-	    op_factory<IntMultiAdder>(){return factoryBuilder<IntMultiAdder>({
+	OperatorDescription<IntMultiAdder> op_descriptor<IntMultiAdder> {
 		"IntMultiAdder",
 		"A component adding n integers, bitheap based. If wIn=1 it is "
 		"also a population count",
@@ -166,7 +165,7 @@ namespace flopoco{
 			  n(int): number of inputs to add;\
 			  wIn(int): input size in bits;\
 			  wOut(int)=0: output size in bits -- if 0, wOut is computed to be large enough to represent the result;",
-		""});}
+		""};
 }
 
 

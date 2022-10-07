@@ -1702,7 +1702,7 @@ namespace flopoco {
     }
 
     template <>
-    OperatorFactory op_factory<FixIIRShiftAdd>(){return factoryBuilder<FixIIRShiftAdd>({
+    OperatorDescription<FixIIRShiftAdd> op_descriptor<FixIIRShiftAdd> {
 	"FixIIRShiftAdd",
 	"An Infinite Impulse Response filter generator using "
 	"IntConstMultShiftAdd (optional).",
@@ -1722,7 +1722,7 @@ namespace flopoco {
                         grapha(string)=emptya: graph in rpag format for coeffa;\
                         graphb(string)=emptyb: graph in rpag format for coeffb;\
                         ",
-	""});}
+	""};
 
     int64_t FixIIRShiftAdd::getIndexCoeff(int64_t* coeff, int64_t arrayLength, int64_t val)
     {

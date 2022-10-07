@@ -114,14 +114,14 @@ OperatorPtr IntMultiplierLUT::parseArguments(OperatorPtr parentOp, Target *targe
 }
 
 template <>
-OperatorFactory op_factory<IntMultiplierLUT>(){return factoryBuilder<IntMultiplierLUT>({
+OperatorDescription<IntMultiplierLUT> op_descriptor<IntMultiplierLUT> {
     "IntMultiplierLUT", // name
     "Implements a LUT multiplier by simply tabulating all results in the LUT, "
     "should only be used for very small word sizes",
     "BasicInteger", // categories
     "",
     "wX(int): size of input X;wY(int): size of input Y",
-    ""});}
+    ""};
 
 void IntMultiplierLUT::emulate(TestCase* tc)
 {

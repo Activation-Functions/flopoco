@@ -144,8 +144,7 @@ namespace flopoco {
     }
 
     template <>
-    OperatorFactory
-	op_factory<BaseMultiplierDSPKaratsuba>(){return factoryBuilder<BaseMultiplierDSPKaratsuba>({
+    OperatorDescription<BaseMultiplierDSPKaratsuba> op_descriptor<BaseMultiplierDSPKaratsuba> {
 	    "BaseMultiplierDSPKaratsuba", // name
 	    "Implements the Karatsuba pattern with DSPs where certain "
 	    "multipliers can be omitted to save DSPs",
@@ -154,7 +153,7 @@ namespace flopoco {
 	    "wX(int): size of input X of a single DSP-block;\
                         wY(int): size of input Y of a single DSP-block;\
 						n(int): size of pattern and number of DSP substitutions;",
-	    ""});}
+	    ""};
 
     int BaseMultiplierDSPKaratsuba::ownLUTCost(int x_anchor, int y_anchor, int wMultX, int wMultY, bool signedIO) {
         int add_bits = 0;

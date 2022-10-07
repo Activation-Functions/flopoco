@@ -170,13 +170,13 @@ namespace flopoco {
 	}
 
 	template <>
-	OperatorFactory op_factory<Posit2PIF>(){return factoryBuilder<Posit2PIF>({
+	OperatorDescription<Posit2PIF> op_descriptor<Posit2PIF> {
 	    "Posit2PIF",
 	    "Converts Posits to Posit Intermediate Format",
 	    "Conversions",
 	    "",
 	    "width(int): The input size; \
                         wES(int): The exponent size",
-	    ""});}
+	    ""};
 
 }//namespace

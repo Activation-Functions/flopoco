@@ -491,7 +491,7 @@ namespace flopoco {
 	}
 
 	template <>
-	OperatorFactory op_factory<FixIIR>(){return factoryBuilder<FixIIR>({
+	OperatorDescription<FixIIR> op_descriptor<FixIIR> {
 	    "FixIIR", // name
 	    "A fix-point Infinite Impulse Response filter generator.",
 	    "FiltersEtc", // categories
@@ -503,5 +503,5 @@ namespace flopoco {
                         coeffa(string): colon-separated list of real coefficients using Sollya syntax. Example: coeffa=\"1.234567890123:sin(3*pi/8)\";\
                         coeffb(string): colon-separated list of real coefficients using Sollya syntax. Example: coeffb=\"1.234567890123:sin(3*pi/8)\";\
                         buildWorstCaseTestBench(bool)=false: if true, the TestBench for this IIR will begin with a stimulation by the worst-case input signal",
-	    ""});}
+	    ""};
 }

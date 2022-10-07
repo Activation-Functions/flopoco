@@ -80,7 +80,7 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorFactory op_factory<FixFunctionByTable>(){return factoryBuilder<FixFunctionByTable>({
+	OperatorDescription<FixFunctionByTable> op_descriptor<FixFunctionByTable> {
 	    "FixFunctionByTable", // name
 	    "Evaluator of function f on [0,1) or [-1,1), depending on "
 	    "signedIn, using a table.",
@@ -90,5 +90,5 @@ namespace flopoco{
 			signedIn(bool): if true the function input range is [-1,1), if false it is [0,1);\
 			lsbIn(int): weight of input LSB, for instance -8 for an 8-bit input;\
 			lsbOut(int): weight of output LSB;",
-	    "This operator uses a table to store function values."});}
+	    "This operator uses a table to store function values."};
 }

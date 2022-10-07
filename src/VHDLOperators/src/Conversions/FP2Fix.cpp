@@ -258,7 +258,7 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorFactory op_factory<FP2Fix>(){return factoryBuilder<FP2Fix>({
+	OperatorDescription<FP2Fix> op_descriptor<FP2Fix> {
 	    "FP2Fix", // name
 	    "Conversion from FloPoCo floating-point to fixed-point.",
 	    "Conversions",
@@ -269,5 +269,5 @@ namespace flopoco{
                         MSB(int): weight of the MSB of the output;\
                         LSB(int): weight of LSB of the output;\
                         trunc(bool)=true: true means truncated (cheaper), false means rounded",
-	    ""});}
+	    ""};
 }

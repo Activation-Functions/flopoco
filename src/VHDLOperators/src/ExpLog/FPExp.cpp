@@ -1028,7 +1028,7 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorFactory op_factory<FPExp>(){return factoryBuilder<FPExp>({
+	OperatorDescription<FPExp> op_descriptor<FPExp> {
 	    "FPExp", // name
 	    "A faithful floating-point exponential function.",
 	    "ElementaryFunctions",
@@ -1043,7 +1043,7 @@ namespace flopoco{
 	    "cases, a value of 0 choses a sensible default. Parameter g is "
 	    "mostly for internal use.<br> For all the details, see <a "
 	    "href=\"bib/flopoco.html#DinechinPasca2010-FPT\">this "
-	    "article</a>."});}
+	    "article</a>."};
 }
 
 

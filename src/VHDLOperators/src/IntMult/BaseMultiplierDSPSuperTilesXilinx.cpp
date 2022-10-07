@@ -393,8 +393,7 @@ OperatorPtr BaseMultiplierDSPSuperTilesXilinx::parseArguments(OperatorPtr parent
 }
 
 template <>
-OperatorFactory
-    op_factory<BaseMultiplierDSPSuperTilesXilinx>(){return factoryBuilder<BaseMultiplierDSPSuperTilesXilinx>({
+OperatorDescription<BaseMultiplierDSPSuperTilesXilinx> op_descriptor<BaseMultiplierDSPSuperTilesXilinx> {
 	"BaseMultiplierDSPSuperTilesXilinx", // name
 	"Implements a DSP block commonly found in FPGAs incl. pre-adders and "
 	"post-adders computing R = (X1+X2) * Y + Z",
@@ -404,7 +403,7 @@ OperatorFactory
                         isPipelined(bool)=0: use pipelining;\
 						xIsSigned(bool)=0: input X is signed;\
 						yIsSigned(bool)=0: input Y is signed;",
-	""});}
+	""};
 
 void BaseMultiplierDSPSuperTilesXilinxOp::emulate(TestCase * tc) {
 	mpz_class sx = tc->getInputValue("X");

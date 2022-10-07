@@ -443,8 +443,7 @@ namespace flopoco {
 	}
 
 	template <>
-	OperatorFactory
-	    op_factory<VaryingPiecewisePolyApprox>(){return factoryBuilder<VaryingPiecewisePolyApprox>({
+	OperatorDescription<VaryingPiecewisePolyApprox> op_descriptor<VaryingPiecewisePolyApprox> {
 		"VaryingPiecewisePolyApprox", // name
 		"Helper/Debug feature, does not generate VHDL. Uniformly "
 		"segmented piecewise polynomial approximation of function f, "
@@ -455,6 +454,6 @@ namespace flopoco {
 		 targetAcc(real): the target approximation errror of the polynomial WRT the function;\
 		 lsbIn(int): input of x;\
 		 lsbOut(int): output of f(x)",
-		""});}
+		""};
 
 } //namespace

@@ -991,14 +991,14 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorFactory op_factory<IEEEFMA>(){return factoryBuilder<IEEEFMA>({
+	OperatorDescription<IEEEFMA> op_descriptor<IEEEFMA> {
 	    "IEEEFMA", // name
 	    "A correctly rounded floating-point FMA.",
 	    "BasicFloatingPoint",
 	    "", // seeAlso
 	    "wE(int): exponent size in bits; \
 			wF(int): mantissa size in bits;",
-	    ""});}
+	    ""};
 
 	TestList IEEEFMA::unitTest(int index)
 	{

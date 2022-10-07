@@ -216,7 +216,7 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorFactory op_factory<FixSinCos>(){return factoryBuilder<FixSinCos>({
+	OperatorDescription<FixSinCos> op_descriptor<FixSinCos> {
 	    "FixSinCos", // name
 	    "Computes (1-2^(-w)) sin(pi*x) and (1-2^(-w)) cos(pi*x) for x in "
 	    "-[1,1[",
@@ -228,5 +228,5 @@ namespace flopoco{
 	    "For a fixed-point 2's complement input x in [-1,1[, evaluates "
 	    "(1-2^(lsbIn))*{sin,cos}(pi*x). <br>For more details, see <a "
 	    "href=\"bib/flopoco.html#DinIstSer2013-HEART-SinCos\">this "
-	    "article</a>."});}
+	    "article</a>."};
 }

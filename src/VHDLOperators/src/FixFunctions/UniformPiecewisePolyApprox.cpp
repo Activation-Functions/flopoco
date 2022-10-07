@@ -436,8 +436,7 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorFactory
-	    op_factory<UniformPiecewisePolyApprox>(){return factoryBuilder<UniformPiecewisePolyApprox>({
+	OperatorDescription<UniformPiecewisePolyApprox> op_descriptor<UniformPiecewisePolyApprox> {
 		"UniformPiecewisePolyApprox", // name
 		"Helper/Debug feature, does not generate VHDL. Uniformly "
 		"segmented piecewise polynomial approximation of function f, "
@@ -447,6 +446,6 @@ namespace flopoco{
 		"f(string): function to be evaluated between double-quotes, for instance \"exp(x*x)\";\
 		 targetAcc(real): the target approximation errror of the polynomial WRT the function;\
          d(int): the degree to use",
-		""});}
+		""};
 
 } //namespace

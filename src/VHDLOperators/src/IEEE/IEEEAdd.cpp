@@ -557,12 +557,12 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorFactory op_factory<IEEEAdd>(){return factoryBuilder<IEEEAdd>({
+	OperatorDescription<IEEEAdd> op_descriptor<IEEEAdd> {
 	    "IEEEAdd", // name
 	    "A single-path floating-point adder.",
 	    "BasicFloatingPoint", // categories
 	    "",
 	    "wE(int): exponent size in bits; \
 		 wF(int): mantissa size in bits;",
-	    ""});}
+	    ""};
 }

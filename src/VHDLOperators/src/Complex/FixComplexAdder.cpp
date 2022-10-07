@@ -387,8 +387,7 @@ namespace flopoco {
 	}
 
 	template <>
-	OperatorFactory
-	    op_factory<FixComplexAdder>(){return factoryBuilder<FixComplexAdder>({
+	OperatorDescription<FixComplexAdder> op_descriptor<FixComplexAdder> {
 		"FixComplexAdder", // name
 		"A Complex adder subtractor.",
 		"Complex", // categories
@@ -401,6 +400,6 @@ namespace flopoco {
 							addorsub(bool)=true: if false subtraction on the inputs ;\
 							laststage(bool)=false: if true: last stage of FFT",
 		"See the developper manual in the doc/ directory of FloPoCo.",
-	    });}
+	    };
 
 }//namespace

@@ -24,7 +24,7 @@ namespace flopoco
 	}
 
 	template<>
-	OperatorFactory op_factory<AutoTest>(){return factoryBuilder<AutoTest>({
+	OperatorDescription<AutoTest> op_descriptor<AutoTest> {
 		"AutoTest", // name
 		"A tester for operators.",
 		"AutoTest",
@@ -32,7 +32,7 @@ namespace flopoco
 		"Operator(string): name of the operator to test, All if we need to test all the operators;\
 		Dependences(bool)=false: test the operator's dependences;",
 		""
-	});}
+	};
 
 	AutoTest::AutoTest(string opName, bool testDependences)
 	{

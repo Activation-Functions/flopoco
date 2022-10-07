@@ -318,7 +318,7 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorFactory op_factory<FPComparator>(){return factoryBuilder<FPComparator>({
+	OperatorDescription<FPComparator> op_descriptor<FPComparator> {
 	    "FPComparator", // name
 	    "An IEEE-like floating-point comparator.",
 	    "BasicFloatingPoint",
@@ -334,5 +334,5 @@ namespace flopoco{
 	    "one of the inputs is NaN. The other ones behave as expected on "
 	    "two non-NaN values, with the IEEE 754 conventions: +0 = -0; "
 	    "+infinity = +infinity; -infinity = -infinity. The flags argument "
-	    "controls which signal is generated.; "});}
+	    "controls which signal is generated.; "};
 }

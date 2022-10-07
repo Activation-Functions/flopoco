@@ -100,7 +100,7 @@ namespace flopoco {
     }
 
     template <>
-    OperatorFactory op_factory<Xilinx_LOOKAHEAD8>(){return factoryBuilder<Xilinx_LOOKAHEAD8>({
+    OperatorDescription<Xilinx_LOOKAHEAD8> op_descriptor<Xilinx_LOOKAHEAD8> {
   "XilinxLOOKAHEAD8", // name
 	"Provides the Xilinx LOOKAHEAD8 primitive introduced by Versal.", // description,
 									  // string
@@ -110,7 +110,7 @@ namespace flopoco {
           lookd(string)=FALSE: lookahead generic \"bool\" param (Values: \"TRUE\" | \"FALSE\");\
           lookf(string)=FALSE: lookahead generic \"bool\" param (Values: \"TRUE\" | \"FALSE\");\
           lookh(string)=FALSE: lookahead generic \"bool\" param (Values: \"TRUE\" | \"FALSE\")",
-	""});}
+	""};
 
     OperatorPtr Xilinx_LOOKAHEAD8::newInstanceForVectorConnections(
       Operator *parentOp, std::string instname, std::string params,

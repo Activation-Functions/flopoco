@@ -1283,8 +1283,7 @@ const int TWIDDLEIM = -1;
 	}
 
 	template <>
-	OperatorFactory
-	    op_factory<FixFFTFullyPA>(){return factoryBuilder<FixFFTFullyPA>({
+	OperatorDescription<FixFFTFullyPA> op_descriptor<FixFFTFullyPA> {
 		"FixFFTFullyPA", // name
 		"A Complex Radix-2 Butterfly.",
 		"Complex", // categories
@@ -1300,7 +1299,7 @@ const int TWIDDLEIM = -1;
 							revbitorder(bool)=true: if true(default) reverse bit order output, else no change",
 
 		"See the developper manual in the doc/ directory of FloPoCo.",
-	    });}
+	    };
 }
 
 

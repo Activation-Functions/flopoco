@@ -101,12 +101,12 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorFactory op_factory<Wrapper>(){return factoryBuilder<Wrapper>({
+	OperatorDescription<Wrapper> op_descriptor<Wrapper> {
 	    "Wrapper", // name
 	    "Wraps the preceding operator between registers (for frequency "
 	    "testing).",
 	    "TestBenches",
 	    "fixed-point function evaluator; fixed-point", // categories
 	    "",
-	    ""});}
+	    ""};
 }

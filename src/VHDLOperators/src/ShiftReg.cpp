@@ -67,7 +67,7 @@ namespace flopoco {
 	}
 
 	template <>
-	OperatorFactory op_factory<ShiftReg>(){return factoryBuilder<ShiftReg>({
+	OperatorDescription<ShiftReg> op_descriptor<ShiftReg> {
 	    "ShiftReg", // name
 	    "A plain shift register implementation.",
 	    "ShiftersLZOCs",
@@ -75,6 +75,6 @@ namespace flopoco {
 	    "w(int): the size of the input; \
 						            n(int): the number of stages in the shift register, also the number of outputs;\
                         reset(int)=0: the reset type (0 for none, 1 for synchronous, 2 for asynchronous)",
-	    ""});}
+	    ""};
 }
 	

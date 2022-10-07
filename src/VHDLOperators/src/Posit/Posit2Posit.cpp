@@ -79,13 +79,13 @@ namespace flopoco {
 	}
 
 	template <>
-	OperatorFactory op_factory<Posit2Posit>(){return factoryBuilder<Posit2Posit>({
+	OperatorDescription<Posit2Posit> op_descriptor<Posit2Posit> {
 	    "Posit2Posit",
 	    "This should do nothing",
 	    "Conversions",
 	    "",
 	    "width(int): The size of the posit; \
                                    wES(int): The width of the exponent",
-	    ""});}
+	    ""};
 
 }//namespace

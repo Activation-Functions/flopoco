@@ -562,7 +562,7 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorFactory op_factory<FixRealKCM>(){return factoryBuilder<FixRealKCM>({
+	OperatorDescription<FixRealKCM> op_descriptor<FixRealKCM> {
 	    "FixRealKCM",
 	    "Table based real multiplier. Output size is computed",
 	    "ConstMultDiv",
@@ -576,7 +576,7 @@ namespace flopoco{
 	    "This variant of Ken Chapman's Multiplier is briefly described in "
 	    "<a href=\"bib/flopoco.html#volkova:hal-01561052\">this "
 	    "article</a>.<br> Special constants, such as 0 or powers of two, "
-	    "are handled efficiently."});}
+	    "are handled efficiently."};
 
 	/************************** The FixRealKCMTable class ********************/
 

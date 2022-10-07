@@ -50,13 +50,13 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorFactory op_factory<Fix2DNorm>(){return factoryBuilder<Fix2DNorm>({
+	OperatorDescription<Fix2DNorm> op_descriptor<Fix2DNorm> {
 	    "Fix2DNorm", // name
 	    "Computes sqrt(x*x+y*y)",
 	    "CompositeFixPoint",
 	    "", // seeAlso
 	    "msb(int): weight of the MSB of both inputs and outputs; lsb(int): weight of the LSB of both inputs and outputs; \
          method(int)=-1: technique to use, -1 selects a sensible default",
-	    ""});}
+	    ""};
 }
 

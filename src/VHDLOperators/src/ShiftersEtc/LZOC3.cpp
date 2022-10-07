@@ -393,12 +393,12 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorFactory op_factory<LZOC3>(){return factoryBuilder<LZOC3>({
+	OperatorDescription<LZOC3> op_descriptor<LZOC3> {
 	    "LZOC3", // name
 	    "A leading zero counter. The output size is computed.",
 	    "ShiftersLZOCs", // category
 	    "",
 	    "wIn(int): input size in bits;\
 				useLargeLut(bool)=false: Use max unrouted lut size to build the encoding;", // This string will be parsed
-	    ""});}
+	    ""};
 }

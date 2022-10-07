@@ -322,7 +322,7 @@ namespace flopoco {
     }
 
     template <>
-    OperatorFactory op_factory<Xilinx_Comparator>(){return factoryBuilder<Xilinx_Comparator>({
+    OperatorDescription<Xilinx_Comparator> op_descriptor<Xilinx_Comparator> {
 	"XilinxComparator",			    // name
 	"A comparator build of xilinx primitives.", // description, string
 	"Primitives", // category, from the list defined in UserInterface.cpp
@@ -331,5 +331,5 @@ namespace flopoco {
 	// (parameterType)[=defaultValue]: parameterDescriptionString
 	"wIn (int): Wordsize of comparator inputs; \
                              type (string): Type of comparator ( gt,ge,lt,le,eq,ne )",
-	"Nope."});}
+	"Nope."};
 }

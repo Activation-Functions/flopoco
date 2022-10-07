@@ -701,12 +701,12 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorFactory op_factory<TestBench>(){return factoryBuilder<TestBench>({
+	OperatorDescription<TestBench> op_descriptor<TestBench> {
 	    "TestBench", // name
 	    "Behavorial test bench for the preceding operator.",
 	    "TestBenches",
 	    "fixed-point function evaluator; fixed-point", // categories
 	    "n(int)=-2: number of random tests. If n=-2, an exhaustive test is generated (use only for small operators);\
          file(bool)=true:Inputs and outputs are stored in file test.input (lower VHDL compilation time). If false, they are stored in the VHDL;",
-	    ""});}
+	    ""};
 }

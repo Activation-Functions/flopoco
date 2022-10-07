@@ -332,7 +332,7 @@ namespace flopoco {
 	}
 
 	template <>
-	OperatorFactory op_factory<Xilinx_GenericAddSub>(){return factoryBuilder<Xilinx_GenericAddSub>({
+	OperatorDescription<Xilinx_GenericAddSub> op_descriptor<Xilinx_GenericAddSub> {
 	    "XilinxAddSub",				       // name
 	    "An adder/subtractor build of xilinx primitives.", // description,
 							       // string
@@ -344,7 +344,7 @@ namespace flopoco {
 	    "dss(bool)=false: Creates configurable adder with possibility to "
 	    "substract both inputs "
 	    "at same time;",
-	    ""});}
+	    ""};
 
 	void Xilinx_GenericAddSub::emulate(TestCase *tc)
 	{

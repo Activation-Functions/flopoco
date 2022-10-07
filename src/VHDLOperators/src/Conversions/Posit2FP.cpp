@@ -118,12 +118,12 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorFactory op_factory<Posit2FP>(){return factoryBuilder<Posit2FP>({
+	OperatorDescription<Posit2FP> op_descriptor<Posit2FP> {
 	    "Posit2FP",
 	    "Convert Posit to floating point",
 	    "Conversions",
 	    "",
 	    "width(int): total size of the encoding;\
 				es(int): exponent field length;",
-	    ""});}
+	    ""};
 }

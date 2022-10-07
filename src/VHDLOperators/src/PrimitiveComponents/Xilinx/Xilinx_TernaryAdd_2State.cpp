@@ -378,7 +378,7 @@ namespace flopoco {
 	}
 
 	template <>
-	OperatorFactory op_factory<Xilinx_TernaryAdd_2State>(){return factoryBuilder<Xilinx_TernaryAdd_2State>({
+	OperatorDescription<Xilinx_TernaryAdd_2State> op_descriptor<Xilinx_TernaryAdd_2State> {
 	    "XilinxTernaryAddSub",				      // name
 	    "A ternary adder subtractor build of xilinx primitives.", // description,
 								      // string
@@ -388,7 +388,7 @@ namespace flopoco {
 	    "wIn(int): The wordsize of the adder; \
                              AddSubBitMask(int)=0: First bitmask for input negation; \
                              AddSubBitMask2(int)=-1: Second bitmask for configurable input negation;",
-	    ""});}
+	    ""};
 
 	void Xilinx_TernaryAdd_2State::emulate(TestCase *tc){
 		mpz_class x = tc->getInputValue("x_i");

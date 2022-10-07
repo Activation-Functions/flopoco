@@ -140,7 +140,7 @@ namespace flopoco {
 	}
 
 	template <>
-	OperatorFactory op_factory<PIF2Fix>(){return factoryBuilder<PIF2Fix>({
+	OperatorDescription<PIF2Fix> op_descriptor<PIF2Fix> {
 	    "PIF2Fix", // name
 	    "Converts Posit Intermediate Format to the FixPoint format used in "
 	    "the exponential", // description, string
@@ -151,6 +151,6 @@ namespace flopoco {
                         wES(int): The exponent size (for the posit)",
 	    // More documentation for the HTML pages. If you want to link to
 	    // your blog, it is here.
-	    ""});}
+	    ""};
 
 }//namespace

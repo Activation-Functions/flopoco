@@ -213,7 +213,7 @@ namespace flopoco
     }
 
     template <>
-    OperatorFactory op_factory<BaseMultiplierIrregularLUTXilinx>(){return factoryBuilder<BaseMultiplierIrregularLUTXilinx>({
+    OperatorDescription<BaseMultiplierIrregularLUTXilinx> op_descriptor<BaseMultiplierIrregularLUTXilinx> {
 	"BaseMultiplierIrregularLUTXilinx", // name
 	"Implements a non rectangular LUT multiplier from a set that yields a "
 	"relatively high efficiency compared to recangular LUT multipliers \n"
@@ -229,7 +229,7 @@ namespace flopoco
 	"wS(int): shape ID;\
                             xSigned(bool)=false: input X can be signed or unsigned;\
                             ySigned(bool)=false: input Y can be signed or unsigned;",
-	""});}
+	""};
 
     int BaseMultiplierIrregularLUTXilinx::ownLUTCost(int x_anchor, int y_anchor, int wMultX, int wMultY, bool signedIO) {
         bool signedX = signedIO && (wMultX == x_anchor+wX);

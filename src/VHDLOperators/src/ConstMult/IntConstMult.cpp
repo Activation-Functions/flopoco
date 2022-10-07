@@ -1705,7 +1705,7 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorFactory op_factory<IntConstMult>(){return factoryBuilder<IntConstMult>({
+	OperatorDescription<IntConstMult> op_descriptor<IntConstMult> {
 	    "IntConstMult", // name
 	    "Integer multiplier of an unsigned number by a constant using a "
 	    "shift-and-add tree.",
@@ -1715,5 +1715,5 @@ namespace flopoco{
 											 n(int): constant to multiply by",
 	    "An early version of this operator is described in <a "
 	    "href=\"bib/flopoco.html#BrisebarreMullerDinechin2008:ASAP\">this "
-	    "article</a>."});}
+	    "article</a>."};
 }

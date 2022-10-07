@@ -698,7 +698,7 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorFactory op_factory<IntConstDiv>(){return factoryBuilder<IntConstDiv>({
+	OperatorDescription<IntConstDiv> op_descriptor<IntConstDiv> {
 	    "IntConstDiv", // name
 	    "Integer divider by a small constant.",
 	    "ConstMultDiv",
@@ -714,5 +714,5 @@ namespace flopoco{
 	    "article</a>, and for arch=1, in <a "
 	    "href=\"bib/flopoco.html#UgurdagEtAl2016\">this article</a>."
 
-	});}
+	};
 }

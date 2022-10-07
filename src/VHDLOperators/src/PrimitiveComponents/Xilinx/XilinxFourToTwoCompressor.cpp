@@ -224,7 +224,7 @@ namespace flopoco{
     }
 
     template <>
-    OperatorFactory op_factory<XilinxFourToTwoCompressor>(){return factoryBuilder<XilinxFourToTwoCompressor>({
+    OperatorDescription<XilinxFourToTwoCompressor> op_descriptor<XilinxFourToTwoCompressor> {
 	"XilinxFourToTwoCompressor",				   // name
 	"An efficient 4:2 compressor build of xilinx primitives.", // description,
 								   // string
@@ -232,7 +232,7 @@ namespace flopoco{
 	"",
 	"wOut(int): The wordsize of the 4:2 compressor;\
                             useLastColumn(bool)=0: if the 4:2 compressor should additonally compress two bits in the last column, this should be set to true;",
-	""});}
+	""};
 
     void BasicXilinxFourToTwoCompressor::calc_widths(int wIn, vector<int> &heights, vector<int> &outHeights){
         vector<int> comp_inputs, comp_outputs;
