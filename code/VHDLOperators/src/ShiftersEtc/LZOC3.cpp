@@ -393,7 +393,7 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorDescription<LZOC3> op_descriptor<LZOC3> {
+	const OperatorDescription<LZOC3> op_descriptor<LZOC3> {
 	    "LZOC3", // name
 	    "A leading zero counter. The output size is computed.",
 	    "ShiftersLZOCs", // category

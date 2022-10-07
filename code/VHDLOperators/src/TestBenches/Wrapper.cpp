@@ -101,7 +101,7 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorDescription<Wrapper> op_descriptor<Wrapper> {
+	const OperatorDescription<Wrapper> op_descriptor<Wrapper> {
 	    "Wrapper", // name
 	    "Wraps the preceding operator between registers (for frequency "
 	    "testing).",

@@ -210,7 +210,7 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorDescription<FPLog> op_descriptor<FPLog> {
+	const OperatorDescription<FPLog> op_descriptor<FPLog> {
 	    "FPLog", // name
 	    "Floating-point logarithm",
 	    "ElementaryFunctions", // categories

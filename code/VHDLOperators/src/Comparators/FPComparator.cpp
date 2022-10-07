@@ -318,7 +318,7 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorDescription<FPComparator> op_descriptor<FPComparator> {
+	const OperatorDescription<FPComparator> op_descriptor<FPComparator> {
 	    "FPComparator", // name
 	    "An IEEE-like floating-point comparator.",
 	    "BasicFloatingPoint",

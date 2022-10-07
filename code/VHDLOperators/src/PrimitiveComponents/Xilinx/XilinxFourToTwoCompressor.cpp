@@ -224,7 +224,7 @@ namespace flopoco{
     }
 
     template <>
-    OperatorDescription<XilinxFourToTwoCompressor> op_descriptor<XilinxFourToTwoCompressor> {
+    const OperatorDescription<XilinxFourToTwoCompressor> op_descriptor<XilinxFourToTwoCompressor> {
 	"XilinxFourToTwoCompressor",				   // name
 	"An efficient 4:2 compressor build of xilinx primitives.", // description,
 								   // string

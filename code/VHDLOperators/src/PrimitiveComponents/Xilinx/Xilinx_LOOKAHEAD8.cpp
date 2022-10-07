@@ -100,7 +100,7 @@ namespace flopoco {
     }
 
     template <>
-    OperatorDescription<Xilinx_LOOKAHEAD8> op_descriptor<Xilinx_LOOKAHEAD8> {
+    const OperatorDescription<Xilinx_LOOKAHEAD8> op_descriptor<Xilinx_LOOKAHEAD8> {
   "XilinxLOOKAHEAD8", // name
 	"Provides the Xilinx LOOKAHEAD8 primitive introduced by Versal.", // description,
 									  // string

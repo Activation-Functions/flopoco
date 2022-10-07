@@ -332,7 +332,7 @@ namespace flopoco {
 	}
 
 	template <>
-	OperatorDescription<Xilinx_GenericAddSub> op_descriptor<Xilinx_GenericAddSub> {
+	const OperatorDescription<Xilinx_GenericAddSub> op_descriptor<Xilinx_GenericAddSub> {
 	    "XilinxAddSub",				       // name
 	    "An adder/subtractor build of xilinx primitives.", // description,
 							       // string

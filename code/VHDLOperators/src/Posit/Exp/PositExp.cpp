@@ -155,7 +155,7 @@ namespace flopoco{
 		}
 
 		template <>
-		OperatorDescription<PositExp> op_descriptor<PositExp> {
+		const OperatorDescription<PositExp> op_descriptor<PositExp> {
 			"PositExp", // name
 			"A faithful posit exponential function.",
 			"Posit",

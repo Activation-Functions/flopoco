@@ -110,7 +110,7 @@ namespace flopoco
 	}
 
 	template <>
-	OperatorDescription<FixFixConstMult> op_descriptor<FixFixConstMult> {
+	const OperatorDescription<FixFixConstMult> op_descriptor<FixFixConstMult> {
 		"FixFixConstMult",
 		"Table based real multiplier. Output size is computed",
 		"ConstMultDiv",

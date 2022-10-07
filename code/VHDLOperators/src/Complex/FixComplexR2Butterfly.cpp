@@ -497,7 +497,7 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorDescription<FixComplexR2Butterfly> op_descriptor<FixComplexR2Butterfly> {
+	const OperatorDescription<FixComplexR2Butterfly> op_descriptor<FixComplexR2Butterfly> {
 		"FixComplexR2Butterfly", // name
 		"A Complex Radix-2 Butterfly.",
 		"Complex", // categories

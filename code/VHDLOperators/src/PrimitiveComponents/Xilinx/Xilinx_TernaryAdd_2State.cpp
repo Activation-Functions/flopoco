@@ -378,7 +378,7 @@ namespace flopoco {
 	}
 
 	template <>
-	OperatorDescription<Xilinx_TernaryAdd_2State> op_descriptor<Xilinx_TernaryAdd_2State> {
+	const OperatorDescription<Xilinx_TernaryAdd_2State> op_descriptor<Xilinx_TernaryAdd_2State> {
 	    "XilinxTernaryAddSub",				      // name
 	    "A ternary adder subtractor build of xilinx primitives.", // description,
 								      // string

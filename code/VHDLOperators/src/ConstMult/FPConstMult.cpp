@@ -751,7 +751,7 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorDescription<FPConstMultInterfaced> op_descriptor<FPConstMultInterfaced> {
+	const OperatorDescription<FPConstMultInterfaced> op_descriptor<FPConstMultInterfaced> {
 	    "FPConstMult",
 	    "Floating-point constant multiplier using the shift-and-add "
 	    "approach.",
@@ -772,7 +772,7 @@ namespace flopoco{
 	    "article</a>."};
 
 	template <>
-	OperatorDescription<FPConstMultRationalInterfaced> op_descriptor<FPConstMultRationalInterfaced> {
+	const OperatorDescription<FPConstMultRationalInterfaced> op_descriptor<FPConstMultRationalInterfaced> {
 	    "FPConstMultRational",
 	    "Correctly rounded floating-point multiplier by a rational "
 	    "constant.",

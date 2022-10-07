@@ -19,7 +19,7 @@ namespace flopoco {
 	/* Filling the different fields that are used to 
 	*/
 	template<>
-	OperatorDescription<TutorialOperator> op_descriptor<TutorialOperator> {
+	const OperatorDescription<TutorialOperator> op_descriptor<TutorialOperator> {
 		/*Name:         */ "TutorialOperator",
 		/*Description:  */ "An heavily commented example operator to start with FloPoCo.",
 		/*Category:     */ "Miscellaneous", //from the list defined in UserInterface.cpp

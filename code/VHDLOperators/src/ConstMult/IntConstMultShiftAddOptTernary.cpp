@@ -105,7 +105,7 @@ namespace flopoco{
 
 namespace flopoco {
 	template <>
-	OperatorDescription<IntConstMultShiftAddOptTernary> op_descriptor<IntConstMultShiftAddOptTernary> {
+	const OperatorDescription<IntConstMultShiftAddOptTernary> op_descriptor<IntConstMultShiftAddOptTernary> {
 	    "IntConstMultShiftAddOptTernary", // name
 	    "Integer constant multiplication using shift and ternary additions "
 	    "in an optimal way (i.e., with minimum number of ternary adders). "

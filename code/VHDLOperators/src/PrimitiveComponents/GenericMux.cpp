@@ -95,7 +95,7 @@ namespace flopoco {
   }
 
   template <>
-  OperatorDescription<GenericMux> op_descriptor<GenericMux> {
+  const OperatorDescription<GenericMux> op_descriptor<GenericMux> {
       "GenericMux",
       "A Multiplexer",
       "ShiftersLZOCs",

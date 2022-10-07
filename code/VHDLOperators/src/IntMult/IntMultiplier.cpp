@@ -875,7 +875,7 @@ namespace flopoco {
 	}
 
 	template <>
-	OperatorDescription<IntMultiplier> op_descriptor<IntMultiplier> {
+	const OperatorDescription<IntMultiplier> op_descriptor<IntMultiplier> {
 		"IntMultiplier", // name
 		"A pipelined integer multiplier.  Also uses the global "
 		"options: tiling, ilpSolver, etc",

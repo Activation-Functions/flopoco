@@ -1028,7 +1028,7 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorDescription<FPExp> op_descriptor<FPExp> {
+	const OperatorDescription<FPExp> op_descriptor<FPExp> {
 	    "FPExp", // name
 	    "A faithful floating-point exponential function.",
 	    "ElementaryFunctions",

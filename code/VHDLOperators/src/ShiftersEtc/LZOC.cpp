@@ -180,7 +180,7 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorDescription<LZOC> op_descriptor<LZOC> {
+	const OperatorDescription<LZOC> op_descriptor<LZOC> {
 	    "LZOC", // name
 	    "A leading zero or one counter. The output size is computed.",
 	    "ShiftersLZOCs", // category

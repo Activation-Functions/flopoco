@@ -79,7 +79,7 @@ namespace flopoco {
 	}
 
 	template <>
-	OperatorDescription<Posit2Posit> op_descriptor<Posit2Posit> {
+	const OperatorDescription<Posit2Posit> op_descriptor<Posit2Posit> {
 	    "Posit2Posit",
 	    "This should do nothing",
 	    "Conversions",

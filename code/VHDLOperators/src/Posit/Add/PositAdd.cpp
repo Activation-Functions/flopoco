@@ -113,7 +113,7 @@ namespace flopoco{
   }
 
   template <>
-  OperatorDescription<PositAdd> op_descriptor<PositAdd> {
+  const OperatorDescription<PositAdd> op_descriptor<PositAdd> {
       "PositAdd", // name
       "A correctly rounded posit adder.",
       "Posit",

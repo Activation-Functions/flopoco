@@ -991,7 +991,7 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorDescription<IEEEFMA> op_descriptor<IEEEFMA> {
+	const OperatorDescription<IEEEFMA> op_descriptor<IEEEFMA> {
 	    "IEEEFMA", // name
 	    "A correctly rounded floating-point FMA.",
 	    "BasicFloatingPoint",

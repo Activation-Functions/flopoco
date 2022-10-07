@@ -80,7 +80,7 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorDescription<FixRootRaisedCosine> op_descriptor<FixRootRaisedCosine> {
+	const OperatorDescription<FixRootRaisedCosine> op_descriptor<FixRootRaisedCosine> {
 		"FixRootRaisedCosine", // name
 		"A generator of fixed-point Root-Raised Cosine filters, for "
 		"inputs between -1 and 1",

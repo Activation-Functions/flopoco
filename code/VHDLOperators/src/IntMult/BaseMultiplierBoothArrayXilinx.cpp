@@ -71,7 +71,7 @@ OperatorPtr BaseMultiplierBoothArrayXilinx::parseArguments(OperatorPtr parentOp,
 }
 
 template <>
-OperatorDescription<BaseMultiplierBoothArrayXilinx>
+const OperatorDescription<BaseMultiplierBoothArrayXilinx>
     op_descriptor<BaseMultiplierBoothArrayXilinx>{
 	"BaseMultiplierBoothArrayXilinx", // name
 	"Implements a 2xY-LUT-Multiplier that can be realized efficiently on "

@@ -162,7 +162,7 @@ namespace flopoco{
   }
 
   template <>
-  OperatorDescription<PIFAdd> op_descriptor<PIFAdd> {
+  const OperatorDescription<PIFAdd> op_descriptor<PIFAdd> {
       "PIFAdd", // name
       "A correctly rounded posit intermediate format adder.",
       "BasicPIF",

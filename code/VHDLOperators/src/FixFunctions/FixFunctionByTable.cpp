@@ -80,7 +80,7 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorDescription<FixFunctionByTable> op_descriptor<FixFunctionByTable> {
+	const OperatorDescription<FixFunctionByTable> op_descriptor<FixFunctionByTable> {
 	    "FixFunctionByTable", // name
 	    "Evaluator of function f on [0,1) or [-1,1), depending on "
 	    "signedIn, using a table.",

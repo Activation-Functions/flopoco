@@ -237,7 +237,7 @@ namespace flopoco{
 	}
 	
 	template <>
-	OperatorDescription<OutputIEEE> op_descriptor<OutputIEEE> {
+	const OperatorDescription<OutputIEEE> op_descriptor<OutputIEEE> {
 	    "OutputIEEE", // name
 	    "Conversion from FloPoCo to IEEE-754-like floating-point formats.",
 	    "Conversions",

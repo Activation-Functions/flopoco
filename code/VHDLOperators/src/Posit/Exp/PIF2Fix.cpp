@@ -140,7 +140,7 @@ namespace flopoco {
 	}
 
 	template <>
-	OperatorDescription<PIF2Fix> op_descriptor<PIF2Fix> {
+	const OperatorDescription<PIF2Fix> op_descriptor<PIF2Fix> {
 	    "PIF2Fix", // name
 	    "Converts Posit Intermediate Format to the FixPoint format used in "
 	    "the exponential", // description, string

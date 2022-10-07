@@ -57,7 +57,7 @@ namespace flopoco {
 	}
 
 	template <>
-	OperatorDescription<TargetModel> op_descriptor<TargetModel> {
+	const OperatorDescription<TargetModel> op_descriptor<TargetModel> {
 	    "TargetModel",					   // name
 	    "A dummy operator useful when designing a new Target", // description,
 								   // string

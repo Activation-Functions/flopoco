@@ -872,7 +872,7 @@ namespace flopoco
 	}
 
 	template <>
-	OperatorDescription<FixFunctionByMultipartiteTable> op_descriptor<FixFunctionByMultipartiteTable> {
+	const OperatorDescription<FixFunctionByMultipartiteTable> op_descriptor<FixFunctionByMultipartiteTable> {
 	    "FixFunctionByMultipartiteTable", // name
 	    "A function evaluator using the multipartite method.",
 	    "FunctionApproximation", // category

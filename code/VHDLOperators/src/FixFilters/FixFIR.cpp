@@ -287,7 +287,7 @@ namespace flopoco {
 	}
 
 	template <>
-	OperatorDescription<FixFIR> op_descriptor<FixFIR> {
+	const OperatorDescription<FixFIR> op_descriptor<FixFIR> {
 	    "FixFIR", // name
 	    "A fix-point Finite Impulse Filter generator.",
 	    "FiltersEtc", // categories

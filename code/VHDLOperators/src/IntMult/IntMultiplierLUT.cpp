@@ -114,7 +114,7 @@ OperatorPtr IntMultiplierLUT::parseArguments(OperatorPtr parentOp, Target *targe
 }
 
 template <>
-OperatorDescription<IntMultiplierLUT> op_descriptor<IntMultiplierLUT> {
+const OperatorDescription<IntMultiplierLUT> op_descriptor<IntMultiplierLUT> {
     "IntMultiplierLUT", // name
     "Implements a LUT multiplier by simply tabulating all results in the LUT, "
     "should only be used for very small word sizes",

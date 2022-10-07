@@ -242,7 +242,7 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorDescription<Normalizer> op_descriptor<Normalizer> {
+	const OperatorDescription<Normalizer> op_descriptor<Normalizer> {
 	    "Normalizer", // name
 	    "A combined leading zero/one counter and left shifter, useful for "
 	    "floating-point normalization.",

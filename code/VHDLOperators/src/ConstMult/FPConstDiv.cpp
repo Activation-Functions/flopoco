@@ -260,7 +260,7 @@ namespace flopoco{
 	}
 
 template<>
-OperatorDescription<FPConstDiv> op_descriptor<FPConstDiv> {"FPConstDiv", // name
+const OperatorDescription<FPConstDiv> op_descriptor<FPConstDiv> {"FPConstDiv", // name
 											 "Correctly rounded floating-point divider by a small constant.",
 											 "ConstMultDiv",
 											 "", // seeAlso

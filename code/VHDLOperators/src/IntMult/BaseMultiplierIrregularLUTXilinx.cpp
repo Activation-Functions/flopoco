@@ -213,7 +213,7 @@ namespace flopoco
     }
 
     template <>
-    OperatorDescription<BaseMultiplierIrregularLUTXilinx> op_descriptor<BaseMultiplierIrregularLUTXilinx> {
+    const OperatorDescription<BaseMultiplierIrregularLUTXilinx> op_descriptor<BaseMultiplierIrregularLUTXilinx> {
 	"BaseMultiplierIrregularLUTXilinx", // name
 	"Implements a non rectangular LUT multiplier from a set that yields a "
 	"relatively high efficiency compared to recangular LUT multipliers \n"

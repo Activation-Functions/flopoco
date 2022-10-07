@@ -318,7 +318,7 @@ namespace flopoco {
 	}
 
 	template <>
-	OperatorDescription<FixAtan2> op_descriptor<FixAtan2> {
+	const OperatorDescription<FixAtan2> op_descriptor<FixAtan2> {
 	    "FixAtan2", // name
 	    "Computes atan(X/Y) as A=(angle in radian)/pi,  so A in [-1,1).",
 	    "ElementaryFunctions",

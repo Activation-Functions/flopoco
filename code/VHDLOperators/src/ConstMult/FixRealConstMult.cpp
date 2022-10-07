@@ -335,7 +335,7 @@ OperatorPtr FixRealConstMult::parseArguments(OperatorPtr parentOp, Target* targe
 }
 
 template <>
-OperatorDescription<FixRealConstMult> op_descriptor<FixRealConstMult> {
+const OperatorDescription<FixRealConstMult> op_descriptor<FixRealConstMult> {
     "FixRealConstMult",
     "Table based real multiplier. Output size is computed",
     "ConstMultDiv",

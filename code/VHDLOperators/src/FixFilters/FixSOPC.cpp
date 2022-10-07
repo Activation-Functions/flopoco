@@ -387,7 +387,7 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorDescription<FixSOPCInterfaced> op_descriptor<FixSOPCInterfaced> {
+	const OperatorDescription<FixSOPCInterfaced> op_descriptor<FixSOPCInterfaced> {
 		"FixSOPC", // name
 		"A fix-point Sum of Product by Constants.",
 		"FiltersEtc", // categories
@@ -398,7 +398,7 @@ namespace flopoco{
 		""};
 
 	template <>
-	OperatorDescription<FixSOPCFullInterfaced> op_descriptor<FixSOPCFullInterfaced> {
+	const OperatorDescription<FixSOPCFullInterfaced> op_descriptor<FixSOPCFullInterfaced> {
 	    "FixSOPCfull", // name
 	    "A fix-point Sum of Product by Constants (detailed interface).",
 	    "FiltersEtc", // categories

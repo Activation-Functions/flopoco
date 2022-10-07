@@ -216,7 +216,7 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorDescription<FixSinCos> op_descriptor<FixSinCos> {
+	const OperatorDescription<FixSinCos> op_descriptor<FixSinCos> {
 	    "FixSinCos", // name
 	    "Computes (1-2^(-w)) sin(pi*x) and (1-2^(-w)) cos(pi*x) for x in "
 	    "-[1,1[",

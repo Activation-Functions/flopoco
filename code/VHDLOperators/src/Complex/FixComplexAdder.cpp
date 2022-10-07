@@ -387,7 +387,7 @@ namespace flopoco {
 	}
 
 	template <>
-	OperatorDescription<FixComplexAdder> op_descriptor<FixComplexAdder> {
+	const OperatorDescription<FixComplexAdder> op_descriptor<FixComplexAdder> {
 		"FixComplexAdder", // name
 		"A Complex adder subtractor.",
 		"Complex", // categories

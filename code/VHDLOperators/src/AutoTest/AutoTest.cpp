@@ -24,7 +24,7 @@ namespace flopoco
 	}
 
 	template<>
-	OperatorDescription<AutoTest> op_descriptor<AutoTest> {
+	const OperatorDescription<AutoTest> op_descriptor<AutoTest> {
 		"AutoTest", // name
 		"A tester for operators.",
 		"AutoTest",

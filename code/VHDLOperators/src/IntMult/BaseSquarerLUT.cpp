@@ -199,7 +199,7 @@ namespace flopoco
     }
 
     template <>
-    OperatorDescription<BaseSquarerLUT> op_descriptor<BaseSquarerLUT> {
+    const OperatorDescription<BaseSquarerLUT> op_descriptor<BaseSquarerLUT> {
 	"IntSquarerLUT", // name
 	"Implements a LUT squarer by simply tabulating all results in the LUT, "
 	"should only be used for very small word sizes",

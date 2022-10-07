@@ -167,7 +167,7 @@ namespace flopoco {
 	}
 
 	template <>
-	OperatorDescription<IntAdder> op_descriptor<IntAdder> {
+	const OperatorDescription<IntAdder> op_descriptor<IntAdder> {
 	    "IntAdder", // name
 	    "Integer adder. In modern VHDL, integer addition is expressed by a "
 	    "+ and one usually needn't define an entity for it. However, this "

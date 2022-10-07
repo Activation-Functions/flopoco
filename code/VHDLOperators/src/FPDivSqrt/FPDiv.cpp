@@ -1005,7 +1005,7 @@ rox P						or wi is 26 bits long
 	}
 
 	template <>
-	OperatorDescription<FPDiv> op_descriptor<FPDiv> {
+	const OperatorDescription<FPDiv> op_descriptor<FPDiv> {
 	    "FPDiv", // name
 	    "A correctly rounded floating-point division.",
 	    "BasicFloatingPoint", // categories
@@ -1026,7 +1026,7 @@ rox P						or wi is 26 bits long
 	}
 
 	template <>
-	OperatorDescription<SRTDivNbBitsMin> op_descriptor<SRTDivNbBitsMin> {
+	const OperatorDescription<SRTDivNbBitsMin> op_descriptor<SRTDivNbBitsMin> {
 		"SRTDivNbBitsMin", // name
 		"A SRT design tool",
 		"Miscellaneous", // categories

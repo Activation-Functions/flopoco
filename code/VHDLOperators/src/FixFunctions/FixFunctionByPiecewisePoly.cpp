@@ -335,7 +335,7 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorDescription<FixFunctionByPiecewisePoly> op_descriptor<FixFunctionByPiecewisePoly> {
+	const OperatorDescription<FixFunctionByPiecewisePoly> op_descriptor<FixFunctionByPiecewisePoly> {
 	    "FixFunctionByPiecewisePoly", // name
 	    "Evaluator of function f on [0,1), using a piecewise polynomial of "
 	    "degree d with Horner scheme.",

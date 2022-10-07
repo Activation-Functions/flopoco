@@ -472,7 +472,7 @@ returns: an integer pext that defines the position of the last column
 	}
 
 	template <>
-	OperatorDescription<IntSquarer> op_descriptor<IntSquarer> {
+	const OperatorDescription<IntSquarer> op_descriptor<IntSquarer> {
 	    "IntSquarer", // name
 	    "An integer squarer.",
 	    "BasicInteger", // category

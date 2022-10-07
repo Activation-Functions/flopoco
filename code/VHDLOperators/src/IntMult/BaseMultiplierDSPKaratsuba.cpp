@@ -144,7 +144,7 @@ namespace flopoco {
     }
 
     template <>
-    OperatorDescription<BaseMultiplierDSPKaratsuba> op_descriptor<BaseMultiplierDSPKaratsuba> {
+    const OperatorDescription<BaseMultiplierDSPKaratsuba> op_descriptor<BaseMultiplierDSPKaratsuba> {
 	    "BaseMultiplierDSPKaratsuba", // name
 	    "Implements the Karatsuba pattern with DSPs where certain "
 	    "multipliers can be omitted to save DSPs",

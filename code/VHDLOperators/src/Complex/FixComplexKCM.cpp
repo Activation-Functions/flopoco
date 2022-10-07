@@ -467,7 +467,7 @@ namespace flopoco {
 	}
 
 	template <>
-	OperatorDescription<FixComplexKCM> op_descriptor<FixComplexKCM> {
+	const OperatorDescription<FixComplexKCM> op_descriptor<FixComplexKCM> {
 	    "FixComplexKCM",
 	    "Table-based complex multiplier. Inputs are two's complement. "
 	    "Output size is computed",

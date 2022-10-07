@@ -1283,7 +1283,7 @@ const int TWIDDLEIM = -1;
 	}
 
 	template <>
-	OperatorDescription<FixFFTFullyPA> op_descriptor<FixFFTFullyPA> {
+	const OperatorDescription<FixFFTFullyPA> op_descriptor<FixFFTFullyPA> {
 		"FixFFTFullyPA", // name
 		"A Complex Radix-2 Butterfly.",
 		"Complex", // categories

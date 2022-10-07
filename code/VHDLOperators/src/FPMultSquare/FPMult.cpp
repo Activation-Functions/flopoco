@@ -291,7 +291,7 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorDescription<FPMult> op_descriptor<FPMult> {
+	const OperatorDescription<FPMult> op_descriptor<FPMult> {
 	    "FPMult", // name
 	    "A floating-point multiplier. The actual FloPoCo component "
 	    "supports different input and output sizes, but this is not "

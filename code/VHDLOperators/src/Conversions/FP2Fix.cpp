@@ -258,7 +258,7 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorDescription<FP2Fix> op_descriptor<FP2Fix> {
+	const OperatorDescription<FP2Fix> op_descriptor<FP2Fix> {
 	    "FP2Fix", // name
 	    "Conversion from FloPoCo floating-point to fixed-point.",
 	    "Conversions",

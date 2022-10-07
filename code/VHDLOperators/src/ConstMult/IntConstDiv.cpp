@@ -698,7 +698,7 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorDescription<IntConstDiv> op_descriptor<IntConstDiv> {
+	const OperatorDescription<IntConstDiv> op_descriptor<IntConstDiv> {
 	    "IntConstDiv", // name
 	    "Integer divider by a small constant.",
 	    "ConstMultDiv",

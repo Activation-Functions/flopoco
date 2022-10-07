@@ -444,7 +444,7 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorDescription<flopoco::FixRealShiftAdd> op_descriptor<flopoco::FixRealShiftAdd> {
+	const OperatorDescription<flopoco::FixRealShiftAdd> op_descriptor<flopoco::FixRealShiftAdd> {
 	    "FixRealShiftAdd",
 	    "Table based real multiplier. Output size is computed",
 	    "ConstMultDiv",

@@ -1702,7 +1702,7 @@ namespace flopoco {
     }
 
     template <>
-    OperatorDescription<FixIIRShiftAdd> op_descriptor<FixIIRShiftAdd> {
+    const OperatorDescription<FixIIRShiftAdd> op_descriptor<FixIIRShiftAdd> {
 	"FixIIRShiftAdd",
 	"An Infinite Impulse Response filter generator using "
 	"IntConstMultShiftAdd (optional).",

@@ -322,7 +322,7 @@ namespace flopoco {
     }
 
     template <>
-    OperatorDescription<Xilinx_Comparator> op_descriptor<Xilinx_Comparator> {
+    const OperatorDescription<Xilinx_Comparator> op_descriptor<Xilinx_Comparator> {
 	"XilinxComparator",			    // name
 	"A comparator build of xilinx primitives.", // description, string
 	"Primitives", // category, from the list defined in UserInterface.cpp

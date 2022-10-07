@@ -352,7 +352,7 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorDescription<FPSqrt> op_descriptor<FPSqrt>{
+	const OperatorDescription<FPSqrt> op_descriptor<FPSqrt>{
 	    "FPSqrt", // name
 	    "A correctly rounded floating-point square root function.",
 	    "BasicFloatingPoint", // categories

@@ -95,7 +95,7 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorDescription<BitheapTest> op_descriptor<BitheapTest> {
+	const OperatorDescription<BitheapTest> op_descriptor<BitheapTest> {
 	    "BitheapTest", // name
 	    "A random test generator for the bitheap.",
 	    "BasicInteger", // categories

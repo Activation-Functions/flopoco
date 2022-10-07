@@ -581,7 +581,7 @@ namespace flopoco{
 		return new FPPow(parentOp, target, wE, wF, type);
 	}
 	template <>
-	OperatorDescription<FPPow> op_descriptor<FPPow> {
+	const OperatorDescription<FPPow> op_descriptor<FPPow> {
 	    "FPPow", // name
 	    "A floating-point power function.",
 	    "ElementaryFunctions", // categories

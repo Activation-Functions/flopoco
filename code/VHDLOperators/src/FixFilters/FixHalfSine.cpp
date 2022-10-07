@@ -76,7 +76,7 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorDescription<FixHalfSine> op_descriptor<FixHalfSine> {
+	const OperatorDescription<FixHalfSine> op_descriptor<FixHalfSine> {
 	    "FixHalfSine", // name
 	    "A generator of fixed-point Half-Sine filters, for inputs between "
 	    "-1 and 1",

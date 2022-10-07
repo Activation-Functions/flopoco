@@ -171,7 +171,7 @@ namespace flopoco {
 	}
 
 	template <>
-	OperatorDescription<PIF2Posit> op_descriptor<PIF2Posit> {
+	const OperatorDescription<PIF2Posit> op_descriptor<PIF2Posit> {
 	    "PIF2Posit",				    // name
 	    "Converts Posit Intermediate Format to Posits", // description,
 		"Conversions", // category, from the list defined in

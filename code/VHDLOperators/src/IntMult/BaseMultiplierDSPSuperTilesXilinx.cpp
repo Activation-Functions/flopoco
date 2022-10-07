@@ -393,7 +393,7 @@ OperatorPtr BaseMultiplierDSPSuperTilesXilinx::parseArguments(OperatorPtr parent
 }
 
 template <>
-OperatorDescription<BaseMultiplierDSPSuperTilesXilinx> op_descriptor<BaseMultiplierDSPSuperTilesXilinx> {
+const OperatorDescription<BaseMultiplierDSPSuperTilesXilinx> op_descriptor<BaseMultiplierDSPSuperTilesXilinx> {
 	"BaseMultiplierDSPSuperTilesXilinx", // name
 	"Implements a DSP block commonly found in FPGAs incl. pre-adders and "
 	"post-adders computing R = (X1+X2) * Y + Z",

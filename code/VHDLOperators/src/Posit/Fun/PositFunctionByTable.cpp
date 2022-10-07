@@ -74,7 +74,7 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorDescription<PositFunctionByTable> op_descriptor<PositFunctionByTable> {
+	const OperatorDescription<PositFunctionByTable> op_descriptor<PositFunctionByTable> {
 	    "PositFunctionByTable", // name
 	    "Evaluator of function f using a table.",
 	    "Posit",

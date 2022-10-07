@@ -172,7 +172,6 @@ vector<vector<size_t>> splitNonOverlap(
 		} else {
 			groupWordSize.push_back(group_left_bound);
 			ret.push_back(curSet);
-			curSet.empty();
 			leftbound = left_border[cur_idx];
 		}
 	}

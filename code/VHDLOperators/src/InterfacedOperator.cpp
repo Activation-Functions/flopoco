@@ -20,8 +20,4 @@ namespace flopoco {
             ui.registerFactory(fac);
         }
     }
-
-    FactoryRegistrator::RecordInserter::RecordInserter(OperatorFactory&& factory) {
-        FactoryRegistrator::registerFactory(std::forward<OperatorFactory>(factory));
-    }
 }

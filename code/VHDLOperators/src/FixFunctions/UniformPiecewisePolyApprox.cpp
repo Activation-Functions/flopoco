@@ -436,7 +436,7 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorDescription<UniformPiecewisePolyApprox> op_descriptor<UniformPiecewisePolyApprox> {
+	const OperatorDescription<UniformPiecewisePolyApprox> op_descriptor<UniformPiecewisePolyApprox> {
 		"UniformPiecewisePolyApprox", // name
 		"Helper/Debug feature, does not generate VHDL. Uniformly "
 		"segmented piecewise polynomial approximation of function f, "

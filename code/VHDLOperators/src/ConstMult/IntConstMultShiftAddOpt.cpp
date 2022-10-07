@@ -263,7 +263,7 @@ namespace flopoco{
     }
 
 	template<>
-	OperatorDescription<IntConstMultShiftAddOpt> op_descriptor<IntConstMultShiftAddOpt> {"IntConstMultShiftAddOpt", // name
+	const OperatorDescription<IntConstMultShiftAddOpt> op_descriptor<IntConstMultShiftAddOpt> {"IntConstMultShiftAddOpt", // name
                             "Integer constant multiplication using shift and add in an optimal way (i.e., with minimum number of adders). Works for coefficients up to " + std::to_string(MAX_SCM_CONST) + " (19 bit)", // description, string
                             "ConstMultDiv", // category, from the list defined in UserInterface.cpp
                             "", //seeAlso

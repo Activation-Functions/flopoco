@@ -224,7 +224,7 @@ namespace flopoco {
     }
 
     template <>
-    OperatorDescription<RowAdder> op_descriptor<RowAdder> {
+    const OperatorDescription<RowAdder> op_descriptor<RowAdder> {
 	"RowAdder",		       // name
 	"Row adder for cormpression.", // description, string
 	"Primitives", // category, from the list defined in UserInterface.cpp

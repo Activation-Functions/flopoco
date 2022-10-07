@@ -418,7 +418,7 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorDescription<Compressor> op_descriptor<Compressor> {
+	const OperatorDescription<Compressor> op_descriptor<Compressor> {
 	    "Compressor", // name
 	    "A basic compressor.",
 	    "BasicInteger", // categories

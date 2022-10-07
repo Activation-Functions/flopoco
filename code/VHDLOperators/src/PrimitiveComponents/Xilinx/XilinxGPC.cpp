@@ -463,7 +463,7 @@ void XilinxGPC::emulate(TestCase *tc, vector<int> heights) {
 }
 
 template <>
-OperatorDescription<XilinxGPC> op_descriptor<XilinxGPC> {
+const OperatorDescription<XilinxGPC> op_descriptor<XilinxGPC> {
     "XilinxGPC", // name
     "Implements Xilinx optimized GPCs \
                        Available GPC sizes are: \

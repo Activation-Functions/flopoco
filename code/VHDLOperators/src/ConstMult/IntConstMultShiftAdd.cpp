@@ -954,7 +954,7 @@ void IntConstMultShiftAdd::printAdditionalNodeInfo(map<adder_graph_base_node_t *
 
 namespace flopoco {
 	template <>
-	OperatorDescription<IntConstMultShiftAdd> op_descriptor<IntConstMultShiftAdd> {
+	const OperatorDescription<IntConstMultShiftAdd> op_descriptor<IntConstMultShiftAdd> {
 		"IntConstMultShiftAdd", // name
 		"A component for building constant multipliers based on "
 		"pipelined adder graphs (PAGs).", // description, string

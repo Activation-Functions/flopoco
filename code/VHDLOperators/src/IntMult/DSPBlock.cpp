@@ -195,7 +195,7 @@ OperatorPtr DSPBlock::parseArguments(OperatorPtr parentOp, Target *target, vecto
 }
 
 template <>
-    OperatorDescription<DSPBlock> op_descriptor<DSPBlock> {"DSPBlock", // name
+    const OperatorDescription<DSPBlock> op_descriptor<DSPBlock> {"DSPBlock", // name
 						"Implements a DSP block commonly found in FPGAs incl. pre-adders and post-adders computing R = (X1+X2) * Y + Z",
 						"BasicInteger", // categories
 						"",

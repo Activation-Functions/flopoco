@@ -118,7 +118,7 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorDescription<Posit2FP> op_descriptor<Posit2FP> {
+	const OperatorDescription<Posit2FP> op_descriptor<Posit2FP> {
 	    "Posit2FP",
 	    "Convert Posit to floating point",
 	    "Conversions",

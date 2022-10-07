@@ -67,7 +67,7 @@ namespace flopoco {
 	}
 
 	template <>
-	OperatorDescription<ShiftReg> op_descriptor<ShiftReg> {
+	const OperatorDescription<ShiftReg> op_descriptor<ShiftReg> {
 	    "ShiftReg", // name
 	    "A plain shift register implementation.",
 	    "ShiftersLZOCs",

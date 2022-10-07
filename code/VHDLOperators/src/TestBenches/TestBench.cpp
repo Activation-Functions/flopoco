@@ -701,7 +701,7 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorDescription<TestBench> op_descriptor<TestBench> {
+	const OperatorDescription<TestBench> op_descriptor<TestBench> {
 	    "TestBench", // name
 	    "Behavorial test bench for the preceding operator.",
 	    "TestBenches",

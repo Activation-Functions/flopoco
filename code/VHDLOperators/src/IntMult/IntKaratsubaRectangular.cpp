@@ -256,7 +256,7 @@ OperatorPtr IntKaratsubaRectangular::parseArguments(OperatorPtr parentOp, Target
 }
 
 template <>
-OperatorDescription<IntKaratsubaRectangular> op_descriptor<IntKaratsubaRectangular> {
+const OperatorDescription<IntKaratsubaRectangular> op_descriptor<IntKaratsubaRectangular> {
     "IntKaratsubaRectangular", // name
     "Implements a large unsigned Multiplier using rectangular shaped tiles as "
     "appears for Xilinx FPGAs. Currently limited to specific, hand-optimized "

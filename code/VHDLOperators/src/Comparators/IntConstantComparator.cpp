@@ -285,7 +285,7 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorDescription<IntConstantComparator> op_descriptor<IntConstantComparator> {
+	const OperatorDescription<IntConstantComparator> op_descriptor<IntConstantComparator> {
 		"IntConstantComparator", // name
 		"An integer comparator.",
 		"BasicInteger",

@@ -59,7 +59,7 @@ OperatorPtr BaseMultiplierXilinx2xk::parseArguments(OperatorPtr parentOp, Target
 }
 
 template <>
-OperatorDescription<BaseMultiplierXilinx2xk> op_descriptor<BaseMultiplierXilinx2xk> {
+const OperatorDescription<BaseMultiplierXilinx2xk> op_descriptor<BaseMultiplierXilinx2xk> {
 	"BaseMultiplierXilinx2xk", // name
 	"Implements a 2xY-LUT-Multiplier that can be realized efficiently on "
 	"some Xilinx-FPGAs",

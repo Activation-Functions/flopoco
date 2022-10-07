@@ -562,7 +562,7 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorDescription<FixRealKCM> op_descriptor<FixRealKCM> {
+	const OperatorDescription<FixRealKCM> op_descriptor<FixRealKCM> {
 	    "FixRealKCM",
 	    "Table based real multiplier. Output size is computed",
 	    "ConstMultDiv",

@@ -182,7 +182,7 @@ namespace flopoco{
     }
 
    template<>
-   OperatorDescription<IntConstMultShiftAddRPAG> op_descriptor<IntConstMultShiftAddRPAG> {"IntConstMultShiftAddRPAG", // name
+   const OperatorDescription<IntConstMultShiftAddRPAG> op_descriptor<IntConstMultShiftAddRPAG> {"IntConstMultShiftAddRPAG", // name
                             "Integer constant multiplication using shift and add using the RPAG algorithm", // description, string
                             "ConstMultDiv", // category, from the list defined in UserInterface.cpp
                             "", //seeAlso

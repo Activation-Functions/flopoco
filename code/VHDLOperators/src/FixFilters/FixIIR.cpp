@@ -491,7 +491,7 @@ namespace flopoco {
 	}
 
 	template <>
-	OperatorDescription<FixIIR> op_descriptor<FixIIR> {
+	const OperatorDescription<FixIIR> op_descriptor<FixIIR> {
 	    "FixIIR", // name
 	    "A fix-point Infinite Impulse Response filter generator.",
 	    "FiltersEtc", // categories

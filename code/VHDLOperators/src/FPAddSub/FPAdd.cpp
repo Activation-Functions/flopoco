@@ -247,7 +247,7 @@ namespace flopoco{
 		return testStateList;
 	}
 	template <>
-	OperatorDescription<FPAdd> op_descriptor<FPAdd> {
+	const OperatorDescription<FPAdd> op_descriptor<FPAdd> {
 	    "FPAdd", // name
 	    "A correctly rounded floating-point adder.",
 	    "BasicFloatingPoint",

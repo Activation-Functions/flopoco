@@ -557,7 +557,7 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorDescription<IEEEAdd> op_descriptor<IEEEAdd> {
+	const OperatorDescription<IEEEAdd> op_descriptor<IEEEAdd> {
 	    "IEEEAdd", // name
 	    "A single-path floating-point adder.",
 	    "BasicFloatingPoint", // categories

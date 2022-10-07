@@ -344,7 +344,7 @@ namespace flopoco {
 	}
 
 	template <>
-	OperatorDescription<GenericLut> op_descriptor<GenericLut> {
+	const OperatorDescription<GenericLut> op_descriptor<GenericLut> {
 	    "GenericLut", // name
 	    "A simple look up table.",
 	    "ShiftersLZOCs", // category

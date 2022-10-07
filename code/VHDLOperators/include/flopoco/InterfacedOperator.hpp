@@ -10,86 +10,133 @@
 #include "flopoco/UserInterface.hpp"
 
 namespace flopoco {
+	/**
+	 * @brief Handles the global registration of factories
+	 *
+	 */
+	struct FactoryRegistrator {
+		/**
+		 * @brief register a factory that will be passed to
+		 * UserInterface when initialising it
+		 *
+		 * @param factory the factory to register
+		 */
+		static void registerFactory(OperatorFactory &&factory);
 
-struct FactoryRegistrator {
-    static void registerFactory(OperatorFactory&& factory);
-    static void delegateRegisteredFactories(UserInterface& ui);
-    struct RecordInserter {
-        RecordInserter(OperatorFactory&& factory);
-    };
-};
+		/**
+		 * @brief Ask for the registration of all known factories until
+		 * now in the given user interface
+		 *
+		 * @param ui the interface in which to register the factories
+		 */
+		static void delegateRegisteredFactories(UserInterface &ui);
+	};
 
-struct HasUnitTest {
-private:
-    // If Operator::unitTest(int) -> TestList, returns std::true_type
-    template<typename Operator>
-    static constexpr typename std::is_same<decltype(Operator::unitTest(0)), TestList>::type check(Operator*);
+	/**
+	 * @brief Helper class that is used to determine if a class has a static
+	 * method with signature TestList unitTest(int)
+	 *
+	 */
+	struct HasUnitTest {
+	private:
+		// These two methods used SFINAE to determine if
+		// OpType::unitTest(int) exists and returns a TestList.
 
-    // Default fallback case
-    template<typename Operator>
-    static constexpr std::false_type check(...);
-public:
-    template<typename Operator>
-    static constexpr bool value = decltype(check<Operator>(nullptr))::value;
-};
+		// If OpType::unitTest(int) esists and returns TestList, this
+		// method is generated
+		template <typename OpType>
+		static constexpr
+		    typename std::is_same<decltype(OpType::unitTest(0)),
+					  TestList>::type
+		    check(OpType *);
 
-// short form
-template<typename Operator>
-static constexpr bool hasUnitTest_v = HasUnitTest::value<Operator>; 
+		// It returns std::true_type iff the return type of the call is
+		// TestList std::false_type otherwise
 
-template<typename T> struct Registrator {
-    Registrator() {
-        (void) recorder;
-    }
-    private:
-    static const FactoryRegistrator::RecordInserter recorder;
-};
+		// This method will be the "default case" that will be
+		// instantiated if the first one is invalid
+		//
+		// Its argument lists is "less specialized" than the one above
+		// (because of the ellipsis in the argument list, it is less
+		// specialized than a method which input type is fully
+		// specified).
+		//
+		// So if the two templates are valid (if the method exists), the
+		// first one will be instantiated, else this one will be.
+		//
+		// It always returns false_type.
+		template <typename OpType>
+		static constexpr std::false_type check(...);
 
-template<typename T>
-struct OperatorDescription {
-    const std::string Name;
-    const std::string Descr;
-    const std::string Category;
-    const std::string SeeAlso;
-    const std::string Parameters;
-    const std::string ExtraHTMLDoc;
-    OperatorDescription(const std::string &name, const std::string &descr,
-			const std::string &category, const std::string &seeAlso,
-			const std::string &parameters,
-			const std::string &extraHTMLDoc)
-	: Name{name}, Descr{descr}, Category{category}, SeeAlso{seeAlso},
-	  Parameters{parameters}, ExtraHTMLDoc{extraHTMLDoc}, registrator{}
-    {
-        (void) registrator;
-    }
-    private:
-    Registrator<T> registrator;
-};
+	public:
+		// A template boolean value that will only be true if
+		// check(OpType*) returns a std::true_type.
+		// So will hold true iff OpType has the method unitTest(int)
+		template <typename OpType>
+		static constexpr bool value =
+		    decltype(check<OpType>(nullptr))::value;
 
-template<typename T>
-OperatorDescription<T> op_descriptor;
+		// === Side note for interested people ===
+		// we don't need to define the check functions here : indeed
+		// what is of interest is the type of the result, which is
+		// available from the signature and nobody will actually call
+		// these functions.
+	};
 
-template<typename T>
-OperatorFactory factoryBuilder(){
-    auto& descriptor = op_descriptor<T>;
-    unitTest_func_t testfunc = nullptr;
-    if constexpr (hasUnitTest_v<T>) {
-        testfunc = T::unitTest;
-    }
-    return {
-      descriptor.Name,
-      descriptor.Descr,
-      descriptor.Category,
-      descriptor.SeeAlso,
-      descriptor.Parameters,
-      descriptor.ExtraHTMLDoc,
-      T::parseArguments,
-      testfunc
-    };
-}
+	// hasUnitTest_v<OpType> holds true iff OpType::unitTest(int) exists and
+	// returns a TestList
+	template <typename OpType>
+	static constexpr bool hasUnitTest_v = HasUnitTest::value<OpType>;
 
-template <typename T>
-const FactoryRegistrator::RecordInserter Registrator<T>::recorder{factoryBuilder<T>()};
+    // This class stores information about the operator and registers the associated factory in the global Factory register
+	template <typename T> struct OperatorDescription {
+		const std::string Name;
+		const std::string Descr;
+		const std::string Category;
+		const std::string SeeAlso;
+		const std::string Parameters;
+		const std::string ExtraHTMLDoc;
+
+		/**
+		 * @brief Construct a new Operator Description object, generates
+		 * the coresponding factory and record it.
+		 *
+		 * @param name Name of the operator
+		 * @param descr Description of the operator
+		 * @param category Category under which to store it
+		 * @param seeAlso name of the related operators
+		 * @param parameters Structured list of parameters and their
+		 * meaning. See TutorialOperator for more information
+		 * @param extraHTMLDoc Extra doc to print in the web
+		 * documentation of the operator.
+		 */
+		OperatorDescription(const std::string &name,
+				    const std::string &descr,
+				    const std::string &category,
+				    const std::string &seeAlso,
+				    const std::string &parameters,
+				    const std::string &extraHTMLDoc)
+		    : Name{name}, Descr{descr}, Category{category},
+		      SeeAlso{seeAlso}, Parameters{parameters},
+		      ExtraHTMLDoc{extraHTMLDoc}
+		{
+            unitTest_func_t testfunc = nullptr;
+		    if constexpr (hasUnitTest_v<T>) {
+			    testfunc = T::unitTest;
+		    }
+			FactoryRegistrator::registerFactory({Name,
+                Descr,
+			    Category,
+                SeeAlso,
+			    Parameters,
+                ExtraHTMLDoc,
+			    T::parseArguments,
+                testfunc});
+		}
+	};
+
+    /// Template variable that needs to be instantiated for each operator 
+	template <typename T> const OperatorDescription<T> op_descriptor;
 }
 
 #endif

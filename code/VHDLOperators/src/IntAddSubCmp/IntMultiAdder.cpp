@@ -155,7 +155,7 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorDescription<IntMultiAdder> op_descriptor<IntMultiAdder> {
+	const OperatorDescription<IntMultiAdder> op_descriptor<IntMultiAdder> {
 		"IntMultiAdder",
 		"A component adding n integers, bitheap based. If wIn=1 it is "
 		"also a population count",

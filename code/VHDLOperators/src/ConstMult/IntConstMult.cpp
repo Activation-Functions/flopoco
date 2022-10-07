@@ -1705,7 +1705,7 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorDescription<IntConstMult> op_descriptor<IntConstMult> {
+	const OperatorDescription<IntConstMult> op_descriptor<IntConstMult> {
 	    "IntConstMult", // name
 	    "Integer multiplier of an unsigned number by a constant using a "
 	    "shift-and-add tree.",

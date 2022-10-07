@@ -50,7 +50,7 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorDescription<Fix2DNorm> op_descriptor<Fix2DNorm> {
+	const OperatorDescription<Fix2DNorm> op_descriptor<Fix2DNorm> {
 	    "Fix2DNorm", // name
 	    "Computes sqrt(x*x+y*y)",
 	    "CompositeFixPoint",

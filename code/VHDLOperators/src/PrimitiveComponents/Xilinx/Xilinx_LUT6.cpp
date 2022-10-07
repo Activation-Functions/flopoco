@@ -102,7 +102,7 @@ namespace flopoco
   }
 
   template <>
-  OperatorDescription<XilinxLUT> op_descriptor<XilinxLUT> {
+  const OperatorDescription<XilinxLUT> op_descriptor<XilinxLUT> {
       "XilinxLUT",				     // name
       "Provides variants of Xilinx LUT primitives.", // description, string
       "Primitives", // category, from the list defined in UserInterface.cpp

@@ -252,7 +252,7 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorDescription<IntDualAddSub> op_descriptor<IntDualAddSub> {
+	const OperatorDescription<IntDualAddSub> op_descriptor<IntDualAddSub> {
 		"IntDualAddSub", // name
 		"Pipelined dual adder/subtractor",
 		"BasicInteger", // category

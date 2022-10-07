@@ -440,7 +440,7 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorDescription<InputIEEE> op_descriptor<InputIEEE> {
+	const OperatorDescription<InputIEEE> op_descriptor<InputIEEE> {
 	    "InputIEEE", // name
 	    "Conversion from IEEE-754-like to FloPoCo floating-point formats. "
 	    "Subnormals are all flushed to zero at the moment.",

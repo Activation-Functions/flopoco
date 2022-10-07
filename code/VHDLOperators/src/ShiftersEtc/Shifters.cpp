@@ -243,7 +243,7 @@ namespace flopoco{
 	}
 
 	template <>
-	OperatorDescription<Shifter> op_descriptor<Shifter> {
+	const OperatorDescription<Shifter> op_descriptor<Shifter> {
 	    "Shifter", // name
 	    "A flexible shifter.",
 	    "ShiftersLZOCs",
