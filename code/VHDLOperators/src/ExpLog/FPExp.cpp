@@ -602,6 +602,7 @@ namespace flopoco{
 				int p = -wF-g+k; // ASA book notation
 
 				if(useTableExpZm1){
+					REPORT(LogLevel::CRITICAL,"*************************************");
 					vector<mpz_class> expZm1TableContent = tableExpZm1(k, -wF-g);
 					TableOperator::newUniqueInstance(this, "Z", "expZm1",
 																	 expZm1TableContent,

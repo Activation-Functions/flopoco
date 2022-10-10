@@ -12,7 +12,7 @@ namespace flopoco
 				     vector<mpz_class> _values, string _name,
 				     int _wIn, int _wOut, int _logicTable,
 				     int _minIn, int _maxIn)
-	    : Operator(parentOp_, target_), wIn(table.wIn),wOut(table.wOut)
+	    : Operator(parentOp_, target_), wIn(table.wIn), wOut(table.wOut)
 	{
 		srcFileName = "TableOperator";
 		setNameWithFreqAndUID(_name);
@@ -26,6 +26,8 @@ namespace flopoco
 	{
 		table = Table{values, _wIn, _minIn, _maxIn};
 		assert((_wOut == table.wOut || _wOut < 0) && "wOut is wrong");
+		if(_wOut >= 0)
+			table.wOut=_wOut;
 		
 		// if this is just a Table
 		if (_name == "")

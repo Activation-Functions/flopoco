@@ -27,16 +27,16 @@ using std::begin;
 
 namespace flopoco
 {
-	Table::Table(std::vector<mpz_class> _values, int _wIn, int _minIn,
-		     int _maxIn):initialised{false}
+	Table::Table(std::vector<mpz_class> _values, int _wIn, int _minIn, int _maxIn):
+		initialised{false}
 	{
 		initialize(_values, _wIn, _minIn, _maxIn);
 	}
 
-	Table::Table():wIn{-1},minIn{-1},maxIn{-1},initialised{false}{}
+	Table::Table():rox
+		wIn{-1},minIn{-1},maxIn{-1},initialised{false}{}
 
-	void Table::initialize(std::vector<mpz_class> _values, int _wIn, int _minIn,
-		     int _maxIn) {
+	void Table::initialize(std::vector<mpz_class> _values, int _wIn, int _minIn, int _maxIn) {
 		assert(!initialised && "Trying to initialise an already initialized Table");
 		values = _values;
 		wIn = _wIn;
@@ -45,8 +45,7 @@ namespace flopoco
 		// sanity checks: can't fill the table if there are no values to
 		// fill it with
 		assert(values.size() != 0 &&
-		       "Error in Table::init(): the set of values to be "
-		       "written in the table is empty");
+		       "Error in Table::init(): the set of values to be written in the table is empty");
 
 		// set wIn
 		if (wIn < 0) {
@@ -65,8 +64,7 @@ namespace flopoco
 		for (auto const &value : values) {
 			// TODO Handle the negative case : requires some
 			// rewriting of the VHDL ops counter part
-			assert(value >= 0 && "Tables cannot be initialized "
-					     "with negative values as of now");
+			assert(value >= 0 && "Tables cannot be initialized with negative values as of now");
 			if (maxValue < value)
 				maxValue = value;
 			if (minValue > value)

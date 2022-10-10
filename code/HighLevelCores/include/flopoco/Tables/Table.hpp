@@ -66,7 +66,7 @@ namespace flopoco
 			      minIn=0 and maxIn=2^wIn-1 */
 
 		std::vector<mpz_class>
-		    values; /**< the values used to fill the table */
+		    values; /**< the values that fill the table */
 
 		/** Input width (in bits)*/
 		int wIn;
