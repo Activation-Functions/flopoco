@@ -119,7 +119,6 @@ namespace flopoco{
 		vector<mpz_class> result;
 		int wIn=-l-k;
 		int wOut=-l-k+1;
-		cout << "A " << wIn << endl;
 		for(int z=0; z<(1<<wIn); z++){
 			mpz_class h;
 			mpfr_t mpz, mpy, one;
@@ -143,7 +142,7 @@ namespace flopoco{
 
 			// debug
 			//			if((h>=(1<<27)) || l>=512 || h<0 || l<0)
-			 cout  <<"z=" << z << " h=" << h <<endl;
+			// cout  <<"z=" << z << " h=" << h <<endl;
 
 			mpfr_clears(mpz, mpy, one, NULL);
 
@@ -602,7 +601,6 @@ namespace flopoco{
 				int p = -wF-g+k; // ASA book notation
 
 				if(useTableExpZm1){
-					REPORT(LogLevel::CRITICAL,"*************************************");
 					vector<mpz_class> expZm1TableContent = tableExpZm1(k, -wF-g);
 					TableOperator::newUniqueInstance(this, "Z", "expZm1",
 																	 expZm1TableContent,

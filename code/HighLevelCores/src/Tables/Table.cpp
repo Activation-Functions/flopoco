@@ -33,8 +33,8 @@ namespace flopoco
 		initialize(_values, _wIn, _minIn, _maxIn);
 	}
 
-	Table::Table():rox
-		wIn{-1},minIn{-1},maxIn{-1},initialised{false}{}
+	Table::Table():
+		wIn{-1}, minIn{-1}, maxIn{-1}, initialised{false} {}
 
 	void Table::initialize(std::vector<mpz_class> _values, int _wIn, int _minIn, int _maxIn) {
 		assert(!initialised && "Trying to initialise an already initialized Table");
