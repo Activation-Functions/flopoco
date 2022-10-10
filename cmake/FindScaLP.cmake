@@ -97,8 +97,7 @@ elseif (SCALP_BUILD_NOTFOUND)
       include(FetchContent)
       FetchContent_Declare(
           Scalp
-          SVN_REPOSITORY https://digidev.digi.e-technik.uni-kassel.de/home/svn/scalp/
-          SOURCE_SUBDIR DO_NOT_USE_PROVIDED_CMAKELISTS
+          GIT_REPOSITORY https://digidev.digi.e-technik.uni-kassel.de/git/scalp.git
         )
       FetchContent_MakeAvailable(Scalp)
       set(SCALP_REAL_SOURCE_DIR ${scalp_SOURCE_DIR}/trunk)
