@@ -3,12 +3,10 @@
 
   In the FloPoCo distribution it is built into executable fpadder_example
 
-  To compile it independently, do something like this (from Flopoco root dir): 
+  To compile it independently, do something like this 
   
-	g++ -c -I./src src/main_minimal.cpp 
-  g++ -L. -pg -Wall main_minimal.o  -o fpadder_example -lFloPoCo /usr/local/lib/libsollya.so -lmpfr  -lgmpxx -lgmp -lmpfi -lxml2 
-
-
+  g++ -std=c++17 -I[FLOPCO_SOURCES]/code/HighLevelCores/include -I[FLOPOCO_SOURCES]/code/VHDLOperators/include -o main_minimal.cpp.o -c main_minimal.cpp 
+  g++ main_minimal.o [FLOPOCO_BUILD]/code/HighLevelCores/libhileco.so [FLOPOCO_BUILD]/code/VHDLOperators/libFloPoCO.so -o fpadder_example
 
   This file is part of the FloPoCo project
   developed by the Arenaire team at Ecole Normale Superieure de Lyon
@@ -22,9 +20,10 @@
 
 */
 
-#include "UserInterface.hpp"
-#include "Targets/Virtex6.hpp"
-#include "FPAddSub/FPAddSinglePath.hpp"
+#include "flopoco/UserInterface.hpp"
+#include "flopoco/Targets/Virtex6.hpp"
+#include "flopoco/FPAddSub/FPAddSinglePath.hpp"
+
 using namespace flopoco;
 
 
@@ -32,22 +31,20 @@ using namespace flopoco;
 int main(int argc, char* argv[] )
 {
 
-	Target* target = new Virtex6();
+	Virtex6 target{};
 
-	target -> setFrequency(200e6); // 200MHz
+	target.setFrequency(200e6); // 200MHz
 	int wE = 9;
 	int wF = 33;
 
 	try{
- 
-		UserInterface::initialize();
-		
-		Operator*	op = new FPAddSinglePath(nullptr, target, wE, wF);
+		Operator*	op = new FPAddSinglePath(nullptr, &target, wE, wF);
 		// if we want pipeline we need to add the two following lines
 		op->schedule(); 
 		op->applySchedule();
 		
 		ofstream file;
+		
 		file.open("FPAdd.vhdl", ios::out);
 		
 		op->outputVHDLToFile(file);

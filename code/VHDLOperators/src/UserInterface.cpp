@@ -42,7 +42,25 @@ namespace flopoco
 		return ui;
 	}
 
-	UserInterface::UserInterface():factRegistry(FactoryRegistry::getFactoryRegistry()) {}
+	UserInterface::UserInterface():factRegistry(FactoryRegistry::getFactoryRegistry()) {
+		outputFileName="flopoco.vhdl";
+		targetFPGA=defaultFPGA;
+		targetFrequencyMHz=400;
+		useHardMult=true;
+		registerLargeTables=false;
+		tableCompression=false;
+		allRegistersWithAsyncReset=false;
+		unusedHardMultThreshold=0.7;
+		compression = "heuristicMaxEff";
+		tiling = "heuristicBeamSearchTiling";
+
+		ilpSolver = "Gurobi";
+		ilpTimeout = 0; //timeout disabled
+
+		depGraphDrawing = "no";
+		generateFigures = false;
+		pipelineActive_ = true;
+	}
 
 	const vector<pair<string,string>> UserInterface::categories = []()->vector<pair<string,string>>{
 		vector<pair<string,string>> v;
@@ -158,7 +176,6 @@ namespace flopoco
 		try {
 			sollya_lib_init();
 			auto& ui = getUserInterface();
-			ui.initialize();
 
 			// TODO refactor more elegantly
 
@@ -308,28 +325,6 @@ namespace flopoco
 			cerr <<  "nvc  -a " << outputFileName << " --relax=prefer-explicit  -e " <<  op->getName() << "  -r --exit-severity=failure " << "--wave=" << op->getName() << ".fst --stop-time=" << ((TestBench*)op)->getSimulationTime() << "ns" <<endl;
 			cerr <<  "gtkwave " << op->getName() << ".fst" << endl;
 		}
-	}
-
-	void UserInterface::initialize(){
-		// Initialize all the command-line options
-		outputFileName="flopoco.vhdl";
-		targetFPGA=defaultFPGA;
-		targetFrequencyMHz=400;
-		useHardMult=true;
-		registerLargeTables=false;
-		tableCompression=false;
-		allRegistersWithAsyncReset=false;
-		unusedHardMultThreshold=0.7;
-		compression = "heuristicMaxEff";
-		tiling = "heuristicBeamSearchTiling";
-
-		ilpSolver = "Gurobi";
-		ilpTimeout = 0; //timeout disabled
-
-		depGraphDrawing = "no";
-		generateFigures = false;
-		pipelineActive_ = true;
-
 	}
 
 	void UserInterface::buildAll(int argc, char* argv[]) {

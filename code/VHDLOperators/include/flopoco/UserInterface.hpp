@@ -55,9 +55,6 @@ namespace flopoco
 
 	private:
 		UserInterface();
-
-		/**  main initialization function */
-		void initialize();
 		
 		/** parse all the operators passed on the command-line */
 		void buildAll(int argc, char* argv[]);

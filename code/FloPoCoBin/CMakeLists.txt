@@ -17,6 +17,8 @@ target_link_libraries(bin2fp MPFR::MPFR GMPXX::GMPXX FloPoCoLib)
 add_executable(ieee2bin src/ieee2bin)
 target_link_libraries(ieee2bin MPFR::MPFR GMPXX::GMPXX FloPoCoLib )
 
+add_executable(minimal_main src/main_minimal.cpp)
+target_link_libraries(minimal_main GMPXX::GMPXX FloPoCoLib)
 
 add_executable(bin2ieee src/bin2ieee)
 target_link_libraries(bin2ieee MPFR::MPFR GMPXX::GMPXX FloPoCoLib)
