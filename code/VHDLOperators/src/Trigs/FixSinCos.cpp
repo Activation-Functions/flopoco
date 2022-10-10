@@ -2,6 +2,7 @@
 // TODOs
 
 // One optim for 24 bits would be to compute z² for free by a table using the second unused port of the blockram
+#include "flopoco/UserInterface.hpp"
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -198,7 +199,7 @@ namespace flopoco{
 		ui.parseInt(args, "wA", &wA); 
 		ui.parseInt(args, "lsb", &lsb); 
 		if(lsb>=0) {
-			cerr << " ERROR in FixSinCos::parseArguments: lsb should be negative" << endl<<  ui.getFactoryByName("FixSinCos").getFullDoc();
+			cerr << " ERROR in FixSinCos::parseArguments: lsb should be negative" << endl<<  FactoryRegistry::getFactoryRegistry().getFactoryByName("FixSinCos")->getFullDoc();
 			exit(EXIT_FAILURE);
 		}
 		
@@ -210,7 +211,7 @@ namespace flopoco{
 		else if (method==2)
 			return new FixSinCosCORDIC(parentOp, target, -lsb+1, -lsb+1, 1);  // reduced iteration
 		else {
-			cerr << " ERROR in FixSinCos::parseArguments: Wrong method number" << endl<<  ui.getFactoryByName("FixSinCos").getFullDoc();
+			cerr << " ERROR in FixSinCos::parseArguments: Wrong method number" << endl<<  FactoryRegistry::getFactoryRegistry().getFactoryByName("FixSinCos")->getFullDoc();
 			exit(EXIT_FAILURE);
 		}
 	}

@@ -461,10 +461,6 @@ namespace flopoco{
 	    "article</a>.<br> Special constants, such as 0 or powers of two, "
 	    "are handled efficiently."};
 }//namespace
-#else // we need the factory but we need it to be empty
-namespace flopoco{
-	void flopoco::FixRealShiftAdd::registerFactory()	{};
-}	
 #endif //#defined(HAVE_PAGLIB) && defined(HAVE_RPAGLIB)
 
 

@@ -274,13 +274,5 @@ namespace flopoco{
     };
 
 }
-#else
-
-#include "flopoco/ConstMult/IntConstMultShiftAddOpt.hpp"
-namespace flopoco
-{
-	void IntConstMultShiftAddOpt::registerFactory() { }
-}
-
 #endif //defined(HAVE_PAGLIB) && defined(HAVE_OSCM)
 

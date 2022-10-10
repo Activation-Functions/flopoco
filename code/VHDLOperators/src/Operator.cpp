@@ -36,7 +36,6 @@
 
 */
 
-#include "flopoco/UserInterface.hpp"
 #include <cassert>
 #include <cstdlib>
 #include <fstream>
@@ -51,7 +50,9 @@
 #include <boost/random/uniform_int.hpp>
 #endif
 
+#include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/Operator.hpp"  // Useful only for reporting. TODO split out the REPORT and THROWERROR #defines from Operator to another include.
+#include "flopoco/UserInterface.hpp"
 #include "flopoco/utils.hpp"
 namespace flopoco{
 
@@ -1508,7 +1509,7 @@ namespace flopoco{
 
 	OperatorPtr Operator::newInstance(string opName, string instanceName, string parameters, string inPortMaps, string outPortMaps, string inPortMapsCst)
 	{
-		OperatorFactory& instanceOpFactory = UserInterface::getUserInterface().getFactoryByName(opName);
+		auto instanceOpFactory = FactoryRegistry::getFactoryRegistry().getFactoryByName(opName);
 		OperatorPtr instance = nullptr;
 		vector<string> parametersVector;
 		string portName, signalName, mapping;
@@ -1543,7 +1544,7 @@ namespace flopoco{
 			REPORT(LogLevel::DEBUG, i);
 		}
 		//create the operator
-		instance = instanceOpFactory.parseArguments(this, target_, parametersVector, UserInterface::getUserInterface());
+		instance = instanceOpFactory->parseArguments(this, target_, parametersVector, UserInterface::getUserInterface());
 
 		REPORT(LogLevel::DEBUG, "   newInstance("<< opName << ", " << instanceName <<"): after factory call" );
 

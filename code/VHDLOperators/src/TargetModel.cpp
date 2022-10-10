@@ -74,6 +74,6 @@ namespace flopoco {
 	    // your blog, it is here.
 	    "This operator is for FloPoCo developers only. <br> Synthesize "
 	    "this operator, then look at its critical path. <br> Also see "
-	    "Target.hpp."};
-
+	    "Target.hpp.", 
+		true /*This operator should not appear in the documentation*/};
 }//namespace

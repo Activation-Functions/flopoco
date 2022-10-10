@@ -30,6 +30,7 @@ namespace flopoco
 {
 	class Operator;
 	class UserInterface;
+	class FactoryRegistry;
 	class Target;
 	typedef Operator* OperatorPtr;
 	typedef std::vector<std::vector<std::pair<std::string,std::string>>> TestList;
@@ -53,11 +54,10 @@ namespace flopoco
 		static UserInterface& getUserInterface();
 
 	private:
-		UserInterface() = default;
+		UserInterface();
 
 		/**  main initialization function */
 		void initialize();
-		void registerFactories();
 		
 		/** parse all the operators passed on the command-line */
 		void buildAll(int argc, char* argv[]);
@@ -73,9 +73,6 @@ namespace flopoco
 
 
 		public:
-		unsigned getFactoryCount();
-		OperatorFactory& getFactoryByIndex(unsigned i);
-		OperatorFactory& getFactoryByName(std::string operatorName);
 		////////////////// Helper parsing functions to be used in each Operator parser ///////////////////////////////
 		void parseBoolean(std::vector<std::string> &args, std::string key, bool* variable, bool genericOption=false);
 		void parseInt(std::vector<std::string> &args, std::string key, int* variable, bool genericOption=false);
@@ -118,11 +115,6 @@ namespace flopoco
 		/** generates the code for operators in oplist, and all their subcomponents */
 		static void outputVHDLToFile(std::vector<OperatorPtr> &oplist, std::ofstream& file, std::set<std::string> &alreadyOutput);
 
-	public:
-		/** register a factory */
-		void registerFactory(OperatorFactory const & factory);
-
-	private:
 		/** error reporting */
 		void throwMissingArgError(std::string opname, std::string key);
 		/** parse all the generic options such as name, target, verbose, etc. */
@@ -147,6 +139,7 @@ namespace flopoco
 		std::string outputFileName;
 		std::string entityName;
 		std::string targetFPGA;
+		FactoryRegistry const & factRegistry;
 		double targetFrequencyMHz;
 		bool   pipeline;
 		bool   clockEnable;
@@ -167,7 +160,6 @@ namespace flopoco
 		static bool   reDebug;
 		static bool   flpDebug;
 #endif
-		std::vector<std::pair<std::string,OperatorFactory>> factoryList; // used to be a map, but I don't want them listed in alphabetical order
 		static const std::vector<std::pair<std::string,std::string>> categories;
 
 		static const std::vector<std::string> known_fpgas;
@@ -220,18 +212,18 @@ namespace flopoco
 		{ return m_name; }
 
 		/** Provide a std::string with the full documentation. */
-		std::string getFullDoc();
+		std::string getFullDoc() const;
 		/** Provide a std::string with the full documentation in HTML. */
-		std::string getHTMLDoc();
+		std::string getHTMLDoc() const;
 		/** Provide a std::string with the full JSON description. */
-		std::string getJSONDescription();
+		std::string getJSONDescription() const;
 
 		const std::vector<std::string> &param_names(void) const;
 
-		std::string getOperatorFunctions(void);
+		std::string getOperatorFunctions(void) const;
 
 		/** get the default value associated to a parameter (empty std::string if there is no default)*/
-		std::string getDefaultParamVal(const std::string& key);
+		std::string getDefaultParamVal(const std::string& key) const;
 
 		/*! Consumes zero or more std::string arguments, and creates an operator
 			The parentOp may be nullptr for top-level entities
@@ -239,11 +231,11 @@ namespace flopoco
 			factory to check the types and whether there are enough.
 			\param consumed On exit, the factory indicates how many of the arguments are used up.
 		*/
-		virtual OperatorPtr parseArguments(OperatorPtr parentOp, Target* target, std::vector<std::string> &args, UserInterface& ui);
+		virtual OperatorPtr parseArguments(OperatorPtr parentOp, Target* target, std::vector<std::string> &args, UserInterface& ui) const;
 		
 		/*! Generate a list of arg-value pairs out of the index value
 		*/
-		virtual TestList unitTestGenerator(int index);
+		virtual TestList unitTestGenerator(int index) const;
 
 	};
 }; // namespace flopoco

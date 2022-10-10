@@ -1,8 +1,12 @@
 #ifndef FLOPOCO_INTERFACED_OPERATORS
 #define FLOPOCO_INTERFACED_OPERATORS
 
+#include <cstddef>
+#include <optional>
 #include <string>
+#include <string_view>
 #include <type_traits>
+#include <unordered_map>
 #include <vector>
 
 #include "flopoco/Operator.hpp"
@@ -14,22 +18,30 @@ namespace flopoco {
 	 * @brief Handles the global registration of factories
 	 *
 	 */
-	struct FactoryRegistrator {
+	struct FactoryRegistry {
 		/**
 		 * @brief register a factory that will be passed to
 		 * UserInterface when initialising it
 		 *
 		 * @param factory the factory to register
+		 * @param internalOnly Can the corresponding operator be created as the top level operator
 		 */
-		static void registerFactory(OperatorFactory &&factory);
+		void registerFactory(OperatorFactory &factory, bool internalOnly);
 
-		/**
-		 * @brief Ask for the registration of all known factories until
-		 * now in the given user interface
-		 *
-		 * @param ui the interface in which to register the factories
-		 */
-		static void delegateRegisteredFactories(UserInterface &ui);
+		OperatorFactory const & getFactoryByIndex(std::size_t i) const;
+		OperatorFactory const * getFactoryByName(std::string_view name) const;
+		OperatorFactory const * getPublicFactoryByName(std::string_view name) const;
+		std::unordered_map<std::string, OperatorFactory const *> const & getFactoryIndex() const;
+		std::set<OperatorFactory const *> const & getPublicRegistry() const;
+		std::size_t getFactoryCount() const;
+
+
+		static FactoryRegistry& getFactoryRegistry();
+		private:
+		std::vector<OperatorFactory const *> registry;
+		std::set<OperatorFactory const*> publicRegistry;
+		std::unordered_map<std::string, OperatorFactory const *> factoryIndex;
+		FactoryRegistry() = default;
 	};
 
 	/**
@@ -115,24 +127,19 @@ namespace flopoco {
 				    const std::string &category,
 				    const std::string &seeAlso,
 				    const std::string &parameters,
-				    const std::string &extraHTMLDoc)
+				    const std::string &extraHTMLDoc, 
+					bool isInternalOperator = false)
 		    : Name{name}, Descr{descr}, Category{category},
 		      SeeAlso{seeAlso}, Parameters{parameters},
-		      ExtraHTMLDoc{extraHTMLDoc}
+		      ExtraHTMLDoc{extraHTMLDoc}, factory{name, descr, category, seeAlso, parameters, extraHTMLDoc, T::parseArguments, nullptr}
 		{
-            unitTest_func_t testfunc = nullptr;
 		    if constexpr (hasUnitTest_v<T>) {
-			    testfunc = T::unitTest;
+			    factory = OperatorFactory{name, descr, category, seeAlso, parameters, extraHTMLDoc, T::parseArguments, T::unitTest};
 		    }
-			FactoryRegistrator::registerFactory({Name,
-                Descr,
-			    Category,
-                SeeAlso,
-			    Parameters,
-                ExtraHTMLDoc,
-			    T::parseArguments,
-                testfunc});
+			FactoryRegistry::getFactoryRegistry().registerFactory(factory, isInternalOperator);
 		}
+		private:
+			OperatorFactory factory;
 	};
 
     /// Template variable that needs to be instantiated for each operator 

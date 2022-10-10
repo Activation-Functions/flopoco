@@ -37,7 +37,7 @@ namespace flopoco
 	AutoTest::AutoTest(string opName, bool testDependences)
 	{
 		system("src/AutoTest/initTests.sh");
-		UserInterface& ui = UserInterface::getUserInterface();
+		FactoryRegistry& factRegistry = FactoryRegistry::getFactoryRegistry();
 
 		string commandLine;
 		string commandLineTestBench;
@@ -77,18 +77,18 @@ namespace flopoco
 		if(allOpTest)
 		{
 				// We get the operators' names to add them in the testedOperator set
-			unsigned nbFactory = ui.getFactoryCount();
+			unsigned nbFactory = factRegistry.getFactoryCount();
 
 			for (unsigned i=0; i<nbFactory ; i++)	{
-				auto facto = ui.getFactoryByIndex(i);
+				auto facto = factRegistry.getFactoryByIndex(i);
 				if(facto.name() != "AutoTest")
 					testedOperator.insert(facto.name());
 			}
 		}
 		else
 		{
-			auto& opFact = ui.getFactoryByName(opName);
-			testedOperator.insert(opFact.name());
+			auto opFact = factRegistry.getFactoryByName(opName);
+			testedOperator.insert(opFact->name());
 
 				// Do we check for dependences ?
 			if(testDependences)		// All this has never been properly tested, I don't remember why it is here at all
@@ -97,12 +97,12 @@ namespace flopoco
 					// Add dependences to the set testedOperator
 					// Then we do the same on all Operator in the set testedOperator
 
-				unsigned nbFactory = ui.getFactoryCount();
+				unsigned nbFactory = factRegistry.getFactoryCount();
 				set<string> allOperator;
 
 				for (unsigned i=0; i<nbFactory ; i++)
 				{
-					opFact = ui.getFactoryByIndex(i);
+					auto opFact = factRegistry.getFactoryByIndex(i);
 					allOperator.insert(opFact.name());
 				}
 
@@ -146,11 +146,11 @@ namespace flopoco
 		for(auto op: testedOperator)	{
 			testsDone = false;
 			system(("src/AutoTest/initOpTest.sh " + op).c_str());
-			auto& opFact = ui.getFactoryByName(op);
+			auto opFact = factRegistry.getFactoryByName(op);
 			// First we run the unitTest for each tested Operator
 			if(doUnitTest)			{
 				unitTestList.clear();
-				unitTestList = opFact.unitTestGenerator(-1);
+				unitTestList = opFact->unitTestGenerator(-1);
 				// Do the unitTestsParamList contains nothing, meaning the unitTest method is not implemented 
 				if(unitTestList.size() != 0 )		{
 					testsDone = true;
@@ -162,9 +162,9 @@ namespace flopoco
 						commandLineTestBench = "";
 						unitTestParam.clear();
 						// Fetch all parameters and default values for readability
-						paramNames = opFact.param_names();
+						paramNames = opFact->param_names();
 						for(auto param :  paramNames)					{
-							string defaultValue = opFact.getDefaultParamVal(param);
+							string defaultValue = opFact->getDefaultParamVal(param);
 							unitTestParam.insert(make_pair(param,defaultValue));
 						}
 
@@ -202,7 +202,7 @@ namespace flopoco
 			if(doRandomTest)		{
 				unitTestList.clear();
 				unitTestParam.clear();
-				unitTestList = opFact.unitTestGenerator(0);
+				unitTestList = opFact->unitTestGenerator(0);
 
 				// Do the unitTestsParamList contains nothing, meaning the unitTest method is not implemented 
 				if(unitTestList.size() != 0 )
@@ -218,10 +218,10 @@ namespace flopoco
 						unitTestParam.clear();
 
 						// Fetch all parameters and default values for readability
-						paramNames = opFact.param_names();
+						paramNames = opFact->param_names();
 						for(auto param : paramNames)
 						{
-							string defaultValue = opFact.getDefaultParamVal(param);
+							string defaultValue = opFact->getDefaultParamVal(param);
 							unitTestParam.insert(make_pair(param,defaultValue));
 						}
 
