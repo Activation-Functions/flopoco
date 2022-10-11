@@ -199,7 +199,7 @@ namespace flopoco
 
 	void UserInterface::parseGenericOptions(vector<string> &args) {
 		parseString(args, "name", &entityName, true); // not sticky: will be used, and reset, after the operator parser
-		int verbose;
+		int verbose{LogLevel::MESSAGE};
 		parsePositiveInt(args, "verbose", &verbose, true); // sticky option
 		set_log_lvl(static_cast<LogLevel>(verbose));
 		parseString(args, "outputFile", &outputFileName, true); // not sticky: will be used, and reset, after the operator parser
