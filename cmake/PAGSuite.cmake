@@ -87,9 +87,11 @@ find_package(ScaLP)
         PAGSuite
         GIT_REPOSITORY https://gitlab.com/kumm/pagsuite.git
         GIT_TAG 3a35198b3cd8ffedf35c31156b72366ca0f98400
+        SOURCE_SUBDIR NonExistentRepo
     )
     set(PAGSUITE_INSTALL_DIR ${pagsuite_BINARY_DIR})
     FetchContent_MakeAvailable(PAGSuite)
+    set(PAGSUITE_LOCAL_BUILD_RES "0")
     if (${pagsuite_POPULATED})
       if (NOT EXISTS "${pagsuite_BINARY_DIR}/bin/rpag")
         file(REMOVE_RECURSE ${pagsuite_SOURCE_DIR}/build)
@@ -98,23 +100,33 @@ find_package(ScaLP)
           COMMAND                cmake -B build -DSCALP_PREFIX_PATH=${ScaLP_DIR} -DCMAKE_INSTALL_PREFIX=${pagsuite_BINARY_DIR}
           WORKING_DIRECTORY      ${pagsuite_SOURCE_DIR}
           COMMAND_ECHO           STDOUT
-          COMMAND_ERROR_IS_FATAL ANY
+          RESULT_VARIABLE        PAGSUITE_LOCAL_BUILD_RES
+        )
+      if (NOT ${PAGSUITE_LOCAL_BUILD_RES} EQUAL "0")
+        message(WARNING "Error when building locally pagsuite")
+      endif()
+      endif()
+      if(${PAGSUITE_LOCAL_BUILD_RES} EQUAL "0")
+        execute_process(
+          COMMAND                cmake --build build --target install
+          WORKING_DIRECTORY      ${pagsuite_SOURCE_DIR}
+          COMMAND_ECHO           STDOUT
+          RESULT_VARIABLE        PAGSUITE_LOCAL_INSTALL_RES
         )
       endif()
-      execute_process(
-        COMMAND                cmake --build build --target install
-        WORKING_DIRECTORY      ${pagsuite_SOURCE_DIR}
-        COMMAND_ECHO           STDOUT
-        COMMAND_ERROR_IS_FATAL ANY
-      )
     endif()
-    set(RPAG_INCLUDE_DIR ${pagsuite_BINARY_DIR}/include)
-    set(RPAG_LIBRARY ${pagsuite_BINARY_DIR}/lib/librpag.so)
-    set(PAG_INCLUDE_DIR ${pagsuite_BINARY_DIR}/include)
-    set(PAG_LIBRARY ${pagsuite_BINARY_DIR}/lib/libpag.so)
-    set(OSCM_INCLUDE_DIR ${pagsuite_BINARY_DIR}/include)
-    set(OSCM_LIBRARY ${pagsuite_BINARY_DIR}/lib/liboscm.so)
-    set(PAGSUITE_LOCALLY_BUILT)
+    if (${PAGSUITE_LOCAL_INSTALL_RES} EQUAL "0")
+      set(RPAG_INCLUDE_DIR ${pagsuite_BINARY_DIR}/include)
+      set(RPAG_LIBRARY ${pagsuite_BINARY_DIR}/lib/librpag.so)
+      set(PAG_INCLUDE_DIR ${pagsuite_BINARY_DIR}/include)
+      set(PAG_LIBRARY ${pagsuite_BINARY_DIR}/lib/libpag.so)
+      set(OSCM_INCLUDE_DIR ${pagsuite_BINARY_DIR}/include)
+      set(OSCM_LIBRARY ${pagsuite_BINARY_DIR}/lib/liboscm.so)
+      set(PAGSUITE_LOCALLY_BUILT)
+      message("ScaLP has been built and installed locally")
+    else()
+      message(WARNING "Error when installing scalp locally")
+    endif()
   else()
     message(STATUS "Missing ScaLP: PAGSuite will not be built locally")
   endif()

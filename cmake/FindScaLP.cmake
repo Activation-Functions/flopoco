@@ -94,18 +94,20 @@ elseif (SCALP_BUILD_NOTFOUND)
   message("lpsolve found: ${LPSOLVE_LIB}")
   find_path(LPSOLVE_INCLUDE_DIR NAMES lpsolve/lp_types.h)
   if (LPSOLVE_LIB AND LPSOLVE_INCLUDE_DIR)
+      get_filename_component(LPSOLVE_LIB_DIR ${LPSOLVE_LIB} DIRECTORY)
       include(FetchContent)
       FetchContent_Declare(
           Scalp
           GIT_REPOSITORY https://digidev.digi.e-technik.uni-kassel.de/git/scalp.git
+          SOURCE_SUBDIR NonExistentRepo
         )
       FetchContent_MakeAvailable(Scalp)
-      set(SCALP_REAL_SOURCE_DIR ${scalp_SOURCE_DIR}/trunk)
+      set(SCALP_REAL_SOURCE_DIR ${scalp_SOURCE_DIR})
       if(${scalp_POPULATED} AND NOT EXISTS "${scalp_BINARY_DIR}/include/ScaLP/SolverDynamic.h")
         file(REMOVE_RECURSE ${SCALP_REAL_SOURCE_DIR}/build)
         file(MAKE_DIRECTORY ${SCALP_REAL_SOURCE_DIR}/build)
         execute_process(
-          COMMAND           cmake -B build -DCMAKE_INSTALL_PREFIX=${scalp_BINARY_DIR} -DUSE_LPSOLVE=ON -DLPSOLVE_LIBRARIES=${LPSOLVE_LIB} -DLPSOLVE_INCLUDE_DIRS=${LPSOLVE_INCLUDE_DIR} -DBUILD_SHARED_LIBRARIES=OFF.
+          COMMAND           cmake -B build -DCMAKE_INSTALL_PREFIX=${scalp_BINARY_DIR} -DUSE_LPSOLVE=ON -DLPSOLVE_LIBRARIES=${LPSOLVE_LIB_DIR} -DLPSOLVE_INCLUDE_DIRS=${LPSOLVE_INCLUDE_DIR} -DBUILD_SHARED_LIBRARIES=OFF.
           WORKING_DIRECTORY ${SCALP_REAL_SOURCE_DIR}
           COMMAND_ECHO      STDOUT
         )

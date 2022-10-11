@@ -70,25 +70,38 @@ if (NOT WCPG_INCLUDE_DIR AND NOT WCPG_LIBRARY AND WCPG_BUILD_NOTFOUND)
       COMMAND                bash autogen.sh
       WORKING_DIRECTORY      ${wcpg_SOURCE_DIR}
       COMMAND_ECHO           STDOUT
-      COMMAND_ERROR_IS_FATAL ANY
+      RESULT_VARIABLE        WCPG_LOCAL_AUTOGEN_RES
     )
-    execute_process(
-      COMMAND                ./configure --prefix=${wcpg_BINARY_DIR}
-      WORKING_DIRECTORY      ${wcpg_SOURCE_DIR}
-      COMMAND_ECHO           STDOUT
-      COMMAND_ERROR_IS_FATAL ANY
-    )
-    execute_process(
-      COMMAND                make -j 4 install
-      WORKING_DIRECTORY      ${wcpg_SOURCE_DIR}
-      COMMAND_ECHO           STDOUT
-      COMMAND_ERROR_IS_FATAL ANY
-    )
+    if (${WCPG_LOCAL_AUTOGEN_RES} EQUAL "0")
+      execute_process(
+        COMMAND                ./configure --prefix=${wcpg_BINARY_DIR}
+        WORKING_DIRECTORY      ${wcpg_SOURCE_DIR}
+        COMMAND_ECHO           STDOUT
+        RESULT_VARIABLE        WCPG_LOCAL_CONFIGURE_RES
+      )
+      if(${WCPG_LOCAL_CONFIGURE_RES} EQUAL 0)
+        execute_process(
+          COMMAND                make -j 4 install
+          WORKING_DIRECTORY      ${wcpg_SOURCE_DIR}
+          COMMAND_ECHO           STDOUT
+          RESULT_VARIABLE        WCPG_LOCAL_INSTALL_RES
+        )
+        if(${WCPG_LOCAL_INSTALL_RES} EQUAL "0")
+          set(WCPG_LIBRARY ${wcpg_BINARY_DIR}/lib/libwcpg.a)
+          set(WCPG_INCLUDE_DIR ${wcpg_BINARY_DIR}/include)
+          set(WCPG_LOCAL_BUILD)
+        else()
+          message(WARNING "Error when running local installation of WCPG")
+        endif()
+      else()
+        message(WARNING "Error when configuring local WCPG")
+      endif()
+    else()
+      message(WARNING "Error when running autogen for local build of WCPG")
+    endif()
   endif()
 
-  set(WCPG_LIBRARY ${wcpg_BINARY_DIR}/lib/libwcpg.a)
-  set(WCPG_INCLUDE_DIR ${wcpg_BINARY_DIR}/include)
-  set(WCPG_LOCAL_BUILD)
+  
 endif()
 
 include(FindPackageHandleStandardArgs)
