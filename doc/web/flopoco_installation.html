@@ -29,9 +29,6 @@
 
 <p> Recommended is <a href="install_scripts/install-full-gitmaster-on-focal64.sh"> the install script for the full version with all optional dependencies</a>.
 </p>	
-<p>	
-	If something goes wrong, try the <a href="install_scripts/install-plain-gitmaster-on-focal64.sh"> install script for a simpler version (fewer dependencies)</a>.
-</p>	
 
 
 <h4>Version 4.1.2, the last one with the old pipelining framework</h4>
@@ -62,15 +59,13 @@ You probably want to run it in Docker.
 
 <h4>Version 2.3.2, the last version before the Great Leader embarked the project in the bit heap hazardous adventure</h4>
 See the <a href="install_scripts/install-2.3.2-on-precise.sh">the install script</a>, that it tested to work in Ubuntu 12.04, aka "precise".
+You probably want to run it in Docker.
 
 <h4>Older versions may include operators that have later been deprecated. See the  <a href="ReleaseNotes.txt">Release Notes</a></h4>
 
-<h3>More installation scripts</h3>
-<p>For Debian/Ubuntu, simply look at <a href="install_scripts/"> this directory of installation scripts </a>. Each script works for one environment, and Vagrant or Docker are your friends to set up this environment in a virtual machine.
-</p>
 
 <h3>Dependencies</h3>
-<p>For non-Debian systems, the installation scripts will give you an idea of the dependencies to install, in particular: Sollya (mandatory, used in a lot of operators), WCPG (optional, used in the FixIIR operator), and ScaLP (optional, will improve the quality of many operators).</p>
+<p>For non-Debian systems, the installation script and the CMakeList.txt will give you an idea of the dependencies to install, in particular: Sollya (mandatory, used in a lot of operators), WCPG (optional, used in the FixIIR operator), and ScaLP (optional, will improve the quality of many operators).</p>
 
 <p>
 	<a href="https://digidev.digi.e-technik.uni-kassel.de/scalp/">ScaLP</a> provides a uniform interface to several ILP solver.
@@ -130,6 +125,9 @@ You are therefore encouraged to download one of these, install it, then recompil
 
 <hr/>
 <h2><a name="windows">Installation in Windows</a></h2>
+
+<p><em>The following instructions predate WSL. If you have a recent WSL, the Ubuntu instructions should work.</em></p>
+
 
 Here is a simple way to get FloPoCo running in a virtual machine under Windows.
 

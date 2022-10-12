@@ -40,7 +40,7 @@ OPTION(PAGSUITE_BUILD_NOTFOUND "Attempt to build PAGsuite if not found" ON)
 
 include(GNUInstallDirs)
 
-add_subdirectory(code/HighLevelCores)
+add_subdirectory(code/HighLevelArithmetic)
 add_subdirectory(code/VHDLOperators)
 add_subdirectory(code/FloPoCoBin)
 
