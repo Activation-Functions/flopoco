@@ -1,0 +1,20 @@
+@PACKAGE_INIT@
+
+foreach(component ${@PROJECT_NAME@_FIND_COMPONENTS})
+    include(${CMAKE_CURRENT_LIST_DIR}/${component}-config.cmake)
+endforeach()
+
+set_and_check(FLOPOCO_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
+list(APPEND CMAKE_MODULE_PATH ${FLOPOCO_MODULE_PATH})
+
+include(CMakeFindDependencyMacro)
+find_dependency(GMPXX)
+find_dependency(GMP)
+find_dependency(MPFR)
+find_dependency(Sollya)
+
+foreach(component ${@PROJECT_NAME@_FIND_COMPONENTS})
+    check_required_components(${component})
+endforeach()
+
+

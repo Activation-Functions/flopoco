@@ -1,0 +1,36 @@
+add_flopocolib_src(
+    FlopocoStream.cpp
+    Instance.cpp
+    InterfacedOperator.cpp
+    OperatorContext.cpp
+    Operator.cpp
+    ShiftReg.cpp
+    Signal.cpp
+    TargetModel.cpp
+    TutorialOperator.cpp
+    UserInterface.cpp
+)
+
+add_subdirectory(AutoTest)
+add_subdirectory(BitHeap)
+add_subdirectory(Comparators)
+add_subdirectory(Complex)
+add_subdirectory(Conversions)
+add_subdirectory(ConstMult)
+add_subdirectory(ExpLog)
+add_subdirectory(FixFilters)
+add_subdirectory(FixFunctions)
+add_subdirectory(FPAddSub)
+add_subdirectory(FPDivSqrt)
+add_subdirectory(FPMultSquare)
+add_subdirectory(IEEE)
+add_subdirectory(IntAddSubCmp)
+add_subdirectory(IntMult)
+#add_subdirectory(LNS)
+add_subdirectory(Posit)
+add_subdirectory(PrimitiveComponents)
+add_subdirectory(ShiftersEtc)
+add_subdirectory(Tables)
+add_subdirectory(TestBenches)
+add_subdirectory(Tools)
+add_subdirectory(Trigs)

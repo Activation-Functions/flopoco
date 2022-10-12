@@ -1,0 +1,17 @@
+add_flopocolib_src(
+	#fakemain.cpp
+	FixComplexAdder.cpp
+	FixComplexKCM.cpp
+	#FixComplexMult.cpp
+	FixComplexR2Butterfly.cpp
+	#FixFFT.cpp
+	FixFFTFullyPA.cpp
+	#FPComplexAdder.cpp
+	#FPComplexMultiplier.cpp
+	#IntFFTButterfly.cpp
+	#IntFFT.cpp
+	#IntFFTLevelDIT2.cpp
+	#IntTwiddleMultiplierAlternative.cpp
+	#IntTwiddleMultiplier.cpp
+	#OldFixedComplexMultiplier.cpp
+)

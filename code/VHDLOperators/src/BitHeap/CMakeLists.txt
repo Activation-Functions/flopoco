@@ -1,0 +1,15 @@
+add_flopocolib_src(
+	Bit.cpp
+	BitHeap.cpp
+	BitHeapPlotter.cpp
+	BitHeapSolution.cpp
+	BitHeapTest.cpp
+	CompressionStrategy.cpp
+	CompressionStrategyOptILP.cpp
+	Compressor.cpp
+	FirstFittingCompressionStrategy.cpp
+	MaxEfficiencyCompressionStrategy.cpp
+	OptimalCompressionStrategy.cpp
+	ParandehAfsharCompressionStrategy.cpp
+	WeightedBit.cpp
+)

@@ -1,3 +1,0 @@
-	void UserInterface::registerFactories()
-	{
-		try {

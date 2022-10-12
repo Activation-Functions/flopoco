@@ -40,38 +40,49 @@ The purpose of this document is to help you use FloPoCo operators in other proje
 
 \section{Getting started with FloPoCo\label{sec:getting-started}}
 
+There should be a Doxygen documentation of FloPoCo.
 
 \subsection{Getting the source and compiling using CMake}
 
 It is strongly advised that you work with the git version of the source, which can be obtained by following the instructions on
 \url{http://flopoco.org/flopoco_installation.html}. If you wish to distribute your work with FloPoCo, contact us.
 
-If you are unfamiliar with the CMake system, there is little to learn,
-really. When adding .hpp and .cpp files to the project, you will need
-to edit \texttt{src/SourceFileList.txt}. It is probably going to be straightforward,
-just do some imitation of what is already there. Anyway \texttt{cmake} is well
-documented. The web page of the CMake project is \url{http://www.cmake.org/}.
+If you are unfamiliar with the CMake system, there is little to learn, really.
+When adding subdirectories or .hpp or .cpp files to the project, you will need to edit the \texttt{CMakeList.txt} in the directory where you add them.
+Straightforward imitation of existing content  will cover most cases, otherwise \texttt{cmake} is well documented.
+The web page of the CMake project is \url{http://www.cmake.org/}.
 
+\iffalse % TODO to move to the proper place
 \subsection{Linking against FloPoCo\label{sec:linking}}
-All the operators provided by the FloPoCo command line are available
-programmatically in libFloPoCo. A minimal example of using this
-library is provided in \texttt{src/main\_minimal.cpp}.
+All the operators provided by the FloPoCo command line are available programmatically in libFloPoCo.
+%A minimal example of using this library is provided in \texttt{src/main\_minimal.cpp}.
 
-It is best to use an operator through its factory. The file \texttt{src/main.cpp} is the source of the FloPoCo command
-line, and as such uses most operators: looking at it is the quickest
-way to look for the interface of a given operator.
+There are two ways to instantiate an operator.
+One is to use its factory, which replicates the command line.
 
-The other way is, of course, to look at the corresponding \texttt{hpp}
-file -- they are all included by \texttt{src/Operator.hpp}. Some
-operators offer more constructors (richer interface options) than what
-is used in \texttt{src/main.cpp}.
+The other one is to use the constructor (whose interface is defined in the corresponding \texttt{hpp} file).
+There is no one-to-one correspondance.
+\begin{itemize}
+\item Sometimes the command-line interface regroups several Operators.
+  For instance FPAddSinglePath and FPAddDualPath are, for historical reasons, two different Operators with two different constructors, but are exposed on the interface as one FPAdd with an option.
+  
+\item Sometimes, the constructor has more interface options than what ends up in the command-line interface, either that some options turned out not to provide interesting solutions, or that they were
+  designed for research purpose only.
+\end{itemize}
+\fi
 
-
-There should be a Doxygen documentation of FloPoCo.
 
 \subsection{Overview of FloPoCo code organization}
 
-The core of FloPoCo is the \texttt{Operator} class. 
+In the \texttt{code/} directory, there are several subdirectories:
+\begin{description}
+\item[HighLevelCore] is a library of arithmetic optimization code, independent of the actual HDL generation. For instance, it will contain the code for polynomial or multipartite approximation to functions, or code that optimizes the shift-and-add tree of a constant multiplier.   
+\item[VHDLOperators] is the library contains the bulk of FloPoCo code that generates VHDL. 
+\item[FloPoCoBin] contains the source of the \texttt{flopoco} executable (linking both previous libraries) and of a few other helper executables.
+\end{description}
+This separation is still work in progress, therefore expect to find in VHDLOperators a lot of code that should be in HighLevelCore.
+
+The core of FloPoCo is the \texttt{Operator} class  (in VHDLOperators). 
 Operator is a virtual class from which all FloPoCo operators inherit. 
 
 The FloPoCo source includes a dummy operator, \texttt{TutorialOperator}, for you to play with. 
@@ -84,11 +95,9 @@ A good way to design a new operator is to imitate a simple one. We suggest
 for a complex operator with several sub-components.
 % An example of assembling several FP operators in a larger pipeline is \texttt{Collision}.
 
-Meanwhile, browse through \texttt{Operator.hpp}. It has become quite bloated, showing
-the history of the project. Try not to use methods flagged as
-deprecated, as they will be removed in the future. Hopefully.%  Instead, use the
-% automatic pipeline framework is described in Section~\ref{sec:pme}
-% below.
+% Meanwhile, browse through \texttt{Operator.hpp}. It has become quite bloated, showing the history of the project.
+% Try not to use methods flagged as deprecated, as they will be removed in the future. Hopefully.
+% Instead, use the automatic pipeline framework is described in Section~\ref{sec:pme}  below.
 
 Another important class hierarchy in FloPoCo is \texttt{Target}, which
 defines the architecture of the target FPGA. It currently has several sub-classes,
@@ -97,15 +106,14 @@ add a new target, the best way to do so is by imitation. Please
 consider contributing it to the project.
 
 The command-line parser is in \texttt{UserInterface} but in principle you won't have to edit it.
-It takes information from each operator's documentation strings defined in their \texttt{registerFactory()} methods. 
+It takes information from each operator's documentation strings defined in their \texttt{OperatorDescription} construction. 
 Again, we hope that you can design the interface to your operator by imitation of existing ones.
 
 \subsection{Adding a new operator to FloPoCo}
 To add a new operator to FloPoCo, you need to 
 \begin{itemize}
 \item write its \texttt{.cpp} and \texttt{.hpp} (we suggest you start with a copy of  \texttt{TutorialOperator}, which is an almost empty skeleton);
-\item add it to \texttt{src/SourceFileList.txt} so that it gets compiled;
-\item add it to \texttt{src/Factories/Interfaced.txt} if you want it to appear in the command-line interface.
+\item add it to the \texttt{CMakeList.txt} of his directory.
 \end{itemize}
 
 That should be all. The rest is arithmetic!
@@ -118,6 +126,9 @@ And do not hesitate to contact us: \texttt{Florent.de.Dinechin@insa-lyon.fr}.
 %  \end{latexonly}
 \end{center}
 
+
+\subsection{Old code}
+The \texttt{codeAttic} directory contains various bits of code that, at some point, didn't compile anymore, and we didnot find the resource to maintain it, and we regret it. Feel free to bring some of it back to life.
 
 \section{Data-types in FloPoCo\label{sec:data-types}}
 

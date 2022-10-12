@@ -1,0 +1,26 @@
+add_flopocolib_src(
+	adder_cost.cpp
+	#CRFPConstMult.cpp
+	error_comp_graph.cpp
+	FixFixConstMult.cpp
+	FixRealConstMult.cpp
+	FixRealKCM.cpp
+	FixRealShiftAdd.cpp
+	#FPConstDiv.cpp
+	FPConstMult.cpp
+	#FPRealKCM.cpp
+	IntConstDiv.cpp
+	#IntConstMCM.cpp
+	IntConstMult.cpp
+	IntConstMultShiftAdd.cpp
+	IntConstMultShiftAddOpt.cpp
+	IntConstMultShiftAddOptTernary.cpp
+	IntConstMultShiftAddRPAG.cpp
+	IntConstMultShiftAddTypes.cpp
+	#IntIntKCM.cpp
+	#KCMTable.cpp
+	ShiftAddDag.cpp
+	ShiftAddOp.cpp
+	tscm_solutions.cpp
+	WordLengthCalculator.cpp
+)
