@@ -15,11 +15,11 @@ namespace flopoco{
 
 		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , std::vector<std::string> &args, UserInterface& ui);
 
-		AutoTest(std::string opName, bool testDependences = false);
+		AutoTest(std::string opName);
 
-	private:
-
-		string defaultTestBenchSize(std::map<std::string, std::string> * unitTestParam);
+		// TODO as of now this only returns TestBench n=1000. Find something better
+		// TODO at some point we might want to get rid of strings
+		static string defaultTestBenchSize(std::map<std::string, std::string> const & unitTestParam);
 
 	};
 };

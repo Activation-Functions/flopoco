@@ -25,7 +25,7 @@ namespace flopoco
 	void TableOperator::init(vector<mpz_class> & values, string _name, int _wIn, int _wOut, int _logicTable, int _minIn, int _maxIn)
 	{
 		table = Table{values, _wIn, _minIn, _maxIn};
-		assert((_wOut == table.wOut || _wOut < 0) && "wOut is wrong");
+		assert((_wOut >= table.wOut || _wOut < 0) && "wOut is wrong");
 		if(_wOut >= 0)
 			table.wOut=_wOut;
 		

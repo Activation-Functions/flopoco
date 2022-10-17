@@ -15,7 +15,7 @@ find_package(MPFR REQUIRED)
 find_package(MPFI REQUIRED)
 
 # find boost random
-find_package(Boost REQUIRED COMPONENTS random)
+find_package(Boost 1.64.0 REQUIRED COMPONENTS random filesystem)
 
 # Detect Sollya
 find_package(Sollya)
@@ -41,7 +41,7 @@ target_link_libraries(FloPoCoLib PUBLIC hileco)
 
 target_link_libraries(
   FloPoCoLib PRIVATE
-  GMPXX::GMPXX MPFR::MPFR MPFI::MPFI
+  GMPXX::GMPXX MPFR::MPFR MPFI::MPFI ${Boost_LIBRARIES}
   )
 
 if (Sollya_FOUND)

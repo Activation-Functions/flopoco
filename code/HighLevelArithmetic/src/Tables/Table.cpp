@@ -82,7 +82,7 @@ namespace flopoco
 			maxIn = values.size() - 1;
 		}
 
-		assert(((1 << wIn) < maxIn) &&
+		assert(maxIn < (1 << (wIn)) &&
 		       "ERROR: in Table constructor: maxIn too large");
 
 		// determine if this is a full table

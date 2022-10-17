@@ -52,6 +52,7 @@ namespace flopoco
 		/** The function that does it all */
 		static void main(int argc, char* argv[]);
 		static UserInterface& getUserInterface();
+		std::string const & getExecName() const;
 
 	private:
 		UserInterface();
@@ -136,6 +137,7 @@ namespace flopoco
 		std::string outputFileName;
 		std::string entityName;
 		std::string targetFPGA;
+		std::string programName;
 		FactoryRegistry const & factRegistry;
 		double targetFrequencyMHz;
 		bool   pipeline;

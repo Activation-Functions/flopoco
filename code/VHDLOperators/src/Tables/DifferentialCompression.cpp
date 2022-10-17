@@ -77,21 +77,33 @@ namespace flopoco {
 		}
 		return make_tuple(true, overlapped, estimate, bestWH);
 	}
-
+	/**
+	 * @brief Given a set of min and max values for each slice of the table, 
+	 * compute the effective number of bits we need to store in the init value tables,
+	 * by eliminating the most significant bits that are unset for all table value
+	 * 
+	 * @param min_max View of a table slice
+	 * @param wH Number of bits to store in the initial value table
+	 * @param wL Number of bits that are stored in the offset table
+	 * @return fitted wH
+	 */
 	auto compressHighTable(vector<min_max_t> const & min_max, int const wH, int const wL)
 	{
+		// Construct high bit masks with wH ones followed by wL zeroes
 		mpz_class high_bits_mask{1};
 		high_bits_mask <<= wH;
 		high_bits_mask -= 1;
 		high_bits_mask <<= wL;
+
 		mpz_class or_acc{0};
 		for (auto const &[min, max] : min_max) {
-			auto high_bits = min & high_bits_mask;
+			auto high_bits = (min) & high_bits_mask;
+			assert(high_bits <= high_bits_mask && "There is probably an error on the choice of wH");
 			or_acc |= high_bits;
 		}
 		or_acc >>= wL;
 		int zero_counter;
-		for (zero_counter = 0 ; (zero_counter < wH) and ((or_acc & 1) != 0); zero_counter++) {
+		for (zero_counter = 0 ; (zero_counter < wH) and ((or_acc & 1) == 0); zero_counter++) {
 			or_acc >>= 1;
 		}
 		return wH - zero_counter;
@@ -127,7 +139,7 @@ namespace flopoco {
 			// cerr << "subsamples_table["<<slice_idx<<"] = \t" <<  subsamples_table[slice_idx]   << " \t\t to_sub=" << to_sub <<endl; 
 			for (size_t cur_idx = val_idx ; cur_idx < val_idx + shift ; cur_idx++) {
 				diff_table[cur_idx] = values[cur_idx] - to_sub;
-				// cerr << "\t  values["<<cur_idx<<"] =  "<< values[cur_idx]<<"   \tdiff_table["<<cur_idx<<"] = \t" << diff_table[cur_idx]  <<endl; 
+				// cerr << "\t  values["<<cur_idx<<"] =  "<< values[cur_idx]<<"   \tdiff_table["<<cur_idx<<"] = \t" << diff_table[cur_idx]  <<endl;
 				assert(diff_table[cur_idx] < L_mask);
 			}
 		}

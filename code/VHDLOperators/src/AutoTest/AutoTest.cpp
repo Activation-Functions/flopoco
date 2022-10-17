@@ -1,12 +1,299 @@
+#include <algorithm>
+#include <cstdlib>
+#include <filesystem>
+#include <fstream>
+#include <iostream>
+#include <istream>
+#include <map>
+#include <optional>
+#include <random>
+#include <set>
+#include <sstream>
+#include <string>
+#include <string_view>
+#include <vector>
+
+#include <boost/process.hpp>
+
 #include "flopoco/AutoTest/AutoTest.hpp"
 #include "flopoco/InterfacedOperator.hpp"
+#include "flopoco/Operator.hpp"
 #include "flopoco/UserInterface.hpp"
 
-#include <vector>
-#include <map>
-#include <set>
+namespace {
+	namespace fs =  std::filesystem;
+	struct TempDirectoryManager {
+		std::optional<fs::path> tmpPath;
+		TempDirectoryManager(bool deleteAtEnd=false):deleteOnDestruct{deleteAtEnd}{
+			// Temporary name generation inspired from
+			// https://stackoverflow.com/a/58454949
+			auto tmpDir = fs::temp_directory_path();
+    		std::uint64_t disambiguationTag = 0;
+    		std::random_device seedGen;
+    		std::mt19937 rng(seedGen());
+    		std::uniform_int_distribution<uint64_t> rand;
+    		fs::path path;
+			size_t nbAttempts = 0;
+			bool dirNameOk = false;
+			while (!dirNameOk && nbAttempts < 1024) {
+				std::stringstream sname;
+				sname << "flopoco_tmp_" << std::hex << rand(rng);
+				path = tmpDir / sname.str();
+				dirNameOk = create_directory(path);
+				nbAttempts += 1;
+			}
+			if (dirNameOk)
+				tmpPath = path;
+		}
 
-#include <iostream>
+		bool inGoodState() {
+			return tmpPath.has_value();
+		}
+
+		~TempDirectoryManager() {
+			if (deleteOnDestruct && tmpPath.has_value()){
+				fs::remove_all(tmpPath.value());
+			}
+		}
+		private:
+			bool deleteOnDestruct;
+	};
+
+	class OperatorTester
+	{
+		static constexpr uint8_t HDLGenerationOK = 0b1;
+		static constexpr uint8_t SimulationOK = 0b10;
+		struct TestConfig {
+			std::map<std::string, std::string> parameters;
+			std::string nbTestBenchCases;
+			uint8_t status;
+			std::vector<std::string> flopocoOut;
+			std::vector<std::string> nvcOut;
+
+			void dumpFlopocoOut(std::string_view outName) {
+				std::ofstream out{std::string{outName}, std::ios::out};
+				for (auto const & line : flopocoOut) {
+					out << line << "\n";
+				}
+			}
+			
+			void dumpnvcOut(std::string_view outName) {
+				std::ofstream out{std::string{outName}, std::ios::out};
+				for (auto const & line : nvcOut) {
+					out << line << "\n";
+				}
+			}
+		};
+
+		std::string commandLineForTestCase(TestConfig const &testcase) const
+		{
+			auto commandLine = opFact->name();
+			for (auto const &[paramName, paramValue] :
+			     testcase.parameters) {
+				commandLine +=
+				    " " + paramName + "=" + paramValue;
+			}
+			commandLine += " TestBench n=" + testcase.nbTestBenchCases;
+			return commandLine;
+		}
+
+		std::vector<TestConfig> tests;
+		bool hasRun;
+
+		OperatorFactory const *const opFact;
+		fs::path testRoot;
+
+		void registerTests(int index)
+		{
+			auto unitTestsList = opFact->unitTestGenerator(-1);
+			auto paramNames = opFact->param_names();
+
+			// Get the default values for factory parameters
+			std::map<std::string, std::string> unitTestDefaultParam;
+			for (auto param : paramNames) {
+				string defaultValue =
+				    opFact->getDefaultParamVal(param);
+				unitTestDefaultParam.insert(
+				    make_pair(param, defaultValue));
+			}
+			for (auto &paramlist : unitTestsList) {
+				std::string testBenchString = "";
+				auto unitTestParam{unitTestDefaultParam};
+				// For each parameter specified in the
+				// unit test parameters, we either update the
+				// default value, or insert a new parameter
+				// (TODO: see why we would have this one)
+				// Special handling is given to TestBench to
+				// ensure it arrives at the end of the command
+				// line
+				for (auto &[paramName, paramValue] :
+				     paramlist) {
+					if (unitTestParam.count(paramName)) {
+						unitTestParam[paramName] =
+						    paramValue;
+					} else if (paramName ==
+						   "TestBench n=") {
+						testBenchString = paramValue;
+					} else {
+						unitTestParam.insert(
+						    {paramName, paramValue});
+					}
+				}
+				if (testBenchString == "") {
+					testBenchString = AutoTest::defaultTestBenchSize(unitTestParam);
+				}
+				tests.emplace_back(TestConfig{std::move(unitTestParam),
+						   std::move(testBenchString), 0});
+			}
+			if (unitTestsList.empty())
+				std::cout << "No unitTest method defined"
+					  << std::endl;
+		}
+
+	public:
+		OperatorTester(OperatorFactory const *fact,
+			       fs::path const &autotestOutputRoot)
+		    : hasRun{false}, opFact{fact}
+		{
+			testRoot = autotestOutputRoot / opFact->name();
+		}
+
+		void registerUnitTests() {
+			registerTests(-1);
+		}
+
+		void registerRandomTests() {
+			registerTests(0);
+		}
+
+		size_t getNbTests() {
+			return tests.size();
+		}
+
+		size_t nbGenerationOK () const {
+			assert(hasRun);
+			size_t res{0};
+			for (auto const & testCase : tests) {
+				if (testCase.status & HDLGenerationOK) res += 1;
+			}
+			return res;
+		}
+
+		size_t nbSimulationOk () const {
+			assert(hasRun);
+			size_t res{0};
+			for (auto const & testCase : tests) {
+				if (testCase.status & SimulationOK) res += 1;
+			}
+			return res;
+		}
+
+		void runTests() {
+			std::cout << "Running tests for " << opFact->name() << ":\n";
+			namespace bp = boost::process;
+			if (!fs::create_directory(testRoot)) {
+				fs::remove_all(testRoot);
+				fs::create_directory(testRoot);
+			}
+			auto name = fs::absolute(UserInterface::getUserInterface().getExecName()).string();
+			auto detailed = testRoot / "detailed.txt";
+			std::ofstream detailedFile{detailed, std::ios::out};
+			auto bufferOut = testRoot / "buffer.txt";
+			int id = 0;
+			detailedFile << "TestID, Command line, VHDL Generation status, Simulation status\n";
+			auto getLines = [&bufferOut](std::vector<std::string> & out) {
+				std::ifstream in{bufferOut.string()};
+				std::string line;
+				while (std::getline(in, line)) {
+					out.emplace_back(line);
+				}
+			};
+			auto nvcPath = bp::search_path("nvc");
+			auto nbTests = tests.size();
+			for (auto & testCase : tests) {
+				std::cout << "\33[2K\rRunning test " << (id + 1) << " / " << nbTests;
+				std::cout.flush();
+				fs::remove(bufferOut);
+				auto command = commandLineForTestCase(testCase);
+				detailedFile << id << ", " << name << " " << command << ", ";
+				auto flopocoStatus =  bp::system(name + " " + command, (bp::std_out & bp::std_err) > bufferOut.string(), bp::start_dir(testRoot.string())); 
+				std::string nvcLine{""};
+				getLines(testCase.flopocoOut);
+				for (auto const & line : testCase.flopocoOut) {
+					if (line.rfind("nvc", 0) == 0) {
+						nvcLine = line;
+					}
+				}
+				// We managed to launch flopoco and it did execute properly
+				if (flopocoStatus == 0 && nvcLine != "" && fs::exists(testRoot / "flopoco.vhdl")){
+					nvcLine.replace(0, 3, nvcPath.c_str());
+					detailedFile << "1, ";
+					testCase.status |= HDLGenerationOK;
+					// Try to run nvc
+					fs::remove(bufferOut);
+					int nvcStatus;
+					try {
+						nvcStatus = bp::system(
+						    nvcLine,
+						    (bp::std_err &
+						     bp::std_out) >
+								bufferOut.string(),
+						    bp::start_dir(
+								testRoot.string()),
+						    bp::throw_on_error);
+					} catch (bp::process_error &pe) {
+						std::cerr << "There is an issue with your nvc installation. Please fix it before running AutoTest.\n"
+								  << "nvc command was: " << nvcLine << "\n"
+								  << "Error: " << pe.what() << "\n"
+								  << "FloPoCo will now graciously crash.\n\n";
+						exit(EXIT_FAILURE);
+					}
+					getLines(testCase.nvcOut);
+					if (nvcStatus == 0) {
+						testCase.status |= SimulationOK;
+						detailedFile << "1\n";
+					} else {
+						detailedFile << "0\n";
+						std::stringstream errname;
+						errname << "nvc_err_" << id;
+						auto dest = testRoot / errname.str();
+						testCase.dumpnvcOut(dest.string());
+						std::cout << "\nFailed at simulation step.\nLog can be found in " << dest.string() << "\n";
+						std::cout << "Command was:\n" << nvcLine << "\n";
+					}
+				} else {
+					detailedFile << "0, 0\n";
+					std::stringstream errname;
+					errname << "flopoco_err_" << id;
+					auto dest = testRoot / errname.str();
+					testCase.dumpFlopocoOut(dest.string());
+					std::cout << "\nFailed at generation step.\nLog can be found in " << dest.string() << "\n";
+					std::cout << "Command was:\n" << name << " " << commandLineForTestCase(testCase) << "\n";
+				}
+				++id;
+			}
+			hasRun = true;
+			std::cout << "\n";
+		}
+
+		void printStats(std::ostream& out) {
+			out << "Tests for " << opFact->name() << ":\n";
+			size_t nbGenOk{nbGenerationOK()}, nbSimOk{nbSimulationOk()};
+			auto plural = [](int val){if (val > 1) return std::string_view{"tests"}; else return std::string_view{"test"};};
+			size_t nbTests = tests.size();
+			double percentageGen = 0.;
+			out << "\t" << nbTests << " " << plural(nbTests) << " in total\n";
+			if (nbTests > 0) {
+				out << "\t" << nbGenOk << " correctly generated (" << ((100.0 * nbGenOk) / nbTests) << " \% of all tests)\n";
+				out << "\t" << nbSimOk << " correctly simulated";
+				if (nbGenOk > 0) {
+					out << " (" << ((100.0 * nbSimOk) / nbGenOk) << " \% of correctly generated cases)";
+				}
+				out << "\n";
+			}
+		}
+	};
+} // namespace
 // TODO: testDependences is fragile
 namespace flopoco
 {
@@ -14,11 +301,9 @@ namespace flopoco
 	OperatorPtr AutoTest::parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args, UserInterface& ui)
 	{
 		string opName;
-		bool testDependences;
-		ui.parseBoolean(args, "Dependences", &testDependences);
 		ui.parseString(args, "Operator", &opName);
 
-		AutoTest AutoTest(opName,testDependences);
+		AutoTest AutoTest(opName);
 
 		return nullptr;
 	}
@@ -29,23 +314,23 @@ namespace flopoco
 		"A tester for operators.",
 		"AutoTest",
 		"", //seeAlso
-		"Operator(string): name of the operator to test, All if we need to test all the operators;\
-		Dependences(bool)=false: test the operator's dependences;",
+		"Operator(string): name of the operator to test, All if we need to test all the operators;",
 		""
 	};
 
-	AutoTest::AutoTest(string opName, bool testDependences)
+	AutoTest::AutoTest(string opName)
 	{
-		system("src/AutoTest/initTests.sh");
+		TempDirectoryManager tmpDirHolder{};
+		if (!(tmpDirHolder.inGoodState())) {
+			throw "Creation of temporary directory is impossible";
+		}
+		std:cout << "All reporting will be done in " << tmpDirHolder.tmpPath->string() << std::endl;
 		FactoryRegistry& factRegistry = FactoryRegistry::getFactoryRegistry();
 
-		string commandLine;
-		string commandLineTestBench;
+		std::map<std::string, OperatorTester> testerMap;
+		
 		set<string> testedOperator;
-		vector<string> paramNames;
-		map<string,string> unitTestParam;
-		map<string,string>::iterator itMap;
-		TestList unitTestList;
+
 		bool doUnitTest = false;
 		bool doRandomTest = false;
 		bool allOpTest = false;
@@ -76,204 +361,45 @@ namespace flopoco
 		// Select the Operator(s) to test
 		if(allOpTest)
 		{
-				// We get the operators' names to add them in the testedOperator set
-			unsigned nbFactory = factRegistry.getFactoryCount();
-
-			for (unsigned i=0; i<nbFactory ; i++)	{
-				auto facto = factRegistry.getFactoryByIndex(i);
-				if(facto.name() != "AutoTest")
-					testedOperator.insert(facto.name());
+			for (auto facto : factRegistry.getPublicRegistry())	{
+				if(facto->name() != "AutoTest")
+					testedOperator.insert(facto->name());
 			}
-		}
-		else
-		{
+		} else {
 			auto opFact = factRegistry.getFactoryByName(opName);
 			testedOperator.insert(opFact->name());
-
 				// Do we check for dependences ?
-			if(testDependences)		// All this has never been properly tested, I don't remember why it is here at all
-			{
-					// Find all the dependences of the Operator opName
-					// Add dependences to the set testedOperator
-					// Then we do the same on all Operator in the set testedOperator
-
-				unsigned nbFactory = factRegistry.getFactoryCount();
-				set<string> allOperator;
-
-				for (unsigned i=0; i<nbFactory ; i++)
-				{
-					auto opFact = factRegistry.getFactoryByIndex(i);
-					allOperator.insert(opFact.name());
-				}
-
-				for(auto op: testedOperator)
-				{
-
-					FILE * in;
-					char buff[512];
-					bool success = true;
-
-						// string grepCommand = "grep '" + *itOperator + "\.o' CMakeFiles/FloPoCoLib.dir/depend.make | awk -F/ '{print $NF}' | awk -F. '{print $1}' | grep ^.*$";
-
-						// Command to get the name of the Operator using the depend file of CMake
-					string grepCommand = "grep '" + op + "\\.hpp' CMakeFiles/FloPoCoLib.dir/depend.make | grep -o '.*\\.o' | awk -F/ '{print $NF}' | awk -F. '{print $1}'";
-
-					if(!(in = popen(grepCommand.c_str(), "r")))
-					{
-						success = false;
-					}
-
-					if(success)
-					{
-						while(fgets(buff, sizeof(buff), in) != NULL )
-						{
-							string opFile = string(buff);
-							opFile.erase(opFile.find("\n"));
-							if(allOperator.find(opFile) != allOperator.end())
-							{
-								testedOperator.insert(opFile);
-							}
-						}
-						pclose(in);
-					}
-				}
-			}
 		}
 
 
 
 		// For each tested Operator, we run a number of tests defined in the Operator's unitTest method
 		for(auto op: testedOperator)	{
-			testsDone = false;
-			system(("src/AutoTest/initOpTest.sh " + op).c_str());
-			auto opFact = factRegistry.getFactoryByName(op);
-			// First we run the unitTest for each tested Operator
-			if(doUnitTest)			{
-				unitTestList.clear();
-				unitTestList = opFact->unitTestGenerator(-1);
-				// Do the unitTestsParamList contains nothing, meaning the unitTest method is not implemented 
-				if(unitTestList.size() != 0 )		{
-					testsDone = true;
-					//For every Test
-					//for(itUnitTestList = unitTestList.begin(); itUnitTestList != unitTestList.end(); ++itUnitTestList)	{
-					for(auto paramlist : unitTestList)	{
-						// Create the flopoco command corresponding to the test
-						commandLine = "src/AutoTest/testScript.sh " + op;
-						commandLineTestBench = "";
-						unitTestParam.clear();
-						// Fetch all parameters and default values for readability
-						paramNames = opFact->param_names();
-						for(auto param :  paramNames)					{
-							string defaultValue = opFact->getDefaultParamVal(param);
-							unitTestParam.insert(make_pair(param,defaultValue));
-						}
-
-						// For every Param
-						for(auto param: paramlist)						{
-							itMap = unitTestParam.find(param.first);
-							
-							if( itMap != unitTestParam.end())				{
-								itMap->second = param.second;
-							}
-							else if (param.first == "TestBench n="){
-								commandLineTestBench = " TestBench n=" + param.second;
-							}
-							else	{
-								unitTestParam.insert(make_pair(param.first,param.second));
-							}
-						}
-						if(commandLineTestBench == "")		{
-							//TODO
-							commandLineTestBench = defaultTestBenchSize(&unitTestParam);
-						}
-						for(auto it :  unitTestParam)			{
-							commandLine += " " + it.first + "=" + it.second;
-						}
-						system((commandLine + commandLineTestBench).c_str());	
-					}
-
-				}
-				else				{
-					cout << "No unitTest method defined" << endl;
-				}
-			}
+			auto iter = testerMap.emplace(op, OperatorTester{factRegistry.getFactoryByName(op), *(tmpDirHolder.tmpPath)}).first;
+			auto& tester = iter->second;
+			// First we register the unitTest for each tested Operator
+			if (doUnitTest) tester.registerUnitTests();
+			// Then we register random Tests for each tested Operator
+			if(doRandomTest) tester.registerRandomTests();
 			
-			// Then we run random Tests for each tested Operator
-			if(doRandomTest)		{
-				unitTestList.clear();
-				unitTestParam.clear();
-				unitTestList = opFact->unitTestGenerator(0);
+			// Real run of the tests
+			tester.runTests();
+			tester.printStats(cout);
+		}
 
-				// Do the unitTestsParamList contains nothing, meaning the unitTest method is not implemented 
-				if(unitTestList.size() != 0 )
-				{
-					testsDone = true;
-					//For every Test
-					for(auto test:  unitTestList) //.begin(); itUnitTestList != unitTestList.end(); ++itUnitTestList)
-					{
-						// Create the flopoco command corresponding to the test
-						commandLine = "src/AutoTest/testScript.sh " + op;
-						commandLineTestBench = "";
-
-						unitTestParam.clear();
-
-						// Fetch all parameters and default values for readability
-						paramNames = opFact->param_names();
-						for(auto param : paramNames)
-						{
-							string defaultValue = opFact->getDefaultParamVal(param);
-							unitTestParam.insert(make_pair(param,defaultValue));
-						}
-
-						for(auto param: test)
-						{
-							itMap = unitTestParam.find(param.first);
-
-							if( itMap != unitTestParam.end())
-							{
-								itMap->second = param.second;
-							}
-							else if (param.first == "TestBench n=")
-							{
-								commandLineTestBench = " TestBench n=" + param.second;
-							}
-							else
-							{
-								unitTestParam.insert(make_pair(param.first,param.second));
-							}
-						}
-
-						if(commandLineTestBench == "")
-						{
-							commandLineTestBench = defaultTestBenchSize(&unitTestParam);
-						}
-
-						for(auto it : unitTestParam)
-						{
-							commandLine += " " + it.first + "=" + it.second;
-						}
-
-						system((commandLine + commandLineTestBench).c_str());	
-
-					}
-				}
-				else
-				{
-					cout << "No unitTest method defined" << endl;
-				}
-			}
-			
-			if(testsDone)	{
-			// Clean all temporary file
-				system(("src/AutoTest/cleanOpTest.sh " + op).c_str());
-			}
+		ofstream outputSummary{"summary.csv"};
+		outputSummary << "Operator Name, Total Tests, Generation OK, Simulation Ok\n";
+		for (auto& [opName, tester] : testerMap) {
+			outputSummary << opName << ", " 
+						  << tester.getNbTests() << ", " 
+						  << tester.nbGenerationOK() << ", " 
+						  << tester.nbSimulationOk() << "\n";
 		}
 
 		cout << "Tests are finished" << endl;
-		exit(EXIT_SUCCESS);		
 	}
 
-	string AutoTest::defaultTestBenchSize(map<string,string> * unitTestParam)
+	string AutoTest::defaultTestBenchSize(map<string,string> const & unitTestParam)
 	{
 		// This  was definitely fragile, we can't rely on information extracted this way
 		// Better make it explicit in the unitTest methods
@@ -300,7 +426,7 @@ namespace flopoco
 		}
 #endif
 
-		string testBench = " TestBench n=1000";
+		string testBench = "1000";
 		
 		return testBench;
 	}
