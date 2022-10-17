@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cstdlib>
+#include <string>
 #include <sys/stat.h>
 #include <iostream>
 #include <iomanip>
@@ -42,6 +43,10 @@ namespace flopoco
 		return ui;
 	}
 
+	std::string const & UserInterface::getExecName() const {
+		return programName;
+	}
+ 
 	UserInterface::UserInterface():factRegistry(FactoryRegistry::getFactoryRegistry()) {
 		outputFileName="flopoco.vhdl";
 		targetFPGA=defaultFPGA;
@@ -60,6 +65,7 @@ namespace flopoco
 		depGraphDrawing = "no";
 		generateFigures = false;
 		pipelineActive_ = true;
+		
 	}
 
 	const vector<pair<string,string>> UserInterface::categories = []()->vector<pair<string,string>>{
@@ -176,6 +182,8 @@ namespace flopoco
 		try {
 			sollya_lib_init();
 			auto& ui = getUserInterface();
+			set_log_lvl(LogLevel::MESSAGE);
+			ui.programName = argv[0];
 
 			// TODO refactor more elegantly
 
@@ -199,9 +207,10 @@ namespace flopoco
 
 	void UserInterface::parseGenericOptions(vector<string> &args) {
 		parseString(args, "name", &entityName, true); // not sticky: will be used, and reset, after the operator parser
-		int verbose{LogLevel::MESSAGE};
+		int verbose{0};
 		parsePositiveInt(args, "verbose", &verbose, true); // sticky option
-		set_log_lvl(static_cast<LogLevel>(verbose));
+		if (verbose)
+			set_log_lvl(static_cast<LogLevel>(verbose));
 		parseString(args, "outputFile", &outputFileName, true); // not sticky: will be used, and reset, after the operator parser
 		parseString(args, "target", &targetFPGA, true); // not sticky: will be used, and reset, after the operator parser
 		parseFloat(args, "frequency", &targetFrequencyMHz, true); // sticky option
@@ -297,12 +306,14 @@ namespace flopoco
 
 
 	void UserInterface::finalReport(ostream& s){
+		if (globalOpList.empty())
+			return;
 		s << endl<<"*** Final report ***"<<endl;
 		s << "Output file: " << outputFileName <<endl;
-		Operator* op = UserInterface::globalOpList.back();
+		Operator* op = globalOpList.back();
 		s << "Target: " << op->getTarget() -> getID()
 			<< " @ "<< op->getTarget() -> frequencyMHz() << " MHz" <<	endl;
-		for(auto i: UserInterface::globalOpList) {
+		for(auto i : globalOpList) {
 			i->outputFinalReport(s, 0);
 		}
 
