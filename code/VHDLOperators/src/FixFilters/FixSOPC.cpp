@@ -123,7 +123,7 @@ namespace flopoco{
 		//reporting on the command line
 		REPORT(LogLevel::VERBOSE, "FixSOPC  lsbOut=" << lsbOut << "   g=" << g) ;
 		for (int i=0; i< n; i++)
-			REPORT(LogLevel::VERBOSE, "i=" << i << "  coeff=" << coeff[i] << "  msbIn=" << msbIn[i] << "  lsbIn=" << lsbIn[i]);
+			REPORT(LogLevel::VERBOSE, "initialize: i=" << i << "  coeff=" << coeff[i]);
 
 		for (int i=0; i< n; i++)
 			addInput(join("X",i), msbIn[i]-lsbIn[i]+1);
@@ -169,7 +169,7 @@ namespace flopoco{
 				sumAbs*=2.0;
 				msbOut--;
 			}
-			REPORT(LogLevel::DETAIL, "Computed msbOut=" << msbOut);
+			REPORT(LogLevel::MESSAGE, "Computed msbOut=" << msbOut);
 			mpfr_clears(sumAbsCoeff, absCoeff, mpMaxX, NULL);
 		}
 		else {
@@ -188,7 +188,7 @@ namespace flopoco{
 		double targetUlpError = 1.0;
 		double maxAbsError=0;
 		for(int i=0; i<n; i++)		{
-			REPORT(LogLevel::MESSAGE, "i=" << i << "  msbIn[i]=" << msbIn[i] << "  lsbIn[i]=" << lsbIn[i]);
+			REPORT(LogLevel::MESSAGE, "i=" << i << " coeff[i]=" << coeff[i] << "  msbIn[i]=" << msbIn[i] << "  lsbIn[i]=" << lsbIn[i]);
 			// instantiating a KCM object. This call does not build any VHDL but computes errorInUlps out of the tentative architecture for g=0.
 			FixRealKCM* m = new FixRealKCM(
 																		 this,                         // the enveloping operator
@@ -220,12 +220,13 @@ namespace flopoco{
 		
 		if(!getTarget()->plainVHDL())
 		{
+			REPORT(LogLevel::VERBOSE,"Now building the actual KCMs" );
 			//create the bitheap that computes the sum
 			bitHeap = new BitHeap(this, sumSize);
 
 			// actually generate the code
 			for(int i=0; i<n; i++)		{
-
+				REPORT(LogLevel::VERBOSE,"Adding KCM tables to the bit heap for i=" << i << " (coeff "<< coeff[i] << ")");
 				kcm[i]->addToBitHeap(bitHeap, g);
 			}
 
