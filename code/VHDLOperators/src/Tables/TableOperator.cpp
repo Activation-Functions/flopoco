@@ -4,20 +4,22 @@
 namespace flopoco
 {
 
-	TableOperator::TableOperator(OperatorPtr parentOp_, Target *target_):Operator(parentOp_, target_), wIn(table.wIn),wOut(table.wOut) {
-
+	TableOperator::TableOperator(OperatorPtr parentOp_, Target *target_)
+		: Operator(parentOp_, target_), wIn(table.wIn), wOut(table.wOut)    // FIXME highly suspiscious, table.wOut is uninitialized
+	{
 	}
 
+	// FIXME remove wIn and wOut from the parameters to init, they are initilialized in the constructor
 	TableOperator::TableOperator(OperatorPtr parentOp_, Target *target_,
 				     vector<mpz_class> _values, string _name,
 				     int _wIn, int _wOut, int _logicTable,
 				     int _minIn, int _maxIn)
-	    : Operator(parentOp_, target_), wIn(table.wIn), wOut(table.wOut)
+		: Operator(parentOp_, target_), wIn(table.wIn), wOut(table.wOut)   // FIXME why not wIn(_wIn) wout(_wOut)
 	{
 		srcFileName = "TableOperator";
 		setNameWithFreqAndUID(_name);
 		setCopyrightString(
-		    "Florent de Dinechin, Bogdan Pasca (2007-2020)");
+		    "Florent de Dinechin, Bogdan Pasca (2007-2022)");
 		init(_values, _name, _wIn, _wOut, _logicTable, _minIn, _maxIn);
 		generateVHDL();
 	}
@@ -25,10 +27,20 @@ namespace flopoco
 	void TableOperator::init(vector<mpz_class> & values, string _name, int _wIn, int _wOut, int _logicTable, int _minIn, int _maxIn)
 	{
 		table = Table{values, _wIn, _minIn, _maxIn};
-		assert((_wOut <= table.wOut) && "wOut too large");
 		assert(( _wOut >=0) && "wOut negative");
-		if(_wOut >= 0)
-			table.wOut=_wOut;
+
+		/* TODO DISCUSS 
+			 Table computes Table.wout out of values.
+			 Then TableOperator is sometimes invoked with a larger _wOut.
+			 
+			 The following used to be an assert which failed in this case (and broke the autotest of  KCM, SOPC etc)
+			 This patch fixes it but it is a patch.
+			 It would be cleaner to explicit the bit extension in generateVHDL
+
+			 Then _wOut should be replaced everywhere with wOut, initialized before this code.
+		*/
+		if(_wOut > table.wOut)
+			table.wOut=_wOut; 
 		
 		// if this is just a Table
 		if (_name == "")
@@ -102,7 +114,6 @@ namespace flopoco
 					    << " s");
 
 		vhdl << tab << "with X select Y0 <= " << endl;
-		;
 
 		for (unsigned int i = table.minIn.get_ui();
 		     i <= table.maxIn.get_ui(); i++)
@@ -155,8 +166,7 @@ namespace flopoco
 		     << " <= Y0; -- for the possible blockram register" << endl;
 
 		if (!logicTable &&
-		    getTarget()
-			->registerLargeTables()) { // force a register so that a
+		    getTarget()->registerLargeTables()) { // force a register so that a
 						   // blockRAM can be infered
 			setSequential();
 			int cycleY0 = getCycleFromSignal("Y0");
