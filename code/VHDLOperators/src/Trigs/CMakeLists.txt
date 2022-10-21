@@ -1,7 +1,6 @@
 add_flopocolib_src(
 	#Atan2Table.cpp
 	ConstDiv3ForSinPoly.cpp
-	Fix2DNorm.cpp
 	#FixAtan2ByBivariateApprox.cpp
 	FixAtan2ByCORDIC.cpp
 	FixAtan2ByRecipMultAtan.cpp
