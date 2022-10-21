@@ -102,7 +102,52 @@ namespace flopoco {
 		emulate(tc);
 		tcl->add(tc);
 	}
-	
+
+
+
+	TestList Fix2DNorm::unitTest(int index)
+	{
+		// the static list of mandatory tests
+		TestList testStateList;
+		vector<pair<string,string>> paramList;
+		
+		if(index==-1) 
+		{ // The unit tests
+			int method=0;
+			for(int wIn=4; wIn<33; wIn+=(wIn<16?1:3)) {
+					paramList.push_back(make_pair("lsbIn",to_string(-wIn)));
+					paramList.push_back(make_pair("lsbOut",to_string(-wIn)));
+					paramList.push_back(make_pair("method",to_string(method)));
+					testStateList.push_back(paramList);
+					paramList.clear();
+					paramList.push_back(make_pair("lsbIn",to_string(-wIn)));
+					paramList.push_back(make_pair("lsbOut",to_string(-wIn-1)));
+					paramList.push_back(make_pair("method",to_string(method)));
+					testStateList.push_back(paramList);
+					paramList.clear();
+			}
+			method=1;
+			for(int wIn=4; wIn<12; wIn++) {
+					paramList.push_back(make_pair("lsbIn",to_string(-wIn)));
+					paramList.push_back(make_pair("lsbOut",to_string(-wIn)));
+					paramList.push_back(make_pair("method",to_string(method)));
+					testStateList.push_back(paramList);
+					paramList.clear();
+					paramList.push_back(make_pair("lsbIn",to_string(-wIn)));
+					paramList.push_back(make_pair("lsbOut",to_string(-wIn-1)));
+					paramList.push_back(make_pair("method",to_string(method)));
+					testStateList.push_back(paramList);
+					paramList.clear();
+			}
+		}
+		else     		{
+				// finite number of random test computed out of index
+				// TODO
+		}	
+		cerr << "************* "<< testStateList.size() <<endl;
+		return testStateList;
+	}
+
 	OperatorPtr Fix2DNorm::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 		int lsbIn, lsbOut, method;
 		ui.parseInt(args, "lsbIn",	&lsbIn);
@@ -117,6 +162,8 @@ namespace flopoco {
 		}
 	}
 
+
+	
 	template <>
 	const OperatorDescription<Fix2DNorm> op_descriptor<Fix2DNorm> {
 		"Fix2DNorm", // name
