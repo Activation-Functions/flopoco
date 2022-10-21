@@ -10,7 +10,7 @@ namespace flopoco {
 		Fix2DNorm(parentOp, target_, lsbIn_, lsbOut_)
 	{
 		srcFileName = "Fix2DNormLUT";
-		setCopyrightString("Romain Bouarah, Florent de Dinechin (2022-...)");
+		setCopyrightString("Romain Bouarah, Florent de Dinechin (2022)");
 
 		ostringstream name;
 		int wIn = getWIn();
@@ -27,7 +27,8 @@ namespace flopoco {
 		if (-5 <= lsbIn && lsbIn <= -7) {
 			squareAdderXYArg = squarerByLUT();
 		} else {		
-			squareAdderXYArg = squarerByIntSquarer();
+			squareAdderXYArg = squarerByLUT();
+			//			squareAdderXYArg = squarerByIntSquarer(); doesn't work without Gurobi
 		}
 
 		/* X^2 + Y^2 : ufix(0, 2*lsbIn) */
