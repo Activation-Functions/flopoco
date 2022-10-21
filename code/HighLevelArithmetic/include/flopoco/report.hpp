@@ -44,14 +44,20 @@ namespace flopoco {
   void report (LogLevel lvl, std::string_view message, T1 filename, T2 line, T3 funcname) {
     if (is_log_lvl_enabled(lvl)) {
         std::ostream& out = (lvl < 0) ? std::cerr : std::cout;
-        out << "> (" << filename << ":" << line <<" (" << funcname << ")): " << message << std::endl;
+				if(lvl>=3)	{
+					out << "" << filename << ":" << line <<" (" << funcname << "): ";
+				}
+				else {
+					out << "" << filename << ": ";
+				}
+				out << message << std::endl;
     }
   };
 }
 
 #define REPORT(level, stream) { \
     std::stringstream __OUT_STREAM__; \
-    __OUT_STREAM__ << "> " << stream; \
+    __OUT_STREAM__ << "" << stream; \
     flopoco::report(level, __OUT_STREAM__.str(), __FILE__, __LINE__, __func__); \
 }
 
