@@ -40,19 +40,7 @@ namespace flopoco {
 
   LogLevel get_log_lvl();
 
-  template<typename T1, typename T2, typename T3>
-  void report (LogLevel lvl, std::string_view message, T1 filename, T2 line, T3 funcname) {
-    if (is_log_lvl_enabled(lvl)) {
-        std::ostream& out = (lvl < 0) ? std::cerr : std::cout;
-				if(lvl>=3)	{
-					out << "" << filename << ":" << line <<" (" << funcname << "): ";
-				}
-				else {
-					out << "" << filename << ": ";
-				}
-				out << message << std::endl;
-    }
-  };
+  void report(LogLevel lvl, std::string_view message, std::string_view filename, int line, std::string_view funcname);
 }
 
 #define REPORT(level, stream) { \
