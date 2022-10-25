@@ -18,7 +18,7 @@ namespace flopoco {
 		Fix2DNorm(parentOp, target_, lsbIn_, lsbOut_)
 	{
 		srcFileName = "Fix2DNormCORDIC";
-		setCopyrightString("Romain Bouarah, Florent de Dinechin (2022-...)");
+		setCopyrightString("Romain Bouarah, Florent de Dinechin (2022)");
 
 		ostringstream name;
 		int wIn = getWIn();
