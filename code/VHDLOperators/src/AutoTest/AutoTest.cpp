@@ -105,7 +105,7 @@ namespace {
 
 		void registerTests(int index)
 		{
-			auto unitTestsList = opFact->unitTestGenerator(-1);
+			auto unitTestsList = opFact->unitTestGenerator(index);
 			auto paramNames = opFact->param_names();
 
 			// Get the default values for factory parameters
