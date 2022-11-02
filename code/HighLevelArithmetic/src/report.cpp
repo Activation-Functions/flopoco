@@ -25,7 +25,7 @@ namespace flopoco {
     return loglevel;
   }
 
-    void report (LogLevel lvl, std::string_view message, std::string_view filename, int line, std::string_view funcname) {
+    void report (LogLevel lvl, std::string const & message, std::string const & filename, int line, std::string const & funcname) {
     if (is_log_lvl_enabled(lvl)) {
         std::ostream& out = (lvl < 0) ? std::cerr : std::cout;
 				if(lvl>=3)	{

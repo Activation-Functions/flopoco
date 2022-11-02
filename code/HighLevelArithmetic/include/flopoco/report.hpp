@@ -4,7 +4,6 @@
 #include <functional>
 #include <iostream>
 #include <ostream>
-#include <source_location>
 #include <sstream>
 #include <string_view>
 
@@ -40,7 +39,7 @@ namespace flopoco {
 
   LogLevel get_log_lvl();
 
-  void report(LogLevel lvl, std::string_view message, std::string_view filename, int line, std::string_view funcname);
+  void report(LogLevel lvl, std::string const & message, std::string const & filename, int line, std::string const & funcname);
 }
 
 #define REPORT(level, stream) { \
