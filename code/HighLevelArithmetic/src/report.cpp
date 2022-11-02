@@ -1,7 +1,10 @@
+#include <filesystem>
 #include <iostream>
 #include <ostream>
 
 #include "flopoco/report.hpp"
+
+namespace fs = std::filesystem;
 
 namespace {
     flopoco::LogLevel loglevel{flopoco::MESSAGE};
@@ -20,5 +23,18 @@ namespace flopoco {
 
   LogLevel get_log_lvl() {
     return loglevel;
+  }
+
+    void report (LogLevel lvl, std::string const & message, std::string const & filename, int line, std::string const & funcname) {
+    if (is_log_lvl_enabled(lvl)) {
+        std::ostream& out = (lvl < 0) ? std::cerr : std::cout;
+				if(lvl>=3)	{
+					out << "" << filename << ":" << line <<" (" << funcname << "): ";
+				}
+				else {
+					out << "" << fs::path{filename}.filename() << ": ";
+				}
+				out << message << std::endl;
+    }
   }
 }
