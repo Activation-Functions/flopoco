@@ -99,14 +99,14 @@ find_package(ScaLP)
         file(REMOVE_RECURSE ${pagsuite_SOURCE_DIR}/build)
         file(MAKE_DIRECTORY ${pagsuite_SOURCE_DIR}/build)
         execute_process(
-          COMMAND                cmake -B build -DSCALP_PREFIX_PATH=${ScaLP_DIR} -DCMAKE_INSTALL_PREFIX=${pagsuite_BINARY_DIR}
+          COMMAND                cmake -B build -G${USED_CMAKE_GENERATOR} -DSCALP_PREFIX_PATH=${ScaLP_DIR} -DCMAKE_INSTALL_PREFIX=${pagsuite_BINARY_DIR}
           WORKING_DIRECTORY      ${pagsuite_SOURCE_DIR}
           COMMAND_ECHO           STDOUT
           RESULT_VARIABLE        PAGSUITE_LOCAL_BUILD_RES
         )
-      if (NOT ${PAGSUITE_LOCAL_BUILD_RES} EQUAL "0")
-        message(WARNING "Error when building locally pagsuite")
-      endif()
+        if (NOT ${PAGSUITE_LOCAL_BUILD_RES} EQUAL "0")
+          message(WARNING "Error when building locally pagsuite")
+        endif()
       endif()
       if(${PAGSUITE_LOCAL_BUILD_RES} EQUAL "0")
         execute_process(
