@@ -60,7 +60,7 @@ set(PAG_VERSION ${PC_PAG_VERSION})
 pkg_check_modules(PC_OSCM QUIET oscm)
 
 find_path(OSCM_INCLUDE_DIR
-  NAMES pagsuite/oscm.h
+  NAMES pagsuite/oscm.hpp
   PATHS ${PC_OSCM_INCLUDE_DIRS}
   DOC "Path of pagsuite/oscm.h, the include file for OSCM library"
 )
@@ -72,13 +72,15 @@ FIND_LIBRARY(OSCM_LIBRARY
 set(OSCM_VERSION ${PC_OSCM_VERSION})
 
 if(RPAG_LIBRARY AND RPAG_INCLUDE_DIR AND PAG_LIBRARY AND PAG_INCLUDE_DIR AND OSCM_LIBRARY AND OSCM_INCLUDE_DIR)
-  set(PAGSUITE_ALL_FOUND)
+	message(STATUS "PAGsuite found")
+  set(PAGSUITE_ALL_FOUND ON)
 endif()
 
 # Build if not found and option is set 
 
-if (NOT PAGSUITE_ALL_FOUND AND PAGSUITE_BUILD_NOTFOUND)
+if ((NOT PAGSUITE_ALL_FOUND) AND PAGSUITE_BUILD_NOTFOUND)
 message(STATUS "PAGsuite not found, will attempt to build locally")
+message(STATUS "PAGsuite packages found: ${RPAG_LIBRARY}, ${RPAG_INCLUDE_DIR}, ${PAG_LIBRARY}, ${PAG_INCLUDE_DIR}, ${OSCM_LIBRARY}, ${OSCM_INCLUDE_DIR}" )
 find_package(ScaLP)
   if(ScaLP_FOUND)
     set(ScaLP_DIR "${ScaLP_INCLUDE_DIR}/..")

@@ -15,7 +15,7 @@ Message("CMAKE_CURRENT_BINARY_DIR is " ${CMAKE_CURRENT_BINARY_DIR}  ", CMAKE_CUR
 
 cmake_policy(SET CMP0028 NEW) # Support for imported targets
 cmake_policy(SET CMP0076 NEW) # Conversion of target_sources argument to absolute
-cmake_policy(SET CMP0115 OLD) # Allow source file extension deduction 
+#cmake_policy(SET CMP0115 OLD) # Allow source file extension deduction 
 
 # Add module to find custom dependencies
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
