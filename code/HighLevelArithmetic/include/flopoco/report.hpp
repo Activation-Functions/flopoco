@@ -5,7 +5,7 @@
 #include <iostream>
 #include <ostream>
 #include <sstream>
-#include <string_view>
+#include <string>
 
 namespace flopoco {
   enum LogLevel {

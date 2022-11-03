@@ -45,6 +45,7 @@ pkg_check_modules(PC_GMPXX QUIET gmpxx)
 
 find_path(GMPXX_INCLUDE_DIR
   NAMES gmpxx.h
+  HINTS ${FLOPOCO_GMPXX_INCLUDE_HINT}
   PATHS ${PC_GMPXX_INCLUDE_DIRS}
   DOC "Path of gmp.h, the include file for GNU GMPXX library"
 )
@@ -52,6 +53,7 @@ find_path(GMPXX_INCLUDE_DIR
 FIND_LIBRARY(GMPXX_LIBRARY
   NAMES gmpxx gmpxx.lib
   PATHS ${PC_GMPXX_LIBRARY_DIRS}
+  HINTS ${FLOPOCO_GMPXX_LIB_HINT}
   DOC "Directory of the GMPXX library"
 )
 
