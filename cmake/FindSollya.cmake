@@ -79,7 +79,7 @@ if (Sollya_FOUND AND NOT TARGET Sollya::Sollya)
   set_target_properties(Sollya::Sollya PROPERTIES 
     IMPORTED_LOCATION "${Sollya_LIBRARY}"
     INTERFACE_COMPILE_OPTIONS "${PC_Sollya_FLAGS_OTHER}"
-    INTERFACE_INCLUDE_DIRECTORRIES "${Sollya_INCLUDE_DIR}"
+    INTERFACE_INCLUDE_DIRECTORIES "${Sollya_INCLUDE_DIR}"
   )
   target_link_libraries(Sollya::Sollya INTERFACE MPFI::MPFI)
 endif()
