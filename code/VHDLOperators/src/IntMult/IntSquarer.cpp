@@ -34,7 +34,7 @@ namespace flopoco{
 
 	/** compute the guard bits and the size of the last column for the faithful truncation of an exact bit heap.
 			input: a vector bhc of bit heap columns, for an integer bit heap (lsb at position 0)
-	 a positive integer l defining the position of the lsb of the result after truncation (overall error should be strictly smaller than 2^l 
+	 a positive integer l defining the position of the lsb of the result after truncation (overall error should be strictly smaller than 2^l
 returns: an integer pext that defines the position of the last column
 	an integer t that defines the number of bits to keep in the last column */
 	void compute_truncation_params(vector<int> bhc, int l, int& lext, int& t) {
@@ -72,7 +72,7 @@ returns: an integer pext that defines the position of the last column
 		for (int i=0; i<wIn; i++) {
 			bhc[2*i] += 1 ;
 		}
-		// The triangle bits 
+		// The triangle bits
 		for (int i=0; i<wIn-1; i++) {
 			for (int j=i+1; j<wIn; j++) {
 				bhc[i+j+1] += 1;
@@ -81,7 +81,7 @@ returns: an integer pext that defines the position of the last column
 		return bhc;
 	}
 
-	
+
 	// a small aux function that tells us if this bit must be stored in the bit heap or if we can discard it.
 	bool needThisBit(int pos, int lext, int&k) {
 		if(pos>lext)
@@ -94,7 +94,7 @@ returns: an integer pext that defines the position of the last column
 	}
 
 
-	
+
 	IntSquarer::IntSquarer(OperatorPtr parentOp_, Target* target_,  int wIn_, bool signedIn_, int wOut_, string method, int maxDSP):
 		Operator(parentOp_, target_), wIn(wIn_), signedIn(signedIn_), wOut(wOut_)
 	{
@@ -159,7 +159,7 @@ returns: an integer pext that defines the position of the last column
 		        }
 		    }
 		    // for (int i=lext; i<2*wIn; i++) {	cerr << i << " "  << bh.getColumnHeight(i) << endl ; }
-		
+
 		    // the correction constant + round bit
 		    if(wOut!=2*wIn) {
 		        for (int i=lext; i<l; i++) {
@@ -177,10 +177,6 @@ returns: an integer pext that defines the position of the last column
 		        }
 		    }
 
-		    #ifdef HAVE_SCALP
-		    getTarget()->setCompressionMethod("optimalMinStages");
-            #endif
-		
 		    bh.startCompression();
 		    string bhr=bh.getSumName();
 
@@ -191,6 +187,7 @@ returns: an integer pext that defines the position of the last column
 		    else {
 		        vhdl << tab << "R <= " << bhr<< range(wOut+guardBits-1, guardBits) << ";" <<endl;
 		    }
+		#ifdef HAVE_SCALP
 		} else if(method == "optimal"){
 		    stringstream commands, name;
 		    getTarget()->setTilingMethod("optimal");
@@ -211,11 +208,12 @@ returns: an integer pext that defines the position of the last column
 		    commands << "useIrregular=0 use2xk=1 useLUT=1 useKaratsuba=" << ((72<=wIn)?1:0) << " useDSP=" << (maxDSP?1:0) << " maxDSP=" << maxDSP << " squarer=0 " << "wX=" << wIn << " wY=" << wIn  << " wOut=" << wOut << " signedIO=" << signedIn;
 		    newInstance( "IntMultiplier", name.str(), commands.str(),"X=>X, Y=>X", "R=>R");
 		    if(wOut!=2*wIn) faithfulOnly=true;
+		#endif
 		} else {
 		    THROWERROR("Unknown squarer design method!");
 		}
 #if 0 // Old code
-		
+
 		if (wIn <= 17 ) {
 			vhdl << tab << declare( "sX", wIn) << " <= X;" << endl;
 			vhdl << tab << declare( "sY", wIn) << " <= X;" << endl;
@@ -448,7 +446,7 @@ returns: an integer pext that defines the position of the last column
 			tc->addExpectedOutput("R", svRRD);
 			tc->addExpectedOutput("R", svRRU);
 		}
-		else { 
+		else {
 			if(wOut==2*wIn) {
 				tc->addExpectedOutput("R", svR);
 			}
