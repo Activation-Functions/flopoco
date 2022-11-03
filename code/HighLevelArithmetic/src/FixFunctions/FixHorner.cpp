@@ -15,6 +15,7 @@
 #include <cassert>
 #include <iomanip>
 #include <iostream>
+#include <cmath>
 
 #include "flopoco/FixFunctions/FixHorner.hpp"
 #include "flopoco/report.hpp"

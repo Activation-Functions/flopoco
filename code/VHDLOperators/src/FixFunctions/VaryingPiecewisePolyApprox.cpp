@@ -30,8 +30,9 @@
 
 namespace flopoco {
 
+
   VaryingPiecewisePolyApprox::VaryingPiecewisePolyApprox(FixFunction *f_, double targetAccuracy_, int lsbIn_, int lsbOut_):
-		lsbIn(lsbIn_), msbOut(f->msbOut),  lsbOut(lsbOut_), f(f_),  targetAccuracy(targetAccuracy_)
+		lsbIn(lsbIn_), msbOut(f_->msbOut),  lsbOut(lsbOut_), f(f_),  targetAccuracy(targetAccuracy_)
 	{
 		degree = 0;
 		needToFreeF = false;
