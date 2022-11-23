@@ -11,7 +11,7 @@
 
 #include "flopoco/Operator.hpp"
 #include "flopoco/Target.hpp"
-#include "flopoco/UserInterface.hpp"
+#include "flopoco/InterfacedOperator.hpp"
 
 namespace flopoco {
 	/**

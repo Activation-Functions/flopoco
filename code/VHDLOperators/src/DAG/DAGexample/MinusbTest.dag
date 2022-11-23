@@ -1,0 +1,26 @@
+# Declare parameters wE and wF
+
+Param wE = 7;
+Param wF = 17; 
+
+# Name your source file name
+
+Name dagOpTest; 
+
+# Declare operators you will use as well as operator parameters
+
+Operator FPConstMult name = myMultConst wE_in = $wE wF_in = $wF wE_out = $wE wF_out = $wF constant = 4;
+Operator FPMult name = myMult wE = $wE wF = $wF;
+Operator FPMult name = mySquarer wE = $wE wF = $wF;
+Operator FPAdd name = myAdd wE = $wE wF = $wF sub = 1;
+
+# Declare I/O Signals
+
+Input A:Float($wE,$wF);
+Input B:Float($wE,$wF);
+Input C:Float($wE,$wF);
+Output S:Float($wE,$wF);
+
+# Assemble the operators in the order of your preference
+
+S = myAdd(mySquarer(B,B) , myMultConst(myMult(A,C)));
