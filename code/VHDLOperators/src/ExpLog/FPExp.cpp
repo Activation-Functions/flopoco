@@ -593,6 +593,7 @@ namespace flopoco{
 																								"ExpATable",
 																								k, sizeExpA));
 				op_ptr->report_compression_gain();
+				// TODO get rid of this
 			}
 
 
@@ -616,7 +617,7 @@ namespace flopoco{
 																	 expYTableContent,
 																	 "ExpZmZm1Table",
 																	 -k-p,
-																	 -2*k-wF-g);
+																	 -2*k+wF+g);
 				}
 
 
