@@ -342,10 +342,10 @@ namespace flopoco{
 	    "FunctionApproximation",
 	    "",
 	    "f(string): function to be evaluated between double-quotes, for instance \"exp(x*x)\";\
-						lsbIn(int): weight of input LSB, for instance -8 for an 8-bit input;\
-						lsbOut(int): weight of output LSB;\
-						d(int): degree of the polynomial;\
-						approxErrorBudget(real)=0.25: error budget in ulp for the approximation, between 0 and 0.5",
+			 lsbIn(int): weight of input LSB, for instance -8 for an 8-bit input;\
+			 lsbOut(int): weight of output LSB;\
+			 d(int): degree of the polynomial;\
+			 approxErrorBudget(real)=0.25: error budget in ulp for the approximation, between 0 and 0.5",
 	    "This operator uses a table for coefficients, and Horner "
 	    "evaluation with truncated multipliers sized just right.<br>For "
 	    "more details, see <a "
