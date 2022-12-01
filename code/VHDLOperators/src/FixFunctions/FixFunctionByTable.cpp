@@ -82,12 +82,11 @@ namespace flopoco{
 	template <>
 	const OperatorDescription<FixFunctionByTable> op_descriptor<FixFunctionByTable> {
 	    "FixFunctionByTable", // name
-	    "Evaluator of function f on [0,1) or [-1,1), depending on "
-	    "signedIn, using a table.",
+	    "Evaluator of function f on [0,1) or [-1,1), depending on signedIn, using a table.",
 	    "FunctionApproximation",
 	    "",
 	    "f(string): function to be evaluated between double-quotes, for instance \"exp(x*x)\";\
-			signedIn(bool): if true the function input range is [-1,1), if false it is [0,1);\
+			signedIn(bool)=0: if true the function input range is [-1,1), if false it is [0,1);\
 			lsbIn(int): weight of input LSB, for instance -8 for an 8-bit input;\
 			lsbOut(int): weight of output LSB;",
 	    "This operator uses a table to store function values."};

@@ -951,7 +951,6 @@ namespace flopoco {
 
 
 }//namespace
-#endif // HAVE_PAGLIB
 
 
 namespace flopoco {
@@ -975,3 +974,5 @@ namespace flopoco {
 	    // const1,stage:trunc_input_0,trunc_input_1,...;const2,stage:trunc_input_0,trunc_input_1,...;...",
 	    ""};
 }//namespace
+
+#endif // HAVE_PAGLIB

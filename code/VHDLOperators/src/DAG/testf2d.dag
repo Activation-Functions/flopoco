@@ -1,0 +1,23 @@
+# Declare parameters wE and wF
+
+Param wE = 8;
+Param wF = 17; 
+
+# Name your source file name
+
+Name test; 
+
+# Declare operators you will use as well as operator parameters
+
+Operator FPAdd name = myAdd wE = $wE wF = $wF sub = 0;
+Operator FPAdd name = myAdd2 wE = $wE wF = $wF sub = 0;
+
+# Declare I/O Signals
+
+Input A, B;
+Output R;
+
+# Assemble the operators in the order of your preference e.g ( cosA = (b^2 + c^2 - a^2) / 2bc)
+
+R = myAdd(A,myAdd2(A,B));
+

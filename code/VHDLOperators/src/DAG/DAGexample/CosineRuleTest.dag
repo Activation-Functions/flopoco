@@ -1,0 +1,37 @@
+# Declare parameters wE and wF
+
+Param wE = 7;
+Param wF = 17; 
+
+# Name your source file name
+
+Name dagOpCosineRule; 
+
+# Declare operators you will use as well as operator parameters
+
+Operator FPMult name = mySquarerOne wE = $wE wF = $wF;
+Operator FPMult name = mySquarerTwo wE = $wE wF = $wF;
+Operator FPMult name = mySquarerThree wE = $wE wF = $wF;
+Operator FPAdd name = myAdd wE = $wE wF = $wF sub = 0;
+Operator FPAdd name = mySub wE = $wE wF = $wF sub = 1;
+Operator FPMult name = myMult wE = $wE wF = $wF;
+Operator FPConstMult name = myMultConst wE_in = $wE wF_in = $wF wE_out = $wE wF_out = $wF constant = 2;
+Operator FPDiv name = myDiv wE = $wE wF = $wF;
+
+# Declare I/O Signals
+
+Input A:Float($wE,$wF);
+Input B:Float($wE,$wF);
+Input C:Float($wE,$wF);
+Output Cosine:Float($wE,$wF);
+
+# Assemble the operators in the order of your preference e.g ( cosA = (b^2 + c^2 - a^2) / 2bc)
+
+# b^2 + c^2 - a^2
+TopFraction = mySub(myAdd(mySquarerOne(B,B), mySquarerTwo(C,C)), mySquarerThree(A,A));
+
+# 2bc
+BottomFraction = myMultConst(myMult(B,C));
+
+# TopFraction / BottomFraction
+Cosine = myDiv(TopFraction, BottomFraction);

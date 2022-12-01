@@ -106,17 +106,18 @@ namespace flopoco {
 	}
 
 	string Fix2DNormLUT::squarerByIntSquarer() {
-		string squarer_args = "wIn=" + to_string(getWIn()) +
-				      " wOut=0"            \
-				      " method=schoolbook" \
-				      " maxDSP=0"          \
-				      " signedIn=false";
-	        newInstance("IntSquarer", "squarerX", squarer_args, "X=>X", "R=>XX");
+		string squarer_args =
+			"wIn=" + to_string(getWIn()) +
+			" wOut=0"										 \
+			" method=schoolbook"				 \
+			" maxDSP=0"									 \
+			" signedIn=false";
+		newInstance("IntSquarer", "squarerX", squarer_args, "X=>X", "R=>XX");
 		newInstance("IntSquarer", "squarerY", squarer_args, "X=>Y", "R=>YY");
-
+		
 		vhdl << tab << declare("XX_adder", -2*lsbIn + 1) << " <= '0' & XX;" << endl;
 		vhdl << tab << declare("YY_adder", -2*lsbIn + 1) << " <= '0' & YY;" << endl;
-
+		
 		return "X=>XX_adder, Y=>YY_adder, ";
 	}
 }

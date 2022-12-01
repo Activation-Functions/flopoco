@@ -1,0 +1,26 @@
+# Declare parameters wE and wF
+
+Param wE = 17;
+Param wF = 17; 
+
+# Name your source file name
+
+Name dagOpTest; 
+
+# Declare operators you will use as well as operator parameters
+
+Operator FPDiv name = myDiv wE = $wE wF = $wF;
+Operator FPSqrt name = mySqrt wE = $wE wF = $wF;
+Operator FPAdd name = myAdd wE = $wE wF = $wF sub = 0;
+Operator FPMult name = mySquarerOne wE = $wE wF = $wF;
+Operator FPMult name = mySquarerTwo wE = $wE wF = $wF;
+
+# Declare I/O Signals
+
+Input A:Float($wE,$wF);
+Input B:Float($wE,$wF);
+Output S:Float($wE,$wF);
+
+# Assemble the operators in the order of your preference
+
+S = myDiv(A,mySqrt(myAdd(mySquarerOne(A,A),mySquarerTwo(B,B))));
