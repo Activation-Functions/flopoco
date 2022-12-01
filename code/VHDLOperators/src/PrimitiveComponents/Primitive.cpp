@@ -114,7 +114,6 @@ namespace flopoco
           if (ioList_[j]->type() == Signal::in)
           {
             ioList_[i]->addPredecessor(ioList_[j]);
-            cout << "!!! setting output delay of " << ioList_[i]->getName() << endl;
             ioList_[i]->setSchedule(0, 1.2345E-9);
           }
         }
