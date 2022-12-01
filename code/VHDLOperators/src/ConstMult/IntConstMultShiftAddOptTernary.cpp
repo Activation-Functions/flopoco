@@ -101,7 +101,6 @@ namespace flopoco{
         return new IntConstMultShiftAddOptTernary(parentOp, target, wIn, constant, false);
     }
 }
-#endif
 
 namespace flopoco {
 	template <>
@@ -118,3 +117,5 @@ namespace flopoco {
                             constant(int): constant;",
 	    "Nope."};
 }
+
+#endif
