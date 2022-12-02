@@ -24,9 +24,7 @@ ninja
 #  make
 
 # executables are in build/code/FloPoCoBin/
-
-cd ..
-ln -s ./build/code/FloPoCoBin/flopoco .
+ln -s ./code/FloPoCoBin/flopoco .
 
 # build the html documentation in doc/web. 
 ./flopoco BuildHTMLDoc
