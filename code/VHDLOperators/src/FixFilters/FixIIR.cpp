@@ -4,11 +4,15 @@
 
 #include "gmp.h"
 #include "mpfr.h"
-#if HAVE_WCPG
+#if WCPG_FOUND
 extern "C"
 {
 	#include "wcpg.h"
 }
+/* Uncomment this to confirm that WCPG is not found
+#else
+#error "WCPG not found"
+*/
 #endif
 
 #include "flopoco/FixFilters/FixIIR.hpp"
@@ -101,7 +105,7 @@ namespace flopoco {
 		
 		// TODO here compute H if it is not provided
 		if(H==0 && Heps==0) {
-#if HAVE_WCPG
+#if WCPG_FOUND
 
 			REPORT(LogLevel::DETAIL, "H not provided: computing worst-case peak gain");
 
