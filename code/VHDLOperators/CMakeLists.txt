@@ -14,6 +14,9 @@ find_package(MPFR REQUIRED)
 # Detect MPFI
 find_package(MPFI REQUIRED)
 
+# Detect LAPACK
+find_package(LAPACK REQUIRED)
+
 # find boost random
 find_package(Boost 1.64.0 REQUIRED COMPONENTS random filesystem)
 
@@ -41,7 +44,7 @@ target_link_libraries(FloPoCoLib PUBLIC hileco)
 
 target_link_libraries(
   FloPoCoLib PRIVATE
-  GMPXX::GMPXX MPFR::MPFR MPFI::MPFI ${Boost_LIBRARIES}
+  GMPXX::GMPXX MPFR::MPFR MPFI::MPFI LAPACK::LAPACK ${Boost_LIBRARIES}
   )
 
 if (Sollya_FOUND)
@@ -51,11 +54,13 @@ if (Sollya_FOUND)
 	)
 endif (Sollya_FOUND)
 
+
 if (WCPG_FOUND)
   target_link_libraries(
 	FloPoCoLib PRIVATE
 	WCPG::WCPG
 	)
+	target_compile_definitions(FloPoCoLib PUBLIC HAVE_WCPG)
 endif (WCPG_FOUND)
 
 if (ScaLP_FOUND)

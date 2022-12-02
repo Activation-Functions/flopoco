@@ -21,7 +21,7 @@
 #include <sstream>
 #include <iomanip>
 
-#if WCPG_FOUND
+#if HAVE_WCPG
 extern "C"
 {
 #include "wcpg.h"
@@ -111,7 +111,7 @@ namespace flopoco {
 
         if(!isFIR) // wcpg and guard bits only necessary for IIR
         {
-#if WCPG_FOUND
+#if HAVE_WCPG
             coeffa_d_wcpg = (double *) malloc(m * sizeof(double));
             coeffb_d_wcpg = (double *) malloc(n * sizeof(double));
             if(H == 0) // H not set by argument

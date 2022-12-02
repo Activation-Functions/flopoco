@@ -4,7 +4,7 @@
 
 #include "gmp.h"
 #include "mpfr.h"
-#if WCPG_FOUND
+#if HAVE_WCPG
 extern "C"
 {
 	#include "wcpg.h"
@@ -105,7 +105,7 @@ namespace flopoco {
 		
 		// TODO here compute H if it is not provided
 		if(H==0 && Heps==0) {
-#if WCPG_FOUND
+#if HAVE_WCPG
 
 			REPORT(LogLevel::DETAIL, "H not provided: computing worst-case peak gain");
 
