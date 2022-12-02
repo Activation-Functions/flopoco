@@ -6,7 +6,7 @@ add_flopocolib_src(
 	FixRealConstMult.cpp
 	FixRealKCM.cpp
 	FixRealShiftAdd.cpp
-	#FPConstDiv.cpp
+	FPConstDiv.cpp
 	FPConstMult.cpp
 	#FPRealKCM.cpp
 	IntConstDiv.cpp
