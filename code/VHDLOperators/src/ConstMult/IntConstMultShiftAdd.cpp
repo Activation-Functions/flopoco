@@ -103,13 +103,12 @@ namespace flopoco {
 		if(validParse)
 		{
 			pipelined_adder_graph.drawdot("pag_input_graph.dot");
-			pipelined_adder_graph.print_graph();
-
-			REPORT(LogLevel::VERBOSE,  "check graph...")
-			pipelined_adder_graph.check_and_correct(pipelined_realization_str);
 
 			if(is_log_lvl_enabled(LogLevel::VERBOSE))
 				pipelined_adder_graph.print_graph();
+
+			REPORT(LogLevel::VERBOSE,  "check graph...")
+			pipelined_adder_graph.check_and_correct(pipelined_realization_str);
 
 			IntConstMultShiftAdd_TYPES::TruncationRegister truncationReg(truncations);
 
