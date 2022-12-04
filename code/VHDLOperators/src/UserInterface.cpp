@@ -50,7 +50,7 @@ namespace flopoco
 	UserInterface::UserInterface():factRegistry(FactoryRegistry::getFactoryRegistry()) {
 		outputFileName="flopoco.vhdl";
 		targetFPGA=defaultFPGA;
-		targetFrequencyMHz=400;
+		targetFrequencyMHz=0;
 		useHardMult=true;
 		registerLargeTables=false;
 		tableCompression=false;
@@ -751,7 +751,7 @@ namespace flopoco
 		s << "  " << COLOR_BOLD << "outputFile" << COLOR_NORMAL << "=<string>:          override the the default output file name " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL <<endl;
 		s << "  " << COLOR_BOLD << "target" << COLOR_NORMAL << "=<string>:              target FPGA (default " << defaultFPGA << ") " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
 		s << "     Supported targets: Kintex7, StratixV, Virtex6, Zynq7000, Versal, VirtexUltrascalePlus"<<endl;
-		s << "  " << COLOR_BOLD << "frequency" << COLOR_NORMAL << "=<float>:            target frequency in MHz (default 400, 0 means: no pipeline) " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
+		s << "  " << COLOR_BOLD << "frequency" << COLOR_NORMAL << "=<float>:            target frequency in MHz (default 0, 0 means: no pipeline) " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
 		s << "  " << COLOR_BOLD << "plainVHDL" << COLOR_NORMAL << "=<0|1>:              use plain VHDL (default), or not " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL << endl;
 		s << "  " << COLOR_BOLD << "useHardMult" << COLOR_NORMAL << "=<0|1>:            use hardware multipliers " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
 		s << "  " << COLOR_BOLD << "tableCompression" << COLOR_NORMAL << "=<0|1>:       use errorless table compression when possible (default false while experimental)" << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
