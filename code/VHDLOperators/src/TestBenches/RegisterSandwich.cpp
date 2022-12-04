@@ -20,19 +20,19 @@
 #include <iostream>
 #include <sstream>
 #include "flopoco/Operator.hpp"
-#include "flopoco/TestBenches/Wrapper.hpp"
+#include "flopoco/TestBenches/RegisterSandwich.hpp"
 
 namespace flopoco{
 
-	Wrapper::Wrapper(Target* target, Operator *op):
+	RegisterSandwich::RegisterSandwich(Target* target, Operator *op):
 		Operator(nullptr, target), op_(op)
 	{
 		string idext;
 
 		setCopyrightString("Florent de Dinechin (2007-2019)");
 		//the name of the Wrapped operator consists of the name of the operator to be
-		//	wrapped followd by _Wrapper
-		setNameWithFreqAndUID(op_->getName() + "_Wrapper");
+		//	wrapped followd by _RegisterSandwich
+		setNameWithFreqAndUID(op_->getName() + "_RegisterSandwich");
 
 		//this operator is a sequential one	even if Target is unpipelined
 		setSequential();
@@ -86,25 +86,24 @@ namespace flopoco{
 		}
 	}
 
-	Wrapper::~Wrapper() {
+	RegisterSandwich::~RegisterSandwich() {
 	}
 
-	OperatorPtr Wrapper::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
+	OperatorPtr RegisterSandwich::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 		if(ui.globalOpList.empty()){
-			throw("ERROR: Wrapper has no operator to wrap (it should come after the operator it wraps)");
+			throw("ERROR: RegisterSandwich has no operator to wrap (it should come after the operator it wraps)");
 		}
 
 		Operator* toWrap = ui.globalOpList.back();
 		ui.globalOpList.pop_back();
 
-		return new Wrapper(target, toWrap);
+		return new RegisterSandwich(target, toWrap);
 	}
 
 	template <>
-	const OperatorDescription<Wrapper> op_descriptor<Wrapper> {
-	    "Wrapper", // name
-	    "Wraps the preceding operator between registers (for frequency "
-	    "testing).",
+	const OperatorDescription<RegisterSandwich> op_descriptor<RegisterSandwich> {
+	    "RegisterSandwich", // name
+	    "Wraps the preceding operator between registers (for frequency testing).",
 	    "TestBenches",
 	    "fixed-point function evaluator; fixed-point", // categories
 	    "",

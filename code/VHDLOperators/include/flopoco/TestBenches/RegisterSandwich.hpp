@@ -1,5 +1,5 @@
-#ifndef WRAPPER_HPP
-#define WRAPPER_HPP
+#ifndef REGISTERSANDWICH_HPP
+#define REGISTERSANDWICH_HPP
 
 /**
  * A wrapper is a VHDL entity that places registers before and after
@@ -11,18 +11,18 @@
 #include "flopoco/InterfacedOperator.hpp"
 namespace flopoco{
 
-	class Wrapper : public Operator
+	class RegisterSandwich : public Operator
 	{
 	public:
 		/**
-		 * The Wrapper constructor
+		 * The RegisterSandwich constructor
 		 * @param[in] target the target device
 		 * @param[in] op the operator to be wrapped
 		 **/
-		Wrapper(Target* target, Operator* op);
+		RegisterSandwich(Target* target, Operator* op);
 
 		/** The destructor */
-		~Wrapper();
+		~RegisterSandwich();
 
 		// User-interface stuff
 

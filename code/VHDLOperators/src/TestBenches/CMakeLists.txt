@@ -4,5 +4,5 @@ add_flopocolib_src(
     PositNumber.cpp
     TestBench.cpp
     TestCase.cpp
-    Wrapper.cpp
+    RegisterSandwich.cpp
 )
