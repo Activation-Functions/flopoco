@@ -149,7 +149,11 @@ if __name__ == '__main__':
     xdc_file_name = workdir+"/clock.xdc"
     report("writing "+xdc_file_name)
     clock_file = open(xdc_file_name,"w")
-    period = 1000.0/float(frequency) # the frequency is in MHz and the period in ns
+    if(float(frequency)>0):
+        period = 1000.0/float(frequency) # the frequency is in MHz and the period in ns
+    else:
+        period=1000
+
     clock_file.write("create_clock -name clk -period {period} -waveform {{0.000 {half_period}}} [get_ports clk]\n".format(period=period, half_period=period/2.0))
     for sig in in_sig:
         clock_file.write("set_input_delay -clock [get_clocks clk] 0 [get_ports {}]\n".format(sig))

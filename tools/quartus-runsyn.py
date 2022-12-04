@@ -105,7 +105,10 @@ if __name__ == '__main__':
     sdc_file_name = entity+".sdc"
     report("Writing clock file " + sdc_file_name)
     clock_file = open(sdc_file_name,"w")
-    period = 1000.0/float(frequency) # the frequency is in MHz and the period in ns
+    if(float(frequency)>0):
+        period = 1000.0/float(frequency) # the frequency is in MHz and the period in ns
+    else:
+        period=1000
     clock_file.write("# This file was created by the quartus_runsyn utility. Sorry to clutter your tmp.\n")
     clock_file.write("create_clock -name clk -period " + str(period) + " [get_ports clk] \n")
     clock_file.close()
