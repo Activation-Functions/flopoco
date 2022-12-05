@@ -63,45 +63,50 @@ if (NOT WCPG_INCLUDE_DIR AND NOT WCPG_LIBRARY AND WCPG_BUILD_NOTFOUND)
     WCPG
     GIT_REPOSITORY https://github.com/fixif/WCPG.git
     GIT_TAG b90253a4a6a650300454f5656a7e8410e0493175
+    UPDATE_DISCONNECTED False
   )
   FetchContent_MakeAvailable(WCPG)
-  if(${wcpg_POPULATED} AND NOT EXISTS "${wcpg_BINARY_DIR}/lib/libwcpg.a")
-    execute_process(
-      COMMAND                bash autogen.sh
-      WORKING_DIRECTORY      ${wcpg_SOURCE_DIR}
-      COMMAND_ECHO           STDOUT
-      RESULT_VARIABLE        WCPG_LOCAL_AUTOGEN_RES
-    )
-    if (${WCPG_LOCAL_AUTOGEN_RES} EQUAL "0")
+  if(${wcpg_POPULATED})
+    if(NOT EXISTS "${wcpg_BINARY_DIR}/lib/libwcpg.a")
       execute_process(
-        COMMAND                ./configure --prefix=${wcpg_BINARY_DIR}
+        COMMAND                bash autogen.sh
         WORKING_DIRECTORY      ${wcpg_SOURCE_DIR}
         COMMAND_ECHO           STDOUT
-        RESULT_VARIABLE        WCPG_LOCAL_CONFIGURE_RES
+        RESULT_VARIABLE        WCPG_LOCAL_AUTOGEN_RES
       )
-      if(${WCPG_LOCAL_CONFIGURE_RES} EQUAL 0)
+      if (${WCPG_LOCAL_AUTOGEN_RES} EQUAL "0")
         execute_process(
-          COMMAND                make -j 4 install
+          COMMAND                ./configure --prefix=${wcpg_BINARY_DIR}
           WORKING_DIRECTORY      ${wcpg_SOURCE_DIR}
           COMMAND_ECHO           STDOUT
-          RESULT_VARIABLE        WCPG_LOCAL_INSTALL_RES
+          RESULT_VARIABLE        WCPG_LOCAL_CONFIGURE_RES
         )
-        if(${WCPG_LOCAL_INSTALL_RES} EQUAL "0")
-          set(WCPG_LIBRARY ${wcpg_BINARY_DIR}/lib/libwcpg.a)
-          set(WCPG_INCLUDE_DIR ${wcpg_BINARY_DIR}/include)
-          set(WCPG_LOCAL_BUILD)
+        if(${WCPG_LOCAL_CONFIGURE_RES} EQUAL 0)
+          execute_process(
+            COMMAND                make -j 4 install
+            WORKING_DIRECTORY      ${wcpg_SOURCE_DIR}
+            COMMAND_ECHO           STDOUT
+            RESULT_VARIABLE        WCPG_LOCAL_INSTALL_RES
+          )
+          if(${WCPG_LOCAL_INSTALL_RES} EQUAL "0")
+            set(WCPG_LIBRARY ${wcpg_BINARY_DIR}/lib/libwcpg.a CACHE FILEPATH "WCPG library")
+            set(WCPG_INCLUDE_DIR ${wcpg_BINARY_DIR}/include CACHE PATH "WCPG include dir")
+            set(WCPG_LOCAL_BUILD CACHE BOOL INTERNAL)
+          else()
+            message(WARNING "Error when running local installation of WCPG")
+          endif()
         else()
-          message(WARNING "Error when running local installation of WCPG")
+          message(WARNING "Error when configuring local WCPG")
         endif()
       else()
-        message(WARNING "Error when configuring local WCPG")
+        message(WARNING "Error when running autogen for local build of WCPG")
       endif()
     else()
-      message(WARNING "Error when running autogen for local build of WCPG")
+      set(WCPG_LIBRARY ${wcpg_BINARY_DIR}/lib/libwcpg.a)
+      set(WCPG_INCLUDE_DIR ${wcpg_BINARY_DIR}/include)
+      set(WCPG_LOCAL_BUILD)
     endif()
   endif()
-
-  
 endif()
 
 include(FindPackageHandleStandardArgs)
