@@ -31,7 +31,7 @@ public:
 			There are defaults for lsbOut and msbOut for situations when they are computed afterwards.
 		*/
 	FixFunction(std::string sollyaString, bool signedIn, int lsbIn=0, int lsbOut=0);
-	FixFunction(sollya_obj_t fS, bool signedIn);
+	FixFunction(sollya_obj_t fS, bool signedIn, int lsbIn=0, int lsbOut=0);
 
 	virtual ~FixFunction();
 
