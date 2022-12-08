@@ -87,23 +87,26 @@ if(ScaLP_INCLUDE_DIR AND ScaLP_LIBRARY)
   )
   LIST(APPEND ScaLP_BACKENDS ${SCALP_LPSOLVE_LIB})
 elseif (SCALP_BUILD_NOTFOUND)
-  message(STATUS "ScaLP not found, will attempt to build")
-  find_library(LPSOLVE_LIB 
-      NAMES lpsolve55
-      PATH_SUFFIXES lpsolve lp_solve)
-  message("lpsolve found: ${LPSOLVE_LIB}")
-  find_path(LPSOLVE_INCLUDE_DIR NAMES lpsolve/lp_types.h)
-  if (LPSOLVE_LIB AND LPSOLVE_INCLUDE_DIR)
-      get_filename_component(LPSOLVE_LIB_DIR ${LPSOLVE_LIB} DIRECTORY)
-      include(FetchContent)
-      FetchContent_Declare(
-          Scalp
-          GIT_REPOSITORY https://digidev.digi.e-technik.uni-kassel.de/git/scalp.git
-          SOURCE_SUBDIR NonExistentRepo
-        )
-      FetchContent_MakeAvailable(Scalp)
-      set(SCALP_REAL_SOURCE_DIR ${scalp_SOURCE_DIR})
-      if(${scalp_POPULATED} AND NOT EXISTS "${scalp_BINARY_DIR}/include/ScaLP/SolverDynamic.h")
+  include(FetchContent)
+  FetchContent_Declare(
+    Scalp
+    GIT_REPOSITORY https://digidev.digi.e-technik.uni-kassel.de/git/scalp.git
+    GIT_TAG 185b84e4ff967f42cf2de5db4db4e6fa0cc18fb8
+    UPDATE_DISCONNECTED False
+    SOURCE_SUBDIR NonExistentRepo
+  )
+  FetchContent_MakeAvailable(Scalp)
+  set(SCALP_REAL_SOURCE_DIR ${scalp_SOURCE_DIR})
+  if(${scalp_POPULATED})
+    if(NOT EXISTS "${scalp_BINARY_DIR}/include/ScaLP/SolverDynamic.h")
+      message(STATUS "ScaLP not found, will attempt to build")
+      find_library(LPSOLVE_LIB
+        NAMES lpsolve55
+        PATH_SUFFIXES lpsolve lp_solve)
+      message("lpsolve found: ${LPSOLVE_LIB}")
+      find_path(LPSOLVE_INCLUDE_DIR NAMES lpsolve/lp_types.h)
+      if (LPSOLVE_LIB AND LPSOLVE_INCLUDE_DIR)
+        get_filename_component(LPSOLVE_LIB_DIR ${LPSOLVE_LIB} DIRECTORY)
         file(REMOVE_RECURSE ${SCALP_REAL_SOURCE_DIR}/build)
         file(MAKE_DIRECTORY ${SCALP_REAL_SOURCE_DIR}/build)
         execute_process(
@@ -116,15 +119,19 @@ elseif (SCALP_BUILD_NOTFOUND)
           WORKING_DIRECTORY ${SCALP_REAL_SOURCE_DIR}
           COMMAND_ECHO      STDOUT
         )
+        set(SCALP_LOCALLY_BUILT TRUE)
+      else()
+        message(STATUS "lpsolve not found, ScaLP cannot be built locally")
       endif()
-
-      set(ScaLP_INCLUDE_DIR ${scalp_BINARY_DIR}/include)
-      set(ScaLP_LIBRARY ${scalp_BINARY_DIR}/lib/libScaLP.so)
-      set(SCALP_LPSOLVE_LIB ${scalp_BINARY_DIR}/lib/libScaLP-LPSOLVE.so)
+    else()
+      set(SCALP_LOCALLY_BUILT TRUE)
+    endif()
+    if(${SCALP_LOCALLY_BUILT})
+      set(ScaLP_INCLUDE_DIR "${scalp_BINARY_DIR}/include")
+      set(ScaLP_LIBRARY "${scalp_BINARY_DIR}/lib/libScaLP.so")
+      set(SCALP_LPSOLVE_LIB "${scalp_BINARY_DIR}/lib/libScaLP-LPSOLVE.so")
       set(ScaLP_BACKENDS ${SCALP_LPSOLVE_LIB})
-      set(SCALP_LOCALLY_BUILT)
-  else()
-      message(STATUS "lpsolve not found, ScaLP cannot be built locally")
+    endif()
   endif()
 endif()
 

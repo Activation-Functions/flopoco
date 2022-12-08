@@ -79,23 +79,23 @@ endif()
 # Build if not found and option is set 
 
 if ((NOT PAGSUITE_ALL_FOUND) AND PAGSUITE_BUILD_NOTFOUND)
-message(STATUS "PAGsuite not found, will attempt to build locally")
-message(STATUS "PAGsuite packages found: ${RPAG_LIBRARY}, ${RPAG_INCLUDE_DIR}, ${PAG_LIBRARY}, ${PAG_INCLUDE_DIR}, ${OSCM_LIBRARY}, ${OSCM_INCLUDE_DIR}" )
 find_package(ScaLP)
-  if(ScaLP_FOUND)
-    set(ScaLP_DIR "${ScaLP_INCLUDE_DIR}/..")
-    include(FetchContent)
+if(ScaLP_FOUND)
+set(ScaLP_DIR "${ScaLP_INCLUDE_DIR}/..")
+include(FetchContent)
     FetchContent_Declare(
-        PAGSuite
-        GIT_REPOSITORY https://gitlab.com/kumm/pagsuite.git
-        GIT_TAG 3a35198b3cd8ffedf35c31156b72366ca0f98400
-        SOURCE_SUBDIR NonExistentRepo
-    )
-    set(PAGSUITE_INSTALL_DIR ${pagsuite_BINARY_DIR})
-    FetchContent_MakeAvailable(PAGSuite)
-    set(PAGSUITE_LOCAL_BUILD_RES "0")
-    if (${pagsuite_POPULATED})
+      PAGSuite
+      GIT_REPOSITORY https://gitlab.com/kumm/pagsuite.git
+      GIT_TAG 3a35198b3cd8ffedf35c31156b72366ca0f98400
+      UPDATE_DISCONNECTED False
+      SOURCE_SUBDIR NonExistentRepo
+      )
+      set(PAGSUITE_INSTALL_DIR ${pagsuite_BINARY_DIR})
+      FetchContent_MakeAvailable(PAGSuite)
+      set(PAGSUITE_LOCAL_INSTALL_RES "-1")
+      if (${pagsuite_POPULATED})
       if (NOT EXISTS "${pagsuite_BINARY_DIR}/bin/rpag")
+        message(STATUS "PAGsuite not found, will attempt to build locally")
         file(REMOVE_RECURSE ${pagsuite_SOURCE_DIR}/build)
         file(MAKE_DIRECTORY ${pagsuite_SOURCE_DIR}/build)
         execute_process(
@@ -106,15 +106,16 @@ find_package(ScaLP)
         )
         if (NOT ${PAGSUITE_LOCAL_BUILD_RES} EQUAL "0")
           message(WARNING "Error when building locally pagsuite")
+        else()
+          execute_process(
+            COMMAND                cmake --build build --target install
+            WORKING_DIRECTORY      ${pagsuite_SOURCE_DIR}
+            COMMAND_ECHO           STDOUT
+            RESULT_VARIABLE        PAGSUITE_LOCAL_INSTALL_RES
+          )
         endif()
-      endif()
-      if(${PAGSUITE_LOCAL_BUILD_RES} EQUAL "0")
-        execute_process(
-          COMMAND                cmake --build build --target install
-          WORKING_DIRECTORY      ${pagsuite_SOURCE_DIR}
-          COMMAND_ECHO           STDOUT
-          RESULT_VARIABLE        PAGSUITE_LOCAL_INSTALL_RES
-        )
+      else()
+        set(PAGSUITE_LOCAL_INSTALL_RES "0")
       endif()
     endif()
     if (${PAGSUITE_LOCAL_INSTALL_RES} EQUAL "0")
@@ -125,9 +126,8 @@ find_package(ScaLP)
       set(OSCM_INCLUDE_DIR ${pagsuite_BINARY_DIR}/include)
       set(OSCM_LIBRARY ${pagsuite_BINARY_DIR}/lib/liboscm.so)
       set(PAGSUITE_LOCALLY_BUILT)
-      message("ScaLP has been built and installed locally")
     else()
-      message(WARNING "Error when installing scalp locally")
+      message(WARNING "Error when installing pagsuite locally")
     endif()
   else()
     message(STATUS "Missing ScaLP: PAGSuite will not be built locally")
