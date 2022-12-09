@@ -1,0 +1,27 @@
+# Name your source file name
+Name QuadraticEquationDelta; 
+
+# Declare parameters wE and wF
+
+Param wE = 17;
+Param wF = 7; 
+
+
+# Declare operators you will use as well as operator parameters
+
+Operator Mul1  : FPMult wE = $wE wF = $wF;
+Operator Square: FPMult  wE = $wE wF = $wF; # to replace with a squarer
+Operator Mul4  : FPConstMult constant=4 wE = $wE wF = $wF; 
+Operator Add   : FPAdd wE = $wE wF = $wF;
+Operator Sub   : FPAdd wE = $wE wF = $wF sub = 1;
+
+# Declare I/O Signals
+
+Input A:Float($wE,$wF);
+Input B:Float($wE,$wF);
+Input C:Float($wE,$wF);
+Output Delta:Float($wE,$wF);
+
+# Assemble the operators : the following is the tree version of b*b-4*a*c
+# Delta = Sub(Square(b, b),  Mul4(Mul(A,C)));
+ Delta = Mul(A,C);
