@@ -1,7 +1,6 @@
 /* Each Operator declared within the flopoco framework has 
    to inherit the class Operator and overload some functions listed below*/
 #include "Operator.hpp"
-
 namespace flopoco {
 
 	// new operator class declaration
@@ -37,13 +36,13 @@ namespace flopoco {
 		/** Factory register method */ 
 		static void registerFactory();
 
-		private:
-		// Maps for storing DAG iformation
 
+#ifdef DAGOPERATOR_IMPLEM
+	private:
 		map<string, string> parameters;
 		map<string, string > operatorValues[30]; 
 		map<string, string> signalList;
-
+#endif
 	};
 
 
