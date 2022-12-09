@@ -39,8 +39,10 @@ namespace flopoco {
 
 #ifdef DAGOPERATOR_IMPLEM
 	private:
+		void parse(string infile);
+		string fileName;
 		map<string, string> parameters;
-		map<string, string > operatorValues[30]; 
+		map<string, string> operatorEntity; 
 		map<string, string> signalList;
 #endif
 	};
