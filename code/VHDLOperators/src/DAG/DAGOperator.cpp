@@ -101,22 +101,21 @@ comment              <-  ('#' / '//') (!endl .)* &endl
 		//Grammar definitio
 		peg::parser DAGparser(R"(
 dag                  <- command*
-command              <- parameterDeclaration / fileName / operatorDeclaration / InputDeclaration / OutputDeclaration / Assignment / LineComment/ EndOfLine
-fileName             <- 'Name' entityName ';'
-parameterDeclaration <- 'Param' paramName '='  number ';'
+command              <- entityDeclaration / parameterDeclaration / operatorDeclaration / ioDeclaration / assignment / commentLine / EndOfLine
+entityDeclaration             <- 'EntityName' entityName ';'
+parameterDeclaration <- 'Parameter' name '='  value ';'
 operatorDeclaration  <- 'Operator' instanceName ':' entityName nameValuePair* ';'
 nameValuePair        <- name '=' value
-InputDeclaration     <-  'Input' signalName ':' typeName '(' value ',' value ')' ';'
-OutputDeclaration    <-  'Output' signalName ':' typeName '(' value ',' value ')' ';'
+ioDeclaration     <-  ioDir signalName ':' typeName '(' value ',' value ')' ';'
+ioDir    <-  'Input' | 'Output'
 
-Assignment     <-  signalName '=' instance ';'
+assignment     <-  signalName '=' instance ';'
 instance       <-  instanceName  '('  arg (','  arg)* ')'
 arg            <-  instance / signalName
 
 typeName        <- name 
 instanceName    <- name 
 entityName      <- name
-paramName       <- name
 signalName      <- name
 value           <- string / number / paramValue
 string          <-  < '"' (!'"' .)* '"' >
@@ -128,49 +127,76 @@ paramValue      <- '$' name
 Endl                      <-  EndOfLine / EndOfFile
 EndOfLine                <-  '\r\n' / '\n' / '\r'
 EndOfFile                <-  !.
-LineComment              <-  ('#' / '//') (!Endl .)* &Endl   
+commentLine              <-  ('#' / '//') (!Endl .)* &Endl   
 
     )");
 
 		assert(static_cast<bool>(DAGparser) == true);
 
-		// The visitor functionis
-		map<string,string> currentValuePairList; // we build the value-pair list here, it is emptied when we parse the operator declaration
-			
-
-
-		DAGparser["parameterDeclaration"] = [&](const peg::SemanticValues &vs) {
-			auto param = removeSpaces(any_cast<string>(vs[0]));
-			auto val = removeSpaces(any_cast<string>(vs[1]));
-			parameters.insert(pair<string, string>("$"+param,val));
-			cerr << "PARAM " << param << " " << val << endl;
-			return 0;
-		};
-
-		DAGparser["fileName"] = [&](const peg::SemanticValues &vs) {
+		DAGparser["entityDeclaration"] = [&](const peg::SemanticValues &vs) {
 			auto name = any_cast<string>(vs[0]);
 			fileName = name;
-			REPORT(LogLevel::DEBUG,  "NAME " << name);;
+			REPORT(LogLevel::DEBUG,  "entityDeclaration :" << name);;
 			return 0;
 		};
 
-#if 0
+		DAGparser["EntityName"] = [&](const peg::SemanticValues &vs) { 
+			return  any_cast<string>(vs[0]);
+		};
 		
+		DAGparser["name"] = [&](const peg::SemanticValues &vs) { 
+			return  removeSpaces(vs.token_to_string());
+		};
+
+		DAGparser["value"] = [&](const peg::SemanticValues &vs) { 
+			return  vs.token_to_string();
+		};
+
+		DAGparser["paramValue"] = [&](const peg::SemanticValues &vs) { 
+			string paramName = any_cast<string>(vs[0]);
+			if(parameters.find(paramName)  == parameters.end()) {
+				THROWERROR("Parameter" << paramName << " not declared");
+			}
+			auto value=parameters[paramName];
+			REPORT(LogLevel::DEBUG,  "paramValue : found that the value of $" << paramName << " is " << value);
+			return value;
+		};
+
+		
+		DAGparser["parameterDeclaration"] = [&](const peg::SemanticValues &vs) {
+			auto name = any_cast<string>(vs[0]);
+			auto value = any_cast<string>(vs[1]);
+			parameters.insert(pair<string, string>(name,value));
+			REPORT(LogLevel::DEBUG,  "parameterDeclaration: " << name << " with value " << value);;
+			return 0;
+		};
+		
+
 		DAGparser["operatorDeclaration"] = [&](const peg::SemanticValues &vs) {
 			auto instanceName = any_cast<string>(vs[0]);
 			auto entityName = any_cast<string>(vs[1]);
 			operatorEntity[instanceName] = entityName;
-			REPORT(LogLevel::DEBUG, "parsing operatorDeclaration for instanceName=" << instanceName << " and entityName="<<entityName<<".");
-			cout <<   "vs.size = " << vs.size() << endl;
-#if 0
-			for (int i=0; i<vs.size();i++){			
-				cout << i << "  ";
-				string name = std::any_cast<string>(vs[i]);
-				cout << name << endl;
+			REPORT(LogLevel::DEBUG, "operatorDeclaration: instanceName=" << instanceName << ", entityName="<<entityName<<". Found " << vs.size()-2 << " parameter(s)" );
+			for (size_t i=2; i<vs.size(); i++){
+				// ask Luc for a modern syntax for the following
+				auto valuePair=any_cast<pair<string,string>>(vs[i]);
+				auto name=valuePair.first;
+				auto value=valuePair.second;
+				REPORT(LogLevel::DEBUG, "   name=" << name << ", value="<<value );
 			}
-#endif
 			return 0;		
 		};
+
+		DAGparser["nameValuePair"] = [&](const peg::SemanticValues &vs) {
+			auto name = std::any_cast<string>(vs[0]);
+			auto value = std::any_cast<string>(vs[1]);
+			REPORT(LogLevel::DEBUG, "parsing nameValuePair:  " << name << "=" << value);
+			return pair<string, string>(name,value);
+		};
+
+
+		
+#if 0
 
 		DAGparser["ioDeclaration"] = [&](const peg::SemanticValues &vs) {
 						cerr << this << endl;
@@ -193,14 +219,6 @@ LineComment              <-  ('#' / '//') (!Endl .)* &Endl
 			return 0;
 		};
 
-		DAGparser["nameValuePair"] = [&](const peg::SemanticValues &vs) {
-			cerr << this << endl;
-			auto name = std::any_cast<string>(vs[0]);
-			auto value = std::any_cast<string>(vs[1]);
-			REPORT(LogLevel::DEBUG, "parsing nameValuePair:  " << name << "=" << value);
-			currentValuePairList[name]=value;
-			return 0;
-		};
 		// I don't know why Peglib doesnt remove the whitespaces in this case
 		DAGparser["paramName"] = [&](const peg::SemanticValues &vs) { return  removeSpaces(vs.token_to_string()); };
 
@@ -217,9 +235,6 @@ LineComment              <-  ('#' / '//') (!Endl .)* &Endl
 			return paramName;
 		};
 		
-		DAGparser["name"] = [&](const peg::SemanticValues &vs) { 
-			return  removeSpaces(vs.token_to_string());
-		};
 
 
 #endif

@@ -3,8 +3,8 @@ EntityName QuadraticEquationDelta;
 
 # Declare parameters wE and wF
 
-Param wE = 17;
-Param wF = 7; 
+Parameter wE = 17;
+Parameter wF = 7; 
 
 
 # Declare operators you will use as well as operator parameters
