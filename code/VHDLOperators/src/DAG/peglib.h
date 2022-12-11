@@ -7,6 +7,14 @@
 
 #pragma once
 
+/*
+ * Configuration
+ */
+
+#ifndef CPPPEGLIB_HEURISTIC_ERROR_TOKEN_MAX_CHAR_COUNT
+#define CPPPEGLIB_HEURISTIC_ERROR_TOKEN_MAX_CHAR_COUNT 32
+#endif
+
 #include <algorithm>
 #include <any>
 #include <cassert>
@@ -487,18 +495,7 @@ struct SemanticValues : protected std::vector<std::any> {
   std::vector<unsigned int> tags;
 
   // Line number and column at which the matched string is
-  std::pair<size_t, size_t> line_info() const {
-    auto &idx = source_line_index();
-
-    auto cur = static_cast<size_t>(std::distance(ss, sv_.data()));
-    auto it = std::lower_bound(
-        idx.begin(), idx.end(), cur,
-        [](size_t element, size_t value) { return element < value; });
-
-    auto id = static_cast<size_t>(std::distance(idx.begin(), it));
-    auto off = cur - (id == 0 ? 0 : idx[id - 1] + 1);
-    return std::pair(id + 1, off + 1);
-  }
+  std::pair<size_t, size_t> line_info() const;
 
   // Choice count
   size_t choice_count() const { return choice_count_; }
@@ -536,6 +533,19 @@ struct SemanticValues : protected std::vector<std::any> {
     return r;
   }
 
+  void append(SemanticValues &chvs) {
+    sv_ = chvs.sv_;
+    for (auto &v : chvs) {
+      emplace_back(std::move(v));
+    }
+    for (auto &tag : chvs.tags) {
+      tags.emplace_back(std::move(tag));
+    }
+    for (auto &tok : chvs.tokens) {
+      tokens.emplace_back(std::move(tok));
+    }
+  }
+
   using std::vector<std::any>::iterator;
   using std::vector<std::any>::const_iterator;
   using std::vector<std::any>::size;
@@ -563,10 +573,9 @@ private:
   friend class Context;
   friend class Sequence;
   friend class PrioritizedChoice;
+  friend class Repetition;
   friend class Holder;
   friend class PrecedenceClimbing;
-
-  const std::vector<size_t> &source_line_index() const;
 
   Context *c_ = nullptr;
   std::string_view sv_;
@@ -632,16 +641,6 @@ private:
 };
 
 /*
- * Semantic predicate
- */
-// Note: 'parse_error' exception class should be be used in sematic action
-// handlers to reject the rule.
-class parse_error : public std::runtime_error {
-public:
-  parse_error(const char *what_arg) : std::runtime_error(what_arg) {}
-};
-
-/*
  * Parse result helper
  */
 inline bool success(size_t len) { return len != static_cast<size_t>(-1); }
@@ -651,17 +650,21 @@ inline bool fail(size_t len) { return len == static_cast<size_t>(-1); }
 /*
  * Log
  */
-using Log = std::function<void(size_t, size_t, const std::string &)>;
+using Log = std::function<void(size_t line, size_t col, const std::string &msg,
+                               const std::string &rule)>;
 
 /*
  * ErrorInfo
  */
+class Definition;
+
 struct ErrorInfo {
   const char *error_pos = nullptr;
-  std::vector<std::pair<const char *, bool>> expected_tokens;
+  std::vector<std::pair<const char *, const Definition *>> expected_tokens;
   const char *message_pos = nullptr;
   std::string message;
-  mutable const char *last_output_pos = nullptr;
+  std::string label;
+  const char *last_output_pos = nullptr;
   bool keep_previous_token = false;
 
   void clear() {
@@ -671,81 +674,14 @@ struct ErrorInfo {
     message.clear();
   }
 
-  void add(const char *token, bool is_literal) {
-    for (const auto &[t, l] : expected_tokens) {
-      if (t == token && l == is_literal) { return; }
+  void add(const char *error_literal, const Definition *error_rule) {
+    for (const auto &[t, r] : expected_tokens) {
+      if (t == error_literal && r == error_rule) { return; }
     }
-    expected_tokens.push_back(std::make_pair(token, is_literal));
+    expected_tokens.emplace_back(error_literal, error_rule);
   }
 
-  void output_log(const Log &log, const char *s, size_t n) const {
-    if (message_pos) {
-      if (message_pos > last_output_pos) {
-        last_output_pos = message_pos;
-        auto line = line_info(s, message_pos);
-        std::string msg;
-        if (auto unexpected_token = heuristic_error_token(s, n, message_pos);
-            !unexpected_token.empty()) {
-          msg = replace_all(message, "%t", unexpected_token);
-
-          auto unexpected_char = unexpected_token.substr(
-              0, codepoint_length(unexpected_token.data(),
-                                  unexpected_token.size()));
-
-          msg = replace_all(msg, "%c", unexpected_char);
-        } else {
-          msg = message;
-        }
-        log(line.first, line.second, msg);
-      }
-    } else if (error_pos) {
-      if (error_pos > last_output_pos) {
-        last_output_pos = error_pos;
-        auto line = line_info(s, error_pos);
-
-        std::string msg;
-        if (expected_tokens.empty()) {
-          msg = "syntax error.";
-        } else {
-          msg = "syntax error";
-
-          // unexpected token
-          if (auto unexpected_token = heuristic_error_token(s, n, error_pos);
-              !unexpected_token.empty()) {
-            msg += ", unexpected '";
-            msg += unexpected_token;
-            msg += "'";
-          }
-
-          auto first_item = true;
-          size_t i = 0;
-          while (i < expected_tokens.size()) {
-            auto [token, is_literal] = expected_tokens[i];
-
-            // Skip rules start with '_'
-            if (!is_literal || token[0] != '_') {
-              msg += (first_item ? ", expecting " : ", ");
-              if (is_literal) {
-                msg += "'";
-                msg += token;
-                msg += "'";
-              } else {
-                msg += "<";
-                msg += token;
-                msg += ">";
-              }
-              first_item = false;
-            }
-
-            i++;
-          }
-          msg += ".";
-        }
-
-        log(line.first, line.second, msg);
-      }
-    }
-  }
+  void output_log(const Log &log, const char *s, size_t n);
 
 private:
   int cast_char(char c) const { return static_cast<unsigned char>(c); }
@@ -763,7 +699,7 @@ private:
         }
       }
 
-      size_t count = 8;
+      size_t count = CPPPEGLIB_HEURISTIC_ERROR_TOKEN_MAX_CHAR_COUNT;
       size_t j = 0;
       while (count > 0 && j < i) {
         j += codepoint_length(&pos[j], i - j);
@@ -790,22 +726,22 @@ private:
  * Context
  */
 class Ope;
-class Definition;
 
-using TracerEnter = std::function<void(const Ope &name, const char *s, size_t n,
-                                       const SemanticValues &vs,
-                                       const Context &c, const std::any &dt)>;
+using TracerEnter = std::function<void(
+    const Ope &name, const char *s, size_t n, const SemanticValues &vs,
+    const Context &c, const std::any &dt, std::any &trace_data)>;
 
 using TracerLeave = std::function<void(
     const Ope &ope, const char *s, size_t n, const SemanticValues &vs,
-    const Context &c, const std::any &dt, size_t)>;
+    const Context &c, const std::any &dt, size_t, std::any &trace_data)>;
+
+using TracerStartOrEnd = std::function<void(std::any &trace_data)>;
 
 class Context {
 public:
   const char *path;
   const char *s;
   const size_t l;
-  std::vector<size_t> source_line_index;
 
   ErrorInfo error_info;
   bool recovered = false;
@@ -838,27 +774,34 @@ public:
 
   TracerEnter tracer_enter;
   TracerLeave tracer_leave;
-  const bool tracer_verbose;
+  std::any trace_data;
+  const bool verbose_trace;
 
   Log log;
 
   Context(const char *path, const char *s, size_t l, size_t def_count,
           std::shared_ptr<Ope> whitespaceOpe, std::shared_ptr<Ope> wordOpe,
           bool enablePackratParsing, TracerEnter tracer_enter,
-          TracerLeave tracer_leave, bool tracer_verbose, Log log)
+          TracerLeave tracer_leave, std::any trace_data, bool verbose_trace,
+          Log log)
       : path(path), s(s), l(l), whitespaceOpe(whitespaceOpe), wordOpe(wordOpe),
         def_count(def_count), enablePackratParsing(enablePackratParsing),
         cache_registered(enablePackratParsing ? def_count * (l + 1) : 0),
         cache_success(enablePackratParsing ? def_count * (l + 1) : 0),
         tracer_enter(tracer_enter), tracer_leave(tracer_leave),
-        tracer_verbose(tracer_verbose), log(log) {
+        trace_data(trace_data), verbose_trace(verbose_trace), log(log) {
 
-    args_stack.resize(1);
-
+    push_args({});
     push_capture_scope();
   }
 
-  ~Context() { assert(!value_stack_size); }
+  ~Context() {
+    pop_capture_scope();
+
+    assert(!value_stack_size);
+    assert(!capture_scope_stack_size);
+    assert(cut_stack.empty());
+  }
 
   Context(const Context &) = delete;
   Context(Context &&) = delete;
@@ -897,6 +840,17 @@ public:
   }
 
   SemanticValues &push() {
+    push_capture_scope();
+    return push_semantic_values_scope();
+  }
+
+  void pop() {
+    pop_capture_scope();
+    pop_semantic_values_scope();
+  }
+
+  // Semantic values
+  SemanticValues &push_semantic_values_scope() {
     assert(value_stack_size <= value_stack.size());
     if (value_stack_size == value_stack.size()) {
       value_stack.emplace_back(std::make_shared<SemanticValues>(this));
@@ -915,12 +869,12 @@ public:
     auto &vs = *value_stack[value_stack_size++];
     vs.path = path;
     vs.ss = s;
-
     return vs;
   }
 
-  void pop() { value_stack_size--; }
+  void pop_semantic_values_scope() { value_stack_size--; }
 
+  // Arguments
   void push_args(std::vector<std::shared_ptr<Ope>> &&args) {
     args_stack.emplace_back(args);
   }
@@ -931,6 +885,7 @@ public:
     return args_stack[args_stack.size() - 1];
   }
 
+  // Capture scope
   void push_capture_scope() {
     assert(capture_scope_stack_size <= capture_scope_stack.size());
     if (capture_scope_stack_size == capture_scope_stack.size()) {
@@ -946,7 +901,7 @@ public:
   void pop_capture_scope() { capture_scope_stack_size--; }
 
   void shift_capture_values() {
-    assert(capture_scope_stack.size() >= 2);
+    assert(capture_scope_stack_size >= 2);
     auto curr = &capture_scope_stack[capture_scope_stack_size - 1];
     auto prev = curr - 1;
     for (const auto &[k, v] : *curr) {
@@ -954,17 +909,41 @@ public:
     }
   }
 
+  // Error
   void set_error_pos(const char *a_s, const char *literal = nullptr);
 
+  // Trace
   void trace_enter(const Ope &ope, const char *a_s, size_t n,
-                   SemanticValues &vs, std::any &dt) const;
+                   const SemanticValues &vs, std::any &dt);
   void trace_leave(const Ope &ope, const char *a_s, size_t n,
-                   SemanticValues &vs, std::any &dt, size_t len) const;
+                   const SemanticValues &vs, std::any &dt, size_t len);
   bool is_traceable(const Ope &ope) const;
 
-  mutable size_t next_trace_id = 0;
-  mutable std::vector<size_t> trace_ids;
+  // Line info
+  std::pair<size_t, size_t> line_info(const char *cur) const {
+    std::call_once(source_line_index_init_, [this]() {
+      for (size_t pos = 0; pos < l; pos++) {
+        if (s[pos] == '\n') { source_line_index.push_back(pos); }
+      }
+      source_line_index.push_back(l);
+    });
+
+    auto pos = static_cast<size_t>(std::distance(s, cur));
+
+    auto it = std::lower_bound(
+        source_line_index.begin(), source_line_index.end(), pos,
+        [](size_t element, size_t value) { return element < value; });
+
+    auto id = static_cast<size_t>(std::distance(source_line_index.begin(), it));
+    auto off = pos - (id == 0 ? 0 : source_line_index[id - 1] + 1);
+    return std::pair(id + 1, off + 1);
+  }
+
+  size_t next_trace_id = 0;
+  std::vector<size_t> trace_ids;
   bool ignore_trace_state = false;
+  mutable std::once_flag source_line_index_init_;
+  mutable std::vector<size_t> source_line_index;
 };
 
 /*
@@ -992,31 +971,15 @@ public:
 
   size_t parse_core(const char *s, size_t n, SemanticValues &vs, Context &c,
                     std::any &dt) const override {
-    auto &chldsv = c.push();
-    auto pop_se = scope_exit([&]() { c.pop(); });
+    auto &chvs = c.push_semantic_values_scope();
+    auto se = scope_exit([&]() { c.pop_semantic_values_scope(); });
     size_t i = 0;
     for (const auto &ope : opes_) {
-      const auto &rule = *ope;
-      auto len = rule.parse(s + i, n - i, chldsv, c, dt);
+      auto len = ope->parse(s + i, n - i, chvs, c, dt);
       if (fail(len)) { return len; }
       i += len;
     }
-    if (!chldsv.empty()) {
-      for (size_t j = 0; j < chldsv.size(); j++) {
-        vs.emplace_back(std::move(chldsv[j]));
-      }
-    }
-    if (!chldsv.tags.empty()) {
-      for (size_t j = 0; j < chldsv.tags.size(); j++) {
-        vs.tags.emplace_back(std::move(chldsv.tags[j]));
-      }
-    }
-    vs.sv_ = chldsv.sv_;
-    if (!chldsv.tokens.empty()) {
-      for (size_t j = 0; j < chldsv.tokens.size(); j++) {
-        vs.tokens.emplace_back(std::move(chldsv.tokens[j]));
-      }
-    }
+    vs.append(chvs);
     return i;
   }
 
@@ -1045,37 +1008,19 @@ public:
     for (const auto &ope : opes_) {
       if (!c.cut_stack.empty()) { c.cut_stack.back() = false; }
 
-      auto &chldsv = c.push();
-      c.push_capture_scope();
-
+      auto &chvs = c.push();
       c.error_info.keep_previous_token = id > 0;
       auto se = scope_exit([&]() {
         c.pop();
-        c.pop_capture_scope();
         c.error_info.keep_previous_token = false;
       });
 
-      len = ope->parse(s, n, chldsv, c, dt);
+      len = ope->parse(s, n, chvs, c, dt);
 
       if (success(len)) {
-        if (!chldsv.empty()) {
-          for (size_t i = 0; i < chldsv.size(); i++) {
-            vs.emplace_back(std::move(chldsv[i]));
-          }
-        }
-        if (!chldsv.tags.empty()) {
-          for (size_t i = 0; i < chldsv.tags.size(); i++) {
-            vs.tags.emplace_back(std::move(chldsv.tags[i]));
-          }
-        }
-        vs.sv_ = chldsv.sv_;
+        vs.append(chvs);
         vs.choice_count_ = opes_.size();
         vs.choice_ = id;
-        if (!chldsv.tokens.empty()) {
-          for (size_t i = 0; i < chldsv.tokens.size(); i++) {
-            vs.tokens.emplace_back(std::move(chldsv.tokens[i]));
-          }
-        }
         c.shift_capture_values();
         break;
       } else if (!c.cut_stack.empty() && c.cut_stack.back()) {
@@ -1108,11 +1053,13 @@ public:
     size_t count = 0;
     size_t i = 0;
     while (count < min_) {
-      c.push_capture_scope();
-      auto se = scope_exit([&]() { c.pop_capture_scope(); });
-      const auto &rule = *ope_;
-      auto len = rule.parse(s + i, n - i, vs, c, dt);
+      auto &chvs = c.push();
+      auto se = scope_exit([&]() { c.pop(); });
+
+      auto len = ope_->parse(s + i, n - i, chvs, c, dt);
+
       if (success(len)) {
+        vs.append(chvs);
         c.shift_capture_values();
       } else {
         return len;
@@ -1121,26 +1068,16 @@ public:
       count++;
     }
 
-    while (n - i > 0 && count < max_) {
-      c.push_capture_scope();
-      auto se = scope_exit([&]() { c.pop_capture_scope(); });
-      auto save_sv_size = vs.size();
-      auto save_tok_size = vs.tokens.size();
+    while (count < max_) {
+      auto &chvs = c.push();
+      auto se = scope_exit([&]() { c.pop(); });
 
-      const auto &rule = *ope_;
-      auto len = rule.parse(s + i, n - i, vs, c, dt);
+      auto len = ope_->parse(s + i, n - i, chvs, c, dt);
+
       if (success(len)) {
+        vs.append(chvs);
         c.shift_capture_values();
       } else {
-        if (vs.size() != save_sv_size) {
-          vs.erase(vs.begin() + static_cast<std::ptrdiff_t>(save_sv_size));
-          vs.tags.erase(vs.tags.begin() +
-                        static_cast<std::ptrdiff_t>(save_sv_size));
-        }
-        if (vs.tokens.size() != save_tok_size) {
-          vs.tokens.erase(vs.tokens.begin() +
-                          static_cast<std::ptrdiff_t>(save_tok_size));
-        }
         break;
       }
       i += len;
@@ -1180,14 +1117,11 @@ public:
 
   size_t parse_core(const char *s, size_t n, SemanticValues & /*vs*/,
                     Context &c, std::any &dt) const override {
-    auto &chldsv = c.push();
-    c.push_capture_scope();
-    auto se = scope_exit([&]() {
-      c.pop();
-      c.pop_capture_scope();
-    });
-    const auto &rule = *ope_;
-    auto len = rule.parse(s, n, chldsv, c, dt);
+    auto &chvs = c.push();
+    auto se = scope_exit([&]() { c.pop(); });
+
+    auto len = ope_->parse(s, n, chvs, c, dt);
+
     if (success(len)) {
       return 0;
     } else {
@@ -1206,13 +1140,9 @@ public:
 
   size_t parse_core(const char *s, size_t n, SemanticValues & /*vs*/,
                     Context &c, std::any &dt) const override {
-    auto &chldsv = c.push();
-    c.push_capture_scope();
-    auto se = scope_exit([&]() {
-      c.pop();
-      c.pop_capture_scope();
-    });
-    auto len = ope_->parse(s, n, chldsv, c, dt);
+    auto &chvs = c.push();
+    auto se = scope_exit([&]() { c.pop(); });
+    auto len = ope_->parse(s, n, chvs, c, dt);
     if (success(len)) {
       c.set_error_pos(s);
       return static_cast<size_t>(-1);
@@ -1261,7 +1191,8 @@ public:
 class CharacterClass : public Ope,
                        public std::enable_shared_from_this<CharacterClass> {
 public:
-  CharacterClass(const std::string &s, bool negated) : negated_(negated) {
+  CharacterClass(const std::string &s, bool negated, bool ignore_case)
+      : negated_(negated), ignore_case_(ignore_case) {
     auto chars = decode(s.data(), s.length());
     auto i = 0u;
     while (i < chars.size()) {
@@ -1280,8 +1211,8 @@ public:
   }
 
   CharacterClass(const std::vector<std::pair<char32_t, char32_t>> &ranges,
-                 bool negated)
-      : ranges_(ranges), negated_(negated) {
+                 bool negated, bool ignore_case)
+      : ranges_(ranges), negated_(negated), ignore_case_(ignore_case) {
     assert(!ranges_.empty());
   }
 
@@ -1296,7 +1227,7 @@ public:
     auto len = decode_codepoint(s, n, cp);
 
     for (const auto &range : ranges_) {
-      if (range.first <= cp && cp <= range.second) {
+      if (in_range(range, cp)) {
         if (negated_) {
           c.set_error_pos(s);
           return static_cast<size_t>(-1);
@@ -1316,8 +1247,20 @@ public:
 
   void accept(Visitor &v) override;
 
+private:
+  bool in_range(const std::pair<char32_t, char32_t> &range, char32_t cp) const {
+    if (ignore_case_) {
+      auto cpl = std::tolower(cp);
+      return std::tolower(range.first) <= cpl &&
+             cpl <= std::tolower(range.second);
+    } else {
+      return range.first <= cp && cp <= range.second;
+    }
+  }
+
   std::vector<std::pair<char32_t, char32_t>> ranges_;
   bool negated_;
+  bool ignore_case_;
 };
 
 class Character : public Ope, public std::enable_shared_from_this<Character> {
@@ -1362,9 +1305,7 @@ public:
                     std::any &dt) const override {
     c.push_capture_scope();
     auto se = scope_exit([&]() { c.pop_capture_scope(); });
-    const auto &rule = *ope_;
-    auto len = rule.parse(s, n, vs, c, dt);
-    return len;
+    return ope_->parse(s, n, vs, c, dt);
   }
 
   void accept(Visitor &v) override;
@@ -1381,8 +1322,7 @@ public:
 
   size_t parse_core(const char *s, size_t n, SemanticValues &vs, Context &c,
                     std::any &dt) const override {
-    const auto &rule = *ope_;
-    auto len = rule.parse(s, n, vs, c, dt);
+    auto len = ope_->parse(s, n, vs, c, dt);
     if (success(len) && match_action_) { match_action_(s, len, c); }
     return len;
   }
@@ -1411,10 +1351,9 @@ public:
 
   size_t parse_core(const char *s, size_t n, SemanticValues & /*vs*/,
                     Context &c, std::any &dt) const override {
-    const auto &rule = *ope_;
-    auto &chldsv = c.push();
-    auto se = scope_exit([&]() { c.pop(); });
-    return rule.parse(s, n, chldsv, c, dt);
+    auto &chvs = c.push_semantic_values_scope();
+    auto se = scope_exit([&]() { c.pop_semantic_values_scope(); });
+    return ope_->parse(s, n, chvs, c, dt);
   }
 
   void accept(Visitor &v) override;
@@ -1447,8 +1386,7 @@ public:
                     std::any &dt) const override {
     auto ope = weak_.lock();
     assert(ope);
-    const auto &rule = *ope;
-    return rule.parse(s, n, vs, c, dt);
+    return ope->parse(s, n, vs, c, dt);
   }
 
   void accept(Visitor &v) override;
@@ -1467,10 +1405,12 @@ public:
 
   std::any reduce(SemanticValues &vs, std::any &dt) const;
 
-  const char *trace_name() const;
+  const std::string &name() const;
+  const std::string &trace_name() const;
 
   std::shared_ptr<Ope> ope_;
   Definition *outer_;
+  mutable std::once_flag trace_name_init_;
   mutable std::string trace_name_;
 
   friend class Definition;
@@ -1512,8 +1452,7 @@ public:
     if (c.in_whitespace) { return 0; }
     c.in_whitespace = true;
     auto se = scope_exit([&]() { c.in_whitespace = false; });
-    const auto &rule = *ope_;
-    return rule.parse(s, n, vs, c, dt);
+    return ope_->parse(s, n, vs, c, dt);
   }
 
   void accept(Visitor &v) override;
@@ -1579,7 +1518,7 @@ class Cut : public Ope, public std::enable_shared_from_this<Cut> {
 public:
   size_t parse_core(const char * /*s*/, size_t /*n*/, SemanticValues & /*vs*/,
                     Context &c, std::any & /*dt*/) const override {
-    c.cut_stack.back() = true;
+    if (!c.cut_stack.empty()) { c.cut_stack.back() = true; }
     return 0;
   }
 
@@ -1641,21 +1580,23 @@ inline std::shared_ptr<Ope> liti(std::string &&s) {
 }
 
 inline std::shared_ptr<Ope> cls(const std::string &s) {
-  return std::make_shared<CharacterClass>(s, false);
+  return std::make_shared<CharacterClass>(s, false, false);
 }
 
 inline std::shared_ptr<Ope>
-cls(const std::vector<std::pair<char32_t, char32_t>> &ranges) {
-  return std::make_shared<CharacterClass>(ranges, false);
+cls(const std::vector<std::pair<char32_t, char32_t>> &ranges,
+    bool ignore_case = false) {
+  return std::make_shared<CharacterClass>(ranges, false, ignore_case);
 }
 
 inline std::shared_ptr<Ope> ncls(const std::string &s) {
-  return std::make_shared<CharacterClass>(s, true);
+  return std::make_shared<CharacterClass>(s, true, false);
 }
 
 inline std::shared_ptr<Ope>
-ncls(const std::vector<std::pair<char32_t, char32_t>> &ranges) {
-  return std::make_shared<CharacterClass>(ranges, true);
+ncls(const std::vector<std::pair<char32_t, char32_t>> &ranges,
+     bool ignore_case = false) {
+  return std::make_shared<CharacterClass>(ranges, true, ignore_case);
 }
 
 inline std::shared_ptr<Ope> chr(char dt) {
@@ -1745,69 +1686,6 @@ struct Ope::Visitor {
   virtual void visit(Cut &) {}
 };
 
-template <typename T> struct OpeType : public Ope::Visitor {
-  void visit(Sequence &) override { ret_ = std::is_same<Sequence, T>::value; }
-  void visit(PrioritizedChoice &) override {
-    ret_ = std::is_same<PrioritizedChoice, T>::value;
-  }
-  void visit(Repetition &) override {
-    ret_ = std::is_same<Repetition, T>::value;
-  }
-  void visit(AndPredicate &) override {
-    ret_ = std::is_same<AndPredicate, T>::value;
-  }
-  void visit(NotPredicate &) override {
-    ret_ = std::is_same<NotPredicate, T>::value;
-  }
-  void visit(Dictionary &) override {
-    ret_ = std::is_same<Dictionary, T>::value;
-  }
-  void visit(LiteralString &) override {
-    ret_ = std::is_same<LiteralString, T>::value;
-  }
-  void visit(CharacterClass &) override {
-    ret_ = std::is_same<CharacterClass, T>::value;
-  }
-  void visit(Character &) override { ret_ = std::is_same<Character, T>::value; }
-  void visit(AnyCharacter &) override {
-    ret_ = std::is_same<AnyCharacter, T>::value;
-  }
-  void visit(CaptureScope &) override {
-    ret_ = std::is_same<CaptureScope, T>::value;
-  }
-  void visit(Capture &) override { ret_ = std::is_same<Capture, T>::value; }
-  void visit(TokenBoundary &) override {
-    ret_ = std::is_same<TokenBoundary, T>::value;
-  }
-  void visit(Ignore &) override { ret_ = std::is_same<Ignore, T>::value; }
-  void visit(User &) override { ret_ = std::is_same<User, T>::value; }
-  void visit(WeakHolder &) override {
-    ret_ = std::is_same<WeakHolder, T>::value;
-  }
-  void visit(Holder &) override { ret_ = std::is_same<Holder, T>::value; }
-  void visit(Reference &) override { ret_ = std::is_same<Reference, T>::value; }
-  void visit(Whitespace &) override {
-    ret_ = std::is_same<Whitespace, T>::value;
-  }
-  void visit(BackReference &) override {
-    ret_ = std::is_same<BackReference, T>::value;
-  }
-  void visit(PrecedenceClimbing &) override {
-    ret_ = std::is_same<PrecedenceClimbing, T>::value;
-  }
-  void visit(Recovery &) override { ret_ = std::is_same<Recovery, T>::value; }
-  void visit(Cut &) override { ret_ = std::is_same<Cut, T>::value; }
-
-  static bool check(const Ope &ope) {
-    OpeType vis;
-    const_cast<Ope &>(ope).accept(vis);
-    return vis.ret_;
-  }
-
-private:
-  bool ret_ = false;
-};
-
 struct TraceOpeName : public Ope::Visitor {
   void visit(Sequence &) override { name_ = "Sequence"; }
   void visit(PrioritizedChoice &) override { name_ = "PrioritizedChoice"; }
@@ -1825,7 +1703,7 @@ struct TraceOpeName : public Ope::Visitor {
   void visit(Ignore &) override { name_ = "Ignore"; }
   void visit(User &) override { name_ = "User"; }
   void visit(WeakHolder &) override { name_ = "WeakHolder"; }
-  void visit(Holder &ope) override { name_ = ope.trace_name(); }
+  void visit(Holder &ope) override { name_ = ope.trace_name().data(); }
   void visit(Reference &) override { name_ = "Reference"; }
   void visit(Whitespace &) override { name_ = "Whitespace"; }
   void visit(BackReference &) override { name_ = "BackReference"; }
@@ -1929,7 +1807,7 @@ private:
 };
 
 struct FindLiteralToken : public Ope::Visitor {
-  void visit(LiteralString &ope) override { token_ = ope.lit_.c_str(); }
+  void visit(LiteralString &ope) override { token_ = ope.lit_.data(); }
   void visit(TokenBoundary &ope) override { ope.ope_->accept(*this); }
   void visit(Ignore &ope) override { ope.ope_->accept(*this); }
   void visit(Reference &ope) override;
@@ -2003,31 +1881,16 @@ struct DetectLeftRecursion : public Ope::Visitor {
 
 private:
   std::string name_;
-  std::set<std::string> refs_;
+  std::unordered_set<std::string> refs_;
   bool done_ = false;
 };
 
 struct HasEmptyElement : public Ope::Visitor {
-  HasEmptyElement(std::vector<std::pair<const char *, std::string>> &refs)
-      : refs_(refs) {}
+  HasEmptyElement(std::vector<std::pair<const char *, std::string>> &refs,
+                  std::unordered_map<std::string, bool> &has_error_cache)
+      : refs_(refs), has_error_cache_(has_error_cache) {}
 
-  void visit(Sequence &ope) override {
-    auto save_is_empty = false;
-    const char *save_error_s = nullptr;
-    std::string save_error_name;
-    for (auto op : ope.opes_) {
-      op->accept(*this);
-      if (!is_empty) { return; }
-      save_is_empty = is_empty;
-      save_error_s = error_s;
-      save_error_name = error_name;
-      is_empty = false;
-      error_name.clear();
-    }
-    is_empty = save_is_empty;
-    error_s = save_error_s;
-    error_name = save_error_name;
-  }
+  void visit(Sequence &ope) override;
   void visit(PrioritizedChoice &ope) override {
     for (auto op : ope.opes_) {
       op->accept(*this);
@@ -2067,12 +1930,20 @@ private:
     tie(error_s, error_name) = refs_.back();
   }
   std::vector<std::pair<const char *, std::string>> &refs_;
+  std::unordered_map<std::string, bool> &has_error_cache_;
 };
 
 struct DetectInfiniteLoop : public Ope::Visitor {
-  DetectInfiniteLoop(const char *s, const std::string &name) {
+  DetectInfiniteLoop(const char *s, const std::string &name,
+                     std::vector<std::pair<const char *, std::string>> &refs,
+                     std::unordered_map<std::string, bool> &has_error_cache)
+      : refs_(refs), has_error_cache_(has_error_cache) {
     refs_.emplace_back(s, name);
   }
+
+  DetectInfiniteLoop(std::vector<std::pair<const char *, std::string>> &refs,
+                     std::unordered_map<std::string, bool> &has_error_cache)
+      : refs_(refs), has_error_cache_(has_error_cache) {}
 
   void visit(Sequence &ope) override {
     for (auto op : ope.opes_) {
@@ -2088,7 +1959,7 @@ struct DetectInfiniteLoop : public Ope::Visitor {
   }
   void visit(Repetition &ope) override {
     if (ope.max_ == std::numeric_limits<size_t>::max()) {
-      HasEmptyElement vis(refs_);
+      HasEmptyElement vis(refs_, has_error_cache_);
       ope.ope_->accept(vis);
       if (vis.is_empty) {
         has_error = true;
@@ -2117,8 +1988,8 @@ struct DetectInfiniteLoop : public Ope::Visitor {
   std::string error_name;
 
 private:
-  std::vector<std::pair<const char *, std::string>> refs_;
-  std::unordered_map<std::string, bool> has_error_cache_;
+  std::vector<std::pair<const char *, std::string>> &refs_;
+  std::unordered_map<std::string, bool> &has_error_cache_;
 };
 
 struct ReferenceChecker : public Ope::Visitor {
@@ -2274,19 +2145,6 @@ private:
   const std::vector<std::string> &params_;
 };
 
-struct IsPrioritizedChoice : public Ope::Visitor {
-  void visit(PrioritizedChoice &) override { result_ = true; }
-
-  static bool check(Ope &ope) {
-    IsPrioritizedChoice vis;
-    ope.accept(vis);
-    return vis.result_;
-  }
-
-private:
-  bool result_ = false;
-};
-
 /*
  * Keywords
  */
@@ -2391,6 +2249,60 @@ public:
     return parse_and_get_value(s, n, dt, val, path, log);
   }
 
+#if defined(__cpp_lib_char8_t)
+  Result parse(const char8_t *s, size_t n, const char *path = nullptr,
+               Log log = nullptr) const {
+    return parse(reinterpret_cast<const char *>(s), n, path, log);
+  }
+
+  Result parse(const char8_t *s, const char *path = nullptr,
+               Log log = nullptr) const {
+    return parse(reinterpret_cast<const char *>(s), path, log);
+  }
+
+  Result parse(const char8_t *s, size_t n, std::any &dt,
+               const char *path = nullptr, Log log = nullptr) const {
+    return parse(reinterpret_cast<const char *>(s), n, dt, path, log);
+  }
+
+  Result parse(const char8_t *s, std::any &dt, const char *path = nullptr,
+               Log log = nullptr) const {
+    return parse(reinterpret_cast<const char *>(s), dt, path, log);
+  }
+
+  template <typename T>
+  Result parse_and_get_value(const char8_t *s, size_t n, T &val,
+                             const char *path = nullptr,
+                             Log log = nullptr) const {
+    return parse_and_get_value(reinterpret_cast<const char *>(s), n, val, *path,
+                               log);
+  }
+
+  template <typename T>
+  Result parse_and_get_value(const char8_t *s, T &val,
+                             const char *path = nullptr,
+                             Log log = nullptr) const {
+    return parse_and_get_value(reinterpret_cast<const char *>(s), val, *path,
+                               log);
+  }
+
+  template <typename T>
+  Result parse_and_get_value(const char8_t *s, size_t n, std::any &dt, T &val,
+                             const char *path = nullptr,
+                             Log log = nullptr) const {
+    return parse_and_get_value(reinterpret_cast<const char *>(s), n, dt, val,
+                               *path, log);
+  }
+
+  template <typename T>
+  Result parse_and_get_value(const char8_t *s, std::any &dt, T &val,
+                             const char *path = nullptr,
+                             Log log = nullptr) const {
+    return parse_and_get_value(reinterpret_cast<const char *>(s), dt, val,
+                               *path, log);
+  }
+#endif
+
   void operator=(Action a) { action = a; }
 
   template <typename T> Definition &operator,(T fn) {
@@ -2416,12 +2328,18 @@ public:
 
   std::string name;
   const char *s_ = nullptr;
+  std::pair<size_t, size_t> line_ = {1, 1};
+
+  std::function<bool(const SemanticValues &vs, const std::any &dt,
+                     std::string &msg)>
+      predicate;
 
   size_t id = 0;
   Action action;
-  std::function<void(const char *s, size_t n, std::any &dt)> enter;
-  std::function<void(const char *s, size_t n, size_t matchlen, std::any &value,
-                     std::any &dt)>
+  std::function<void(const Context &c, const char *s, size_t n, std::any &dt)>
+      enter;
+  std::function<void(const Context &c, const char *s, size_t n, size_t matchlen,
+                     std::any &value, std::any &dt)>
       leave;
   bool ignoreSemanticValue = false;
   std::shared_ptr<Ope> whitespaceOpe;
@@ -2429,13 +2347,18 @@ public:
   bool enablePackratParsing = false;
   bool is_macro = false;
   std::vector<std::string> params;
+  bool disable_action = false;
+
   TracerEnter tracer_enter;
   TracerLeave tracer_leave;
-  bool tracer_verbose = false;
-  bool disable_action = false;
+  bool verbose_trace = false;
+  TracerStartOrEnd tracer_start;
+  TracerStartOrEnd tracer_end;
 
   std::string error_message;
   bool no_ast_opt = false;
+
+  bool eoi_check = true;
 
 private:
   friend class Reference;
@@ -2460,28 +2383,45 @@ private:
 
     std::shared_ptr<Ope> ope = holder_;
 
+    std::any trace_data;
+    if (tracer_start) { tracer_start(trace_data); }
+    auto se = scope_exit([&]() {
+      if (tracer_end) { tracer_end(trace_data); }
+    });
+
     Context c(path, s, n, definition_ids_.size(), whitespaceOpe, wordOpe,
-              enablePackratParsing, tracer_enter, tracer_leave, tracer_verbose,
-              log);
+              enablePackratParsing, tracer_enter, tracer_leave, trace_data,
+              verbose_trace, log);
 
     size_t i = 0;
 
     if (whitespaceOpe) {
       auto save_ignore_trace_state = c.ignore_trace_state;
-      c.ignore_trace_state = !c.tracer_verbose;
+      c.ignore_trace_state = !c.verbose_trace;
       auto se =
           scope_exit([&]() { c.ignore_trace_state = save_ignore_trace_state; });
 
       auto len = whitespaceOpe->parse(s, n, vs, c, dt);
-      if (fail(len)) {
-        return Result{success(len), c.recovered, len, c.error_info};
-      }
+      if (fail(len)) { return Result{false, c.recovered, i, c.error_info}; }
 
       i = len;
     }
 
     auto len = ope->parse(s + i, n - i, vs, c, dt);
-    return Result{success(i + len), c.recovered, i + len, c.error_info};
+    auto ret = success(len);
+    if (ret) {
+      i += len;
+      if (eoi_check) {
+        if (i < n) {
+          if (c.error_info.error_pos - c.s < s + i - c.s) {
+            c.error_info.message_pos = s + i;
+            c.error_info.message = "expected end of input";
+          }
+          ret = false;
+        }
+      }
+    }
+    return Result{ret, c.recovered, i, c.error_info};
   }
 
   std::shared_ptr<Holder> holder_;
@@ -2504,7 +2444,7 @@ inline size_t parse_literal(const char *s, size_t n, SemanticValues &vs,
   for (; i < lit.size(); i++) {
     if (i >= n || (ignore_case ? (std::tolower(s[i]) != std::tolower(lit[i]))
                                : (s[i] != lit[i]))) {
-      c.set_error_pos(s, lit.c_str());
+      c.set_error_pos(s, lit.data());
       return static_cast<size_t>(-1);
     }
   }
@@ -2512,14 +2452,14 @@ inline size_t parse_literal(const char *s, size_t n, SemanticValues &vs,
   // Word check
   if (c.wordOpe) {
     auto save_ignore_trace_state = c.ignore_trace_state;
-    c.ignore_trace_state = !c.tracer_verbose;
+    c.ignore_trace_state = !c.verbose_trace;
     auto se =
         scope_exit([&]() { c.ignore_trace_state = save_ignore_trace_state; });
 
     std::call_once(init_is_word, [&]() {
       SemanticValues dummy_vs;
       Context dummy_c(nullptr, c.s, c.l, 0, nullptr, nullptr, false, nullptr,
-                      nullptr, false, nullptr);
+                      nullptr, nullptr, false, nullptr);
       std::any dummy_dt;
 
       auto len =
@@ -2530,7 +2470,7 @@ inline size_t parse_literal(const char *s, size_t n, SemanticValues &vs,
     if (is_word) {
       SemanticValues dummy_vs;
       Context dummy_c(nullptr, c.s, c.l, 0, nullptr, nullptr, false, nullptr,
-                      nullptr, false, nullptr);
+                      nullptr, nullptr, false, nullptr);
       std::any dummy_dt;
 
       NotPredicate ope(c.wordOpe);
@@ -2544,31 +2484,90 @@ inline size_t parse_literal(const char *s, size_t n, SemanticValues &vs,
   }
 
   // Skip whiltespace
-  if (!c.in_token_boundary_count) {
-    if (c.whitespaceOpe) {
-      auto save_ignore_trace_state = c.ignore_trace_state;
-      c.ignore_trace_state = !c.tracer_verbose;
-      auto se =
-          scope_exit([&]() { c.ignore_trace_state = save_ignore_trace_state; });
+  if (!c.in_token_boundary_count && c.whitespaceOpe) {
+    auto save_ignore_trace_state = c.ignore_trace_state;
+    c.ignore_trace_state = !c.verbose_trace;
+    auto se =
+        scope_exit([&]() { c.ignore_trace_state = save_ignore_trace_state; });
 
-      auto len = c.whitespaceOpe->parse(s + i, n - i, vs, c, dt);
-      if (fail(len)) { return len; }
-      i += len;
-    }
+    auto len = c.whitespaceOpe->parse(s + i, n - i, vs, c, dt);
+    if (fail(len)) { return len; }
+    i += len;
   }
 
   return i;
 }
 
-inline const std::vector<size_t> &SemanticValues::source_line_index() const {
-  if (!c_) { std::vector<size_t>(); }
-  if (c_->source_line_index.empty()) {
-    for (size_t pos = 0; pos < c_->l; pos++) {
-      if (c_->s[pos] == '\n') { c_->source_line_index.push_back(pos); }
+inline std::pair<size_t, size_t> SemanticValues::line_info() const {
+  assert(c_);
+  return c_->line_info(sv_.data());
+}
+
+inline void ErrorInfo::output_log(const Log &log, const char *s, size_t n) {
+  if (message_pos) {
+    if (message_pos > last_output_pos) {
+      last_output_pos = message_pos;
+      auto line = line_info(s, message_pos);
+      std::string msg;
+      if (auto unexpected_token = heuristic_error_token(s, n, message_pos);
+          !unexpected_token.empty()) {
+        msg = replace_all(message, "%t", unexpected_token);
+
+        auto unexpected_char = unexpected_token.substr(
+            0,
+            codepoint_length(unexpected_token.data(), unexpected_token.size()));
+
+        msg = replace_all(msg, "%c", unexpected_char);
+      } else {
+        msg = message;
+      }
+      log(line.first, line.second, msg, label);
     }
-    c_->source_line_index.push_back(c_->l);
+  } else if (error_pos) {
+    if (error_pos > last_output_pos) {
+      last_output_pos = error_pos;
+      auto line = line_info(s, error_pos);
+
+      std::string msg;
+      if (expected_tokens.empty()) {
+        msg = "syntax error.";
+      } else {
+        msg = "syntax error";
+
+        // unexpected token
+        if (auto unexpected_token = heuristic_error_token(s, n, error_pos);
+            !unexpected_token.empty()) {
+          msg += ", unexpected '";
+          msg += unexpected_token;
+          msg += "'";
+        }
+
+        auto first_item = true;
+        size_t i = 0;
+        while (i < expected_tokens.size()) {
+          auto [error_literal, error_rule] = expected_tokens[i];
+
+          // Skip rules start with '_'
+          if (!(error_rule && error_rule->name[0] == '_')) {
+            msg += (first_item ? ", expecting " : ", ");
+            if (error_literal) {
+              msg += "'";
+              msg += error_literal;
+              msg += "'";
+            } else {
+              msg += "<" + error_rule->name + ">";
+              if (label.empty()) { label = error_rule->name; }
+            }
+            first_item = false;
+          }
+
+          i++;
+        }
+        msg += ".";
+      }
+      log(line.first, line.second, msg, label);
+    }
   }
-  return c_->source_line_index;
 }
 
 inline void Context::set_error_pos(const char *a_s, const char *literal) {
@@ -2578,39 +2577,50 @@ inline void Context::set_error_pos(const char *a_s, const char *literal) {
         error_info.error_pos = a_s;
         error_info.expected_tokens.clear();
       }
+
+      const char *error_literal = nullptr;
+      const Definition *error_rule = nullptr;
+
       if (literal) {
-        error_info.add(literal, true);
+        error_literal = literal;
       } else if (!rule_stack.empty()) {
         auto rule = rule_stack.back();
         auto ope = rule->get_core_operator();
         if (auto token = FindLiteralToken::token(*ope);
             token && token[0] != '\0') {
-          error_info.add(token, true);
-        } else {
-          error_info.add(rule->name.c_str(), false);
+          error_literal = token;
         }
+      }
+
+      for (auto r : rule_stack) {
+        error_rule = r;
+        if (r->is_token()) { break; }
+      }
+
+      if (error_literal || error_rule) {
+        error_info.add(error_literal, error_rule);
       }
     }
   }
 }
 
 inline void Context::trace_enter(const Ope &ope, const char *a_s, size_t n,
-                                 SemanticValues &vs, std::any &dt) const {
+                                 const SemanticValues &vs, std::any &dt) {
   trace_ids.push_back(next_trace_id++);
-  tracer_enter(ope, a_s, n, vs, *this, dt);
+  tracer_enter(ope, a_s, n, vs, *this, dt, trace_data);
 }
 
 inline void Context::trace_leave(const Ope &ope, const char *a_s, size_t n,
-                                 SemanticValues &vs, std::any &dt,
-                                 size_t len) const {
-  tracer_leave(ope, a_s, n, vs, *this, dt, len);
+                                 const SemanticValues &vs, std::any &dt,
+                                 size_t len) {
+  tracer_leave(ope, a_s, n, vs, *this, dt, len, trace_data);
   trace_ids.pop_back();
 }
 
 inline bool Context::is_traceable(const Ope &ope) const {
   if (tracer_enter && tracer_leave) {
     if (ignore_trace_state) { return false; }
-    return !OpeType<Reference>::check(ope);
+    return !dynamic_cast<const peg::Reference *>(&ope);
   }
   return false;
 }
@@ -2627,12 +2637,50 @@ inline size_t Ope::parse(const char *s, size_t n, SemanticValues &vs,
 }
 
 inline size_t Dictionary::parse_core(const char *s, size_t n,
-                                     SemanticValues & /*vs*/, Context &c,
-                                     std::any & /*dt*/) const {
-  auto len = trie_.match(s, n);
-  if (len > 0) { return len; }
-  c.set_error_pos(s);
-  return static_cast<size_t>(-1);
+                                     SemanticValues &vs, Context &c,
+                                     std::any &dt) const {
+  auto i = trie_.match(s, n);
+  if (i == 0) {
+    c.set_error_pos(s);
+    return static_cast<size_t>(-1);
+  }
+
+  // Word check
+  if (c.wordOpe) {
+    auto save_ignore_trace_state = c.ignore_trace_state;
+    c.ignore_trace_state = !c.verbose_trace;
+    auto se =
+        scope_exit([&]() { c.ignore_trace_state = save_ignore_trace_state; });
+
+    {
+      SemanticValues dummy_vs;
+      Context dummy_c(nullptr, c.s, c.l, 0, nullptr, nullptr, false, nullptr,
+                      nullptr, nullptr, false, nullptr);
+      std::any dummy_dt;
+
+      NotPredicate ope(c.wordOpe);
+      auto len = ope.parse(s + i, n - i, dummy_vs, dummy_c, dummy_dt);
+      if (fail(len)) {
+        c.set_error_pos(s);
+        return len;
+      }
+      i += len;
+    }
+  }
+
+  // Skip whiltespace
+  if (!c.in_token_boundary_count && c.whitespaceOpe) {
+    auto save_ignore_trace_state = c.ignore_trace_state;
+    c.ignore_trace_state = !c.verbose_trace;
+    auto se =
+        scope_exit([&]() { c.ignore_trace_state = save_ignore_trace_state; });
+
+    auto len = c.whitespaceOpe->parse(s + i, n - i, vs, c, dt);
+    if (fail(len)) { return len; }
+    i += len;
+  }
+
+  return i;
 }
 
 inline size_t LiteralString::parse_core(const char *s, size_t n,
@@ -2646,7 +2694,7 @@ inline size_t TokenBoundary::parse_core(const char *s, size_t n,
                                         SemanticValues &vs, Context &c,
                                         std::any &dt) const {
   auto save_ignore_trace_state = c.ignore_trace_state;
-  c.ignore_trace_state = !c.tracer_verbose;
+  c.ignore_trace_state = !c.verbose_trace;
   auto se =
       scope_exit([&]() { c.ignore_trace_state = save_ignore_trace_state; });
 
@@ -2689,41 +2737,52 @@ inline size_t Holder::parse_core(const char *s, size_t n, SemanticValues &vs,
   std::any val;
 
   c.packrat(s, outer_->id, len, val, [&](std::any &a_val) {
-    if (outer_->enter) { outer_->enter(s, n, dt); }
-
-    auto se2 = scope_exit([&]() {
-      c.pop();
-      if (outer_->leave) { outer_->leave(s, n, len, a_val, dt); }
+    if (outer_->enter) { outer_->enter(c, s, n, dt); }
+    auto &chvs = c.push_semantic_values_scope();
+    auto se = scope_exit([&]() {
+      c.pop_semantic_values_scope();
+      if (outer_->leave) { outer_->leave(c, s, n, len, a_val, dt); }
     });
 
-    auto &chldsv = c.push();
-
     c.rule_stack.push_back(outer_);
-    len = ope_->parse(s, n, chldsv, c, dt);
+    len = ope_->parse(s, n, chvs, c, dt);
     c.rule_stack.pop_back();
 
     // Invoke action
     if (success(len)) {
-      chldsv.sv_ = std::string_view(s, len);
-      chldsv.name_ = outer_->name;
+      chvs.sv_ = std::string_view(s, len);
+      chvs.name_ = outer_->name;
 
-      if (!IsPrioritizedChoice::check(*ope_)) {
-        chldsv.choice_count_ = 0;
-        chldsv.choice_ = 0;
+      if (!dynamic_cast<const peg::PrioritizedChoice *>(ope_.get())) {
+        chvs.choice_count_ = 0;
+        chvs.choice_ = 0;
       }
 
-      try {
-        a_val = reduce(chldsv, dt);
-      } catch (const parse_error &e) {
-        if (c.log) {
-          if (e.what()) {
-            if (c.error_info.message_pos < s) {
-              c.error_info.message_pos = s;
-              c.error_info.message = e.what();
-            }
-          }
+      std::string msg;
+      if (outer_->predicate && !outer_->predicate(chvs, dt, msg)) {
+        if (c.log && !msg.empty() && c.error_info.message_pos < s) {
+          c.error_info.message_pos = s;
+          c.error_info.message = msg;
+          c.error_info.label = outer_->name;
         }
         len = static_cast<size_t>(-1);
+      }
+
+      if (success(len)) {
+        if (!c.recovered) { a_val = reduce(chvs, dt); }
+      } else {
+        if (c.log && !msg.empty() && c.error_info.message_pos < s) {
+          c.error_info.message_pos = s;
+          c.error_info.message = msg;
+          c.error_info.label = outer_->name;
+        }
+      }
+    } else {
+      if (c.log && !outer_->error_message.empty() &&
+          c.error_info.message_pos < s) {
+        c.error_info.message_pos = s;
+        c.error_info.message = outer_->error_message;
+        c.error_info.label = outer_->name;
       }
     }
   });
@@ -2748,16 +2807,19 @@ inline std::any Holder::reduce(SemanticValues &vs, std::any &dt) const {
   }
 }
 
-inline const char *Holder::trace_name() const {
-  if (trace_name_.empty()) { trace_name_ = "[" + outer_->name + "]"; }
-  return trace_name_.data();
+inline const std::string &Holder::name() const { return outer_->name; }
+
+inline const std::string &Holder::trace_name() const {
+  std::call_once(trace_name_init_,
+                 [this]() { trace_name_ = "[" + outer_->name + "]"; });
+  return trace_name_;
 }
 
 inline size_t Reference::parse_core(const char *s, size_t n, SemanticValues &vs,
                                     Context &c, std::any &dt) const {
   auto save_ignore_trace_state = c.ignore_trace_state;
   if (rule_ && rule_->ignoreSemanticValue) {
-    c.ignore_trace_state = !c.tracer_verbose;
+    c.ignore_trace_state = !c.verbose_trace;
   }
   auto se =
       scope_exit([&]() { c.ignore_trace_state = save_ignore_trace_state; });
@@ -2811,7 +2873,10 @@ inline size_t BackReference::parse_core(const char *s, size_t n,
       return parse_literal(s, n, vs, c, dt, lit, init_is_word, is_word, false);
     }
   }
-  throw std::runtime_error("Invalid back reference...");
+
+  c.error_info.message_pos = s;
+  c.error_info.message = "undefined back reference '$" + name_ + "'...";
+  return static_cast<size_t>(-1);
 }
 
 inline Definition &
@@ -2854,11 +2919,11 @@ inline size_t PrecedenceClimbing::parse_expression(const char *s, size_t n,
     std::vector<std::any> save_values(vs.begin(), vs.end());
     auto save_tokens = vs.tokens;
 
-    auto chv = c.push();
-    auto chl = binop_->parse(s + i, n - i, chv, c, dt);
-    c.pop();
+    auto chvs = c.push_semantic_values_scope();
+    auto chlen = binop_->parse(s + i, n - i, chvs, c, dt);
+    c.pop_semantic_values_scope();
 
-    if (fail(chl)) { break; }
+    if (fail(chlen)) { break; }
 
     auto it = info_.find(tok);
     if (it == info_.end()) { break; }
@@ -2868,25 +2933,25 @@ inline size_t PrecedenceClimbing::parse_expression(const char *s, size_t n,
 
     if (level < min_prec) { break; }
 
-    vs.emplace_back(std::move(chv[0]));
-    i += chl;
+    vs.emplace_back(std::move(chvs[0]));
+    i += chlen;
 
     auto next_min_prec = level;
     if (assoc == 'L') { next_min_prec = level + 1; }
 
-    chv = c.push();
-    chl = parse_expression(s + i, n - i, chv, c, dt, next_min_prec);
-    c.pop();
+    chvs = c.push_semantic_values_scope();
+    chlen = parse_expression(s + i, n - i, chvs, c, dt, next_min_prec);
+    c.pop_semantic_values_scope();
 
-    if (fail(chl)) {
+    if (fail(chlen)) {
       vs.assign(save_values.begin(), save_values.end());
       vs.tokens = save_tokens;
-      i = chl;
+      i = chlen;
       break;
     }
 
-    vs.emplace_back(std::move(chv[0]));
-    i += chl;
+    vs.emplace_back(std::move(chvs[0]));
+    i += chlen;
 
     std::any val;
     if (rule_.action) {
@@ -2910,16 +2975,15 @@ inline size_t Recovery::parse_core(const char *s, size_t n,
   // Custom error message
   if (c.log) {
     auto label = dynamic_cast<Reference *>(rule.args_[0].get());
-    if (label) {
-      if (!label->rule_->error_message.empty()) {
-        c.error_info.message_pos = s;
-        c.error_info.message = label->rule_->error_message;
-      }
+    if (label && !label->rule_->error_message.empty()) {
+      c.error_info.message_pos = s;
+      c.error_info.message = label->rule_->error_message;
+      c.error_info.label = label->rule_->name;
     }
   }
 
   // Recovery
-  size_t len = static_cast<size_t>(-1);
+  auto len = static_cast<size_t>(-1);
   {
     auto save_log = c.log;
     c.log = nullptr;
@@ -3029,6 +3093,43 @@ inline void DetectLeftRecursion::visit(Reference &ope) {
     }
   }
   done_ = true;
+}
+
+inline void HasEmptyElement::visit(Sequence &ope) {
+  auto save_is_empty = false;
+  const char *save_error_s = nullptr;
+  std::string save_error_name;
+
+  auto it = ope.opes_.begin();
+  while (it != ope.opes_.end()) {
+    (*it)->accept(*this);
+    if (!is_empty) {
+      ++it;
+      while (it != ope.opes_.end()) {
+        DetectInfiniteLoop vis(refs_, has_error_cache_);
+        (*it)->accept(vis);
+        if (vis.has_error) {
+          is_empty = true;
+          error_s = vis.error_s;
+          error_name = vis.error_name;
+        }
+        ++it;
+      }
+      return;
+    }
+
+    save_is_empty = is_empty;
+    save_error_s = error_s;
+    save_error_name = error_name;
+
+    is_empty = false;
+    error_name.clear();
+    ++it;
+  }
+
+  is_empty = save_is_empty;
+  error_s = save_error_s;
+  error_name = save_error_name;
 }
 
 inline void HasEmptyElement::visit(Reference &ope) {
@@ -3176,10 +3277,16 @@ private:
     std::shared_ptr<Grammar> grammar;
     std::string start;
     const char *start_pos = nullptr;
+
     std::vector<std::pair<std::string, const char *>> duplicates_of_definition;
+
     std::vector<std::pair<std::string, const char *>> duplicates_of_instruction;
     std::map<std::string, std::vector<Instruction>> instructions;
-    std::set<std::string_view> captures;
+
+    std::vector<std::pair<std::string, const char *>> undefined_back_references;
+    std::vector<std::set<std::string_view>> captures_stack{{}};
+
+    std::set<std::string_view> captures_in_current_definition;
     bool enablePackratParsing = true;
 
     Data() : grammar(std::make_shared<Grammar>()) {}
@@ -3206,11 +3313,10 @@ private:
             seq(g["Ignore"], g["Identifier"],
                 npd(seq(opt(g["Parameters"]), g["LEFTARROW"]))),
             seq(g["OPEN"], g["Expression"], g["CLOSE"]),
-            seq(g["BeginTok"], g["Expression"], g["EndTok"]),
-            seq(g["BeginCapScope"], g["Expression"], g["EndCapScope"]),
+            seq(g["BeginTok"], g["Expression"], g["EndTok"]), g["CapScope"],
             seq(g["BeginCap"], g["Expression"], g["EndCap"]), g["BackRef"],
-            g["LiteralI"], g["Dictionary"], g["Literal"], g["NegatedClass"],
-            g["Class"], g["DOT"]);
+            g["LiteralI"], g["Dictionary"], g["Literal"], g["NegatedClassI"],
+            g["NegatedClass"], g["ClassI"], g["Class"], g["DOT"]);
 
     g["Identifier"] <= seq(g["IdentCont"], g["Spacing"]);
     g["IdentCont"] <= seq(g["IdentStart"], zom(g["IdentRest"]));
@@ -3241,9 +3347,16 @@ private:
     g["Class"] <= seq(chr('['), npd(chr('^')),
                       tok(oom(seq(npd(chr(']')), g["Range"]))), chr(']'),
                       g["Spacing"]);
+    g["ClassI"] <= seq(chr('['), npd(chr('^')),
+                       tok(oom(seq(npd(chr(']')), g["Range"]))), lit("]i"),
+                       g["Spacing"]);
+
     g["NegatedClass"] <= seq(lit("[^"),
                              tok(oom(seq(npd(chr(']')), g["Range"]))), chr(']'),
                              g["Spacing"]);
+    g["NegatedClassI"] <= seq(lit("[^"),
+                              tok(oom(seq(npd(chr(']')), g["Range"]))),
+                              lit("]i"), g["Spacing"]);
 
     // NOTE: This is different from The original Brian Ford's paper, and this
     // modification allows us to specify `[+-]` as a valid char class.
@@ -3267,6 +3380,8 @@ private:
                                 seq(g["Number"], g["COMMA"]), g["Number"],
                                 seq(g["COMMA"], g["Number"]));
     g["Number"] <= seq(oom(cls("0-9")), g["Spacing"]);
+
+    g["CapScope"] <= seq(g["BeginCapScope"], g["Expression"], g["EndCapScope"]);
 
     g["LEFTARROW"] <= seq(cho(lit("<-"), lit(u8(u8"←"))), g["Spacing"]);
     ~g["SLASH"] <= seq(chr('/'), g["Spacing"]);
@@ -3344,8 +3459,8 @@ private:
     g["PrecedenceAssoc"] <= cls("LR");
 
     // Error message instruction
-    g["ErrorMessage"] <=
-        seq(lit("message"), g["SpacesOom"], g["LiteralD"], g["SpacesZom"]);
+    g["ErrorMessage"] <= seq(lit("error_message"), g["SpacesOom"],
+                             g["LiteralD"], g["SpacesZom"]);
 
     // No Ast node optimazation instruction
     g["NoAstOpt"] <= seq(lit("no_ast_opt"), g["SpacesZom"]);
@@ -3379,16 +3494,17 @@ private:
 
       if (has_instructions) {
         auto index = is_macro ? 5 : 4;
-        std::set<std::string> types;
+        std::unordered_set<std::string> types;
         for (const auto &instruction :
              std::any_cast<std::vector<Instruction>>(vs[index])) {
           const auto &type = instruction.type;
           if (types.find(type) == types.end()) {
             data.instructions[name].push_back(instruction);
             types.insert(instruction.type);
+            if (type == "declare_symbol" || type == "check_symbol") {
+              if (!TokenChecker::is_token(*ope)) { ope = tok(ope); }
+            }
           } else {
-            // data.duplicates_of_instruction.emplace_back(type,
-            // vs.sv().data());
             data.duplicates_of_instruction.emplace_back(type,
                                                         instruction.sv.data());
           }
@@ -3401,22 +3517,24 @@ private:
         rule <= ope;
         rule.name = name;
         rule.s_ = vs.sv().data();
+        rule.line_ = line_info(vs.ss, rule.s_);
         rule.ignoreSemanticValue = ignore;
         rule.is_macro = is_macro;
         rule.params = params;
 
         if (data.start.empty()) {
-          data.start = name;
-          data.start_pos = vs.sv().data();
+          data.start = rule.name;
+          data.start_pos = rule.s_;
         }
       } else {
         data.duplicates_of_definition.emplace_back(name, vs.sv().data());
       }
     };
 
-    g["Definition"].enter = [](const char * /*s*/, size_t /*n*/, std::any &dt) {
+    g["Definition"].enter = [](const Context & /*c*/, const char * /*s*/,
+                               size_t /*n*/, std::any &dt) {
       auto &data = *std::any_cast<Data *>(dt);
-      data.captures.clear();
+      data.captures_in_current_definition.clear();
     };
 
     g["Expression"] = [&](const SemanticValues &vs) {
@@ -3517,29 +3635,6 @@ private:
       }
     };
 
-    g["RepetitionRange"] = [&](const SemanticValues &vs) {
-      switch (vs.choice()) {
-      case 0: { // Number COMMA Number
-        auto min = std::any_cast<size_t>(vs[0]);
-        auto max = std::any_cast<size_t>(vs[1]);
-        return std::pair(min, max);
-      }
-      case 1: // Number COMMA
-        return std::pair(std::any_cast<size_t>(vs[0]),
-                         std::numeric_limits<size_t>::max());
-      case 2: { // Number
-        auto n = std::any_cast<size_t>(vs[0]);
-        return std::pair(n, n);
-      }
-      default: // COMMA Number
-        return std::pair(std::numeric_limits<size_t>::min(),
-                         std::any_cast<size_t>(vs[0]));
-      }
-    };
-    g["Number"] = [&](const SemanticValues &vs) {
-      return vs.token_to_number<size_t>();
-    };
-
     g["Primary"] = [&](const SemanticValues &vs, std::any &dt) {
       auto &data = *std::any_cast<Data *>(dt);
 
@@ -3577,7 +3672,8 @@ private:
         const auto &name = std::any_cast<std::string_view>(vs[0]);
         auto ope = std::any_cast<std::shared_ptr<Ope>>(vs[1]);
 
-        data.captures.insert(name);
+        data.captures_stack.back().insert(name);
+        data.captures_in_current_definition.insert(name);
 
         return cap(ope, [name](const char *a_s, size_t a_n, Context &c) {
           auto &cs = c.capture_scope_stack[c.capture_scope_stack_size - 1];
@@ -3616,9 +3712,17 @@ private:
       auto ranges = vs.transform<std::pair<char32_t, char32_t>>();
       return cls(ranges);
     };
+    g["ClassI"] = [](const SemanticValues &vs) {
+      auto ranges = vs.transform<std::pair<char32_t, char32_t>>();
+      return cls(ranges, true);
+    };
     g["NegatedClass"] = [](const SemanticValues &vs) {
       auto ranges = vs.transform<std::pair<char32_t, char32_t>>();
       return ncls(ranges);
+    };
+    g["NegatedClassI"] = [](const SemanticValues &vs) {
+      auto ranges = vs.transform<std::pair<char32_t, char32_t>>();
+      return ncls(ranges, true);
     };
     g["Range"] = [](const SemanticValues &vs) {
       switch (vs.choice()) {
@@ -3641,6 +3745,41 @@ private:
       return resolve_escape_sequence(vs.sv().data(), vs.sv().length());
     };
 
+    g["RepetitionRange"] = [&](const SemanticValues &vs) {
+      switch (vs.choice()) {
+      case 0: { // Number COMMA Number
+        auto min = std::any_cast<size_t>(vs[0]);
+        auto max = std::any_cast<size_t>(vs[1]);
+        return std::pair(min, max);
+      }
+      case 1: // Number COMMA
+        return std::pair(std::any_cast<size_t>(vs[0]),
+                         std::numeric_limits<size_t>::max());
+      case 2: { // Number
+        auto n = std::any_cast<size_t>(vs[0]);
+        return std::pair(n, n);
+      }
+      default: // COMMA Number
+        return std::pair(std::numeric_limits<size_t>::min(),
+                         std::any_cast<size_t>(vs[0]));
+      }
+    };
+    g["Number"] = [&](const SemanticValues &vs) {
+      return vs.token_to_number<size_t>();
+    };
+
+    g["CapScope"].enter = [](const Context & /*c*/, const char * /*s*/,
+                             size_t /*n*/, std::any &dt) {
+      auto &data = *std::any_cast<Data *>(dt);
+      data.captures_stack.emplace_back();
+    };
+    g["CapScope"].leave = [](const Context & /*c*/, const char * /*s*/,
+                             size_t /*n*/, size_t /*matchlen*/,
+                             std::any & /*value*/, std::any &dt) {
+      auto &data = *std::any_cast<Data *>(dt);
+      data.captures_stack.pop_back();
+    };
+
     g["AND"] = [](const SemanticValues &vs) { return *vs.sv().data(); };
     g["NOT"] = [](const SemanticValues &vs) { return *vs.sv().data(); };
     g["QUESTION"] = [](const SemanticValues &vs) { return *vs.sv().data(); };
@@ -3655,9 +3794,31 @@ private:
 
     g["BackRef"] = [&](const SemanticValues &vs, std::any &dt) {
       auto &data = *std::any_cast<Data *>(dt);
-      if (data.captures.find(vs.token()) == data.captures.end()) {
+
+      // Undefined back reference check
+      {
+        auto found = false;
+        auto it = data.captures_stack.rbegin();
+        while (it != data.captures_stack.rend()) {
+          if (it->find(vs.token()) != it->end()) {
+            found = true;
+            break;
+          }
+          ++it;
+        }
+        if (!found) {
+          auto ptr = vs.token().data() - 1; // include '$' symbol
+          data.undefined_back_references.emplace_back(vs.token(), ptr);
+        }
+      }
+
+      // NOTE: Disable packrat parsing if a back reference is not defined in
+      // captures in the current definition rule.
+      if (data.captures_in_current_definition.find(vs.token()) ==
+          data.captures_in_current_definition.end()) {
         data.enablePackratParsing = false;
       }
+
       return bkr(vs.token_to_string());
     };
 
@@ -3696,7 +3857,7 @@ private:
 
     g["ErrorMessage"] = [](const SemanticValues &vs) {
       Instruction instruction;
-      instruction.type = "message";
+      instruction.type = "error_message";
       instruction.data = std::any_cast<std::string>(vs[0]);
       instruction.sv = vs.sv();
       return instruction;
@@ -3734,7 +3895,8 @@ private:
           auto line = line_info(s, rule.s_);
           log(line.first, line.second,
               "'precedence' instruction cannot be applied to '" + rule.name +
-                  "'.");
+                  "'.",
+              "");
         }
         return false;
       }
@@ -3746,7 +3908,8 @@ private:
         auto line = line_info(s, rule.s_);
         log(line.first, line.second,
             "'precedence' instruction cannot be applied to '" + rule.name +
-                "'.");
+                "'.",
+            "");
       }
       return false;
     }
@@ -3780,10 +3943,11 @@ private:
       if (log) {
         if (r.error_info.message_pos) {
           auto line = line_info(s, r.error_info.message_pos);
-          log(line.first, line.second, r.error_info.message);
+          log(line.first, line.second, r.error_info.message,
+              r.error_info.label);
         } else {
           auto line = line_info(s, r.error_info.error_pos);
-          log(line.first, line.second, "syntax error");
+          log(line.first, line.second, "syntax error", r.error_info.label);
         }
       }
       return nullptr;
@@ -3813,7 +3977,7 @@ private:
         if (log) {
           auto line = line_info(s, ptr);
           log(line.first, line.second,
-              "The definition '" + name + "' is already defined.");
+              "The definition '" + name + "' is already defined.", "");
         }
       }
       ret = false;
@@ -3825,7 +3989,19 @@ private:
         if (log) {
           auto line = line_info(s, ptr);
           log(line.first, line.second,
-              "The instruction '" + type + "' is already defined.");
+              "The instruction '" + type + "' is already defined.", "");
+        }
+      }
+      ret = false;
+    }
+
+    // Check undefined back references
+    if (!data.undefined_back_references.empty()) {
+      for (const auto &[name, ptr] : data.undefined_back_references) {
+        if (log) {
+          auto line = line_info(s, ptr);
+          log(line.first, line.second,
+              "The back reference '" + name + "' is undefined.", "");
         }
       }
       ret = false;
@@ -3840,8 +4016,8 @@ private:
         if (log) {
           auto line = line_info(s, start_rule.s_);
           log(line.first, line.second,
-              "Ignore operator cannot be applied to '" + start_rule.name +
-                  "'.");
+              "Ignore operator cannot be applied to '" + start_rule.name + "'.",
+              "");
         }
         ret = false;
       }
@@ -3864,7 +4040,7 @@ private:
       for (const auto &[name, ptr] : vis.error_s) {
         if (log) {
           auto line = line_info(s, ptr);
-          log(line.first, line.second, vis.error_message[name]);
+          log(line.first, line.second, vis.error_message[name], "");
         }
         ret = false;
       }
@@ -3875,7 +4051,7 @@ private:
         if (log) {
           auto line = line_info(s, rule.s_);
           auto msg = "'" + name + "' is not referenced.";
-          log(line.first, line.second, msg);
+          log(line.first, line.second, msg, "");
         }
       }
     }
@@ -3898,7 +4074,7 @@ private:
       if (vis.error_s) {
         if (log) {
           auto line = line_info(s, vis.error_s);
-          log(line.first, line.second, "'" + name + "' is left recursive.");
+          log(line.first, line.second, "'" + name + "' is left recursive.", "");
         }
         ret = false;
       }
@@ -3943,7 +4119,7 @@ private:
           if (!apply_precedence_instruction(rule, info, s, log)) {
             return nullptr;
           }
-        } else if (instruction.type == "message") {
+        } else if (instruction.type == "error_message") {
           rule.error_message = std::any_cast<std::string>(instruction.data);
         } else if (instruction.type == "no_ast_opt") {
           rule.no_ast_opt = true;
@@ -3960,13 +4136,15 @@ private:
 
   bool detect_infiniteLoop(const Data &data, Definition &rule, const Log &log,
                            const char *s) const {
-    DetectInfiniteLoop vis(data.start_pos, rule.name);
+    std::vector<std::pair<const char *, std::string>> refs;
+    std::unordered_map<std::string, bool> has_error_cache;
+    DetectInfiniteLoop vis(data.start_pos, rule.name, refs, has_error_cache);
     rule.accept(vis);
     if (vis.has_error) {
       if (log) {
         auto line = line_info(s, vis.error_s);
         log(line.first, line.second,
-            "infinite loop is detected in '" + vis.error_name + "'.");
+            "infinite loop is detected in '" + vis.error_name + "'.", "");
       }
       return true;
     }
@@ -4002,12 +4180,12 @@ template <typename Annotation> struct AstBase : public Annotation {
 
   AstBase(const AstBase &ast, const char *original_name, size_t position = 0,
           size_t length = 0, size_t original_choice_count = 0,
-          size_t original_choise = 0)
+          size_t original_choice = 0)
       : path(ast.path), line(ast.line), column(ast.column), name(ast.name),
         position(position), length(length), choice_count(ast.choice_count),
         choice(ast.choice), original_name(original_name),
         original_choice_count(original_choice_count),
-        original_choice(original_choise), tag(ast.tag),
+        original_choice(original_choice), tag(ast.tag),
         original_tag(str2tag(original_name)), is_token(ast.is_token),
         token(ast.token), nodes(ast.nodes), parent(ast.parent) {}
 
@@ -4283,18 +4461,26 @@ public:
     load_grammar(s, n, rules);
   }
 
+  parser(const char *s, size_t n) : parser(s, n, Rules()) {}
+
   parser(std::string_view sv, const Rules &rules)
       : parser(sv.data(), sv.size(), rules) {}
 
-  parser(const char *s, size_t n) : parser(s, n, Rules()) {}
-
   parser(std::string_view sv) : parser(sv.data(), sv.size(), Rules()) {}
+
+#if defined(__cpp_lib_char8_t)
+  parser(std::u8string_view sv, const Rules &rules)
+      : parser(reinterpret_cast<const char *>(sv.data()), sv.size(), rules) {}
+
+  parser(std::u8string_view sv)
+      : parser(reinterpret_cast<const char *>(sv.data()), sv.size(), Rules()) {}
+#endif
 
   operator bool() { return grammar_ != nullptr; }
 
   bool load_grammar(const char *s, size_t n, const Rules &rules) {
-    grammar_ =
-        ParserGenerator::parse(s, n, rules, start_, enablePackratParsing_, log);
+    grammar_ = ParserGenerator::parse(s, n, rules, start_,
+                                      enablePackratParsing_, log_);
     return grammar_ != nullptr;
   }
 
@@ -4313,27 +4499,20 @@ public:
   bool parse_n(const char *s, size_t n, const char *path = nullptr) const {
     if (grammar_ != nullptr) {
       const auto &rule = (*grammar_)[start_];
-      return post_process(s, n, rule.parse(s, n, path, log));
+      auto result = rule.parse(s, n, path, log_);
+      return post_process(s, n, result);
     }
     return false;
-  }
-
-  bool parse(std::string_view sv, const char *path = nullptr) const {
-    return parse_n(sv.data(), sv.size(), path);
   }
 
   bool parse_n(const char *s, size_t n, std::any &dt,
                const char *path = nullptr) const {
     if (grammar_ != nullptr) {
       const auto &rule = (*grammar_)[start_];
-      return post_process(s, n, rule.parse(s, n, dt, path, log));
+      auto result = rule.parse(s, n, dt, path, log_);
+      return post_process(s, n, result);
     }
     return false;
-  }
-
-  bool parse(std::string_view sv, std::any &dt,
-             const char *path = nullptr) const {
-    return parse_n(sv.data(), sv.size(), dt, path);
   }
 
   template <typename T>
@@ -4341,14 +4520,10 @@ public:
                const char *path = nullptr) const {
     if (grammar_ != nullptr) {
       const auto &rule = (*grammar_)[start_];
-      return post_process(s, n, rule.parse_and_get_value(s, n, val, path, log));
+      auto result = rule.parse_and_get_value(s, n, val, path, log_);
+      return post_process(s, n, result);
     }
     return false;
-  }
-
-  template <typename T>
-  bool parse(std::string_view sv, T &val, const char *path = nullptr) const {
-    return parse_n(sv.data(), sv.size(), val, path);
   }
 
   template <typename T>
@@ -4357,28 +4532,67 @@ public:
     if (grammar_ != nullptr) {
       const auto &rule = (*grammar_)[start_];
       return post_process(s, n,
-                          rule.parse_and_get_value(s, n, dt, val, path, log));
+                          rule.parse_and_get_value(s, n, dt, val, path, log_));
     }
     return false;
   }
 
-  template <typename T>
-  bool parse(const char *s, std::any &dt, T &val,
-             const char *path = nullptr) const {
-    auto n = strlen(s);
-    return parse_n(s, n, dt, val, path);
+  bool parse(std::string_view sv, const char *path = nullptr) const {
+    return parse_n(sv.data(), sv.size(), path);
   }
+
+  bool parse(std::string_view sv, std::any &dt,
+             const char *path = nullptr) const {
+    return parse_n(sv.data(), sv.size(), dt, path);
+  }
+
+  template <typename T>
+  bool parse(std::string_view sv, T &val, const char *path = nullptr) const {
+    return parse_n(sv.data(), sv.size(), val, path);
+  }
+
+  template <typename T>
+  bool parse(std::string_view sv, std::any &dt, T &val,
+             const char *path = nullptr) const {
+    return parse_n(sv.data(), sv.size(), dt, val, path);
+  }
+
+#if defined(__cpp_lib_char8_t)
+  bool parse(std::u8string_view sv, const char *path = nullptr) const {
+    return parse_n(reinterpret_cast<const char *>(sv.data()), sv.size(), path);
+  }
+
+  bool parse(std::u8string_view sv, std::any &dt,
+             const char *path = nullptr) const {
+    return parse_n(reinterpret_cast<const char *>(sv.data()), sv.size(), dt,
+                   path);
+  }
+
+  template <typename T>
+  bool parse(std::u8string_view sv, T &val, const char *path = nullptr) const {
+    return parse_n(reinterpret_cast<const char *>(sv.data()), sv.size(), val,
+                   path);
+  }
+
+  template <typename T>
+  bool parse(std::u8string_view sv, std::any &dt, T &val,
+             const char *path = nullptr) const {
+    return parse_n(reinterpret_cast<const char *>(sv.data()), sv.size(), dt,
+                   val, path);
+  }
+#endif
 
   Definition &operator[](const char *s) { return (*grammar_)[s]; }
 
   const Definition &operator[](const char *s) const { return (*grammar_)[s]; }
 
-  std::vector<std::string> get_rule_names() const {
-    std::vector<std::string> rules;
-    for (auto &[name, _] : *grammar_) {
-      rules.push_back(name);
+  const Grammar &get_grammar() const { return *grammar_; }
+
+  void disable_eoi_check() {
+    if (grammar_ != nullptr) {
+      auto &rule = (*grammar_)[start_];
+      rule.eoi_check = false;
     }
-    return rules;
   }
 
   void enable_packrat_parsing() {
@@ -4388,13 +4602,30 @@ public:
     }
   }
 
-  void enable_trace(TracerEnter tracer_enter, TracerLeave tracer_leave,
-                    bool tracer_verbose = false) {
+  void enable_trace(TracerEnter tracer_enter, TracerLeave tracer_leave) {
     if (grammar_ != nullptr) {
       auto &rule = (*grammar_)[start_];
       rule.tracer_enter = tracer_enter;
       rule.tracer_leave = tracer_leave;
-      rule.tracer_verbose = tracer_verbose;
+    }
+  }
+
+  void enable_trace(TracerEnter tracer_enter, TracerLeave tracer_leave,
+                    TracerStartOrEnd tracer_start,
+                    TracerStartOrEnd tracer_end) {
+    if (grammar_ != nullptr) {
+      auto &rule = (*grammar_)[start_];
+      rule.tracer_enter = tracer_enter;
+      rule.tracer_leave = tracer_leave;
+      rule.tracer_start = tracer_start;
+      rule.tracer_end = tracer_end;
+    }
+  }
+
+  void set_verbose_trace(bool verbose_trace) {
+    if (grammar_ != nullptr) {
+      auto &rule = (*grammar_)[start_];
+      rule.verbose_trace = verbose_trace;
     }
   }
 
@@ -4411,14 +4642,19 @@ public:
     return AstOptimizer(opt_mode, get_no_ast_opt_rules()).optimize(ast);
   }
 
-  Log log;
+  void set_logger(Log log) { log_ = log; }
+
+  void set_logger(
+      std::function<void(size_t line, size_t col, const std::string &msg)>
+          log) {
+    log_ = [log](size_t line, size_t col, const std::string &msg,
+                 const std::string & /*rule*/) { log(line, col, msg); };
+  }
 
 private:
-  bool post_process(const char *s, size_t n,
-                    const Definition::Result &r) const {
-    auto ret = r.ret && r.len == n;
-    if (log && !ret) { r.error_info.output_log(log, s, n); }
-    return ret && !r.recovered;
+  bool post_process(const char *s, size_t n, Definition::Result &r) const {
+    if (log_ && !r.ret) { r.error_info.output_log(log_, s, n); }
+    return r.ret && !r.recovered;
   }
 
   std::vector<std::string> get_no_ast_opt_rules() const {
@@ -4432,6 +4668,166 @@ private:
   std::shared_ptr<Grammar> grammar_;
   std::string start_;
   bool enablePackratParsing_ = false;
+  Log log_;
 };
 
+/*-----------------------------------------------------------------------------
+ *  enable_tracing
+ *---------------------------------------------------------------------------*/
+
+inline void enable_tracing(parser &parser, std::ostream &os) {
+  parser.enable_trace(
+      [&](auto &ope, auto s, auto, auto &, auto &c, auto &, auto &trace_data) {
+	auto prev_pos = std::any_cast<size_t>(trace_data);
+        auto pos = static_cast<size_t>(s - c.s);
+        auto backtrack = (pos < prev_pos ? "*" : "");
+        std::string indent;
+        auto level = c.trace_ids.size() - 1;
+        while (level--) {
+          indent += "│";
+        }
+        std::string name;
+        {
+          name = peg::TraceOpeName::get(const_cast<peg::Ope &>(ope));
+
+          auto lit = dynamic_cast<const peg::LiteralString *>(&ope);
+          if (lit) { name += " '" + peg::escape_characters(lit->lit_) + "'"; }
+        }
+        os << "E " << pos + 1 << backtrack << "\t" << indent << "┌" << name
+           << " #" << c.trace_ids.back() << std::endl;
+        trace_data = static_cast<size_t>(pos);
+      },
+      [&](auto &ope, auto s, auto, auto &sv, auto &c, auto &, auto len,
+          auto &) {
+        auto pos = static_cast<size_t>(s - c.s);
+        if (len != static_cast<size_t>(-1)) { pos += len; }
+        std::string indent;
+        auto level = c.trace_ids.size() - 1;
+        while (level--) {
+          indent += "│";
+        }
+        auto ret = len != static_cast<size_t>(-1) ? "└o " : "└x ";
+        auto name = peg::TraceOpeName::get(const_cast<peg::Ope &>(ope));
+        std::stringstream choice;
+        if (sv.choice_count() > 0) {
+          choice << " " << sv.choice() << "/" << sv.choice_count();
+        }
+        std::string token;
+        if (!sv.tokens.empty()) {
+          token += ", token '";
+          token += sv.tokens[0];
+          token += "'";
+        }
+        std::string matched;
+        if (peg::success(len) &&
+            peg::TokenChecker::is_token(const_cast<peg::Ope &>(ope))) {
+          matched = ", match '" + peg::escape_characters(s, len) + "'";
+        }
+        os << "L " << pos + 1 << "\t" << indent << ret << name << " #"
+           << c.trace_ids.back() << choice.str() << token << matched
+           << std::endl;
+      },
+      [&](auto &trace_data) { trace_data = static_cast<size_t>(0); },
+      [&](auto &) {});
+}
+
+/*-----------------------------------------------------------------------------
+ *  enable_profiling
+ *---------------------------------------------------------------------------*/
+
+inline void enable_profiling(parser &parser, std::ostream &os) {
+  struct Stats {
+    struct Item {
+      std::string name;
+      size_t success;
+      size_t fail;
+    };
+    std::vector<Item> items;
+    std::map<std::string, size_t> index;
+    size_t total = 0;
+    std::chrono::steady_clock::time_point start;
+  };
+
+  parser.enable_trace(
+      [&](auto &ope, auto, auto, auto &, auto &, auto &, std::any &trace_data) {
+        if (auto holder = dynamic_cast<const peg::Holder *>(&ope)) {
+          auto &stats = *std::any_cast<Stats *>(trace_data);
+
+          auto &name = holder->name();
+          if (stats.index.find(name) == stats.index.end()) {
+            stats.index[name] = stats.index.size();
+            stats.items.push_back({name, 0, 0});
+          }
+          stats.total++;
+        }
+      },
+      [&](auto &ope, auto, auto, auto &, auto &, auto &, auto len,
+          std::any &trace_data) {
+        if (auto holder = dynamic_cast<const peg::Holder *>(&ope)) {
+          auto &stats = *std::any_cast<Stats *>(trace_data);
+
+          auto &name = holder->name();
+          auto index = stats.index[name];
+          auto &stat = stats.items[index];
+          if (len != static_cast<size_t>(-1)) {
+            stat.success++;
+          } else {
+            stat.fail++;
+          }
+
+          if (index == 0) {
+            auto end = std::chrono::steady_clock::now();
+            auto nano = std::chrono::duration_cast<std::chrono::microseconds>(
+                            end - stats.start)
+                            .count();
+            auto sec = nano / 1000000.0;
+            os << "duration: " << sec << "s (" << nano << "µs)" << std::endl
+               << std::endl;
+
+            char buff[BUFSIZ];
+            size_t total_success = 0;
+            size_t total_fail = 0;
+            for (auto &[name, success, fail] : stats.items) {
+              total_success += success;
+              total_fail += fail;
+            }
+
+            os << "  id       total      %     success        fail  "
+                  "definition"
+               << std::endl;
+
+            auto grand_total = total_success + total_fail;
+            snprintf(buff, BUFSIZ, "%4s  %10zu  %5s  %10zu  %10zu  %s", "",
+                     grand_total, "", total_success, total_fail,
+                     "Total counters");
+            os << buff << std::endl;
+
+            snprintf(buff, BUFSIZ, "%4s  %10s  %5s  %10.2f  %10.2f  %s", "",
+                     "", "", total_success * 100.0 / grand_total,
+                     total_fail * 100.0 / grand_total, "% success/fail");
+            os << buff << std::endl << std::endl;
+            ;
+
+            size_t id = 0;
+            for (auto &[name, success, fail] : stats.items) {
+              auto total = success + fail;
+              auto ratio = total * 100.0 / stats.total;
+              snprintf(buff, BUFSIZ, "%4zu  %10zu  %5.2f  %10zu  %10zu  %s",
+                       id, total, ratio, success, fail, name.c_str());
+              os << buff << std::endl;
+              id++;
+            }
+          }
+        }
+      },
+      [&](auto &trace_data) {
+        auto stats = new Stats{};
+        stats->start = std::chrono::steady_clock::now();
+        trace_data = stats;
+      },
+      [&](auto &trace_data) {
+        auto stats = std::any_cast<Stats *>(trace_data);
+        delete stats;
+      });
+}
 } // namespace peg
