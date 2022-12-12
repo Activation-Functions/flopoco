@@ -29,8 +29,8 @@
 #include <gmpxx.h>
 #include <mpfr.h>
 
-#include "flopoco/IEEE/IEEEFMA.hpp"
-#include "flopoco/IEEE/IEEEFloatFormat.hpp"
+#include "flopoco/IEEEFP/IEEEFPFMA.hpp"
+#include "flopoco/IEEEFP/IEEEFloatFormat.hpp"
 #include <flopoco/IntAddSubCmp/IntAdder.hpp>
 #include <flopoco/Operator.hpp>
 #include <flopoco/ShiftersEtc/LZOC.hpp>
@@ -48,14 +48,14 @@ namespace flopoco{
 #define DEBUGVHDL 0
 
 
-	IEEEFMA::IEEEFMA(OperatorPtr parentOp, Target* target, int wE_, int wF_) :
+	IEEEFPFMA::IEEEFPFMA(OperatorPtr parentOp, Target* target, int wE_, int wF_) :
 		Operator(parentOp, target), wE(wE_), wF(wF_) {
 	
 		ostringstream name;
 
-		srcFileName="IEEEFMA";
+		srcFileName="IEEEFPFMA";
 
-		name<<"IEEEFMA"; 
+		name<<"IEEEFPFMA"; 
 		name<<"_"<<wE<<"_"<<wF; 
 		setNameWithFreqAndUID(name.str());
 
@@ -440,7 +440,7 @@ namespace flopoco{
 
 	}
 
-	IEEEFMA::~IEEEFMA() {
+	IEEEFPFMA::~IEEEFPFMA() {
 	}
 
 
@@ -452,7 +452,7 @@ namespace flopoco{
 
 
 
-	void IEEEFMA::emulate(TestCase * tc)
+	void IEEEFPFMA::emulate(TestCase * tc)
 	{
 		/* Get I/O values */
 		mpz_class svA = tc->getInputValue("A");
@@ -510,7 +510,7 @@ namespace flopoco{
 
 
 
-	void IEEEFMA::buildStandardTestCases(TestCaseList* tcl){
+	void IEEEFPFMA::buildStandardTestCases(TestCaseList* tcl){
 		TestCase *tc;
 
 		// Tests with signed zeros
@@ -905,7 +905,7 @@ namespace flopoco{
 
 
  
-	void IEEEFMA::buildRandomTestCases(TestCaseList* tcl, int n){
+	void IEEEFPFMA::buildRandomTestCases(TestCaseList* tcl, int n){
 		TestCase *tc;
 		mpz_class a,b,c, ea, eb, ec, d, negateAB, negateC,rndmode;
 		mpz_class negative  = mpz_class(1)<<(wE+wF);
@@ -983,16 +983,16 @@ namespace flopoco{
 		}
 	}
 
-	OperatorPtr IEEEFMA::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
+	OperatorPtr IEEEFPFMA::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 		int wE, wF;
 		ui.parseStrictlyPositiveInt(args, "wE", &wE); 
 		ui.parseStrictlyPositiveInt(args, "wF", &wF);
-		return new IEEEFMA(parentOp, target, wE, wF);
+		return new IEEEFPFMA(parentOp, target, wE, wF);
 	}
 
 	template <>
-	const OperatorDescription<IEEEFMA> op_descriptor<IEEEFMA> {
-	    "IEEEFMA", // name
+	const OperatorDescription<IEEEFPFMA> op_descriptor<IEEEFPFMA> {
+	    "IEEEFPFMA", // name
 	    "A correctly rounded floating-point FMA.",
 	    "BasicFloatingPoint",
 	    "", // seeAlso
@@ -1000,7 +1000,7 @@ namespace flopoco{
 			wF(int): mantissa size in bits;",
 	    ""};
 
-	TestList IEEEFMA::unitTest(int index)
+	TestList IEEEFPFMA::unitTest(int index)
 	{
 		// the static list of mandatory tests
 		TestList testStateList;

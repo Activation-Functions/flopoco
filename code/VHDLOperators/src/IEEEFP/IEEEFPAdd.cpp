@@ -12,8 +12,8 @@
 
   */
 
-#include "flopoco/IEEE/IEEEAdd.hpp"
-#include "flopoco/IEEE/IEEEFloatFormat.hpp"
+#include "flopoco/IEEEFP/IEEEFPAdd.hpp"
+#include "flopoco/IEEEFP/IEEEFloatFormat.hpp"
 
 #include <iostream>
 #include <cmath>
@@ -42,18 +42,18 @@ namespace flopoco{
 #define DEBUGVHDL 0
 	
 	
-	IEEEAdd::IEEEAdd(OperatorPtr parentOp, Target* target,
+	IEEEFPAdd::IEEEFPAdd(OperatorPtr parentOp, Target* target,
 		int wE, int wF,
 		bool sub) :
 		Operator(parentOp, target), wE(wE), wF(wF), sub(sub) {
 		
-		srcFileName="IEEEAdd";
+		srcFileName="IEEEFPAdd";
 
 		ostringstream name;
 		if(sub)
 			name<<"IEEESub_";
 		else
-			name<<"IEEEAdd_";
+			name<<"IEEEFPAdd_";
 
 		name <<wE<<"_"<<wF;
 		setNameWithFreqAndUID(name.str());
@@ -231,7 +231,7 @@ namespace flopoco{
 
 
 		//						 TODO: all this assumes that wE>log2(wF+2), true for all the standard IEEE formats. We should test properly when it doesnt work anymore
-		addComment("Cancellation detection, renormalization (see explanations in IEEEAdd.cpp) ", tab);
+		addComment("Cancellation detection, renormalization (see explanations in IEEEFPAdd.cpp) ", tab);
 
 		vhdl << tab << declare("z1") << " <=  significandZ" << of(wF+3) << "; -- bit of weight 1" << endl;
 		vhdl << tab << declare("z0") << " <=  significandZ" << of(wF+2) << "; -- bit of weight 0" << endl;
@@ -329,11 +329,11 @@ namespace flopoco{
 	}
 
 
-	IEEEAdd::~IEEEAdd() {
+	IEEEFPAdd::~IEEEFPAdd() {
 	}
 
 
-	void IEEEAdd::emulate(TestCase * tc)
+	void IEEEFPAdd::emulate(TestCase * tc)
 	{
 		/* Get I/O values */
 			mpz_class svX = tc->getInputValue("X");
@@ -374,7 +374,7 @@ namespace flopoco{
 	}
 
 
-	void IEEEAdd::buildStandardTestCases(TestCaseList* tcl){
+	void IEEEFPAdd::buildStandardTestCases(TestCaseList* tcl){
 		TestCase *tc;
 
 		tc = new TestCase(this);
@@ -458,7 +458,7 @@ namespace flopoco{
 }
 
 
-	TestCase* IEEEAdd::buildRandomTestCase(int i){
+	TestCase* IEEEFPAdd::buildRandomTestCase(int i){
 
 		TestCase *tc;
 		mpz_class x,y;
@@ -524,7 +524,7 @@ namespace flopoco{
 	}
 
 
-	TestList IEEEAdd::unitTest(int index)
+	TestList IEEEFPAdd::unitTest(int index)
 	{
 		// the static list of mandatory tests
 		TestList testStateList;
@@ -548,18 +548,18 @@ namespace flopoco{
 		return testStateList;
 	}
 
-	OperatorPtr IEEEAdd::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
+	OperatorPtr IEEEFPAdd::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 		int wE;
 		ui.parseStrictlyPositiveInt(args, "wE", &wE);
 		int wF;
 		ui.parseStrictlyPositiveInt(args, "wF", &wF);
-		return new IEEEAdd(parentOp, target, wE, wF);
+		return new IEEEFPAdd(parentOp, target, wE, wF);
 	}
 
 	template <>
-	const OperatorDescription<IEEEAdd> op_descriptor<IEEEAdd> {
-	    "IEEEAdd", // name
-	    "A single-path floating-point adder.",
+	const OperatorDescription<IEEEFPAdd> op_descriptor<IEEEFPAdd> {
+	    "IEEEFPAdd", // name
+	    "A single-path floating-point adder for standard IEEE floating-point data.",
 	    "BasicFloatingPoint", // categories
 	    "",
 	    "wE(int): exponent size in bits; \

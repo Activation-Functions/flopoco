@@ -1,5 +1,5 @@
 add_flopocolib_src(
-	IEEEAdd.cpp
+	IEEEFPAdd.cpp
 	IEEEFloatFormat.cpp
-	IEEEFMA.cpp
+	IEEEFPFMA.cpp
 )

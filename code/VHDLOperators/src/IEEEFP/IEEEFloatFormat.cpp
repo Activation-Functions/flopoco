@@ -8,7 +8,7 @@
  * Ecole Normale Superieure de Lyon
  */
 
-#include "flopoco/IEEE/IEEEFloatFormat.hpp"
+#include "flopoco/IEEEFP/IEEEFloatFormat.hpp"
 
 using namespace std;
 namespace flopoco

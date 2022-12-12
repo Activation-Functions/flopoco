@@ -1,5 +1,5 @@
-#ifndef FPADDERSPIEEE_HPP
-#define FPADDERSPIEEE_HPP
+#ifndef IEEEFPADD_HPP
+#define IEEEFPADD_HPP
 #include <vector>
 #include <sstream>
 #include <gmp.h>
@@ -11,22 +11,22 @@
 
 namespace flopoco{
 
-	/** The IEEEAdd class */
-	class IEEEAdd : public Operator
+	/** The IEEEFPAdd class */
+	class IEEEFPAdd : public Operator
 	{
 	public:
 		/**
-		 * The IEEEAdd constructor
+		 * The IEEEFPAdd constructor
 		 * @param[in]		target		the target device
 		 * @param[in]		wE			the width of the exponent
 		 * @param[in]		wF			the width of the fraction
 		 */
-		IEEEAdd(OperatorPtr parentOp, Target* target, int wE, int wF, bool sub=false);
+		IEEEFPAdd(OperatorPtr parentOp, Target* target, int wE, int wF, bool sub=false);
 
 		/**
-		 * IEEEAdd destructor
+		 * IEEEFPAdd destructor
 		 */
-		~IEEEAdd();
+		~IEEEFPAdd();
 
 
 		void emulate(TestCase * tc);

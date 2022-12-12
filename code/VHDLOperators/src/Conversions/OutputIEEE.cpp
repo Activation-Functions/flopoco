@@ -22,7 +22,7 @@
 #include <mpfr.h>
 
 #include "flopoco/Conversions/OutputIEEE.hpp"
-#include "flopoco/IEEE/IEEEFloatFormat.hpp"
+#include "flopoco/IEEEFP/IEEEFloatFormat.hpp"
 #include "flopoco/Operator.hpp"
 #include "flopoco/utils.hpp"
 
