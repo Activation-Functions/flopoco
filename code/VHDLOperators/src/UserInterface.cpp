@@ -311,8 +311,14 @@ namespace flopoco
 		s << endl<<"*** Final report ***"<<endl;
 		s << "Output file: " << outputFileName <<endl;
 		Operator* op = globalOpList.back();
-		s << "Target: " << op->getTarget() -> getID()
-			<< " @ "<< op->getTarget() -> frequencyMHz() << " MHz" <<	endl;
+		s << "Target: " << op->getTarget() -> getID();
+		if(op->getTarget()->frequencyMHz()>0) {
+			s << " @ "<< op->getTarget() -> frequencyMHz() << " MHz" <<	endl;
+		}
+		else {
+			s << " combinatorial (0 MHz)"  <<	endl;
+		}			
+
 		for(auto i : globalOpList) {
 			i->outputFinalReport(s, 0);
 		}

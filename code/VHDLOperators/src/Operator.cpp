@@ -508,7 +508,12 @@ namespace flopoco{
 	void Operator::setNameWithFreqAndUID(std::string operatorName){
 		std::ostringstream o;
 		o <<  operatorName <<  "_" ;
-		o << "F"<<target_->frequencyMHz() ;
+		if(target_->frequencyMHz()>0) {
+			o << "Freq"<<target_->frequencyMHz() ;
+		}
+		else {
+			o << "comb" ;
+		}			
 		o << "_uid" << getNewUId();
 		uniqueName_ = o.str();
 	}
