@@ -1,0 +1,368 @@
+\usepackage[pdftex]{graphicx,color}
+\usepackage[table]{xcolor}
+\usepackage{fullpage,palatino,mathpazo,amsmath,amssymb,url}
+\usepackage{url,amsmath,amssymb,subfigure,boxedminipage,shadow}
+\usepackage{listings}
+\usepackage{tabularx,booktabs,hyperref,ifthen}
+
+\usepackage{tikz}
+
+\usetikzlibrary{math} 
+\usetikzlibrary{patterns}
+\usetikzlibrary{decorations.pathmorphing}
+% arrows is deprecated; removing it will take some time
+\usetikzlibrary{arrows,arrows.meta,automata,shadows,shapes,shapes.geometric,circuits.logic.US,shapes.gates.logic.US,calc}
+
+\usepackage{mwe} %example-image 
+
+\tikzset{
+  >=Stealth, % can't stand the default arrows
+  multrectangle/.style={draw, fill=black!5},
+  generator/.style={draw,align=center,fill=blue!5,rounded corners, minimum width=15ex, minimum height=8ex},
+%  hwblock/.style={draw, rectangle, rounded corners=.3, very thick, fill=black!5, font=\sf, minimum height=5ex,align=center},
+  hwblock/.style={draw, rectangle, rounded corners=.3, thick, fill=black!2, drop shadow={shadow xshift=.5ex,shadow yshift=-.5ex}, font=\sf, minimum height=5ex,align=center},
+  hwregblock/.style={hwblock, fill=blue!10},
+  every circuit symbol/.style={hwblock},
+  filteradd/.style={hwblock, circle, minimum height=1ex},
+  filtermult/.style={hwblock, minimum height=7ex, regular polygon, regular polygon sides=3, shape border rotate=180, inner sep= .2ex},
+  hwbus/.style={very thick,>={Stealth[length=6pt]}},
+  hwbuslarge/.style={line width=2pt,>={Stealth[length=7pt]}},
+  hwbuswhitebackground/.style={line width=4pt,color=white},
+  hwwire/.style={thin, >={Stealth[length=4pt]}  },
+  hwword/.style={draw, rectangle, minimum height=3ex},
+  bitwidth/.style={font=\scriptsize,blue},
+  abitwidth/.style={bitwidth,above},
+  bbitwidth/.style={bitwidth,below},
+  lbitwidth/.style={bitwidth,left},
+  rbitwidth/.style={bitwidth,right},
+  flopocoClass/.style={font=\small\tt,draw,align=center,rectangle,fill=blue!5,minimum height=3ex},
+  flopocoInfo/.style={font=\small,align=center,rectangle, fill=yellow!50,fill opacity=0.5, text opacity=1,rounded corners=10}
+}
+% Other colors that could be used consistent
+\definecolor{normalbitcolor}{rgb}{0,0,0.5}
+\definecolor{normalbitfillcolor}{rgb}{0.8,1,0.8}
+\definecolor{signbitcolor}{rgb}{0.5,0,0}
+\definecolor{signbitfillcolor}{rgb}{1,0.8,0.8}
+
+% When we refer to a component in the text
+%\newcommand{\texthwblock}[1]{\fbox{\small\sf #1}}
+% The following is ugly
+\newcommand{\texthwblock}[1]{\raisebox{-.8ex}{\scalebox{0.85}{\tikz{\node[hwblock,text height=1.4ex,text depth=.2ex, minimum height=1ex]{#1}}}}}
+
+
+
+\newcommand{\bitwidth}[3]{ % coordinate, text, [a|b|l|r]
+    \draw[bitwidth,ultra thin] (#1) ++(0.5ex, 0.5ex)  -- ++(-1ex, -1ex) ++(0.5ex, 0.5ex)  node[#3bitwidth] {#2};
+} %
+
+% Shifts in shift-and-add figure
+\newcommand{\leftbitshift}[2]{ % coordinate, value
+    \draw[font=\small, thick, Latex-] (#1) ++(-2ex, 0)  -- ++(3ex,0)  node[right] {#2};
+} %
+
+\newcommand{\rightbitshift}[2]{ % coordinate, value
+    \draw[font=\small, thick, Latex-] (#1) ++(2ex, 0)  -- ++(-3ex,0)  node[left] {#2};
+} %
+
+
+\newcommand{\vhdlfile}[2]{ % x,y
+  \draw[fill=black!5] (#1,#2) ++(3.5ex, -5ex) -- ++(-7ex,0) -- ++(0,10ex) -- ++(6ex,0)
+  -- ++(1ex,-1ex)-- ++(-1ex,0) -- ++(0,1ex) -- ++(1ex,-1ex) -- cycle;%  (vhdl) at (15ex,0ex) {.vhdl};
+  \draw (#1,#2) ++(+3.5ex, -5ex) node[above left] {.vhdl};
+  \draw (#1,#2) ++(-3.5ex, 0) node(vhdlnode) {};
+  \coordinate (vhdl) at (vhdlnode.center);
+}
+
+
+\newcommand{\drawclockinput}[1] { % name of a hwregblock
+  \draw(#1.south) ++(0,1) -- (#1.south west); 
+  \draw(#1.south) ++(0,1) -- (#1.south east); 
+} 
+\newcommand{\multtrunc}[3]{ % name, position, scale
+  \coordinate (#1) at #2;
+  \begin{scope}
+  \tikzset{x=#3,y=#3}; % scale
+  \filldraw[hwblock] (#1) ++(+3,0) -- ++(0,-1) -- ++(-2,-2) -- ++(-4,0)-- ++(0,6)-- ++(6,0) -- cycle;
+  \node at (#1) {\large$\times$};
+  \coordinate[shift={(0,  -3)}] (#1South) at (#1);  
+  \coordinate[shift={(0,  +3)}] (#1North) at (#1);  
+  \coordinate[shift={(-3,0)}] (#1West) at (#1);  
+  \coordinate[shift={(+3, +1)}] (#1East) at (#1);
+  \end{scope}
+}
+\newcommand{\squaretrunc}[3]{ % name, position, scale
+  \coordinate (#1) at #2;
+  \begin{scope}
+  \tikzset{x=#3,y=#3}; % scale
+  \filldraw[hwblock] (#1) ++(+3,0) -- ++(0,-1) -- ++(-2,-2) -- ++(-4,0)-- ++(0,6)-- ++(6,0) -- cycle;
+  \node at (#1) {\large$x^2$};
+  \coordinate[shift={(0,  -3)}] (#1South) at (#1);  
+  \coordinate[shift={(0,  +3)}] (#1North) at (#1);  
+  \coordinate[shift={(-3,0)}] (#1West) at (#1);  
+  \coordinate[shift={(+3, +1)}] (#1East) at (#1);
+  \end{scope}
+}
+
+\newcommand{\multadd}[3]{ %name, position, scale 
+  \coordinate (#1) at #2;
+  \begin{scope}
+  \tikzset{x=#3,y=#3}; % scale
+  \filldraw[hwblock] (#1) ++(+3,0) -- ++(0,-1) -- ++(-2,-2) -- ++(-4,0)-- ++(0,6)-- ++(6,0) -- cycle;
+  \filldraw[hwblock] (#1) ++(+3,0) -- ++(0,-1) -- ++(+2ex,0) -- ++(0,+4)-- ++(-2ex,0) -- cycle;
+  \node at (#1) {\large$\times$};
+  \draw (#1) ++(3,1) ++(1ex,0) node{$+$};
+  \coordinate[shift={(+3,  +1)}] (#1MultOut) at (#1);  
+  \coordinate[shift={(+2ex,  0)}] (#1Out) at (#1MultOut);  
+  \coordinate[shift={(-3, +1)}] (#1InMA) at (#1);  
+  \coordinate[shift={(-3, -1)}] (#1InMB) at (#1);  
+  \coordinate[shift={(0,+2)}] (#1InAddTempSorry) at (#1MultOut);  
+  \coordinate[shift={(+1ex,0)}] (#1InAdd) at (#1InAddTempSorry);  
+  \end{scope}
+}
+
+\newcommand{\mybracket}[3]{% center position, width in bits, height
+  \draw[hwword](#1) --  ++($(0.5*#2-.2,0)$)  -- ++(.2,#3);
+  \draw[hwword](#1) --  ++($(-0.5*#2+.3,0)$)  -- ++(-.2,#3);
+}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%% Macros for drawing fixed-point formats %%%%%%%%%%%%%%%%%%%%%%%%% 
+
+% Select one of the following bit style: rectangle, or circle as in bit heaps
+\newcommand{\drawbit}{rectangle +(-1,1)}   % Square bits
+%\newcommand{\drawbit}{+(-0.5,0.5) circle[radius=0.4]} % circle bits
+
+
+\newcommand{\fixpointdot}[1] % posY
+{
+	\draw[black,fill] (0,#1-0.3) circle [radius=0.1];
+}
+
+% This command is to be invoked within a tikzpicture.
+% Can be scaled by [x=2ex, y=2ex] etc
+\newcommand{\fixpointnumbernodot}[4] % sign, wMSB, wLSB, posY
+{ 
+	\foreach \i in {#3,...,#2} {
+		\draw (-\i,#4-0.3) \drawbit[normalbitcolor,fill=normalbitfillcolor];
+	}
+	\ifthenelse{#1=1}{
+		\draw (-#2,#4-0.3) \drawbit[signbitcolor,fill=signbitfillcolor];
+	} 
+	{
+		\draw (-#2,#4-0.3) \drawbit[normalbitcolor,fill=normalbitfillcolor];
+	}
+}
+
+% version without the separation into bits
+\newcommand{\fixpointbox}[4] % sign, wMSB, wLSB, posY
+{ 
+   \draw[normalbitcolor,fill=normalbitfillcolor] (-#3,#4-0.3) rectangle +(#3-#2-1,1);
+ }
+
+ % used in fpacc figures
+\newcommand{\fixpointboxtrunc}[5] % sign, wMSB, wLSB, posY, wlsbcut
+{ 
+   \draw[normalbitcolor,fill=normalbitfillcolor] (-#5,#4-0.3) rectangle +(#5-#2-1,1);
+   \draw[normalbitcolor,fill=normalbitfillcolor,opacity=0.5,fill opacity=0.5] (-#3,#4-0.3) rectangle +(#3-#5,1);
+}
+  \newcommand{\fixpointnumber}[4] % sign, wMSB, wLSB, posY
+{ 
+	\fixpointnumbernodot{#1}{#2}{#3}{#4}
+	\fixpointdot{#4};
+}
+
+% FIXME doesn't work
+\newcommand{\fixpointreal}[4] % sign, wMSB, wLSB, posY
+{ 
+	\fixpointnumber{#1}{#2}{#3}{#4}
+	\foreach \i in {0,...,9} 
+	{ 
+		\tikzmath{ \shade=\i*10;} 
+		 \draw  (-#3+10-\i,#4-0.3)\drawbit[normalbitfillcolor!\shade,fill=normalbitfillcolor!\shade] ;
+	}
+	
+	
+	% \foreach \i in {1,...,5} {
+	%  	\draw (-#3+\i,#4-0.3) \drawbit[shadedbit];
+	% }
+}
+
+% This command shows the bit positions axis properly for a \fixpointnumber with the same parameters
+\newcommand{\fixpointpositionsaxis}[4] % sign, wMSB, wLSB, posY
+{	
+	\draw[->,thick,>=stealth] (-#3+1,#4-1) -- (-#2-3,#4-1);
+	\foreach \i in {#3,...,#2} {
+		\draw (-\i-0.5,#4-.8) -- ++(0,-0.4) ;
+	}
+  \draw (-#2-3, #4-2)  node[left] {\small bit position};
+  }
+  
+\newcommand{\fixpointpositions}[4] % sign, wMSB, wLSB, posY
+{
+  \fixpointpositionsaxis{#1}{#2}{#3}{#4}
+	\ifthenelse{#1=1}{
+		\draw (-#2,#4) +(-0.5,0.2) node{\footnotesize s};
+	}{}
+	\foreach \i in {#3,...,#2} {
+		\draw (-\i-0.5,#4-2) node{\footnotesize \i};
+	}
+  \draw (-#3-0.5,#4-2) node[right=0.3]{\footnotesize $=\ell$};    
+  \draw (-#2-0.75,#4-2) node[left]{\footnotesize $m=$};
+  }
+  
+
+% This command shows the bit weights properly for a \fixpointnumber with the same parameters
+% Shows the numerical bit weights
+  \newcommand{\fixpointweights}[4] % sign, wMSB, wLSB, posY
+{	
+	\ifthenelse{#1=0}{
+		\draw (-#2-0.5,#4+1.5) node {\small $2^{#2}$};
+	}{ 
+%		\draw[->,thick,>=stealth] (-#2-1.7, #4+1.5) node (w) {\small $-2^{m}$~} ;%-- ++(-1,+1) node[above=-0.5ex] ;
+    \draw (-#2-1, #4+1.5) node (w) {\small $-2^{#2}$~} ;
+    % TODO resurrect the next line
+ %		\draw (-#2+1, #4+1.5) node (w) {\small $~~2^{#2-1}$};
+%    \draw[->,thick,>=stealth] (w) -- ++(-1,-1);% -- ++(+1,+1) ;
+	}
+%	\draw (-0.5, #4+1.5) node {\small $2^0$};
+\draw (-#3-0.5,#4+1.5) node {\small $2^{#3}$}; 
+  \draw (-#2-3, #4+1.5)  node[left] {\small bit weights};
+
+}
+
+
+% This command shows the bit weights properly for a \fixpointnumber with the same parameters
+% shows the bit weigths as (m,l)
+\newcommand{\fixpointweightsml}[4] % sign, wMSB, wLSB, posY
+{	
+	\ifthenelse{#1=0}{
+		\draw (-#2-0.5,#4+1.5) node {\small $2^{m}$};
+	}{ 
+%		\draw[->,thick,>=stealth] (-#2-1.7, #4+1.5) node (w) {\small $-2^{m}$~} ;%-- ++(-1,+1) node[above=-0.5ex] ;
+    \draw (-#2-1, #4+1.5) node (w) {\small $-2^{m}$~} ;
+		\draw (-#2+1, #4+1.5) node (w) {\small $~~2^{m-1}$};
+%    \draw[->,thick,>=stealth] (w) -- ++(-1,-1);% -- ++(+1,+1) ;
+	}
+	\draw (-0.5, #4+1.5) node {\small $2^0$};
+  \ifthenelse{#3=0}{ %then don't draw this, it overlaps with the 2^0
+    }{  \draw (-#3-0.5,#4+1.5) node {\small $2^{\ell}$}; }
+  \draw (-#2-3, #4+1.5)  node[left] {\small bit weights};
+}
+
+
+% the two following macros are for the fpacc drawings
+
+% Plots the bits of a given number in a given fixed-point format
+\newcommand{\fpsignificand}[4] % wF, integer exponent, posY, integer significand value
+{
+  \pgfmathsetmacro{\xinit}{#4} 
+  \pgfmathsetmacro{\lsb}{#2} 
+   \pgfmathtruncatemacro{\msb}{#2+#1} 
+   \draw[normalbitcolor,fill=normalbitfillcolor] (-\lsb,#3-0.3) rectangle +(-#1-1,1);
+	 \foreach \i [remember=\x as \xlast (initially \xinit)] in {\lsb,...,\msb} {
+     \pgfmathtruncatemacro{\t}{\xlast / 2}
+     \pgfmathtruncatemacro{\currentbit}{\xlast - 2*\t}
+     \pgfmathsetmacro{\x}{\t}
+     \draw (-\i-0.5,#3+0.2) node{\footnotesize \currentbit};
+   }
+}
+% Plots the bits of a given number in a given fixed-point format
+\newcommand{\fpaccbits}[4] % wF, integer exponent, posY, integer significand value
+{
+  \pgfmathsetmacro{\xinit}{#4} 
+  \pgfmathsetmacro{\lsb}{#2} 
+   \pgfmathtruncatemacro{\msb}{#2+#1} 
+   \draw[draw=none,normalbitcolor,fill=normalbitfillcolor] (-\lsb,#3-0.3) rectangle +(-#1-1,1);
+	 \foreach \i [remember=\x as \xlast (initially \xinit)] in {\lsb,...,\msb} {
+     \pgfmathtruncatemacro{\t}{\xlast / 2}
+     \pgfmathtruncatemacro{\currentbit}{\xlast - 2*\t}
+     \pgfmathsetmacro{\x}{\t}
+     \draw (-\i-0.5,#3+0.2) node{\footnotesize \currentbit};
+   }
+}
+
+%Plots the bits of a given number in a given fixed-point format
+\newcommand{\fixpointvalue}[4] % wMSB, wLSB, posY, value
+{
+  \pgfmathsetmacro{\x}{#4}
+	\foreach \i in {#2,...,#1} {
+    \pgfmathsetmacro{\currentbit}{1}
+    \draw (-\i,#3-0.3) \drawbit[normalbitcolor,fill=normalbitfillcolor];
+    \draw (-\i-0.5,#3+0.2) node{\bf \tiny \currentbit};
+  }
+  \draw(0,0) node {\x}; 
+}
+
+% Plots a random string of ones and zeroes - UNTESTED
+\newcommand{\fixpointrandomreal}[3] % wMSB, wLSB, posY
+{	
+	\fixpointdot{#3}
+	\foreach \i in {#2,...,#1} {
+		\ifthenelse{\i=#1}		{
+			\draw (-\i-0.5,#3+0.2) node{\tt \footnotesize 1};
+		}		{
+			\draw (-\i-0.5,#3+0.2) node{\tt \footnotesize \pgfmathparse{isodd(random(2))}\pgfmathresult};
+		}
+	}
+	
+}
+
+
+
+
+\newenvironment{flopocobox}[1]
+  {\noindent
+    \begin{boxedminipage}{1\textwidth}
+    \textbf{#1}\\}
+  {\end{boxedminipage}}
+
+
+\newcommand{\flopoco}[1]{
+  \typeout{begin_flopoco_command:} % a grep in the .log will catch them all
+  \typeout{#1} % a grep in the .log will catch them all, but typout adds newlines etc
+  \typeout{end_flopoco_command} % a grep in the .log will catch them all
+  \begin{minipage}{\linewidth}
+    ~ 
+
+    \small\tt\noindent\hangindent=2em   #1 \\[-.5ex]
+  \end{minipage}
+}
+
+\newcommand{\UFix}{\text{ufix}}% TODO if you change me: update the \index commmands in 1_number_representation
+\newcommand{\SFix}{\text{sfix}}% TODO if you change me: update the \index commmands in 1_number_representation
+%\newcommand{\Float}{\text{Simple\_Float}}   %Martin don't like these
+%\newcommand{\IEEEFloat}{\text{IEEE\_Float}} 
+%\newcommand{\Float}{{$\text{float}_\text{simple}$}\xspace} % Florent don't like these
+%\newcommand{\IEEEFloat}{{$\text{float}_\text{IEEE}$}\xspace}
+\newcommand{\GenericFloat}{{\text{float}}} % 
+\newcommand{\Float}{{\text{Nfloat}}} % 
+\newcommand{\IEEEFloat}{\text{IEEEfloat}} 
+\newcommand{\delay}[2][\null]{\mathcal{D}^{#1}(#2)} 
+
+\newcommand{\page}[1]{p.~\pageref{#1}} %shortcut for a figure reference
+\newcommand{\fig}[1]{\figurename~\ref{#1}} %shortcut for a figure reference
+\newcommand{\tab}[1]{Table~\ref{#1}} %shortcut for a table reference
+\newcommand{\eq}[1]{(\ref{#1})} %shortcut for an equation reference
+\newcommand{\lst}[1]{\lstlistingname~\ref{#1}} %shortcut for a listing reference
+\newcommand{\alg}[1]{Algorithm~\ref{#1}} %shortcut for an algorithm reference
+\newcommand{\sect}[1]{Section~\ref{#1}} %shortcut for a section reference
+\newcommand{\app}[1]{Appendix~\ref{#1}} %shortcut for a appendix reference
+\newcommand{\chap}[1]{Chapter~\ref{#1}} %shortcut for a chapter reference
+\newcommand{\ilp}[1]{ILP Formulation~\ref{#1}} %shortcut for an ILP reference
+\newcommand{\pmcmilp}[1]{PMCM ILP Formulation~\ref{#1}} %shortcut for an PMCM ILP reference
+\newcommand{\lem}[1]{Lemma~\ref{#1}} %shortcut for a Lemma
+\newcommand{\defn}[1]{Definition~\ref{#1}} %shortcut for a Definition
+\newcommand{\lin}[1]{Line~\ref{#1}} %shortcut for a line reference
+\newcommand{\etal}{\emph{et al.}}
+\newcommand{\ie}{i.\,e.}
+\newcommand{\eg}{e.\,g.}
+\definecolor{light-gray}{gray}{0.6}
+\definecolor{darkred}{rgb}{0.5,0,0.2}
+\definecolor{darkgreen}{rgb}{0,0.5,0.2}
+\definecolor{lightgreen}{rgb}{0.8, 1, 0.8}
+\definecolor{lightred}{rgb}{1, 0.9, 0.8}
+\newcommand{\wE}{{w_E}}
+\newcommand{\wF}{{w_F}}
+\newcommand{\wA}{{w_A}}
+\newcommand{\emin}{{e_\mathrm{min}}}
+\newcommand{\emax}{{e_\mathrm{max}}}
