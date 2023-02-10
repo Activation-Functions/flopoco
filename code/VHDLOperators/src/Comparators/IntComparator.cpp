@@ -61,7 +61,7 @@ namespace flopoco{
 
 
 		if (method==0 || method ==1 || method ==3) {
-			if(getTarget()->plainVHDL()) {
+			if(getTarget()->plainVHDL() || getTarget()->frequency()==0  ) {
 				chunkSize=w;
 			}
 			else if (method == 3) {
