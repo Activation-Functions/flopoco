@@ -1,6 +1,7 @@
 add_hileco_src(
 	DSP.cpp
 	Kintex7.cpp
+	ManualPipeline.cpp
 	StratixV.cpp
 	Versal.cpp
 	Virtex6.cpp

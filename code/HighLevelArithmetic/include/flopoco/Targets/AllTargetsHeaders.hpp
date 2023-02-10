@@ -26,4 +26,5 @@
 
 #include "flopoco/Targets/Versal.hpp"
 
+#include "flopoco/Targets/ManualPipeline.hpp"
 #endif //ALLTARGETSHEADERS_HPP

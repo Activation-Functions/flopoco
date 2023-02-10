@@ -273,6 +273,11 @@ namespace flopoco{
 		return 2e-9;
 	}
 
+	double Target::cycleDelay() {
+		cout << "Warning: using the generic Target::cycleDelay() with a Target which is not ManualPipeline" << endl;
+		return 0.;
+	}
+
 
 
 	int Target::tableDepth(int wIn, int wOut){

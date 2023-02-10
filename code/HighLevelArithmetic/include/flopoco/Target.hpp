@@ -362,6 +362,7 @@ namespace flopoco{
 		 */
 		virtual double tableDelay(int wIn_, int wOut_, bool logicTable_);
 
+		virtual double cycleDelay();
 
 
 		/** get a vector of possible DSP configurations */
