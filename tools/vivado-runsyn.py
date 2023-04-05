@@ -65,6 +65,7 @@ def get_compile_info(filename):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='This is an helper script for FloPoCo that launches Xilinx Vivado and extracts resource consumption and critical path information')
     parser.add_argument('-i', '--implement', action='store_true', help='Go all the way to implementation (default stops after synthesis)')
+    parser.add_argument('-d', '--delay_registers', action='store_true', help='Get critical path between registers, ignore io (default is overall critical path).')
     parser.add_argument('-v', '--vhdl', help='VHDL file name (default flopoco.vhdl)')
     parser.add_argument('-e', '--entity', help='Entity name (default is last entity of the VHDL file)')
     parser.add_argument('-t', '--target', help='Target name (default is read from the VHDL file)')
@@ -79,6 +80,12 @@ if __name__ == '__main__':
         synthesis_only=False
     else:
         synthesis_only=True
+
+    if (options.delay_registers==True):
+        delay_between_registers=True
+    else:
+        delay_between_registers=False
+
 
     if (options.vhdl==None):
         filename = "flopoco.vhdl"
@@ -218,7 +225,10 @@ if __name__ == '__main__':
     else:
         timing_report_file +="placed.rpt"
 
-    tclscriptfile.write("report_timing -file " + timing_report_file + " \n")
+    if delay_between_registers:
+        tclscriptfile.write("report_timing -file " + timing_report_file + " -from [all_registers] -to [all_registers] \n")
+    else:
+        tclscriptfile.write("report_timing -file " + timing_report_file + " \n")
 
     # Power report
     power_report_file = "../power_report.rpt"
