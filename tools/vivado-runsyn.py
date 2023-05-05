@@ -65,6 +65,7 @@ def get_compile_info(filename):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='This is an helper script for FloPoCo that launches Xilinx Vivado and extracts resource consumption and critical path information')
     parser.add_argument('-i', '--implement', action='store_true', help='Go all the way to implementation (default stops after synthesis)')
+    parser.add_argument('-iooc', '--implement_ooc', action='store_true', help='Implementation is out of context (default adds io)')
     parser.add_argument('-d', '--delay_registers', action='store_true', help='Get critical path between registers, ignore io (default is overall critical path).')
     parser.add_argument('-v', '--vhdl', help='VHDL file name (default flopoco.vhdl)')
     parser.add_argument('-e', '--entity', help='Entity name (default is last entity of the VHDL file)')
@@ -80,6 +81,11 @@ if __name__ == '__main__':
         synthesis_only=False
     else:
         synthesis_only=True
+
+    if (options.implement_ooc==True):
+        implement_ooc=True
+    else:
+        implement_ooc=False
 
     if (options.delay_registers==True):
         delay_between_registers=True
@@ -205,6 +211,10 @@ if __name__ == '__main__':
         # tclscriptfile.write("synth_design  -mode out_of_context \n")
     else:
         result_name = "impl_1"
+        if implement_ooc:
+            tclscriptfile.write("write_edif " + entity + ".edf\n")
+            tclscriptfile.write("read_edif " + entity + ".edf\n")
+            tclscriptfile.write("link_design -mode out_of_context\n")
         tclscriptfile.write("launch_runs " + result_name + "\n")
         tclscriptfile.write("wait_on_run " + result_name + "\n")
         tclscriptfile.write("open_run " + result_name + " -name " + result_name + "\n")
