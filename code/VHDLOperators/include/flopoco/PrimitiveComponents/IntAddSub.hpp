@@ -8,11 +8,11 @@
 namespace flopoco
 {
 ///
-/// \brief The GenericAddSub class. A junction for primitive implementations.
+/// \brief The IntAddSub class. A junction for primitive implementations.
 ///
-/// The GenericAddSub desides on the specific Target which primitive implementation to take.
+/// The IntAddSub desides on the specific Target which primitive implementation to take.
 ///
-  class GenericAddSub : public Operator
+  class IntAddSub : public Operator
   {
   public:
     ///
@@ -34,12 +34,12 @@ namespace flopoco
     const uint32_t flags_; //!< Specifies the properties of the adder
   public:
     ///
-    /// \brief GenericAddSub constructor
+    /// \brief IntAddSub constructor
     /// \param target The current Target
     /// \param wIn The wordsize of the generated adder
     /// \param flags The properties of the generated adder
     ///
-    GenericAddSub(Operator *parentOp, Target *target, const uint32_t &wIn, const uint32_t &flags = 0);
+    IntAddSub(Operator *parentOp, Target *target, const uint32_t &wIn, const uint32_t &flags = 0);
 
     ///
     /// \brief getInputName returns the name of the input signal or the conf signal of the specific index
@@ -74,7 +74,7 @@ namespace flopoco
     ///
     std::string printFlags() const;
 
-    ~GenericAddSub()
+    ~IntAddSub()
     {}
 
     void emulate(TestCase *tc);

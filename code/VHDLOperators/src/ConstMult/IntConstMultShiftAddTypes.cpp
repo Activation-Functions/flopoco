@@ -261,7 +261,7 @@ string IntConstMultShiftAdd_ADDSUB2_CONF::get_realisation(map<adder_graph_base_n
 {
     conf_adder_subtractor_node_t* t = (conf_adder_subtractor_node_t*)(base_node);
 
-    GenericAddSub* addsub = new GenericAddSub(base_op, target,wordsize);
+    IntAddSub* addsub = new IntAddSub(base_op, target, wordsize);
     base_op->addSubComponent(addsub);
     for(int i=0;i<2;i++){
         IntConstMultShiftAdd_BASE* t_in=InfoMap[t->inputs[i]];
@@ -325,14 +325,14 @@ string IntConstMultShiftAdd_ADDSUB3_2STATE::get_realisation(map<adder_graph_base
 
 // This is pre-5.0 code. It doesn't work with the new pipeline framework because inPortMap and outPortMap just build a temporary map
 // F2D disabled it for now.
-// The fix is to separate the code for each GenericAddSub, grouping it with its portMaps
+// The fix is to separate the code for each IntAddSub, grouping it with its portMaps
 string IntConstMultShiftAdd_ADDSUB3_CONF::get_realisation(map<adder_graph_base_node_t *, IntConstMultShiftAdd_BASE *> &InfoMap)
 {
 #if 0 // complain to F2D,  but it probably didn't work anyway
 	conf_adder_subtractor_node_t* t = (conf_adder_subtractor_node_t*)(base_node);
 
-    GenericAddSub* addsub = new GenericAddSub(base_op, target,wordsize);
-    GenericAddSub* addsub2 = new GenericAddSub(base_op, target,wordsize);
+    IntAddSub* addsub = new IntAddSub(base_op, target,wordsize);
+    IntAddSub* addsub2 = new IntAddSub(base_op, target,wordsize);
     base_op->addSubComponent(addsub);
     base_op->addSubComponent(addsub2);
     for(int i=0;i<3;i++){
@@ -725,20 +725,20 @@ void IntConstMultShiftAdd_BASE::build_operand_realisation(
 		operands[i] = signal_name;
 	}
 
-	int flag = (nb_inputs == 3) ? GenericAddSub::TERNARY : 0;
+	int flag = (nb_inputs == 3) ? IntAddSub::TERNARY : 0;
 	if (t->input_is_negative[0]) {
-		flag |= GenericAddSub::SUB_LEFT;
+		flag |= IntAddSub::SUB_LEFT;
 	}
 
 	if (t->input_is_negative[1]) {
-		flag |= (nb_inputs == 3) ? GenericAddSub::SUB_MID : GenericAddSub::SUB_RIGHT;
+		flag |= (nb_inputs == 3) ? IntAddSub::SUB_MID : IntAddSub::SUB_RIGHT;
 	}
 
 	if (nb_inputs > 2 && t->input_is_negative[2]) {
-		flag |= GenericAddSub::SUB_RIGHT;
+		flag |= IntAddSub::SUB_RIGHT;
 	}
 
-    GenericAddSub* add = new GenericAddSub(
+    IntAddSub* add = new IntAddSub(
 			base_op,
 			target,
 			adder_word_size,

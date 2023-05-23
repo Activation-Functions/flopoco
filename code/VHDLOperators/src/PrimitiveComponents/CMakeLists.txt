@@ -1,6 +1,6 @@
 add_flopocolib_src(
 	BooleanEquation.cpp
-	GenericAddSub.cpp
+        IntAddSub.cpp
 	GenericLut.cpp
 	#GenericMult.cpp
 	GenericMux.cpp

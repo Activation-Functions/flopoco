@@ -3,20 +3,20 @@
 
 #include "gmp.h"
 #include "mpfr.h"
-#include "flopoco/PrimitiveComponents/GenericAddSub.hpp"
+#include "flopoco/PrimitiveComponents/IntAddSub.hpp"
 #include "flopoco/PrimitiveComponents/Primitive.hpp"
 
 using namespace std;
 namespace flopoco
 {
-  GenericAddSub::GenericAddSub(Operator *parentOp, Target *target, const uint32_t &wIn, const uint32_t &flags) : Operator(parentOp, target), flags_(flags)
+  IntAddSub::IntAddSub(Operator *parentOp, Target *target, const uint32_t &wIn, const uint32_t &flags) : Operator(parentOp, target), flags_(flags)
   {
     setShared();
     setCopyrightString("Marco Kleinlein");
     this->useNumericStd();
-    srcFileName = "GenericAddSub";
+    srcFileName = "IntAddSub";
     ostringstream name;
-    name << "GenericAddSub_w" << wIn << "_" << printFlags();
+    name << "IntAddSub_w" << wIn << "_" << printFlags();
     setNameWithFreqAndUID(name.str());
 
     addInput("iL", wIn);
@@ -42,21 +42,21 @@ namespace flopoco
 
   }
 
-  void GenericAddSub::buildXilinx(Target *target, const uint32_t &wIn)
+  void IntAddSub::buildXilinx(Target *target, const uint32_t &wIn)
   {
     REPORT(LogLevel::MESSAGE, "Xilinx junction not fully implemented, fall back to common.");
     buildCommon(target, wIn);
 
   }
 
-  void GenericAddSub::buildAltera(Target *target, const uint32_t &wIn)
+  void IntAddSub::buildAltera(Target *target, const uint32_t &wIn)
   {
     REPORT(LogLevel::MESSAGE, "Altera junction not fully implemented, fall back to common.");
     buildCommon(target, wIn);
 
   }
 
-  void GenericAddSub::buildCommon(Target *target, const uint32_t &wIn)
+  void IntAddSub::buildCommon(Target *target, const uint32_t &wIn)
   {
     const uint16_t c_count = (hasFlags(CONF_LEFT) ? 1 : 0) + (hasFlags(CONF_RIGHT) ? 1 : 0) + (hasFlags(TERNARY & CONF_MID) ? 1 : 0);
     if (c_count > 0)
@@ -140,7 +140,7 @@ namespace flopoco
     }
   }
 
-  string GenericAddSub::getInputName(const uint32_t &index, const bool &c_input) const
+  string IntAddSub::getInputName(const uint32_t &index, const bool &c_input) const
   {
     switch (index)
     {
@@ -155,17 +155,17 @@ namespace flopoco
     }
   }
 
-  string GenericAddSub::getOutputName() const
+  string IntAddSub::getOutputName() const
   {
     return "sum_o";
   }
 
-  bool GenericAddSub::hasFlags(const uint32_t &flag) const
+  bool IntAddSub::hasFlags(const uint32_t &flag) const
   {
     return flags_ & flag;
   }
 
-  const uint32_t GenericAddSub::getInputCount() const
+  const uint32_t IntAddSub::getInputCount() const
   {
     uint32_t c = (hasFlags(TERNARY) ? 3 : 2);
     if (hasFlags(CONF_LEFT)) c++;
@@ -174,7 +174,7 @@ namespace flopoco
     return c;
   }
 
-  string GenericAddSub::printFlags() const
+  string IntAddSub::printFlags() const
   {
     std::stringstream o;
     o << (hasFlags(SUB_LEFT) ? "s" : "");
@@ -195,27 +195,27 @@ namespace flopoco
   }
 
 
-  void GenericAddSub::emulate(TestCase *tc)
+  void IntAddSub::emulate(TestCase *tc)
   {
 
   }
 
 
-  void GenericAddSub::buildStandardTestCases(TestCaseList *tcl)
+  void IntAddSub::buildStandardTestCases(TestCaseList *tcl)
   {
     // please fill me with regression tests or corner case tests!
   }
 
-  OperatorPtr GenericAddSub::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
+  OperatorPtr IntAddSub::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
     int wIn;
     ui.parseStrictlyPositiveInt(args, "wIn", &wIn, false);
     const uint32_t flags=0;
-    return new GenericAddSub(parentOp, target, wIn, flags);
+    return new IntAddSub(parentOp, target, wIn, flags);
   }
 
   template <>
-  const OperatorDescription<GenericAddSub> op_descriptor<GenericAddSub> {
-    "GenericAddSub", // name
+  const OperatorDescription<IntAddSub> op_descriptor<IntAddSub> {
+    "IntAddSub", // name
     "Generic Integer adder/subtractor that supports addition and subtraction of up to three inputs (ternary adder) as well as runtime configuration of the signs of operation but no fancy pipelining like IntAdder.",
     "BasicInteger", // category
     "",

@@ -218,7 +218,7 @@ use withing matrix-multiplication scenarios ------------------ */
 #endif // 0
 
 /* Primitive components -------------------------------- */
-#include "PrimitiveComponents/GenericAddSub.hpp"
+#include "PrimitiveComponents/IntAddSub.hpp"
 #include "PrimitiveComponents/GenericMult.hpp"
 #include "PrimitiveComponents/GenericMux.hpp"
 #include "PrimitiveComponents/GenericLut.hpp"

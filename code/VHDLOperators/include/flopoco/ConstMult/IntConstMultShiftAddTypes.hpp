@@ -11,7 +11,7 @@
 #include "flopoco/utils.hpp"
 #include "flopoco/Target.hpp"
 #include "flopoco/Operator.hpp"
-#include "flopoco/PrimitiveComponents/GenericAddSub.hpp"
+#include "flopoco/PrimitiveComponents/IntAddSub.hpp"
 
 #include <string>
 #include <sstream>
