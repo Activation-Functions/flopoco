@@ -40,6 +40,8 @@ namespace flopoco
     else
       buildCommon(target, wIn);
 
+    cerr << "VHDL: " << vhdl.str() << endl;
+
   }
 
   void IntAddSub::buildXilinx(Target *target, const uint32_t &wIn)
@@ -86,18 +88,21 @@ namespace flopoco
       {
         vhdl << "& iM_c";
       }
-      vhdl << std::endl;
+      vhdl << ";" << std::endl;
       vhdl << "case CONF is" << std::endl;
+      declare("iLSE", wIn); //!!!
       for (int i = 0; i < (1 << c_count); ++i)
       {
         vhdl << "\t" << "when \"";
         for (int j = c_count - 1; j >= 0; --j)
           vhdl << (i & (1 << j) ? "1" : "0");
-        vhdl << "\"\t=> std_logic_vector(";
+//        vhdl << "\"\t=> std_logic_vector(";  //!!!
+        vhdl << "\"\t=> ";  //!!!
         uint16_t mask = 1 << (c_count - 1);
         if (hasFlags(CONF_LEFT))
         {
-          vhdl << (i & (mask) ? "-" : "+") << "unsigned(iL)";
+//          vhdl << (i & (mask) ? "-" : "+") << "unsigned(iL)"; //!!!
+          vhdl << "iLSE <= iL"; //!!!
           mask >>= 1;
           if (hasFlags(TERNARY & CONF_MID))
           {
@@ -123,7 +128,8 @@ namespace flopoco
         {
           vhdl << (i & mask ? "-" : "+") << "unsigned(iR)";
         }
-        vhdl << ");" << std::endl;
+//        vhdl << ");" << std::endl; //!!!
+        vhdl << ";" << std::endl; //!!!
       }
       vhdl << "\t" << "when others => sum_o <= (others=>'X');" << std::endl;
       vhdl << "end case;" << std::endl;
@@ -136,7 +142,7 @@ namespace flopoco
       {
         vhdl << (hasFlags(SUB_MID) ? "-" : "+") << "signed(iM)";
       }
-      vhdl << (hasFlags(SUB_RIGHT) ? "-" : "+") << " signed(iR));" << endl;
+      vhdl << (hasFlags(SUB_RIGHT) ? "-" : "+") << "signed(iR));" << endl;
     }
   }
 
@@ -206,23 +212,78 @@ namespace flopoco
     // please fill me with regression tests or corner case tests!
   }
 
-  OperatorPtr IntAddSub::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
+  OperatorPtr IntAddSub::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface &ui)
+  {
     int wIn;
     ui.parseStrictlyPositiveInt(args, "wIn", &wIn, false);
-    const uint32_t flags=0;
+
+    bool isTernary;
+    bool leftNegative;
+    bool rightNegative;
+    bool middleNegative;
+    bool leftConfigurable;
+    bool rightConfigurable;
+    bool middleConfigurable;
+    ui.parseBoolean(args, "isTernary", &isTernary);
+    ui.parseBoolean(args, "leftNegative", &leftNegative);
+    ui.parseBoolean(args, "rightNegative", &rightNegative);
+    ui.parseBoolean(args, "middleNegative", &middleNegative);
+    ui.parseBoolean(args, "leftConfigurable", &leftConfigurable);
+    ui.parseBoolean(args, "rightConfigurable", &rightConfigurable);
+    ui.parseBoolean(args, "middleConfigurable", &middleConfigurable);
+
+    if((middleNegative && !isTernary) || (middleConfigurable && !isTernary))
+    {
+      cerr << "Error: middleNegative or middleConfigurable can not be true when isTernary is false" << endl;
+      exit(-1);
+    }
+
+    uint32_t flags = 0;
+    if(isTernary)
+    {
+      flags |= IntAddSub::TERNARY;
+    }
+    if(leftNegative)
+    {
+      flags |= IntAddSub::SUB_LEFT;
+    }
+    if(rightNegative)
+    {
+      flags |= IntAddSub::SUB_RIGHT;
+    }
+    if(middleNegative)
+    {
+      flags |= IntAddSub::SUB_MID;
+    }
+    if(leftConfigurable)
+    {
+      flags |= IntAddSub::CONF_LEFT;
+    }
+    if(rightConfigurable)
+    {
+      flags |= IntAddSub::CONF_RIGHT;
+    }
+    if(middleConfigurable)
+    {
+      flags |= IntAddSub::CONF_MID;
+    }
     return new IntAddSub(parentOp, target, wIn, flags);
   }
 
-  template <>
+  template<>
   const OperatorDescription<IntAddSub> op_descriptor<IntAddSub> {
     "IntAddSub", // name
     "Generic Integer adder/subtractor that supports addition and subtraction of up to three inputs (ternary adder) as well as runtime configuration of the signs of operation but no fancy pipelining like IntAdder.",
     "BasicInteger", // category
     "",
     "wIn(int): input size in bits;\
-					  arch(int)=-1: -1 for automatic, 0 for classical, 1 for alternative, 2 for short latency; \
-					  optObjective(int)=2: 0 to optimize for logic, 1 to optimize for register, 2 to optimize for slice/ALM count; \
-					  SRL(bool)=true: optimize for shift registers",
+     isTernary(bool)=false: set to true if you want a ternary (3-input adder);\
+     leftNegative(bool)=false: set to true if left (first) input should be subtracted;\
+     rightNegative(bool)=false: set to true if right (second) input should be subtracted;\
+     middleNegative(bool)=false: set to true if middle (third) input should be subtracted, only valid when isTernary=true;\
+     leftConfigurable(bool)=false: set to true if left input should be configurable with its sign (an extra input is added to decide add/subtract operation);\
+     rightConfigurable(bool)=false: set to true if right should be configurable with its sign (an extra input is added to decide add/subtract operation);\
+     middleConfigurable(bool)=false: set to true if middle should be configurable with its sign (an extra input is added to decide add/subtract operation), only valid when isTernary=true;",
     ""};
 
 }//namespace
