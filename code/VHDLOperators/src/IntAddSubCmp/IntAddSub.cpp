@@ -3,7 +3,7 @@
 
 #include "gmp.h"
 #include "mpfr.h"
-#include "flopoco/PrimitiveComponents/IntAddSub.hpp"
+#include "flopoco/IntAddSubCmp/IntAddSub.hpp"
 #include "flopoco/PrimitiveComponents/Primitive.hpp"
 
 using namespace std;

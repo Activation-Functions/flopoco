@@ -13,6 +13,7 @@ add_flopocolib_src(
 	#IntConstMCM.cpp
 	IntConstMult.cpp
 	IntConstMultShiftAdd.cpp
+#	IntConstMultShiftAddNew.cpp
 	IntConstMultShiftAddOpt.cpp
 	IntConstMultShiftAddOptTernary.cpp
 	IntConstMultShiftAddRPAG.cpp
