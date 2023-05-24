@@ -1246,6 +1246,21 @@ If a pipeline register is inserted to account for the delay of a shared instance
 The simplest example of shared instances is currently \texttt{FPDivSqrt/FPDiv}.
 
 
+\subsection{Limitations of the pipelining framework}
+
+The parser has some limitations when parsing the generated \texttt{vhdl}. The following statements are not supported:
+\begin{itemize}
+	\item \texttt{case} statements are not supported. Use conditional assignments (like the \texttt{with ... select} or \texttt{when} statements) if possible or \texttt{if}/\texttt{then}/\texttt{else} statements.
+	\item Assignments to parts of a vector like
+	
+\texttt{signal v: std\_logic\_vector(1 downto 0);}\\
+\texttt{(...)}\\
+\texttt{v(0)<=expr1;}\\
+\texttt{v(1)<=expr2;}\\
+are not supported. It should be written \texttt{v <= expr2 \& expr1;} instead.
+	
+\end{itemize}
+
 
 
 \section{Bit heaps \label{sec:bitheap}}
