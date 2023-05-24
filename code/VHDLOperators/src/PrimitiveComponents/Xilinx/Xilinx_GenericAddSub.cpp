@@ -17,7 +17,7 @@ using namespace std;
 namespace flopoco {
 
 	Xilinx_GenericAddSub::Xilinx_GenericAddSub(Operator* parentOp, Target *target, int wIn, int fixed_signs ) : Operator( parentOp, target ),wIn_(wIn),signs_(fixed_signs),dss_(false) {
-		setCopyrightString( "Marco Kleinlein" );
+		setCopyrightString( "Marco Kleinlein, Martin Kumm" );
 
 		srcFileName = "Xilinx_GenericAddSub";
 		stringstream name;
@@ -84,7 +84,7 @@ namespace flopoco {
 		for( ; i < num_full_slices; i++ ) {
 			stringstream slice_name;
 			slice_name << "slice_" << i;
-			Xilinx_GenericAddSub_slice *slice_i = new Xilinx_GenericAddSub_slice( getParentOp(), target, 4, ( i == 0 ? true : false ), false, false, this->getName() );
+			Xilinx_GenericAddSub_slice *slice_i = new Xilinx_GenericAddSub_slice( this, target, 4, ( i == 0 ? true : false ), false, false, this->getName() );
 			addSubComponent( slice_i );
 			inPortMap( slice_i, "x_in", "x" + range( 4 * i + 3, 4 * i ) );
 			inPortMap( slice_i, "y_in", "y" + range( 4 * i + 3, 4 * i ) );
@@ -105,7 +105,7 @@ namespace flopoco {
 		if( ws_remain > 0 ) {
 			stringstream slice_name;
 			slice_name << "slice_" << i;
-			Xilinx_GenericAddSub_slice *slice_i = new Xilinx_GenericAddSub_slice( getParentOp(), target, ws_remain, ( i == 0 ? true : false ), false, false , this->getName() );
+			Xilinx_GenericAddSub_slice *slice_i = new Xilinx_GenericAddSub_slice( this, target, ws_remain, ( i == 0 ? true : false ), false, false , this->getName() );
 			addSubComponent( slice_i );
 			inPortMap( slice_i, "x_in", "x" + range( effective_ws - 1, 4 * i ) );
 			inPortMap( slice_i, "y_in", "y" + range( effective_ws - 1, 4 * i ) );
@@ -154,7 +154,7 @@ namespace flopoco {
 		for( ; i < num_full_slices; i++ ) {
 			stringstream slice_name;
 			slice_name << "slice_" << i;
-			Xilinx_GenericAddSub_slice *slice_i = new Xilinx_GenericAddSub_slice( getParentOp(), target, 4, ( i == 0 ? true : false ), false, true , this->getName() );
+			Xilinx_GenericAddSub_slice *slice_i = new Xilinx_GenericAddSub_slice( this, target, 4, ( i == 0 ? true : false ), false, true , this->getName() );
 			addSubComponent( slice_i );
 			inPortMap( slice_i, "x_in", "x" + range( 4 * i + 3, 4 * i ) );
 			inPortMap( slice_i, "y_in", "y" + range( 4 * i + 3, 4 * i ) );
@@ -177,7 +177,7 @@ namespace flopoco {
 		if( ws_remain > 0 ) {
 			stringstream slice_name;
 			slice_name << "slice_" << i;
-			Xilinx_GenericAddSub_slice *slice_i = new Xilinx_GenericAddSub_slice( getParentOp(), target, ws_remain, ( i == 0 ? true : false ), false, true , this->getName() );
+			Xilinx_GenericAddSub_slice *slice_i = new Xilinx_GenericAddSub_slice( this, target, ws_remain, ( i == 0 ? true : false ), false, true , this->getName() );
 			addSubComponent( slice_i );
 			inPortMap( slice_i, "x_in", "x" + range( effective_ws - 1, 4 * i ) );
 			inPortMap( slice_i, "y_in", "y" + range( effective_ws - 1, 4 * i ) );
@@ -249,7 +249,7 @@ namespace flopoco {
 		for( ; i < num_full_slices; i++ ) {
 			stringstream slice_name;
 			slice_name << "slice_" << i;
-			Xilinx_GenericAddSub_slice *slice_i = new Xilinx_GenericAddSub_slice( getParentOp(), target, 4, ( i == 0 ? true : false ), true, false , this->getName() );
+			Xilinx_GenericAddSub_slice *slice_i = new Xilinx_GenericAddSub_slice( this, target, 4, ( i == 0 ? true : false ), true, false , this->getName() );
 			addSubComponent( slice_i );
 			inPortMap( slice_i, "x_in", "x" + range( 4 * i + 3, 4 * i ) );
 			inPortMap( slice_i, "y_in", "y" + range( 4 * i + 3, 4 * i ) );
@@ -263,10 +263,10 @@ namespace flopoco {
 					inPortMapCst( slice_i, "carry_in", "'0'" );
 				}
 			} else {
-				inPortMap( slice_i, "carry_in" , "carry" + range(i-1, i - 1 ) );
+				inPortMap( slice_i, "carry_in" , "carry" + of(i-1));
 			}
 
-			outPortMap( slice_i, "carry_out", "carry" + range(i, i ));
+			outPortMap( slice_i, "carry_out", "carry" + of( i )); 
 			outPortMap( slice_i, "sum_out", "sum_t" + range( 4 * i + 3, 4 * i ));
 			vhdl << instance( slice_i, slice_name.str() );
 		}
@@ -274,7 +274,7 @@ namespace flopoco {
 		if( ws_remain > 0 ) {
 			stringstream slice_name;
 			slice_name << "slice_" << i;
-			Xilinx_GenericAddSub_slice *slice_i = new Xilinx_GenericAddSub_slice( getParentOp(), target, ws_remain, ( i == 0 ? true : false ), true, false , this->getName() );
+			Xilinx_GenericAddSub_slice *slice_i = new Xilinx_GenericAddSub_slice( this, target, ws_remain, ( i == 0 ? true : false ), true, false , this->getName() );
 			addSubComponent( slice_i );
 			inPortMap( slice_i, "x_in", "x" + range( effective_ws - 1, 4 * i ) );
 			inPortMap( slice_i, "y_in", "y" + range( effective_ws - 1, 4 * i ) );
@@ -288,13 +288,13 @@ namespace flopoco {
 					inPortMapCst( slice_i, "carry_in", "'0'" );
 				}
 			} else {
-				inPortMap( slice_i, "carry_in" , "carry" + range(i-1, i - 1 ) );
+				inPortMap( slice_i, "carry_in" , "carry" + of(i-1));
 			}
 
 			if( i == 0 ) {
 				outPortMap( slice_i, "carry_out", "carry");
 			} else {
-				outPortMap( slice_i, "carry_out", "carry" + range(i, i ));
+				outPortMap( slice_i, "carry_out", "carry" + of(i));
 			}
 
 			outPortMap( slice_i, "sum_out", "sum_t" + range( effective_ws - 1, 4 * i ));
@@ -316,19 +316,68 @@ namespace flopoco {
 		if( target->getVendor() != "Xilinx" )
 			throw std::runtime_error( "Can't build xilinx primitive on non xilinx target" );
 
-		int wIn,mode;
-		bool dss;
-		ui.parseInt(args,"wIn",&wIn );
-		ui.parseInt(args,"mode",&mode);
-		ui.parseBoolean(args,"dss",&dss);
+		int wIn;
+    ui.parseInt(args,"wIn",&wIn );
+//		bool dss;
+//		ui.parseInt(args,"fixed_signs",&fixed_signs);
+//    ui.parseBoolean(args,"dss",&dss);
 
-		if( dss ){
-			return new Xilinx_GenericAddSub(parentOp, target,wIn,dss);
-		}else if( mode > 0 ){
-			return new Xilinx_GenericAddSub(parentOp, target,wIn,mode);
+    bool leftNegative;
+    ui.parseBoolean(args,"leftNegative",&leftNegative);
+    bool rightNegative;
+    ui.parseBoolean(args,"rightNegative",&rightNegative);
+    bool configurable;
+    ui.parseBoolean(args,"configurable",&configurable);
+    bool allowBothInputsNegative;
+    ui.parseBoolean(args,"allowBothInputsNegative",&allowBothInputsNegative);
+
+    int fixed_signs=0;
+    if(leftNegative)
+      fixed_signs |= 1; //x is left input
+
+    if(rightNegative)
+      fixed_signs |= 2; //y is right input
+
+    if((fixed_signs & 3) == 3)
+    {
+      cerr << "Error: Both inputs negative at the same time is not allowed!" << endl;
+      exit(-1);
+    }
+
+    if(configurable)
+    {
+      if(fixed_signs != 0)
+      {
+        cerr << "Error: No fixed signs are allowed when configurable!" << endl;
+        exit(-1);
+      }
+      if(allowBothInputsNegative)
+      {
+        return new Xilinx_GenericAddSub(parentOp, target, wIn, true);
+      }
+      else
+      {
+        return new Xilinx_GenericAddSub(parentOp, target, wIn, false);
+      }
+    }
+    else
+    {
+      if(allowBothInputsNegative)
+      {
+        cerr << "Error: allowBothInputsNegative is only allowed for a configurable Add/Sub!" << endl;
+        exit(-1);
+      }
+      return new Xilinx_GenericAddSub(parentOp, target, wIn, fixed_signs);
+    }
+    /*
+		if( allowBothInputsNegative ){
+			return new Xilinx_GenericAddSub(parentOp, target,wIn,allowBothInputsNegative);
+		}else if(fixed_signs > 0 ){
+			return new Xilinx_GenericAddSub(parentOp, target, wIn, fixed_signs);
 		}else{
 			return new Xilinx_GenericAddSub(parentOp, target,wIn,false);
 		}
+     */
 	}
 
 	template <>
@@ -340,13 +389,19 @@ namespace flopoco {
 			  // UserInterface.cpp
 	    "",
 	    "wIn(int): The wordsize of the adder;"
-	    "mode(int)=0: Bitmask for input negation, removes configurability;"
-	    "dss(bool)=false: Creates configurable adder with possibility to "
-	    "substract both inputs "
-	    "at same time;",
+      "leftNegative(bool)=false: set to true if left (first) input should be subtracted, only works when rightNegative=false;"
+      "rightNegative(bool)=false: set to true if right (second) input should be subtracted, only works when leftNegative=false;"
+      "configurable(bool)=false: set to true if signs of input should be configurable at runtime (an extra input is added to decide on add/subtract operation);"
+      "allowBothInputsNegative(bool)=false: Allows both inputs to be negative in the runtime configurable configuration (at the cost of a slower implementation)"
+//	    "mode(int)=0: Bitmask for input negation, removes configurability;"
+//	    "dss(bool)=false: Creates configurable adder with possibility to substract both inputs at same time;"
+      ,
 	    ""};
+/*
+*/
 
-	void Xilinx_GenericAddSub::emulate(TestCase *tc)
+
+  void Xilinx_GenericAddSub::emulate(TestCase *tc)
 	{
 		bool neg_a=false,neg_b=false;
 		mpz_class x = tc->getInputValue("x_i");
@@ -369,18 +424,26 @@ namespace flopoco {
 				neg_b = true;
 		}
 
-		if( neg_a )
-			s -= x;
-		else
-			s += x;
+    if(neg_a && neg_b && !dss_)
+    {
+      //when dss is false, negating both inputs is not allowed and leads to result +1, this is simulated here
+      s = 1;
+    }
+    else
+    {
+      if( neg_a )
+        s -= x;
+      else
+        s += x;
 
-		if( neg_b )
-			s -= y;
-		else
-			s += y;
+      if( neg_b )
+        s -= y;
+      else
+        s += y;
 
-		mpz_class mask = ((1<<wIn_)-1);
-		s = s & mask;
+      mpz_class mask = ((1<<wIn_)-1);
+      s = s & mask;
+    }
 
 		tc->addExpectedOutput("sum_o", s);
 	}

@@ -20,6 +20,8 @@ namespace flopoco {
         setCopyrightString( "Marco Kleinlein" );
 
         stringstream name;
+        setCombinatorial();
+        setShared();
 
         if( prefix.empty() ) {
             name << "Xilinx_GenericAddSub_slice_" << wIn;
@@ -93,7 +95,8 @@ namespace flopoco {
         for( int i = 0; i < wIn; i++ ) {
             stringstream lut_name;
             lut_name << "lut_bit_" << i;
-			Xilinx_LUT6_2 *initial_lut = new Xilinx_LUT6_2( parentOp,target );
+
+	      		Xilinx_LUT6_2 *initial_lut = new Xilinx_LUT6_2( this,target );
 
             if( initial && i == 0 ) {
                 initial_lut->setGeneric( "init", carry_pre.get_hex(), 64 );
@@ -118,7 +121,7 @@ namespace flopoco {
             vhdl << initial_lut->primitiveInstance( lut_name.str() );
         }
 
-		Xilinx_CARRY4 *further_cc = new Xilinx_CARRY4( parentOp,target );
+		Xilinx_CARRY4 *further_cc = new Xilinx_CARRY4( this,target );
         outPortMap( further_cc, "co", "cc_co");
         outPortMap( further_cc, "o", "cc_o");
         inPortMapCst( further_cc, "cyinit", "'0'" );
@@ -173,7 +176,7 @@ namespace flopoco {
         for( int i = 0; i < wIn; i++ ) {
             stringstream lut_name;
             lut_name << "lut_bit_" << i;
-			Xilinx_LUT6_2 *initial_lut = new Xilinx_LUT6_2( parentOp,target );
+			Xilinx_LUT6_2 *initial_lut = new Xilinx_LUT6_2( this,target );
             initial_lut->setGeneric( "init", adder.get_hex(), 64 );
             inPortMap( initial_lut, "i0", "y_in" + of( i ) );
             inPortMap( initial_lut, "i1", "x_in" + of( i ) );
@@ -186,7 +189,7 @@ namespace flopoco {
             vhdl << initial_lut->primitiveInstance( lut_name.str() );
         }
 
-		Xilinx_CARRY4 *further_cc = new Xilinx_CARRY4( parentOp,target );
+		Xilinx_CARRY4 *further_cc = new Xilinx_CARRY4( this,target );
         outPortMap( further_cc, "co", "cc_co");
         outPortMap( further_cc, "o", "cc_o");
         inPortMapCst( further_cc, "cyinit", "'0'" );
@@ -237,7 +240,7 @@ namespace flopoco {
         for( int i = 0; i < wIn; i++ ) {
             stringstream lut_name;
             lut_name << "lut_bit_" << i;
-			Xilinx_LUT6_2 *cur_lut = new Xilinx_LUT6_2( parentOp,target );
+			Xilinx_LUT6_2 *cur_lut = new Xilinx_LUT6_2( this,target );
 
             if( initial && i == 0 ) {
                 cur_lut->setGeneric( "init", getLUT_dss_init(), 64 );
@@ -258,7 +261,7 @@ namespace flopoco {
             vhdl << cur_lut->primitiveInstance( lut_name.str() );
         }
 
-		Xilinx_CARRY4 *further_cc = new Xilinx_CARRY4( parentOp,target );
+		Xilinx_CARRY4 *further_cc = new Xilinx_CARRY4( this,target );
         outPortMap( further_cc, "co", "cc_co");
         outPortMap( further_cc, "o", "cc_o");
         inPortMapCst( further_cc, "cyinit", "'0'" );
