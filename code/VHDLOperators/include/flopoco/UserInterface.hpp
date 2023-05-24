@@ -140,7 +140,7 @@ namespace flopoco
 		std::string programName;
 		FactoryRegistry const & factRegistry;
 		double targetFrequencyMHz;
-		bool   pipeline;
+//		bool   pipeline; //not used at all, uncomment for now, remove this later!
 		bool   clockEnable;
 		bool   useHardMult;
 		bool   plainVHDL;
