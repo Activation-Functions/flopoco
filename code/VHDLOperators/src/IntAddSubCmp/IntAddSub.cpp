@@ -12,8 +12,9 @@ namespace flopoco
   IntAddSub::IntAddSub(Operator *parentOp, Target *target, const uint32_t &wIn, const uint32_t &flags) : Operator(parentOp, target), flags_(flags)
   {
     setShared();
-    setCopyrightString("Marco Kleinlein");
+    setCopyrightString("Marco Kleinlein, Martin Kumm");
     this->useNumericStd();
+    //disablePipelining(); //does not change anything
     srcFileName = "IntAddSub";
     ostringstream name;
     name << "IntAddSub_w" << wIn << "_" << printFlags();
@@ -40,8 +41,6 @@ namespace flopoco
     else
       buildCommon(target, wIn);
 
-    cerr << "VHDL: " << vhdl.str() << endl;
-
   }
 
   void IntAddSub::buildXilinx(Target *target, const uint32_t &wIn)
@@ -67,14 +66,14 @@ namespace flopoco
       if (hasFlags(CONF_LEFT))
       {
         vhdl << "iL_c";
-        if (hasFlags(TERNARY) and hasFlags(CONF_MID))
-        {
-          vhdl << "& iM_c";
-        }
-        if (hasFlags(CONF_RIGHT))
-        {
-          vhdl << "& iR_c";
-        }
+      }
+      if (hasFlags(TERNARY) and hasFlags(CONF_MID))
+      {
+        vhdl << "& iM_c";
+      }
+      if (hasFlags(CONF_RIGHT))
+      {
+        vhdl << "& iR_c";
       }
       else if (hasFlags(TERNARY) and hasFlags(CONF_MID))
       {
@@ -88,7 +87,20 @@ namespace flopoco
       {
         vhdl << "& iM_c";
       }
+      vhdl << " & (others =>'0')";
       vhdl << ";" << std::endl;
+
+      vhdl << declare("iLSE",wIn) << " <= ";
+      uint16_t mask = 1 << (c_count - 1);
+      for (int i = 0; i < (1 << c_count); ++i)
+      {
+        vhdl << "std_logic_vector(" << (i & (mask) ? "-" : "") << "signed(iL)) when CONF=\"";
+        for (int j = c_count - 1; j >= 0; --j)
+          vhdl << (i & (1 << j) ? "1" : "0");
+          vhdl << "\" else ";
+      }
+      vhdl << "(others=>'X');" << std::endl;
+      /*
       vhdl << "case CONF is" << std::endl;
       declare("iLSE", wIn); //!!!
       for (int i = 0; i < (1 << c_count); ++i)
@@ -96,13 +108,13 @@ namespace flopoco
         vhdl << "\t" << "when \"";
         for (int j = c_count - 1; j >= 0; --j)
           vhdl << (i & (1 << j) ? "1" : "0");
-//        vhdl << "\"\t=> std_logic_vector(";  //!!!
-        vhdl << "\"\t=> ";  //!!!
+        vhdl << "\"\t=> std_logic_vector(";  //!!!
+//        vhdl << "\"\t=> ";  //!!!
         uint16_t mask = 1 << (c_count - 1);
         if (hasFlags(CONF_LEFT))
         {
-//          vhdl << (i & (mask) ? "-" : "+") << "unsigned(iL)"; //!!!
-          vhdl << "iLSE <= iL"; //!!!
+          vhdl << (i & (mask) ? "-" : "+") << "unsigned(iL)"; //!!!
+//          vhdl << "iLSE <= iL"; //!!!
           mask >>= 1;
           if (hasFlags(TERNARY & CONF_MID))
           {
@@ -128,11 +140,12 @@ namespace flopoco
         {
           vhdl << (i & mask ? "-" : "+") << "unsigned(iR)";
         }
-//        vhdl << ");" << std::endl; //!!!
-        vhdl << ";" << std::endl; //!!!
+        vhdl << ");" << std::endl; //!!!
+//        vhdl << ";" << std::endl; //!!!
       }
       vhdl << "\t" << "when others => sum_o <= (others=>'X');" << std::endl;
       vhdl << "end case;" << std::endl;
+      */
     }
     else
     {
