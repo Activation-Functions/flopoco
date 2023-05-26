@@ -243,6 +243,8 @@ namespace flopoco {
             cout << "calc min req weight is=" << prodsize(wX, wY, signedIO, signedIO) - (wOut + guardBits) << endl;
             bitHeapLSBWeight = (dynamic_cast<CompressionStrategy*>(tilingStrategy))?0:calcBitHeapLSB(solution, guardBits, errorBudget, centerErrConstant, actualTruncError, wX, wY);
             guardBits = wFullP - wOut - bitHeapLSBWeight; //To select result bits, because the dynamic ilp does not consider guardBits
+            //if (dynamic_cast<CompressionStrategy*>(tilingStrategy) == nullptr)  //The combined optimization always considers the full product size for a BitHeap
+            //    bitHeap.resizeBitheap(wFullP-bitHeapLSBWeight, 1);  //resize BitHeap for down to size required by truncation to simplify compression
 
 		    //this is the rounding bit for a faithfully rounded truncated multiplier
 			bitHeap.addConstantOneBit(static_cast<int>(guardBits) - 1);
