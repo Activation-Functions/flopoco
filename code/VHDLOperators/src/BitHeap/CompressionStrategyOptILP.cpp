@@ -31,7 +31,7 @@ namespace flopoco {
     orderCompressorsByCompressionEfficiency();
 
     ScaLP::status stat;
-    s_max = 0;
+    s_max = bitAmount.size()-1;
     do{
         s_max++;
         //if(s_max > 4) break;
@@ -161,17 +161,11 @@ void CompressionStrategyOptILP::constructProblem(int s_max)
     while (nst /= 10)
         dpSt++;
 
-    vector<ScaLP::Term> bitsinColumn(wIn + 4);
     // add the Constraints
     cout << "   adding the constraints to problem formulation..." << endl;
 
-
-    for(int i = 0; i < wIn; i++){               //Fill array for the bits initially available on Bitheap
-        bitsinColumn[i].add(bitAmount[0][i]);
-    }
-
     // BitHeap compression part of ILP formulation
-    vector<vector<ScaLP::Variable>> bitsInColAndStage(s_max+1, vector<ScaLP::Variable>(bitsinColumn.size()+1));
+    vector<vector<ScaLP::Variable>> bitsInColAndStage(s_max+1, vector<ScaLP::Variable>((int)wIn + 5));
 
     cout << "Available compressors :" << endl;
     for(unsigned e = 0; e < possibleCompressors.size(); e++){
@@ -200,19 +194,19 @@ void CompressionStrategyOptILP::constructProblem(int s_max)
                         //cout <<  "give bits: " << possibleCompressors[e]->getOutHeightsAtColumn((unsigned) ce, false) << " c: " << c+ce << " " << nvarName.str() << endl;
                         bitsinNextColumn[c+ce].add(tempV, possibleCompressors[e]->outHeights[ce]);
                     }
-                    handleRowAdderDependencies(tempV,bitsinColumn, rcdDependencies, c, e);
+                    handleRowAdderDependencies(tempV, rcdDependencies, c, e);
                 }
             }
 
-            if(bitsInColAndStage[s][c] == nullptr){                                                                 //N_s_c: Bits that enter current compressor stage
+            if(0 < s && bitsInColAndStage[s][c] == nullptr){                                                                 //N_s_c: Bits that enter current compressor stage
                 stringstream curBits;
                 curBits << "N_" << s << "_" << c;
                 //cout << curBits.str() << endl;
                 bitsInColAndStage[s][c] = ScaLP::newIntegerVariable(curBits.str(), 0, ScaLP::INF());
             }
-            if(s == 0 && bitsInColAndStage[s][c] != nullptr){
-                C0_bithesp_input_bits(s, c, bitsinColumn, bitsInColAndStage);
-            }
+            if(s < (int)bitAmount.size() && c <= (int)bitAmount[s].size())
+                C0_bithesp_input_bits(s, c, bitsinCurrentColumn);
+
             if(s < s_max){
                 C1_compressor_input_bits(s, c, bitsinCurrentColumn, bitsInColAndStage);
                 C2_compressor_output_bits(s, c, bitsinNextColumn, bitsInColAndStage);
@@ -238,11 +232,21 @@ void CompressionStrategyOptILP::constructProblem(int s_max)
 }
 
 
-    void CompressionStrategyOptILP::C0_bithesp_input_bits(int s, int c, vector<ScaLP::Term> &bitsinColumn, vector<vector<ScaLP::Variable>> &bitsInColAndStage){
+    void CompressionStrategyOptILP::C0_bithesp_input_bits(int s, int c, vector<ScaLP::Term> &bitsinCurrentColumn){
+        stringstream inpBits;
+        inpBits << "U_" << s << "_" << c;               //Variable for bits entering the compressor tree in the current stage s and column c
+        //cout << curBits.str() << endl;
+        ScaLP::Variable inputBits = ScaLP::newIntegerVariable(inpBits.str(), 0, ScaLP::INF());
+
+        ScaLP::Term bitsinColumn;
+        bitsinColumn.add(((c<wIn)?bitAmount[s][c]:0));
+        bitsinColumn.add(inputBits, -1);      //Output bits from sub-multipliers
+        bitsinCurrentColumn[c].add(inputBits, -1);
+
         stringstream consName0;
         consName0 << "C0_" << s << "_" << c;
-        bitsinColumn[c].add(bitsInColAndStage[s][c], -1);      //Output bits from sub-multipliers
-        ScaLP::Constraint c0Constraint = bitsinColumn[c] == 0;     //C0_s_c
+
+        ScaLP::Constraint c0Constraint = bitsinColumn == 0;     //C0_s_c
         c0Constraint.name = consName0.str();
         solver->addConstraint(c0Constraint);
     }
@@ -253,7 +257,8 @@ void CompressionStrategyOptILP::constructProblem(int s_max)
         zeroBits << "Z_" << setfill('0') << setw(dpSt) << s << "_" << setfill('0') << setw(dpC) << c;
         //cout << zeroBits.str() << endl;
         bitsinCurrentColumn[c].add(ScaLP::newIntegerVariable(zeroBits.str(), 0, ScaLP::INF()), -1);      //Unused compressor input bits, that will be set zero
-        bitsinCurrentColumn[c].add(bitsInColAndStage[s][c], -1);      //Bits arriving in current stage of the compressor tree
+        if(0 < s)
+            bitsinCurrentColumn[c].add(bitsInColAndStage[s][c], -1);      //Bits arriving in current stage of the compressor tree
         ScaLP::Constraint c1Constraint = bitsinCurrentColumn[c] == 0;     //C1_s_c
         c1Constraint.name = consName1.str();
         solver->addConstraint(c1Constraint);
@@ -294,13 +299,13 @@ void CompressionStrategyOptILP::constructProblem(int s_max)
         }
     }
 
-    void CompressionStrategyOptILP::handleRowAdderDependencies(const ScaLP::Variable &tempV, vector<ScaLP::Term> &bitsinColumn, vector<vector<ScaLP::Term>> &rcdDependencies, unsigned int c, unsigned int e) const {
+    void CompressionStrategyOptILP::handleRowAdderDependencies(const ScaLP::Variable &tempV, vector<vector<ScaLP::Term>> &rcdDependencies, unsigned int c, unsigned int e) const {
         if(possibleCompressors[e]->type == CompressorType::Variable){
             if(0 < c && (possibleCompressors[e]->subtype == subType::M || possibleCompressors[e]->subtype == subType::L))   //Middle and left element of RCA are counted negative in eq. for relations between RCA elements (C5)
                 rcdDependencies[c-1][possibleCompressors[e]->rcType].add(tempV, -1);
-            if(c < bitsinColumn.size()-1 && (possibleCompressors[e]->subtype == subType::M || possibleCompressors[e]->subtype == subType::R))    //Middle and right element of RCA are counted positive in eq. for relations between RCA elements (C5)
+            if(c < (unsigned)wIn + 4 - 1 && (possibleCompressors[e]->subtype == subType::M || possibleCompressors[e]->subtype == subType::R))    //Middle and right element of RCA are counted positive in eq. for relations between RCA elements (C5)
                 rcdDependencies[c][possibleCompressors[e]->rcType].add(tempV, 1);
-            if(c == bitsinColumn.size() && possibleCompressors[e]->subtype == subType::L)                                       //only the left (and not the middle) element of the RCA should be put in the MSB column of the bitheap
+            if(c == (unsigned)wIn + 4 && possibleCompressors[e]->subtype == subType::L)                                       //only the left (and not the middle) element of the RCA should be put in the MSB column of the bitheap
                 rcdDependencies[c][possibleCompressors[e]->rcType].add(tempV, 1);
         }
     }
