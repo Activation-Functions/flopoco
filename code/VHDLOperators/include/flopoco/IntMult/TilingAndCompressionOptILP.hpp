@@ -52,6 +52,9 @@ private:
     mpz_class eBudget, &centerErrConstant;
     unsigned long long  errorBudget;
 	bool performOptimalTruncation, minLutsFocus;
+	bool consider_final_adder;
+	using CompressorType = BasicCompressor::CompressorType;
+	using subType = BasicCompressor::subType;
 #ifdef HAVE_SCALP
     BasicCompressor* flipflop;
     void constructProblem(int s_max);
@@ -79,7 +82,20 @@ private:
     bool checkTruncationError(list<TilingStrategy::mult_tile_t> &solution, unsigned int guardBits, mpz_class errorBudget, mpz_class constant);
 
 
+    void C0_bithesp_input_bits(int s, int c, vector<ScaLP::Term> &bitsinCurrentColumn, vector<ScaLP::Term> &InpBitsinColumn, vector<vector<ScaLP::Variable>> &bitsInColAndStage, vector<ScaLP::Variable> &cvBits);
+    void C1_compressor_input_bits(int s, int c, vector<ScaLP::Term> &bitsinCurrentColumn,
+                                  vector<vector<ScaLP::Variable>> &bitsInColAndStage);
+    void C2_compressor_output_bits(int s, int c, vector<ScaLP::Term> &bitsinNextColumn,
+                                   vector<vector<ScaLP::Variable>> &bitsInColAndStage);
+    void C3_limit_BH_height(int s, int c, vector<vector<ScaLP::Variable>> &bitsInColAndStage, bool consider_final_adder);
+    void C5_RCA_dependencies(int s, int c, vector<vector<ScaLP::Term>> &rcdDependencies);
+    void drawBitHeap();
+    void replace_row_adders(BitHeapSolution &solution, vector<vector<vector<int>>> &row_adders);
+    void handleRowAdderDependencies(const ScaLP::Variable &tempV, vector<vector<ScaLP::Term>> &rcdDependencies,
+                                    unsigned int c, unsigned int e) const;
+
     void parseTilingSolution(long long &optTruncNumericErr);
+    void addRowAdder();
 
 #endif
 
