@@ -1370,7 +1370,7 @@ namespace flopoco{
     }
 
     void CompressionStrategy::printSolutionTeX(){
-        stringstream compr;
+        stringstream compr, compr1, compr2;
         compr <<
               tab << "\\documentclass[margin=0pt]{standalone}" << endl <<
               tab << "\\usepackage{graphicx}" << endl <<
@@ -1388,13 +1388,15 @@ namespace flopoco{
         vector<int> bh_constants(bitheap->width+4, 0);
 
         unsigned lastMaxHeight = 0;
-        for(unsigned c = 0; c < orderedBits[0].size(); c++) {
-            bh_bit[0][c] = orderedBits[0][c].size();
-            lastMaxHeight = (lastMaxHeight < orderedBits[0][c].size())?orderedBits[0][c].size():lastMaxHeight;
-            //cout << "col=" << c << " height=" << orderedBits[0][c].size() << endl;
-            for(unsigned b = 0; b < orderedBits[0][c].size(); b++) {
-                if(orderedBits[0][c][b]->signal->type() == Signal::SignalType::constantWithDeclaration || orderedBits[0][c][b]->signal->type() == Signal::SignalType::constant) bh_constants[c]++;
-                //cout << (orderedBits[0][c][b]->signal->getName()) << " is constant " << (orderedBits[0][c][b]->signal->type() == Signal::SignalType::constantWithDeclaration) << endl;
+        for(unsigned s = 0; s < (unsigned)orderedBits.size(); s++) {
+            for(unsigned c = 0; c < orderedBits[0].size(); c++) {
+                bh_bit[s][c] = orderedBits[s][c].size();
+                lastMaxHeight = (lastMaxHeight < orderedBits[s][c].size())?orderedBits[s][c].size():lastMaxHeight;
+                //cout << "col=" << c << " height=" << orderedBits[0][c].size() << endl;
+                for(unsigned b = 0; b < orderedBits[s][c].size(); b++) {
+                    if(orderedBits[s][c][b]->signal->type() == Signal::SignalType::constantWithDeclaration || orderedBits[s][c][b]->signal->type() == Signal::SignalType::constant) bh_constants[c]++;
+                    //cout << (orderedBits[0][c][b]->signal->getName()) << " is constant " << (orderedBits[0][c][b]->signal->type() == Signal::SignalType::constantWithDeclaration) << endl;
+                }
             }
         }
 
@@ -1402,6 +1404,8 @@ namespace flopoco{
         int finalAdderStart = 0, afound = 0;
         for(unsigned s = 0; s <= (unsigned)solution.getNumberOfStages(); s++) {
             int maxHeight = 0;
+            compr2 << compr1.str();
+            compr1.str("");
             for (unsigned c = 0; c < bitheap->width; c++) {
 
                 if(s < (unsigned)solution.getNumberOfStages()){
@@ -1410,28 +1414,28 @@ namespace flopoco{
                     for (unsigned j = 0; j < tempVector.size(); j++) {      //for every compressor in current column and stage
                         int cc;
                         //cout << tempVector[j].first->heights.size() << " " << tempVector[j].first->heights[0] << " " << tempVector[j].first->getStringOfIO() << endl;
-                        compr << tab <<  "\\draw[fill="<< tikz_colors[color++%N_TIKZ_COLORS] << "!50,opacity=0.75] ("<<-(int)c*0.25L+0.125L<<","<<(coveredBits[s][c]*0.25L)-0.125L-shift*0.25L<<")  {[rounded corners=2.5pt]";
+                        compr2 << tab <<  "\\draw[fill="<< tikz_colors[color++%N_TIKZ_COLORS] << "!50,opacity=0.75] ("<<-(int)c*0.25L+0.125L<<","<<(coveredBits[s][c]*0.25L)-0.125L<<")  {[rounded corners=2.5pt]";
                         for(cc = 0; cc < (int)tempVector[j].first->heights.size(); cc++){
-                            compr << "--("<<-(int)(c+cc)*0.25+0.125<<","<<(coveredBits[s][c+cc]+tempVector[j].first->heights[cc])*0.25L-0.125L-shift*0.25L<<")";
+                            compr2 << "--("<<-(int)(c+cc)*0.25+0.125<<","<<(coveredBits[s][c+cc]+tempVector[j].first->heights[cc])*0.25L-0.125L<<")";
                             if(cc+1 == (int)tempVector[j].first->heights.size() || (cc+1 < (int)tempVector[j].first->heights.size() && (coveredBits[s][c+cc]+tempVector[j].first->heights[cc]) != coveredBits[s][c+cc+1]+tempVector[j].first->heights[cc+1]))
-                                compr << "--("<<-(int)(c+cc+1)*0.25+0.125<<","<<(coveredBits[s][c+cc]+tempVector[j].first->heights[cc])*0.25L-0.125L-shift*0.25L<<")";
+                                compr2 << "--("<<-(int)(c+cc+1)*0.25+0.125<<","<<(coveredBits[s][c+cc]+tempVector[j].first->heights[cc])*0.25L-0.125L<<")";
                             if(cc+1 == (int)tempVector[j].first->heights.size()){
-                                compr << "--("<<-(int)(c+cc+1)*0.25+0.125<<","<<coveredBits[s][c+cc]*0.25L-0.125L-shift*0.25L<<")";
+                                compr2 << "--("<<-(int)(c+cc+1)*0.25+0.125<<","<<coveredBits[s][c+cc]*0.25L-0.125L<<")";
                             }
                             coveredBits[s][c+cc] += tempVector[j].first->heights[cc];
                         }
                         for(cc--; 0 <= cc; cc--){
-                            compr << "--("<<-(int)(c+cc)*0.25+0.125<<","<<(((int)coveredBits[s][c+cc]-(int)tempVector[j].first->heights[cc]))*0.25L-0.125L-shift*0.25L<<")";
+                            compr2 << "--("<<-(int)(c+cc)*0.25+0.125<<","<<(((int)coveredBits[s][c+cc]-(int)tempVector[j].first->heights[cc]))*0.25L-0.125L<<")";
                             if(0 <= cc-1 && ((int)coveredBits[s][c+cc]-(int)tempVector[j].first->heights[cc]) != ((int)coveredBits[s][c+cc-1]-(int)tempVector[j].first->heights[cc-1])){
-                                compr << "--("<<-(int)(c+cc)*0.25+0.125<<","<<(((int)coveredBits[s][c+cc-1]-(int)tempVector[j].first->heights[cc-1]))*0.25L-0.125L-shift*0.25L<<")";
+                                compr2 << "--("<<-(int)(c+cc)*0.25+0.125<<","<<(((int)coveredBits[s][c+cc-1]-(int)tempVector[j].first->heights[cc-1]))*0.25L-0.125L<<")";
                             }
                         }
-                        compr << "--cycle};" << endl;
+                        compr2 << "--cycle};" << endl;
                         int prevBitPos;
                         for(cc = 0; cc < (int)tempVector[j].first->outHeights.size(); cc++){
                             if(0 < cc){ //draw connection for output bits of compressors
-                                compr << tab << "\\draw[black,thick] (-0.25*" << c+cc << "," << bh_bit[s+1][c+cc]*0.25L-shift*0.25L-(lastMaxHeight)*0.25L << ")"
-                                << "--(-0.25*" << c+cc-1 << "," << prevBitPos*0.25L-shift*0.25L-(lastMaxHeight)*0.25L << ") ;" << endl;
+                                compr1 << tab << "\\draw[black,thick] (-0.25*" << c+cc << "," << bh_bit[s+1][c+cc]*0.25L << ")"
+                                << "--(-0.25*" << c+cc-1 << "," << prevBitPos*0.25L << ") ;" << endl;
                             }
                             prevBitPos = bh_bit[s+1][c+cc];
                             bh_bit[s+1][c+cc] += tempVector[j].first->outHeights[cc];
@@ -1444,25 +1448,31 @@ namespace flopoco{
                 } else {    //draw final adder
                     if(1 < bh_bit[s][c] && !afound){
                         finalAdderStart = c; afound = 1;
-                        compr << tab <<  "\\draw[fill=blue!50,opacity=0.75] ("<<-(int)finalAdderStart*0.25L+0.125L<<","<<-0.125L-(shift)*0.25L<<")  {[rounded corners=2.5pt]";
-                        compr << "--("<<-(int)bitheap->width*0.25L+0.125L<<","<<-0.125L-(shift)*0.25L<<")";
-                        compr << "--("<<-(int)bitheap->width*0.25L+0.125L<<","<<+0.25*bitheap->final_add_height-0.125L-(shift)*0.25L<<")";
-                        compr << "--("<<-(int)finalAdderStart*0.25L+0.125L<<","<<+0.25*bitheap->final_add_height-0.125L-(shift)*0.25L<<")--cycle};";
+                        compr2 << tab <<  "\\draw[fill=blue!50,opacity=0.75] ("<<-(int)finalAdderStart*0.25L+0.125L<<","<<-0.125L<<")  {[rounded corners=2.5pt]";
+                        compr2 << "--("<<-(int)bitheap->width*0.25L+0.125L<<","<<-0.125L<<")";
+                        compr2 << "--("<<-(int)bitheap->width*0.25L+0.125L<<","<<+0.25*bitheap->final_add_height-0.125L<<")";
+                        compr2 << "--("<<-(int)finalAdderStart*0.25L+0.125L<<","<<+0.25*bitheap->final_add_height-0.125L<<")--cycle};";
                     }
                 }
 
                 if(bh_bit[s][c]){       //bits in column of current stage
-                    compr << tab <<  tab <<"\\foreach \\i in {0,...," << bh_bit[s][c]-1 << "}" << endl <<
-                          tab << tab << tab <<"\\draw[fill=blue!20] (-0.25*" << c << ",0.25*\\i+" << -shift*0.25L << ") circle (2pt);" << endl;
+                    compr2 << tab <<  tab <<"\\foreach \\i in {0,...," << bh_bit[s][c]-1 << "}" << endl <<
+                          tab << tab << tab <<"\\draw[fill=blue!20] (-0.25*" << c << ",0.25*\\i" << ") circle (2pt);" << endl;
                     if(s == 0 && bh_constants[c] != 0) for(int b=0; b < bh_constants[c]; b++){
-                        compr << tab <<  tab <<"\\node[] at (-0.25*" << c << ",0+" << 0.25*b-shift*0.25L << ") {\\textsf{\\tiny c}};" << endl;
+                        compr2 << tab <<  tab <<"\\node[] at (-0.25*" << c << ",0+" << 0.25*b << ") {\\textsf{\\tiny c}};" << endl;
                     }
                 }
             }
-            shift += lastMaxHeight;
+            shift += lastMaxHeight + 2;
             lastMaxHeight = maxHeight;
 
+            compr << tab << "\\begin{scope}[yshift=" << -0.25L*(shift) << "cm]" << endl;
+            compr << compr2.str();
+            compr2.str("");
+            compr << tab << "\\end{scope}" << endl;
+
             if(s == (unsigned)solution.getNumberOfStages()) { //Output of final stage of the compressor tree
+                shift += lastMaxHeight + 2;
                 compr << tab << "\\draw[black,thick] (-0.25*" << finalAdderStart << "," << -shift*0.25L << ")"
                       << "--(-0.25*" << bitheap->width-1 << "," << -shift*0.25L << ") ;" << endl;
                 compr << tab <<  tab <<"\\foreach \\i in {0,...," << bitheap->width-1 << "}" << endl <<
@@ -1475,7 +1485,7 @@ namespace flopoco{
         tab << "\\end{document}" << endl << endl;
 
         ofstream result_file;
-        result_file.open("compression.tex");
+        result_file.open("compression_bh" + to_string(bitheap->getGUid()) + ".tex");
         result_file << compr.str();
         result_file.close();
     }
