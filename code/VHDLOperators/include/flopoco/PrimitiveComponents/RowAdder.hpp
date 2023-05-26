@@ -24,8 +24,8 @@ namespace flopoco
     {
     public:
         /** constructor **/
-        RowAdder(Operator *parentOp, Target *target, vector<int> _heights, vector<int> _outHeights);
-        RowAdder(Operator *parentOp, Target *target, int wIn, int type=2);
+        RowAdder(Operator *parentOp, Target *target, vector<int> _heights, vector<int> _outHeights, bool colmode=true);
+        RowAdder(Operator *parentOp, Target *target, int wIn, int type=2, bool colmode=true);
 
         /** destructor**/
         ~RowAdder();

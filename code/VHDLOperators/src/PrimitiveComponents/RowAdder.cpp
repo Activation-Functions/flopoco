@@ -18,7 +18,7 @@
 using namespace std;
 namespace flopoco {
 
-    RowAdder::RowAdder(Operator *parentOp, Target *target, vector<int> _heights, vector<int> _outHeights) : Compressor(
+    RowAdder::RowAdder(Operator *parentOp, Target *target, vector<int> _heights, vector<int> _outHeights, bool colmode) : Compressor(
             parentOp, target) {
         setCopyrightString("Andreas Boettcher");
 
@@ -29,46 +29,32 @@ namespace flopoco {
         setCombinatorial();
         setShared();
 
-        for(int i=heights.size()-1; i>=0; i--) {
-            //no need to create a signal for columns of height 0
-            if (heights[i] > 0) {
-                addInput(join("X", i), heights[i]);
-                //cerr << " creating input " << join("X", i) << " width " << heights[i] << endl;
+        if(colmode){
+            for(int i=heights.size()-1; i>=0; i--) {
+                //no need to create a signal for columns of height 0
+                if (heights[i] > 0) {
+                    addInput(join("X", i), heights[i]);
+                    //cerr << " creating input " << join("X", i) << " width " << heights[i] << endl;
+                }
             }
+            addOutput("R", heights.size()+1);
+        } else {
+            addInput( "x_i", heights.size() );
+            addInput( "y_i", heights.size() );
+            if(heights[0] == 4) addInput( "z_i", heights.size() );
+            addInput  ("Cin");
+            for(int i=heights.size()-1; i>=0; i--) {
+                //no need to create a signal for columns of height 0
+                if (heights[i] > 0) {
+                    vhdl << tab <<  declare(join("X", i), heights[i]) << " <= x_i" + of(i) << " & y_i" + of(i) + ((3 <= heights[i])?" & z_i" + of(i):"") + ((i == 0)?" & Cin":"") + ";" << endl;
+                }
+            }
+            addOutput("R", heights.size());
         }
-        addOutput("R", heights.size()+1);
 
         ostringstream name;
         name << "Row_Adder_" << heights.size() ;
         setNameWithFreqAndUID(name.str());
-        //cerr << "in-heights: " << heights.size() << " out-heights: " << outHeights.size() << endl;
-/*
-        int adderUid = parentOp->getNewUId();
-        ostringstream adderIn0, adderIn0Name, adderIn1, adderIn1Name, adderOutName, adderCin, adderCinName;
-        //create the names for the inputs/output of the adder
-        adderIn0Name << "adder" << adderUid << "_In0";
-        adderIn1Name << "adder" << adderUid << "_In1";
-        adderCinName << "adder" << adderUid << "_Cin";
-        adderOutName << "adder" << adderUid << "_Out";
-
-        adderIn0 << "\"0\"";
-        adderIn1 << "\"0\"";
-        adderCin << join("X",0) << "(2 downto 2)";
-        for(int i = heights.size()-1; 0 <= i; i--){
-            adderIn0 << " & " << join("X",i) << "(0)";
-            adderIn1 << " & " << join("X",i) << "(1)";
-        }
-        vhdl << tab << declare(adderIn0Name.str(), heights.size()+1) << " <= " << adderIn0.str() << ";" << endl;
-        vhdl << tab << declare(adderIn1Name.str(), heights.size()+1) << " <= " << adderIn1.str() << ";" << endl;
-        vhdl << tab << declare(adderCinName.str(), 1) << " <= " << adderCin.str() << ";" << endl;
-
-        vhdl << tab << declare(getTarget()->adderDelay(heights.size()+1),adderOutName.str(), heights.size()+1);
-        vhdl << " <= " << adderIn0Name.str() << " + " << adderIn1Name.str() << " + " << adderCinName.str() << ";" << endl;
-        vhdl << tab << "R <= " << adderOutName.str() << ";" << endl;
-  */
-
-
-
 
         declare("cc_di",4*((heights.size()+4-1)/4));
         declare("cc_s",4*((heights.size()+4-1)/4));
@@ -152,23 +138,18 @@ namespace flopoco {
             }
         }
 
-        declare( getTarget()->adderDelay(heights.size()+1),"result", heights.size()+1);    //TODO: Check timing information
-        vhdl << tab << "result <= cc_co" + of(heights.size()-1) + " & cc_o" + range( heights.size()-1, 0 ) + ";" << endl;
+        declare( getTarget()->adderDelay(heights.size()+1),"result", heights.size()+1+((colmode == 0)?-1:0));    //TODO: Check timing information
+        vhdl << tab << "result <= " + ((colmode == 1)?"cc_co" + of(heights.size()-1) + " & ":"") + "cc_o" + range( heights.size()-1, 0 ) + ";" << endl;
 
         vhdl << tab << "R <= result;" << endl;
 
-
-
-
-
-
-
     }
 
-    RowAdder::RowAdder(Operator *parentOp, Target *target, int wIn, int type) : Compressor(
+    RowAdder::RowAdder(Operator *parentOp, Target *target, int wIn, int type, bool colmode) : Compressor(
             parentOp, target) {
         calc_widths(wIn, type, heights, outHeights);
-        RowAdder(parentOp, target, heights, outHeights);
+        if(colmode == 0) heights.pop_back(); //remove leading element as it is currently expected when used as an adder that each input has the same height
+        new (this) RowAdder(parentOp, target, heights, outHeights, colmode);
     }
 
     void RowAdder::calc_widths(int wIn, int type, vector<int> &heights, vector<int> &outHeights){
@@ -218,9 +199,12 @@ namespace flopoco {
     }
 
     OperatorPtr RowAdder::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
-        int wIn;
+        int wIn, height;
+        bool colmode;
         ui.parseInt(args, "wIn", &wIn);
-        return new RowAdder(parentOp, target, wIn);
+        ui.parseInt(args, "height", &height);
+        ui.parseBoolean(args, "colmode", &colmode);
+        return new RowAdder(parentOp, target, wIn, height, colmode);
     }
 
     template <>
@@ -229,6 +213,8 @@ namespace flopoco {
 	"Row adder for cormpression.", // description, string
 	"Primitives", // category, from the list defined in UserInterface.cpp
 	"",
-	"wIn(int): input width of the row adder",
+	"wIn(int): input width of the row adder;\
+	height(int)=2: adder height (2 or 3); \
+        colmode(bool)=1: input as column-vectors rather then row vector;",
 	""};
 }

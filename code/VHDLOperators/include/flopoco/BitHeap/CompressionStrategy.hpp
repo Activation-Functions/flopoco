@@ -270,6 +270,7 @@ class BitheapPlotter;
 
 		int stagesPerCycle;                         /**< The number of stages of compression in each cycle */
 		double compressionDelay;                    /**< The duration of a compression stage */
+		bool pipelineTiles_;                        /**< Insert partial product bits in later stages of BH if they are delayed by more then one cycle time */
 
 		// For error reporting to work
 		int guid;

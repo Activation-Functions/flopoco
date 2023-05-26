@@ -41,6 +41,8 @@ namespace flopoco{
 
 		//create the plotter
 		bitheapPlotter = new BitheapPlotter(bitheap);
+
+		pipelineTiles_ = true;
 	}
 
 	CompressionStrategy::~CompressionStrategy(){
@@ -398,7 +400,8 @@ namespace flopoco{
 
 
 	unsigned CompressionStrategy::getStageOfArrivalForBit(Bit* bit){
-		return 0; //!!! This is a workaround. BitHeap compression currently does not work when bits are distributed to different stages. TODO: fix
+		//return 0; //!!! This is a workaround. BitHeap compression currently does not work when bits are distributed to different stages. TODO: fix
+		if(!pipelineTiles_) return 0;   //The combined optimization of tiling and compression currently does not support partial products being processed in a later stage.
 		if(!UserInterface::getUserInterface().pipelineActive_) {
 			return 0;
 		}
@@ -959,14 +962,24 @@ namespace flopoco{
             bitheap->getOp()->vhdl << endl;
 
             //declare the adder
-            bitheap->getOp()->newInstance("XilinxTernaryAddSub",
+/*            bitheap->getOp()->newInstance("XilinxTernaryAddSub",
                                           "bitheapFinalAdd_bh"+to_string(bitheap->guid),
                                           "wIn=" + to_string(bitheap->msb-bitheap->lsb-adderStartIndex+1+1),
                                           "x_i=>"+ adderIn0Name.str()
                                           + ",y_i=>"+adderIn1Name.str()
                                           + ",z_i=>"+adderIn2Name.str(),
                                           //+ ",carry_in=>" + adderCinName.str(),
-                                          "sum_o=>"+ adderOutName.str()   );
+                                          "R=>"+ adderOutName.str()   );*/
+            //declare the adder
+            bitheap->getOp()->newInstance("RowAdder",
+                              "bitheapFinalAdd_bh"+to_string(bitheap->guid),
+                              "wIn=" + to_string(bitheap->msb-bitheap->lsb-adderStartIndex+1+1)
+                                        + " colmode=0 height=3",
+                              "x_i=>"+ adderIn0Name.str()
+                              + ",y_i=>"+adderIn1Name.str()
+                              + ",z_i=>"+adderIn2Name.str()
+                              + ",Cin=>" + adderCinName.str(),
+                              "R=>"+ adderOutName.str()   );
 
             //add the result of the final add as the last chunk
 			chunksDone.push_back(join(adderOutName.str(), range(bitheap->msb-adderStartIndex-bitheap->lsb, 0)));
