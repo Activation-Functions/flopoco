@@ -241,7 +241,7 @@ namespace flopoco {
             //Check truncated solution
             mpz_class actualTruncError = checkTruncationError(solution, guardBits, errorBudget, centerErrConstant, wX, wY, signedIO);
             cout << "calc min req weight is=" << prodsize(wX, wY, signedIO, signedIO) - (wOut + guardBits) << endl;
-            bitHeapLSBWeight = (dynamic_cast<CompressionStrategy*>(tilingStrategy))?0:calcBitHeapLSB(solution, guardBits, errorBudget, centerErrConstant, actualTruncError);
+            bitHeapLSBWeight = (dynamic_cast<CompressionStrategy*>(tilingStrategy))?0:calcBitHeapLSB(solution, guardBits, errorBudget, centerErrConstant, actualTruncError, wX, wY);
             guardBits = wFullP - wOut - bitHeapLSBWeight; //To select result bits, because the dynamic ilp does not consider guardBits
 
 		    //this is the rounding bit for a faithfully rounded truncated multiplier
@@ -985,7 +985,7 @@ namespace flopoco {
         return max(negTruncError,posTruncError);
 	}
 
-    int IntMultiplier::calcBitHeapLSB(list<TilingStrategy::mult_tile_t> &solution, unsigned guardBits, const mpz_class& errorBudget, const mpz_class& constant, const mpz_class& actualTruncError) const{
+	int IntMultiplier::calcBitHeapLSB(list<TilingStrategy::mult_tile_t> &solution, unsigned guardBits, const mpz_class& errorBudget, const mpz_class& constant, const mpz_class& actualTruncError, int wX, int wY){
 	    int col=0, nBits = 0;
 	    std::vector<std::vector<int>> mulAreaI(wX, std::vector<int>(wY,0));
 
@@ -1013,7 +1013,7 @@ namespace flopoco {
 	        }
 	    }
 
-        mpz_class error, weight;
+        mpz_class error, weight, cnew = constant;
         do{
             nBits = 0;
             error = 0;
@@ -1025,9 +1025,10 @@ namespace flopoco {
                     nBits += (mulAreaI[x][y] == 1)?1:0;
                 }
             }
-            cout << "trying to prune " << nBits << " bits with weight " << col << " error is "  << error << " additional permissible error is " << errorBudget + constant - actualTruncError << endl;
+            cnew -= (((cnew & weight) > 0)?weight:0);     //Remove bit from error re-centering constant if the column with the corresponding weight is removed from bitheap
+            cout << "trying to prune " << nBits << " bits with weight 2^" << col << " error is "  << error << " additional permissible error is " << errorBudget + cnew - actualTruncError << " recentering const=" << cnew << endl;
             col++;
-        } while(actualTruncError + error < errorBudget + constant || 0 == error);
+        } while(actualTruncError + error < errorBudget + cnew || 0 == error);
         col--;
         cout << "min req weight is=" << col << endl;
         return col;
@@ -1061,6 +1062,8 @@ namespace flopoco {
 	        tilingStrategy->printSolutionTeX(texfile, wOut, true);
 	        texfile.close();
 	    }
+
+	    
 	}
 
 }
