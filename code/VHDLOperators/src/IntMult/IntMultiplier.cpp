@@ -62,11 +62,7 @@ namespace flopoco {
         unsigned int guardBits = 0, keepBits = 0;
         mpz_class errorBudget = 0, centerErrConstant = 0;
         if(wOut < wFullP){  //check if multiplier is truncated
-            if(signedIO_){
-                computeTruncMultParamsMPZ(wFullP, wOut, guardBits, keepBits, errorBudget, centerErrConstant);
-            }else{
-                computeTruncMultParamsMPZunsigned(wFullP, wOut, guardBits, keepBits, errorBudget, centerErrConstant);
-            }
+            computeTruncMultParamsMPZ(wX, wY, wFullP, wOut, signedIO, guardBits, keepBits, errorBudget, centerErrConstant);
             trunc_info << " faithfully rounded to wOut=" << wOut << " bits. Will use " << guardBits << " guard and " << keepBits <<
                         " keep bits. The error budget is " << errorBudget << " and the error re-centering constant " << centerErrConstant;
         }
