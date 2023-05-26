@@ -316,7 +316,7 @@ namespace flopoco {
 		return nbDontCare - nbUnneeded;
 	}
 
-    void IntMultiplier::computeTruncMultParamsMPZ(unsigned wFull, unsigned wOut, unsigned &g, unsigned &k, mpz_class &errorBudget, mpz_class &constant) const{
+	void IntMultiplier::computeTruncMultParamsMPZ(unsigned wX, unsigned wY, unsigned wFull, unsigned wOut, bool signedIO, unsigned &g, unsigned &k, mpz_class &errorBudget, mpz_class &constant) {
         unsigned l_P = wFull - wOut, l_ext = 0, t = 0;
         mpz_class colweight = 2, deltan = 0, deltap = 0, wlext = 1, wlextpe = 2, tbits = 0;
         mpz_pow_ui(errorBudget.get_mpz_t(), mpz_class(2).get_mpz_t(), l_P-1); //tiling error budget
@@ -374,7 +374,7 @@ namespace flopoco {
         return 0;
     }
 
-    void IntMultiplier::computeTruncMultParamsMPZunsigned(unsigned wFull, unsigned wOut, unsigned &g, unsigned &k, mpz_class &errorBudget, mpz_class &constant) const{
+    void IntMultiplier::computeTruncMultParamsMPZunsigned(unsigned wX, unsigned wY, unsigned wFull, unsigned wOut, unsigned &g, unsigned &k, mpz_class &errorBudget, mpz_class &constant) {
         unsigned l_P = wFull - wOut, l_ext = 0, t = 0;
         mpz_class colweight = 2, dlow = 0, wlext = 1, wlextpe = 2, wlp;
         mpz_pow_ui(errorBudget.get_mpz_t(), mpz_class(2).get_mpz_t(), l_P-1); //tiling error budget
