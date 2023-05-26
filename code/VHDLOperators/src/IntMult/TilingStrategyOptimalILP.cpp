@@ -314,8 +314,8 @@ void TilingStrategyOptimalILP::constructProblem()
             stringstream consName;
             consName << "limDSP";
             ScaLP::Term pxyTerm;
-            for (int y = 0 - 24 + 1; y < wY; y++) {
-                for (int x = 0 - 24 + 1; x < wX; x++) {
+            for (int y = 0 - y_neg; y < wY; y++) {
+                for (int x = 0 - x_neg; x < wX; x++) {
                     for (int s = 0; s < wS; s++)
                         if (solve_Vars[s][x + x_neg][y + y_neg] != nullptr)
                             for (int c = 0; c < tiles[s]->getDSPCost(); c++)

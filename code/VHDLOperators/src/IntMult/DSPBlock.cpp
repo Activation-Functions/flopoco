@@ -48,7 +48,7 @@ DSPBlock::DSPBlock(Operator *parentOp, Target* target, int wX, int wY, bool xIsS
 
 		//implement pre-adder:
 		if(!isPipelined) stageDelay = getTarget()->DSPAdderDelay();
-		vhdl << tab << declare(stageDelay,"X",wX) << " <= std_logic_vector(" << (xIsSigned ? "signed" : "unsigned") << "(X1) ";
+		vhdl << tab << declare(getTarget()->DSPAdderDelay(),"X",wX) << " <= std_logic_vector(" << (xIsSigned ? "signed" : "unsigned") << "(X1) ";
 		if(preAdderSubtracts) {
 			vhdl << "-";
 		} else {
@@ -65,7 +65,7 @@ DSPBlock::DSPBlock(Operator *parentOp, Target* target, int wX, int wY, bool xIsS
 
 	if(!isPipelined) stageDelay = getTarget()->DSPMultiplierDelay();
 
-	vhdl << tab << declare(stageDelay,"Mint",wIntermMult) << " <= std_logic_vector(" << (signedMultOutput ? "signed" : "unsigned") << "("<<
+	vhdl << tab << declare(getTarget()->DSPMultiplierDelay(),"Mint",wIntermMult) << " <= std_logic_vector(" << (signedMultOutput ? "signed" : "unsigned") << "("<<
 		 (shouldPadX ? "'0' & " : "") <<"X) * " << (signedMultOutput ? "signed" : "unsigned") << "(" <<
 		 (shouldPadY ? "'0' & " : "")<< "Y)); -- multiplier" << endl;
 

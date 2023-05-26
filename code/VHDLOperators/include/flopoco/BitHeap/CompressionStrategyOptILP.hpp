@@ -45,8 +45,7 @@ private:
     void resizeBitAmount(unsigned int stages);
     void printIOHeights(void);
 
-    void C0_bithesp_input_bits(int s, int c, vector<ScaLP::Term> &bitsinColumn,
-                               vector<vector<ScaLP::Variable>> &bitsInColAndStage);
+    void C0_bithesp_input_bits(int s, int c, vector<ScaLP::Term> &bitsinCurrentColumn);
     void C1_compressor_input_bits(int s, int c, vector<ScaLP::Term> &bitsinCurrentColumn,
                                   vector<vector<ScaLP::Variable>> &bitsInColAndStage);
     void C2_compressor_output_bits(int s, int c, vector<ScaLP::Term> &bitsinNextColumn,
@@ -56,8 +55,7 @@ private:
 
     void drawBitHeap();
     void replace_row_adders(BitHeapSolution &solution, vector<vector<vector<int>>> &row_adders);
-    void handleRowAdderDependencies(const ScaLP::Variable &tempV, vector<ScaLP::Term> &bitsinColumn,
-                                    vector<vector<ScaLP::Term>> &rcdDependencies,
+    void handleRowAdderDependencies(const ScaLP::Variable &tempV, vector<vector<ScaLP::Term>> &rcdDependencies,
                                     unsigned int c, unsigned int e) const;
 #endif
 
