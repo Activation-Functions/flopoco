@@ -26,7 +26,7 @@ public:
 
 private:
 
-    int dpS, wS, dpK, dpC, dpSt, s_max;
+    int dpK, dpC, dpSt, s_max;
     int wIn, mod;
     bool consider_final_adder;
     using CompressorType = BasicCompressor::CompressorType;

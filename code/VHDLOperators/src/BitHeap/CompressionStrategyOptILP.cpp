@@ -78,7 +78,7 @@ void CompressionStrategyOptILP::compressionAlgorithm() {
 		CompressionStrategy::solution.setSolutionStatus(BitheapSolutionStatus::OPTIMAL_PARTIAL);
 
 		float compressor_cost = 0;
-		vector<vector<int>> zeroInputsVector(s_max, vector<int>((int)wIn, 0));
+		vector<vector<int>> zeroInputsVector(s_max, vector<int>((int)wIn+4, 0));    //The GPCs can protrude 4 bit over the MSB of the BH
         vector<vector<vector<int>>> row_adder(s_max, vector<vector<int>>((int)wIn, vector<int>(3*3, 0)));   //3 types of row adders that have 3 (L,M,R) elements (3x3=9)
 		resizeBitAmount(s_max);
 		ScaLP::Result res = solver->getResult();
@@ -158,10 +158,8 @@ void CompressionStrategyOptILP::constructProblem(int s_max)
     cout << "   assembling cost function, declaring problem variables..." << endl;
     ScaLP::Term obj;
     wIn = bitAmount[0].size();
-    int ns = wS-1; dpS = 1;     //calc number of decimal places, for var names
+    //calc number of decimal places, for var names
     int nk = possibleCompressors.size()+4, nc = wIn + 1, nst = s_max; dpK = 1; dpC = 1; dpSt = 1;
-    while (ns /= 10)
-        dpS++;
     while (nk /= 10)
         dpK++;
     while (nc /= 10)
@@ -404,8 +402,8 @@ void CompressionStrategyOptILP::constructProblem(int s_max)
     }
 
     void CompressionStrategyOptILP::drawBitHeap(){
-        vector<vector<int>> bitsOnBitHeap(s_max+1, vector<int>((int)wIn, 0));
-        vector<int> colWidth((int)wIn, 1);
+        vector<vector<int>> bitsOnBitHeap(s_max+1, vector<int>((int)wIn+4, 0));
+        vector<int> colWidth((int)wIn+4, 1);    //The GPCs can protrude 4 bit over the MSB of the BH
         ScaLP::Result res = solver->getResult();
         for(auto &p:res.values) {
             if (p.second >
