@@ -57,6 +57,7 @@ private:
     void replace_row_adders(BitHeapSolution &solution, vector<vector<vector<int>>> &row_adders);
     void handleRowAdderDependencies(const ScaLP::Variable &tempV, vector<vector<ScaLP::Term>> &rcdDependencies,
                                     unsigned int c, unsigned int e) const;
+    void writeSolutionFile(ScaLP::Result result);
 #endif
 
 

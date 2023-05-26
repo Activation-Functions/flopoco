@@ -53,6 +53,8 @@ namespace flopoco {
 
     ScaLP::Result res = solver->getResult();
 
+    writeSolutionFile(res);
+
 #endif
 }
 
@@ -332,7 +334,7 @@ void CompressionStrategyOptILP::constructProblem(int s_max)
         }
 
         if(!foundFlipflop){
-            BasicCompressor *newCompressor = new BasicCompressor(bitheap->getOp(), bitheap->getOp()->getTarget(), vector<int> {1}, 0.5, CompressorType::Gpc, true);
+            BasicCompressor *newCompressor = new BasicCompressor(bitheap->getOp(), bitheap->getOp()->getTarget(), vector<int> {1}, 0.0, CompressorType::Gpc, true);
             possibleCompressors.push_back(newCompressor);
             flipflop = newCompressor;
         }
@@ -510,6 +512,13 @@ void CompressionStrategyOptILP::constructProblem(int s_max)
                 }
             }
         }
+    }
+
+    void CompressionStrategyOptILP::writeSolutionFile(ScaLP::Result result) {
+        ofstream result_file;
+        result_file.open("compression_result.txt");
+        result_file << result;
+        result_file.close();
     }
 
 #endif
