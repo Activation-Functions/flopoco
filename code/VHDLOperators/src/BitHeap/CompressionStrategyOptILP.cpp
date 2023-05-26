@@ -78,7 +78,7 @@ void CompressionStrategyOptILP::compressionAlgorithm() {
 		float compressor_cost = 0;
 		vector<vector<int>> zeroInputsVector(s_max, vector<int>((int)wIn, 0));
         vector<vector<vector<int>>> row_adder(s_max, vector<vector<int>>((int)wIn, vector<int>(3*3, 0)));   //3 types of row adders that have 3 (L,M,R) elements (3x3=9)
-		resizeBitAmount(s_max-1);
+		resizeBitAmount(s_max);
 		ScaLP::Result res = solver->getResult();
 
 		ofstream result_file;
