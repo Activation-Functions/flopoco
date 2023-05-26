@@ -115,7 +115,7 @@ namespace flopoco {
 					&baseMultiplierCollection,
 					baseMultiplierCollection.getPreferedMultiplier(),
 					dspOccupationThreshold,
-                    ((maxDSP<0)?(unsigned)INT_MAX:(unsigned)maxDSP)
+					((maxDSP<0)?(unsigned)INT_MAX:(unsigned)((useDSP)?maxDSP:0))
 			);
 		}
 		else if(tilingMethod.compare("heuristicGreedyTiling") == 0) {
