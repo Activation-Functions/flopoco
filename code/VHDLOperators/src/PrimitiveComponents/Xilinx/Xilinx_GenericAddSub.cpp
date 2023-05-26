@@ -192,23 +192,13 @@ namespace flopoco {
 				inPortMap( slice_i, "carry_in" , "carry" + of( i-1 ) );
 			}
 
-			if( i == 0 ) {
-				outPortMap( slice_i, "carry_out", "carry");
-			} else {
-				outPortMap( slice_i, "carry_out", "carry" + of( i ));
-			}
-
+      outPortMap( slice_i, "carry_out", "carry" + of( i ));
 			outPortMap( slice_i, "sum_out", "sum_t" + range( effective_ws - 1, 4 * i ));
 			vhdl << instance( slice_i, slice_name.str() );
 		}
 
 		vhdl << tab << "sum_o <= sum_t" << range( effective_ws - 1, 0 ) << ";" << std::endl;
-
-		if( i == 0 ) {
-			vhdl << tab << "c_o <= carry;" << std::endl;
-		} else {
-			vhdl << tab << "c_o <= carry" << of( i ) << ";" << std::endl;
-		}
+    vhdl << tab << "c_o <= carry" << of( i ) << ";" << std::endl;
 	}
 
 	void Xilinx_GenericAddSub::build_with_fixed_sign( Target *target, int wIn, int fixed_signs ) {
@@ -266,7 +256,7 @@ namespace flopoco {
 				inPortMap( slice_i, "carry_in" , "carry" + of(i-1));
 			}
 
-			outPortMap( slice_i, "carry_out", "carry" + of( i )); 
+			outPortMap( slice_i, "carry_out", "carry" + of( i ));
 			outPortMap( slice_i, "sum_out", "sum_t" + range( 4 * i + 3, 4 * i ));
 			vhdl << instance( slice_i, slice_name.str() );
 		}
@@ -291,23 +281,13 @@ namespace flopoco {
 				inPortMap( slice_i, "carry_in" , "carry" + of(i-1));
 			}
 
-			if( i == 0 ) {
-				outPortMap( slice_i, "carry_out", "carry");
-			} else {
-				outPortMap( slice_i, "carry_out", "carry" + of(i));
-			}
-
+      outPortMap( slice_i, "carry_out", "carry" + of(i));
 			outPortMap( slice_i, "sum_out", "sum_t" + range( effective_ws - 1, 4 * i ));
 			vhdl << instance( slice_i, slice_name.str() );
 		}
 
 		vhdl << tab << "sum_o <= sum_t" << range( effective_ws - 1, 0 ) << ";" << std::endl;
-
-		if( i == 0 ) {
-			vhdl << tab << "c_o <= carry;" << std::endl;
-		} else {
-			vhdl << tab << "c_o <= carry" << of( i ) << ";" << std::endl;
-		}
+    vhdl << tab << "c_o <= carry" << of( i ) << ";" << std::endl;
 	}
 
 	Xilinx_GenericAddSub::~Xilinx_GenericAddSub() {}
@@ -318,9 +298,6 @@ namespace flopoco {
 
 		int wIn;
     ui.parseInt(args,"wIn",&wIn );
-//		bool dss;
-//		ui.parseInt(args,"fixed_signs",&fixed_signs);
-//    ui.parseBoolean(args,"dss",&dss);
 
     bool leftNegative;
     ui.parseBoolean(args,"leftNegative",&leftNegative);
@@ -369,32 +346,19 @@ namespace flopoco {
       }
       return new Xilinx_GenericAddSub(parentOp, target, wIn, fixed_signs);
     }
-    /*
-		if( allowBothInputsNegative ){
-			return new Xilinx_GenericAddSub(parentOp, target,wIn,allowBothInputsNegative);
-		}else if(fixed_signs > 0 ){
-			return new Xilinx_GenericAddSub(parentOp, target, wIn, fixed_signs);
-		}else{
-			return new Xilinx_GenericAddSub(parentOp, target,wIn,false);
-		}
-     */
 	}
 
 	template <>
 	const OperatorDescription<Xilinx_GenericAddSub> op_descriptor<Xilinx_GenericAddSub> {
 	    "XilinxAddSub",				       // name
-	    "An adder/subtractor build of xilinx primitives.", // description,
-							       // string
-	    "Primitives", // category, from the list defined in
-			  // UserInterface.cpp
+	    "An adder/subtractor build of xilinx primitives.", // description
+	    "Primitives", // category, from the list defined in UserInterface.cpp
 	    "",
 	    "wIn(int): The wordsize of the adder;"
       "leftNegative(bool)=false: set to true if left (first) input should be subtracted, only works when rightNegative=false;"
       "rightNegative(bool)=false: set to true if right (second) input should be subtracted, only works when leftNegative=false;"
       "configurable(bool)=false: set to true if signs of input should be configurable at runtime (an extra input is added to decide on add/subtract operation);"
       "allowBothInputsNegative(bool)=false: Allows both inputs to be negative in the runtime configurable configuration (at the cost of a slower implementation)"
-//	    "mode(int)=0: Bitmask for input negation, removes configurability;"
-//	    "dss(bool)=false: Creates configurable adder with possibility to substract both inputs at same time;"
       ,
 	    ""};
 /*
@@ -447,7 +411,57 @@ namespace flopoco {
 
 		tc->addExpectedOutput("sum_o", s);
 	}
-	
+
+  TestList Xilinx_GenericAddSub::unitTest(int index)
+  {
+    TestList testStateList;
+    vector<pair<string, string>> paramList;
+
+    if(index==-1)
+    {// Unit tests
+
+      //this tests all different cases (< 1 slice, > 1 slice up to 3 fully used slices:
+      for(int wIn=1; wIn<=12; wIn++){
+        string wInStr = to_string(wIn);
+        paramList.push_back(make_pair("wIn", wInStr));
+        testStateList.push_back(paramList);
+        paramList.clear();
+      }
+
+      paramList.push_back(make_pair("wIn", "10"));
+      paramList.push_back(make_pair("leftNegative", "true"));
+      paramList.push_back(make_pair("rightNegative", "false"));
+      paramList.push_back(make_pair("configurable", "false"));
+      paramList.push_back(make_pair("allowBothInputsNegative", "false"));
+      testStateList.push_back(paramList);
+      paramList.clear();
+
+      paramList.push_back(make_pair("wIn", "10"));
+      paramList.push_back(make_pair("leftNegative", "false"));
+      paramList.push_back(make_pair("rightNegative", "true"));
+      paramList.push_back(make_pair("configurable", "false"));
+      paramList.push_back(make_pair("allowBothInputsNegative", "false"));
+      testStateList.push_back(paramList);
+      paramList.clear();
+
+      paramList.push_back(make_pair("wIn", "10"));
+      paramList.push_back(make_pair("leftNegative", "false"));
+      paramList.push_back(make_pair("rightNegative", "false"));
+      paramList.push_back(make_pair("configurable", "true"));
+      paramList.push_back(make_pair("allowBothInputsNegative", "false"));
+      testStateList.push_back(paramList);
+      paramList.clear();
+
+      paramList.push_back(make_pair("wIn", "10"));
+      paramList.push_back(make_pair("leftNegative", "false"));
+      paramList.push_back(make_pair("rightNegative", "false"));
+      paramList.push_back(make_pair("configurable", "true"));
+      paramList.push_back(make_pair("allowBothInputsNegative", "true"));
+      testStateList.push_back(paramList);
+      paramList.clear();
+    }
+    return testStateList;
+  }
 }//namespace
 
 

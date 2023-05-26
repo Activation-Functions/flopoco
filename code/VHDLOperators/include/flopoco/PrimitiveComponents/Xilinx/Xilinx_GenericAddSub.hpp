@@ -30,7 +30,8 @@ namespace flopoco {
 		
 		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
 	
-		virtual void emulate(TestCase *tc);		
+		virtual void emulate(TestCase *tc);
+    static TestList unitTest(int index);
 	};
 
 

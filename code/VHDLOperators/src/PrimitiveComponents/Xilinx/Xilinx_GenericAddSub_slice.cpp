@@ -134,6 +134,7 @@ namespace flopoco {
     }
 
 	void Xilinx_GenericAddSub_slice::build_fixed_sign(Operator* parentOp, Target *target, int wIn, bool initial ) {
+    cerr << "!!! Xilinx_GenericAddSub_slice::build_fixed_sign" << endl;
         lut_op add_o5 =   ( ~lut_in( 2 ) & ~lut_in( 3 ) &  lut_in( 0 ) ) |
                           ( lut_in( 2 ) & ~lut_in( 3 ) & ~lut_in( 0 ) ) |
                           ( ~lut_in( 2 ) &  lut_in( 3 ) &  lut_in( 0 ) ) ;
@@ -159,7 +160,7 @@ namespace flopoco {
             stringstream fillup;
 
             if ( 4 - wIn == 1 ) {
-                fillup << "'0'";
+                fillup << "\"0\"";
             } else {
                 fillup << "(3 downto " << ( wIn ) << " => '0')";
             }
