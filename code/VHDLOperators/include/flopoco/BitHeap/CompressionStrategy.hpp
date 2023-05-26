@@ -228,10 +228,11 @@ class BitheapPlotter;
         void printSolutionStatistics();
 
         /**
-          * @brief Check, if the stage of the BitHeap before the final adder has a height <= 2
+          * @brief Check, if the stage of the BitHeap before the final adder has a height <= adderHeight
           * except the LSB column, where one additional bit can be processed due to the Cin input
+          * @param adderHeight nominal input height of the final adder
           */
-        int heightIs2exceptCin();
+        int heightIsAdderHeightexceptCin(unsigned adderHeight);
 
 
         /**

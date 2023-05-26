@@ -863,8 +863,14 @@ namespace flopoco {
 	{
 		if(getMaxHeight() <= final_add_height){
 			return false;
-		}else if(height > 3){
-			return true;
+		}else if(height > final_add_height){
+		    unsigned long carry_count = 0;
+		    for(int i=width-1; i>0; i--){
+		        if(bits[i].size() > final_add_height)
+		            carry_count += (bits[i].size()-final_add_height);
+		        if(1 < carry_count) return true; //The final adder has ony a carry input in the LSB-position.
+		    }
+		    return false;
 		}else{
 			for(unsigned i=1; i<bits.size(); i++)
 				if(bits[i].size() > final_add_height)

@@ -362,10 +362,12 @@ namespace flopoco{
 		}
 		concatenateLSBColumns();
 
-		for(unsigned int c = 0; c < bitheap->bits.size(); c++){
-			if(bitheap->bits[c].size() > 3){
-				THROWERROR("in column " << c << " are more than two bits (" << bitheap->bits[c].size() << ") for the final adder ");
-			}
+		if(!heightIsAdderHeightexceptCin(bitheap->final_add_height)){
+		    for(unsigned int c = 0; c < bitheap->bits.size(); c++){
+		        if(bitheap->bits[c].size() > bitheap->final_add_height){
+		            THROWERROR("in column " << c << " are more than " << ((bitheap->final_add_height==2)?"two":"three") << " bits (" << bitheap->bits[c].size() << ") for the final adder ");
+		        }
+		    }
 		}
 	}
 
@@ -767,7 +769,7 @@ namespace flopoco{
 		{
 			//an adder isn't necessary; concatenateLSBColumns should do the rest
 			//concatenateLSBColumns(); //it is already called in
-		}else if(bitheap->getMaxHeight() == 2  || heightIs2exceptCin()){
+		}else if(bitheap->getMaxHeight() == 2 || heightIsAdderHeightexceptCin(2)){
 			ostringstream adderIn0, adderIn0Name, adderIn1, adderIn1Name, adderOutName, adderCin, adderCinName;
 			int adderStartIndex = compressionDoneIndex + 1;
 
@@ -867,7 +869,7 @@ namespace flopoco{
 			//add the result of the final add as the last chunk
 			chunksDone.push_back(join(adderOutName.str(), range(bitheap->msb-adderStartIndex-bitheap->lsb, 0)));
 
-		} else if(bitheap->getMaxHeight() == 3){
+		} else if(bitheap->getMaxHeight() == 3 || heightIsAdderHeightexceptCin(3)){
             ostringstream adderIn0, adderIn0Name, adderIn1, adderIn1Name, adderIn2, adderIn2Name, adderOutName, adderCin, adderCinName;
             int adderStartIndex = compressionDoneIndex + 1;
 
@@ -943,8 +945,8 @@ namespace flopoco{
 
                 adderStartIndex--;
             }else{
-                if(bitheap->bits[compressionDoneIndex+1].size() > 2)
-                    adderCin << bitheap->bits[compressionDoneIndex+1][2]->getName();
+                if(bitheap->bits[compressionDoneIndex+1].size() > 3)
+                    adderCin << bitheap->bits[compressionDoneIndex+1][3]->getName();
                 else
                     adderCin << "\'0\'";
             }
@@ -1371,14 +1373,18 @@ namespace flopoco{
 		bitheap->getOp()->vhdl << ";" << endl;
 	}
 
-    int CompressionStrategy::heightIs2exceptCin() {
-        for(int i=bitheap->width-1; i>(int)compressionDoneIndex; i--)
+    int CompressionStrategy::heightIsAdderHeightexceptCin(unsigned adderHeight) {
+	    int max_reached = 0, check_height=adderHeight;
+        for(int i=bitheap->width-1; i>=0; i--)
         {
-            if(bitheap->bits[i].size() > 2)
-                return 0;                       //Dual input adder can only handle 2 inputs
+            //cout << "column=" << i << " height=" << bitheap->bits[i].size() << endl;
+            if(bitheap->bits[i].size() > check_height)
+                if(!max_reached && bitheap->bits[i].size() <= adderHeight+1 ){  //The adder LSB can process adderHeight+1 bits due to the Cin, but not more
+                    max_reached++;
+                    check_height = 1;
+                } else
+                    return 0;                       //Dual input adder can only handle 2 and the ternary 3 inputs
         }
-        if(bitheap->bits[compressionDoneIndex].size() > 3)
-            return 0;                           //But the adder LSB can process 3 bits due to the Cin, but not more
         return 1;
     }
 
