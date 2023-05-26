@@ -46,6 +46,9 @@ namespace flopoco{
                 addInput(join("X",i), heights[heights.size()-i-1]);
         }
 
+        declare( wOut * target->carryPropagateDelay()+target->logicDelay(6) + 9e-10,"result0", wOut);    //TODO: Check timing information
+        declare( wOut * target->carryPropagateDelay()+target->logicDelay(6) + 9e-10,"result1", wOut);    //TODO: Check timing information
+        declare( "result1_sig", wOut);
         addOutput("R0", wOut);
         addOutput("R1", wOut);
 
@@ -97,7 +100,7 @@ namespace flopoco{
             inPortMapCst( "i4","'0'");
             inPortMapCst( "i5","'1'");
 
-            outPortMap("o5","R1" + of(i+1));
+            outPortMap("o5","result1_sig" + of(i+1));
             outPortMap("o6","cc_s" + of(i));
 
             //        vhdl << instance(join("lut",i)) << endl;
@@ -155,7 +158,10 @@ namespace flopoco{
 
         vhdl << endl;
 
-        vhdl << tab << "R0 <= cc_co(" << width-1 << ") & cc_o(" << width-1 << " downto 0);" << endl;
+        vhdl << tab << "result0 <= cc_co(" << width-1 << ") & cc_o(" << width-1 << " downto 0);" << endl;
+        vhdl << tab << "R0 <= result0;" << endl;
+        vhdl << tab << "result1 <= result1_sig;" << endl;
+        vhdl << tab << "R1 <= result1;" << endl;
 
         reverse(heights.begin(), heights.end());        //the order of the heights is reversed in the 4:2 compressor class
         reverse(outHeights.begin(), outHeights.end());
