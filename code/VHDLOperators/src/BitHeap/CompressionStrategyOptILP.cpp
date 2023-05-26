@@ -80,6 +80,12 @@ void CompressionStrategyOptILP::compressionAlgorithm() {
         vector<vector<vector<int>>> row_adder(s_max, vector<vector<int>>((int)wIn, vector<int>(3*3, 0)));   //3 types of row adders that have 3 (L,M,R) elements (3x3=9)
 		resizeBitAmount(s_max-1);
 		ScaLP::Result res = solver->getResult();
+
+		ofstream result_file;
+		result_file.open("compression_result.txt");
+		result_file << solver->getResult();
+		result_file.close();
+
 		for(auto &p:res.values)
 		{
 			if(p.second > 0.5){     //parametrize all multipliers at a certain position, for which the solver returned 1 as solution, to flopoco solution structure
@@ -182,6 +188,7 @@ void CompressionStrategyOptILP::constructProblem(int s_max)
             if(s < s_max){
                 for(unsigned e = 0; e < possibleCompressors.size(); e++){                                          //place every possible compressor on current position and the following that get covered by it, index extended by 3 for RCA
                     if(c == 0 && (possibleCompressors[e]->subtype == subType::M || possibleCompressors[e]->subtype == subType::L)) continue;
+//                    if(s != s_max-1 && (possibleCompressors[e]->type == CompressorType::Variable)) continue;        //Test to place row adders only in the final stage
                     stringstream nvarName;
                     nvarName << "k_" << setfill('0') << setw(dpSt) << s << "_" << setfill('0') << setw(dpK) << e << "_" << setfill('0') << setw(dpC) << c;
                     ScaLP::Variable tempV = ScaLP::newIntegerVariable(nvarName.str(), 0, ScaLP::INF());
@@ -200,7 +207,7 @@ void CompressionStrategyOptILP::constructProblem(int s_max)
 
             if(0 < s && bitsInColAndStage[s][c] == nullptr){                                                                 //N_s_c: Bits that enter current compressor stage
                 stringstream curBits;
-                curBits << "N_" << s << "_" << c;
+		curBits << "N_" << setfill('0') << setw(dpSt) << s << "_" << setfill('0') << setw(dpC) << c;
                 //cout << curBits.str() << endl;
                 bitsInColAndStage[s][c] = ScaLP::newIntegerVariable(curBits.str(), 0, ScaLP::INF());
             }
@@ -269,7 +276,7 @@ void CompressionStrategyOptILP::constructProblem(int s_max)
         consName2 << "C2_" << s << "_" << c;
         //cout << consName2.str() << endl;
         if(bitsInColAndStage[s+1][c] == nullptr){
-            nextBits << "N_" << s+1 << "_" << c;
+            nextBits << "N_" << setfill('0') << setw(dpSt) << s+1 << "_" << setfill('0') << setw(dpC) << c;
             //cout << nextBits.str() << endl;
             bitsInColAndStage[s+1][c] = ScaLP::newIntegerVariable(nextBits.str(), 0, ScaLP::INF());
         }
