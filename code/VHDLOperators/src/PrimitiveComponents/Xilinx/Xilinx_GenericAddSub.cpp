@@ -35,12 +35,12 @@ namespace flopoco {
 		if( fixed_signs != 0 ) {
 			build_with_fixed_sign( target, wIn, fixed_signs );
 		} else {
-			build_normal( target, wIn );
+			build_normal( target, wIn, false);
 		}
 	}
 
 	Xilinx_GenericAddSub::Xilinx_GenericAddSub(Operator* parentOp, Target *target, int wIn, bool dss ) : Operator( parentOp, target ),wIn_(wIn),signs_(-1),dss_(dss) {
-		setCopyrightString( "Marco Kleinlein" );
+		setCopyrightString( "Marco Kleinlein, Martin Kumm" );
 		srcFileName = "Xilinx_GenericAddSub";
 		stringstream name;
 		name << "Xilinx_GenericAddSub_" << wIn;
@@ -56,16 +56,19 @@ namespace flopoco {
 		if( dss ) {
 			build_with_dss( target, wIn );
 		} else {
-			build_normal( target, wIn );
+			build_normal( target, wIn, true);
 		}
 	}
 	
-	void Xilinx_GenericAddSub::build_normal( Target *target, int wIn ) {
+	void Xilinx_GenericAddSub::build_normal( Target *target, int wIn, bool configurable ) {
     cerr << "!!! Xilinx_GenericAddSub::build_normal" << endl;
 		addInput( "X", wIn );
 		addInput( "Y", wIn );
-//		addInput( "neg_X" );
-//	addInput( "neg_Y" );
+    if(configurable)
+    {
+      addInput( "neg_X" );
+      addInput( "neg_Y" );
+    }
 		addOutput( "R", wIn );
 		addOutput( "Cout" );
 		const int effective_ws = wIn + 1;
@@ -79,12 +82,17 @@ namespace flopoco {
 		declare( "neg_y_int");
 		vhdl << tab << "x_int" << range( effective_ws - 1, 1 ) << " <= X;" << std::endl;
 		vhdl << tab << "y_int" << range( effective_ws - 1, 1 ) << " <= Y;" << std::endl;
-//    vhdl << tab << "neg_x_int <= neg_X;" << std::endl;
-//    vhdl << tab << "neg_y_int <= neg_Y;" << std::endl;
-    vhdl << tab << "neg_x_int <= '0';" << std::endl;
-    vhdl << tab << "neg_y_int <= '0';" << std::endl;
+    if(configurable)
+    {
+      vhdl << tab << "neg_x_int <= neg_X;" << std::endl;
+      vhdl << tab << "neg_y_int <= neg_Y;" << std::endl;
+    }
+    else
+    {
+      vhdl << tab << "neg_x_int <= '0';" << std::endl;
+      vhdl << tab << "neg_y_int <= '0';" << std::endl;
+    }
 		int i = 0;
-
 		for( ; i < num_full_slices; i++ ) {
 			stringstream slice_name;
 			slice_name << "slice_" << i;
@@ -303,21 +311,21 @@ namespace flopoco {
 		int wIn;
     ui.parseInt(args,"wIn",&wIn );
 
-    bool leftNegative;
-    ui.parseBoolean(args,"leftNegative",&leftNegative);
-    bool rightNegative;
-    ui.parseBoolean(args,"rightNegative",&rightNegative);
+    bool xNegative;
+    ui.parseBoolean(args,"xNegative",&xNegative);
+    bool yNegative;
+    ui.parseBoolean(args,"yNegative",&yNegative);
     bool configurable;
     ui.parseBoolean(args,"configurable",&configurable);
     bool allowBothInputsNegative;
     ui.parseBoolean(args,"allowBothInputsNegative",&allowBothInputsNegative);
 
     int fixed_signs=0;
-    if(leftNegative)
-      fixed_signs |= 1; //x is left input
+    if(xNegative)
+      fixed_signs |= 1; //x input
 
-    if(rightNegative)
-      fixed_signs |= 2; //y is right input
+    if(yNegative)
+      fixed_signs |= 2; //y input
 
     if((fixed_signs & 3) == 3)
     {
@@ -359,8 +367,8 @@ namespace flopoco {
 	    "Primitives", // category, from the list defined in UserInterface.cpp
 	    "",
 	    "wIn(int): The wordsize of the adder;"
-      "leftNegative(bool)=false: set to true if left (first) input should be subtracted, only works when rightNegative=false;"
-      "rightNegative(bool)=false: set to true if right (second) input should be subtracted, only works when leftNegative=false;"
+      "xNegative(bool)=false: set to true if x (first) input should be subtracted, only works when yNegative=false;"
+      "yNegative(bool)=false: set to true if y (second) input should be subtracted, only works when xNegative=false;"
       "configurable(bool)=false: set to true if signs of input should be configurable at runtime (an extra input is added to decide on add/subtract operation);"
       "allowBothInputsNegative(bool)=false: Allows both inputs to be negative in the runtime configurable configuration (at the cost of a slower implementation)"
       ,
@@ -433,32 +441,32 @@ namespace flopoco {
       }
 
       paramList.push_back(make_pair("wIn", "10"));
-      paramList.push_back(make_pair("leftNegative", "true"));
-      paramList.push_back(make_pair("rightNegative", "false"));
+      paramList.push_back(make_pair("xNegative", "true"));
+      paramList.push_back(make_pair("yNegative", "false"));
       paramList.push_back(make_pair("configurable", "false"));
       paramList.push_back(make_pair("allowBothInputsNegative", "false"));
       testStateList.push_back(paramList);
       paramList.clear();
 
       paramList.push_back(make_pair("wIn", "10"));
-      paramList.push_back(make_pair("leftNegative", "false"));
-      paramList.push_back(make_pair("rightNegative", "true"));
+      paramList.push_back(make_pair("xNegative", "false"));
+      paramList.push_back(make_pair("yNegative", "true"));
       paramList.push_back(make_pair("configurable", "false"));
       paramList.push_back(make_pair("allowBothInputsNegative", "false"));
       testStateList.push_back(paramList);
       paramList.clear();
 
       paramList.push_back(make_pair("wIn", "10"));
-      paramList.push_back(make_pair("leftNegative", "false"));
-      paramList.push_back(make_pair("rightNegative", "false"));
+      paramList.push_back(make_pair("xNegative", "false"));
+      paramList.push_back(make_pair("yNegative", "false"));
       paramList.push_back(make_pair("configurable", "true"));
       paramList.push_back(make_pair("allowBothInputsNegative", "false"));
       testStateList.push_back(paramList);
       paramList.clear();
 
       paramList.push_back(make_pair("wIn", "10"));
-      paramList.push_back(make_pair("leftNegative", "false"));
-      paramList.push_back(make_pair("rightNegative", "false"));
+      paramList.push_back(make_pair("xNegative", "false"));
+      paramList.push_back(make_pair("yNegative", "false"));
       paramList.push_back(make_pair("configurable", "true"));
       paramList.push_back(make_pair("allowBothInputsNegative", "true"));
       testStateList.push_back(paramList);

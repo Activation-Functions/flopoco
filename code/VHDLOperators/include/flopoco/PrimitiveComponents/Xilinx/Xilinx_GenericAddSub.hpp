@@ -19,7 +19,7 @@ namespace flopoco {
 		Xilinx_GenericAddSub(Operator* parentOp, Target *target, int wIn = 10, bool dss = false );
 		Xilinx_GenericAddSub(Operator* parentOp, Target *target, int wIn = 10, int fixed_signs = -1 );
 
-		void build_normal( Target *target, int wIn );
+		void build_normal( Target *target, int wIn, bool configurable);
 
 		void build_with_dss( Target *target, int wIn );
 
