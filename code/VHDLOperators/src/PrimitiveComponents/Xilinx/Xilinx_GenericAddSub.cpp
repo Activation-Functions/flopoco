@@ -31,7 +31,8 @@ namespace flopoco {
 		setCombinatorial();
 		addLUT( wIn + 1 );
 
-		if( fixed_signs != -1 ) {
+    cerr << "!!! fixed_signs=" << fixed_signs << endl;
+		if( fixed_signs != 0 ) {
 			build_with_fixed_sign( target, wIn, fixed_signs );
 		} else {
 			build_normal( target, wIn );
@@ -60,10 +61,11 @@ namespace flopoco {
 	}
 	
 	void Xilinx_GenericAddSub::build_normal( Target *target, int wIn ) {
-		addInput( "x_i", wIn );
-		addInput( "y_i", wIn );
-		addInput( "neg_x_i" );
-		addInput( "neg_y_i" );
+    cerr << "!!! Xilinx_GenericAddSub::build_normal" << endl;
+		addInput( "X", wIn );
+		addInput( "Y", wIn );
+//		addInput( "neg_X" );
+//	addInput( "neg_Y" );
 		addOutput( "sum_o", wIn );
 		addOutput( "c_o" );
 		const int effective_ws = wIn + 1;
@@ -71,14 +73,16 @@ namespace flopoco {
 		const int num_full_slices = floor( ( effective_ws - ws_remain ) / 4 );
 		declare( "carry", num_full_slices + 1 );
 		declare( "sum_t", effective_ws );
-		declare( "x", effective_ws );
-		declare( "y", effective_ws );
-		declare( "neg_x");
-		declare( "neg_y");
-		vhdl << tab << "x" << range( effective_ws - 1, 1 ) << " <= x_i;" << std::endl;
-		vhdl << tab << "y" << range( effective_ws - 1, 1 ) << " <= y_i;" << std::endl;
-		vhdl << tab << "neg_x <= neg_x_i;" << std::endl;
-		vhdl << tab << "neg_y <= neg_y_i;" << std::endl;
+		declare( "x_int", effective_ws );
+		declare( "y_int", effective_ws );
+		declare( "neg_x_int");
+		declare( "neg_y_int");
+		vhdl << tab << "x_int" << range( effective_ws - 1, 1 ) << " <= X;" << std::endl;
+		vhdl << tab << "y_int" << range( effective_ws - 1, 1 ) << " <= Y;" << std::endl;
+//    vhdl << tab << "neg_x_int <= neg_X;" << std::endl;
+//    vhdl << tab << "neg_y_int <= neg_Y;" << std::endl;
+    vhdl << tab << "neg_x_int <= '0';" << std::endl;
+    vhdl << tab << "neg_y_int <= '0';" << std::endl;
 		int i = 0;
 
 		for( ; i < num_full_slices; i++ ) {
@@ -86,10 +90,10 @@ namespace flopoco {
 			slice_name << "slice_" << i;
 			Xilinx_GenericAddSub_slice *slice_i = new Xilinx_GenericAddSub_slice( this, target, 4, ( i == 0 ? true : false ), false, false, this->getName() );
 			addSubComponent( slice_i );
-			inPortMap( slice_i, "x_in", "x" + range( 4 * i + 3, 4 * i ) );
-			inPortMap( slice_i, "y_in", "y" + range( 4 * i + 3, 4 * i ) );
-			inPortMap( slice_i, "neg_x_in", "neg_x" );
-			inPortMap( slice_i, "neg_y_in", "neg_y" );
+			inPortMap( slice_i, "X", "x_int" + range( 4 * i + 3, 4 * i ) );
+			inPortMap( slice_i, "Y", "y_int" + range( 4 * i + 3, 4 * i ) );
+			inPortMap( slice_i, "neg_X", "neg_x_int" );
+			inPortMap( slice_i, "neg_Y", "neg_y_int" );
 
 			if( i == 0 ) {
 				inPortMapCst( slice_i, "carry_in", "'0'" );
@@ -107,10 +111,10 @@ namespace flopoco {
 			slice_name << "slice_" << i;
 			Xilinx_GenericAddSub_slice *slice_i = new Xilinx_GenericAddSub_slice( this, target, ws_remain, ( i == 0 ? true : false ), false, false , this->getName() );
 			addSubComponent( slice_i );
-			inPortMap( slice_i, "x_in", "x" + range( effective_ws - 1, 4 * i ) );
-			inPortMap( slice_i, "y_in", "y" + range( effective_ws - 1, 4 * i ) );
-			inPortMap( slice_i, "neg_x_in", "neg_x" );
-			inPortMap( slice_i, "neg_y_in", "neg_y" );
+			inPortMap( slice_i, "X", "x_int" + range( effective_ws - 1, 4 * i ) );
+			inPortMap( slice_i, "Y", "y_int" + range( effective_ws - 1, 4 * i ) );
+			inPortMap( slice_i, "neg_X", "neg_x_int" );
+			inPortMap( slice_i, "neg_Y", "neg_y_int" );
 
 			if( i == 0 ) {
 				inPortMapCst( slice_i, "carry_in", "'0'" );
@@ -128,10 +132,10 @@ namespace flopoco {
 	}
 
 	void Xilinx_GenericAddSub::build_with_dss( Target *target, int wIn ) {
-		addInput( "x_i", wIn );
-		addInput( "y_i", wIn );
-		addInput( "neg_x_i" );
-		addInput( "neg_y_i" );
+		addInput( "X", wIn );
+		addInput( "Y", wIn );
+		addInput( "neg_X" );
+		addInput( "neg_Y" );
 		addOutput( "sum_o", wIn );
 		addOutput( "c_o" );
 		const int effective_ws = wIn;
@@ -139,15 +143,15 @@ namespace flopoco {
 		const int num_full_slices = ( effective_ws - ws_remain ) / 4;
 		declare( "carry", num_full_slices + 1 );
 		declare( "sum_t", effective_ws );
-		declare( "x", effective_ws );
-		declare( "y", effective_ws );
-		declare( "neg_x" );
-		declare( "neg_y" );
+		declare( "x_int", effective_ws );
+		declare( "y_int", effective_ws );
+		declare( "neg_x_int" );
+		declare( "neg_y_int" );
 		declare( "bbus", wIn + 1 );
-		vhdl << tab << "x" << range( effective_ws - 1, 0 ) << " <= x_i;" << std::endl;
-		vhdl << tab << "y" << range( effective_ws - 1, 0 ) << " <= y_i;" << std::endl;
-		vhdl << tab << "neg_x <= neg_x_i;" << std::endl;
-		vhdl << tab << "neg_y <= neg_y_i;" << std::endl;
+		vhdl << tab << "x_int" << range( effective_ws - 1, 0 ) << " <= X;" << std::endl;
+		vhdl << tab << "y_int" << range( effective_ws - 1, 0 ) << " <= Y;" << std::endl;
+		vhdl << tab << "neg_x_int <= neg_X;" << std::endl;
+		vhdl << tab << "neg_y_int <= neg_Y;" << std::endl;
 		vhdl << tab << "bbus" << of( 0 ) << " <= '0';" << std::endl;
 		int i = 0;
 
@@ -156,10 +160,10 @@ namespace flopoco {
 			slice_name << "slice_" << i;
 			Xilinx_GenericAddSub_slice *slice_i = new Xilinx_GenericAddSub_slice( this, target, 4, ( i == 0 ? true : false ), false, true , this->getName() );
 			addSubComponent( slice_i );
-			inPortMap( slice_i, "x_in", "x" + range( 4 * i + 3, 4 * i ) );
-			inPortMap( slice_i, "y_in", "y" + range( 4 * i + 3, 4 * i ) );
-			inPortMap( slice_i, "neg_x_in", "neg_x" );
-			inPortMap( slice_i, "neg_y_in", "neg_y" );
+			inPortMap( slice_i, "X", "x_int" + range( 4 * i + 3, 4 * i ) );
+			inPortMap( slice_i, "Y", "y_int" + range( 4 * i + 3, 4 * i ) );
+			inPortMap( slice_i, "neg_X", "neg_x_int" );
+			inPortMap( slice_i, "neg_Y", "neg_y_int" );
 			inPortMap( slice_i, "bbus_in", "bbus" + range( 4 * i + 3, 4 * i ) );
 			outPortMap( slice_i, "bbus_out" , "bbus" + range( 4 * i + 4, 4 * i + 1 ));
 
@@ -179,10 +183,10 @@ namespace flopoco {
 			slice_name << "slice_" << i;
 			Xilinx_GenericAddSub_slice *slice_i = new Xilinx_GenericAddSub_slice( this, target, ws_remain, ( i == 0 ? true : false ), false, true , this->getName() );
 			addSubComponent( slice_i );
-			inPortMap( slice_i, "x_in", "x" + range( effective_ws - 1, 4 * i ) );
-			inPortMap( slice_i, "y_in", "y" + range( effective_ws - 1, 4 * i ) );
-			inPortMap( slice_i, "neg_x_in", "neg_x" );
-			inPortMap( slice_i, "neg_y_in", "neg_y" );
+			inPortMap( slice_i, "X", "x_int" + range( effective_ws - 1, 4 * i ) );
+			inPortMap( slice_i, "Y", "y_int" + range( effective_ws - 1, 4 * i ) );
+			inPortMap( slice_i, "neg_X", "neg_x_int" );
+			inPortMap( slice_i, "neg_Y", "neg_y_int" );
 			inPortMap( slice_i, "bbus_in", "bbus" + range( effective_ws - 1, 4 * i ) );
 			outPortMap( slice_i, "bbus_out" , "bbus" + range( effective_ws, 4 * i + 1 ));
 
@@ -202,8 +206,8 @@ namespace flopoco {
 	}
 
 	void Xilinx_GenericAddSub::build_with_fixed_sign( Target *target, int wIn, int fixed_signs ) {
-		addInput( "x_i", wIn );
-		addInput( "y_i", wIn );
+		addInput( "X", wIn );
+		addInput( "Y", wIn );
 		addOutput( "sum_o", wIn );
 		addOutput( "c_o" );
 		const int effective_ws = wIn;
@@ -211,10 +215,10 @@ namespace flopoco {
 		const int num_full_slices = ( effective_ws - ws_remain ) / 4;
 		declare( "carry", num_full_slices + 1 );
 		declare( "sum_t", effective_ws );
-		declare( "x", effective_ws );
-		declare( "y", effective_ws );
-		vhdl << tab << "x" << range( effective_ws - 1 , 0 ) << " <= x_i;" << std::endl;
-		vhdl << tab << "y" << range( effective_ws - 1, 0 ) << " <= y_i;" << std::endl;
+		declare( "x_int", effective_ws );
+		declare( "y_int", effective_ws );
+		vhdl << tab << "x_int" << range( effective_ws - 1 , 0 ) << " <= X;" << std::endl;
+		vhdl << tab << "y_int" << range( effective_ws - 1, 0 ) << " <= Y;" << std::endl;
 		std::string neg_x, neg_y;
 
 		if( fixed_signs != 3 ) {
@@ -241,10 +245,10 @@ namespace flopoco {
 			slice_name << "slice_" << i;
 			Xilinx_GenericAddSub_slice *slice_i = new Xilinx_GenericAddSub_slice( this, target, 4, ( i == 0 ? true : false ), true, false , this->getName() );
 			addSubComponent( slice_i );
-			inPortMap( slice_i, "x_in", "x" + range( 4 * i + 3, 4 * i ) );
-			inPortMap( slice_i, "y_in", "y" + range( 4 * i + 3, 4 * i ) );
-			inPortMapCst( slice_i, "neg_x_in", neg_x );
-			inPortMapCst( slice_i, "neg_y_in", neg_y );
+			inPortMap( slice_i, "X", "x_int" + range( 4 * i + 3, 4 * i ) );
+			inPortMap( slice_i, "Y", "y_int" + range( 4 * i + 3, 4 * i ) );
+			inPortMapCst( slice_i, "neg_X", neg_x );
+			inPortMapCst( slice_i, "neg_Y", neg_y );
 
 			if( i == 0 ) {
 				if( fixed_signs > 0 ) {
@@ -266,10 +270,10 @@ namespace flopoco {
 			slice_name << "slice_" << i;
 			Xilinx_GenericAddSub_slice *slice_i = new Xilinx_GenericAddSub_slice( this, target, ws_remain, ( i == 0 ? true : false ), true, false , this->getName() );
 			addSubComponent( slice_i );
-			inPortMap( slice_i, "x_in", "x" + range( effective_ws - 1, 4 * i ) );
-			inPortMap( slice_i, "y_in", "y" + range( effective_ws - 1, 4 * i ) );
-			inPortMapCst( slice_i, "neg_x_in", neg_x );
-			inPortMapCst( slice_i, "neg_y_in", neg_y );
+			inPortMap( slice_i, "X", "x_int" + range( effective_ws - 1, 4 * i ) );
+			inPortMap( slice_i, "Y", "y_int" + range( effective_ws - 1, 4 * i ) );
+			inPortMapCst( slice_i, "neg_X", neg_x );
+			inPortMapCst( slice_i, "neg_Y", neg_y );
 
 			if( i == 0 ) {
 				if( fixed_signs > 0 ) {
@@ -368,8 +372,8 @@ namespace flopoco {
   void Xilinx_GenericAddSub::emulate(TestCase *tc)
 	{
 		bool neg_a=false,neg_b=false;
-		mpz_class x = tc->getInputValue("x_i");
-		mpz_class y = tc->getInputValue("y_i");
+		mpz_class x = tc->getInputValue("X");
+		mpz_class y = tc->getInputValue("Y");
 		mpz_class s = 0;
 		if( signs_ > 0 ){
 			if( signs_ & 0x1 )
@@ -378,8 +382,8 @@ namespace flopoco {
 			if( signs_ & 0x2 )
 				neg_b = true;
 		} else {
-			mpz_class na = tc->getInputValue("neg_x_i");
-			mpz_class nb = tc->getInputValue("neg_y_i");
+			mpz_class na = tc->getInputValue("neg_X");
+			mpz_class nb = tc->getInputValue("neg_Y");
 
 			if( na > 0 )
 				neg_a = true;
