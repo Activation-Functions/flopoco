@@ -81,9 +81,9 @@ namespace flopoco
     addInput("Y", wIn);
     addInput("neg_X");
     addInput("neg_Y");
-    addInput("carry_in");
-    addOutput("carry_out");
-    addOutput("sum_out", wIn);
+    addInput("Cin");
+    addOutput("Cout");
+    addOutput("R", wIn);
     declare("cc_di", 4);
     declare("cc_s", 4);
     declare("cc_o", 4);
@@ -148,12 +148,12 @@ namespace flopoco
     outPortMap(further_cc, "co", "cc_co");
     outPortMap(further_cc, "o", "cc_o");
     inPortMapCst(further_cc, "cyinit", "'0'");
-    inPortMap(further_cc, "ci", "carry_in");
+    inPortMap(further_cc, "ci", "Cin");
     inPortMap(further_cc, "di", "cc_di");
     inPortMap(further_cc, "s", "cc_s");
     vhdl << further_cc->primitiveInstance("slice_cc");
-    vhdl << "carry_out <= cc_co" << of(wIn - 1) << ";" << std::endl;
-    vhdl << "sum_out <= cc_o" << range(wIn - 1, 0) << ";" << std::endl;
+    vhdl << "Cout <= cc_co" << of(wIn - 1) << ";" << std::endl;
+    vhdl << "R <= cc_o" << range(wIn - 1, 0) << ";" << std::endl;
   }
 
   void Xilinx_GenericAddSub_slice::build_fixed_sign(Operator *parentOp, Target *target, int wIn, bool initial)
@@ -170,9 +170,9 @@ namespace flopoco
     addInput("Y", wIn);
     addInput("neg_X");
     addInput("neg_Y");
-    addInput("carry_in");
-    addOutput("carry_out");
-    addOutput("sum_out", wIn);
+    addInput("Cin");
+    addOutput("Cout");
+    addOutput("R", wIn);
     declare("cc_di", 4);
     declare("cc_s", 4);
     declare("cc_o", 4);
@@ -225,12 +225,12 @@ namespace flopoco
     outPortMap(further_cc, "co", "cc_co");
     outPortMap(further_cc, "o", "cc_o");
     inPortMapCst(further_cc, "cyinit", "'0'");
-    inPortMap(further_cc, "ci", "carry_in");
+    inPortMap(further_cc, "ci", "Cin");
     inPortMap(further_cc, "di", "cc_di");
     inPortMap(further_cc, "s", "cc_s");
     vhdl << further_cc->primitiveInstance("slice_cc");
-    vhdl << "carry_out <= cc_co" << of(wIn - 1) << ";" << std::endl;
-    vhdl << "sum_out <= cc_o" << range(wIn - 1, 0) << ";" << std::endl;
+    vhdl << "Cout <= cc_co" << of(wIn - 1) << ";" << std::endl;
+    vhdl << "R <= cc_o" << range(wIn - 1, 0) << ";" << std::endl;
   }
 
   void Xilinx_GenericAddSub_slice::build_with_dss(Operator *parentOp, Target *target, int wIn, bool initial)
@@ -239,9 +239,9 @@ namespace flopoco
     addInput("Y", wIn);
     addInput("neg_X");
     addInput("neg_Y");
-    addInput("carry_in");
-    addOutput("carry_out");
-    addOutput("sum_out", wIn);
+    addInput("Cin");
+    addOutput("Cout");
+    addOutput("R", wIn);
     addInput("bbus_in", wIn);
     addOutput("bbus_out", wIn);
     declare("cc_di", 4);
@@ -310,12 +310,12 @@ namespace flopoco
     outPortMap(further_cc, "co", "cc_co");
     outPortMap(further_cc, "o", "cc_o");
     inPortMapCst(further_cc, "cyinit", "'0'");
-    inPortMap(further_cc, "ci", "carry_in");
+    inPortMap(further_cc, "ci", "Cin");
     inPortMap(further_cc, "di", "cc_di");
     inPortMap(further_cc, "s", "cc_s");
     vhdl << further_cc->primitiveInstance("slice_cc");
-    vhdl << "carry_out <= cc_co" << of(wIn - 1) << ";" << std::endl;
-    vhdl << "sum_out <= cc_o" << range(wIn - 1, 0) << ";" << std::endl;
+    vhdl << "Cout <= cc_co" << of(wIn - 1) << ";" << std::endl;
+    vhdl << "R <= cc_o" << range(wIn - 1, 0) << ";" << std::endl;
     vhdl << "bbus_out <= bb_t;" << std::endl;
   }
 

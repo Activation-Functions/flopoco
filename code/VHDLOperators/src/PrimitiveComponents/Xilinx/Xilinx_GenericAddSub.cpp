@@ -96,13 +96,13 @@ namespace flopoco {
 			inPortMap( slice_i, "neg_Y", "neg_y_int" );
 
 			if( i == 0 ) {
-				inPortMapCst( slice_i, "carry_in", "'0'" );
+				inPortMapCst( slice_i, "Cin", "'0'" );
 			} else {
-				inPortMap( slice_i, "carry_in" , "carry" + of( i - 1 ) );
+				inPortMap( slice_i, "Cin" , "carry" + of( i - 1 ) );
 			}
 
-			outPortMap( slice_i, "carry_out", "carry" + of( i ));
-			outPortMap( slice_i, "sum_out", "sum_t" + range( 4 * i + 3, 4 * i ));
+			outPortMap( slice_i, "Cout", "carry" + of( i ));
+			outPortMap( slice_i, "R", "sum_t" + range( 4 * i + 3, 4 * i ));
 			vhdl << instance( slice_i, slice_name.str() );
 		}
 
@@ -117,13 +117,13 @@ namespace flopoco {
 			inPortMap( slice_i, "neg_Y", "neg_y_int" );
 
 			if( i == 0 ) {
-				inPortMapCst( slice_i, "carry_in", "'0'" );
+				inPortMapCst( slice_i, "Cin", "'0'" );
 			} else {
-				inPortMap( slice_i, "carry_in" , "carry" + of( i - 1 ) );
+				inPortMap( slice_i, "Cin" , "carry" + of( i - 1 ) );
 			}
 
-			outPortMap( slice_i, "carry_out", "carry" + of( i ));
-			outPortMap( slice_i, "sum_out", "sum_t" + range( effective_ws - 1, 4 * i ));
+			outPortMap( slice_i, "Cout", "carry" + of( i ));
+			outPortMap( slice_i, "R", "sum_t" + range( effective_ws - 1, 4 * i ));
 			vhdl << instance( slice_i, slice_name.str() );
 		}
 
@@ -168,13 +168,13 @@ namespace flopoco {
 			outPortMap( slice_i, "bbus_out" , "bbus" + range( 4 * i + 4, 4 * i + 1 ));
 
 			if( i == 0 ) {
-				inPortMapCst( slice_i, "carry_in", "'0'" );
+				inPortMapCst( slice_i, "Cin", "'0'" );
 			} else {
-				inPortMap( slice_i, "carry_in" , "carry" + of( i-1 ) );
+				inPortMap( slice_i, "Cin" , "carry" + of( i-1 ) );
 			}
 
-			outPortMap( slice_i, "carry_out", "carry" + of( i ));
-			outPortMap( slice_i, "sum_out", "sum_t" + range( 4 * i + 3, 4 * i ));
+			outPortMap( slice_i, "Cout", "carry" + of( i ));
+			outPortMap( slice_i, "R", "sum_t" + range( 4 * i + 3, 4 * i ));
 			vhdl << instance( slice_i, slice_name.str() );
 		}
 
@@ -191,13 +191,13 @@ namespace flopoco {
 			outPortMap( slice_i, "bbus_out" , "bbus" + range( effective_ws, 4 * i + 1 ));
 
 			if( i == 0 ) {
-				inPortMapCst( slice_i, "carry_in", "'0'" );
+				inPortMapCst( slice_i, "Cin", "'0'" );
 			} else {
-				inPortMap( slice_i, "carry_in" , "carry" + of( i-1 ) );
+				inPortMap( slice_i, "Cin" , "carry" + of( i-1 ) );
 			}
 
-      outPortMap( slice_i, "carry_out", "carry" + of( i ));
-			outPortMap( slice_i, "sum_out", "sum_t" + range( effective_ws - 1, 4 * i ));
+      outPortMap( slice_i, "Cout", "carry" + of( i ));
+			outPortMap( slice_i, "R", "sum_t" + range( effective_ws - 1, 4 * i ));
 			vhdl << instance( slice_i, slice_name.str() );
 		}
 
@@ -252,16 +252,16 @@ namespace flopoco {
 
 			if( i == 0 ) {
 				if( fixed_signs > 0 ) {
-					inPortMapCst( slice_i, "carry_in", "'1'" );
+					inPortMapCst( slice_i, "Cin", "'1'" );
 				} else {
-					inPortMapCst( slice_i, "carry_in", "'0'" );
+					inPortMapCst( slice_i, "Cin", "'0'" );
 				}
 			} else {
-				inPortMap( slice_i, "carry_in" , "carry" + of(i-1));
+				inPortMap( slice_i, "Cin" , "carry" + of(i-1));
 			}
 
-			outPortMap( slice_i, "carry_out", "carry" + of( i ));
-			outPortMap( slice_i, "sum_out", "sum_t" + range( 4 * i + 3, 4 * i ));
+			outPortMap( slice_i, "Cout", "carry" + of( i ));
+			outPortMap( slice_i, "R", "sum_t" + range( 4 * i + 3, 4 * i ));
 			vhdl << instance( slice_i, slice_name.str() );
 		}
 
@@ -277,16 +277,16 @@ namespace flopoco {
 
 			if( i == 0 ) {
 				if( fixed_signs > 0 ) {
-					inPortMapCst( slice_i, "carry_in", "'1'" );
+					inPortMapCst( slice_i, "Cin", "'1'" );
 				} else {
-					inPortMapCst( slice_i, "carry_in", "'0'" );
+					inPortMapCst( slice_i, "Cin", "'0'" );
 				}
 			} else {
-				inPortMap( slice_i, "carry_in" , "carry" + of(i-1));
+				inPortMap( slice_i, "Cin" , "carry" + of(i-1));
 			}
 
-      outPortMap( slice_i, "carry_out", "carry" + of(i));
-			outPortMap( slice_i, "sum_out", "sum_t" + range( effective_ws - 1, 4 * i ));
+      outPortMap( slice_i, "Cout", "carry" + of(i));
+			outPortMap( slice_i, "R", "sum_t" + range( effective_ws - 1, 4 * i ));
 			vhdl << instance( slice_i, slice_name.str() );
 		}
 
