@@ -35,6 +35,20 @@ namespace flopoco {
         return output_weights;
     }
 
+    vector<int> BaseMultiplierDSPKaratsuba::get_output_sizes(int n, int wX, int wY){
+        vector<int> output_sizes;
+        for(int xy = 0; xy <= n; xy++){     //diagonal
+            output_sizes.push_back(41);
+            for(int nr = 0; nr < xy; nr++) {     //karatsuba substitution
+                output_sizes.push_back(41);
+                output_sizes.push_back(41);
+                output_sizes.push_back(41);
+            }
+        }
+        //cout << "Karatsuba order " << n << " has " << output_weights.size() << " outputs." << endl;
+        return output_sizes;
+    }
+
     int BaseMultiplierDSPKaratsuba::get_output_count(int n, int wX, int wY){
         int dsps = 0;
         int gcd = BaseMultiplierDSPKaratsuba::gcd(wX, wY);

@@ -34,11 +34,13 @@ namespace flopoco {
         size,
         "BaseMultiplierDSPKaratsuba_size" + to_string(size),
         true,
-        get_output_weights(size, wX, wY)
+        get_output_weights(size, wX, wY),
+        get_output_sizes(size, wX, wY)
         }, wX(wX), wY(wY), wR(wX+wY), n(size){}
 
         static int get_output_count(int n, int wX, int wY);
         static vector<int> get_output_weights(int n, int wX, int wY);
+        static vector<int> get_output_sizes(int n, int wX, int wY);
         static int get_wX(int n, int wX, int wY) {return fpr(wX, wY, gcd(wX, wY))*n+wX;}
         static int get_wY(int n, int wX, int wY) {return fpr(wX, wY, gcd(wX, wY))*n+wY;}
         static int get_wR(int n, int wX, int wY) {return get_wX(n, wX, wY) + get_wY(n, wX, wY);}

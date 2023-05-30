@@ -2,6 +2,7 @@
 #include "flopoco/IntMult/BaseMultiplierDSP.hpp"
 #include "flopoco/IntMult/BaseMultiplierLUT.hpp"
 #include "flopoco/IntMult/BaseMultiplierXilinx2xk.hpp"
+#include "flopoco/IntMult/BaseMultiplierXilinxGeneralizedLUT.hpp"
 #include "flopoco/IntMult/BaseMultiplierIrregularLUTXilinx.hpp"
 #include "flopoco/IntMult/BaseMultiplierDSPSuperTilesXilinx.hpp"
 #include "flopoco/IntMult/BaseMultiplierDSPKaratsuba.hpp"
@@ -10,14 +11,57 @@
 using namespace std;
 namespace flopoco {
 
-    MultiplierTileCollection::MultiplierTileCollection(Target *target, BaseMultiplierCollection *bmc, int mult_wX, int mult_wY, bool superTile, bool use2xk, bool useirregular, bool useLUT, bool useDSP, bool useKaratsuba, bool squarer):squarer{squarer} {
+    MultiplierTileCollection::MultiplierTileCollection(Target *target, BaseMultiplierCollection *bmc, int mult_wX, int mult_wY, bool superTile, bool use2xk, bool useirregular, bool useLUT, bool useDSP, bool useKaratsuba, bool useGenLUT, bool squarer, bool varSizeDSP):squarer{squarer} {
         //cout << bmc->size() << endl;
         int tilingWeights[4] = {1, -1, 2, -2};
         for(int w = 0; w < ((squarer)?4:1); w++){
 
+            if(useGenLUT){      //Generalized Xilinx LUT multiplier
+                std::vector<vector<pair<int,int>>> shapes;
+                std::ifstream multdef;
+                multdef.open("./multiplier_shapes.tiledef");
+                if(multdef.is_open()) {
+                    std::string line;
+                    while (std::getline(multdef, line)) {
+                        std::vector <pair<int,int>> coords;
+                        int next;
+                        while(0 <= (next = line.find(";"))){
+                            std::string coordinate = line.substr(0, next);
+                            line = line.substr(next+1, line.length());
+                            int x = stoi(coordinate.substr(0, coordinate.find(",")));
+                            int y = stoi(coordinate.substr(coordinate.find(",")+1, coordinate.length()));
+                            coords.push_back(make_pair(x,y));
+                        }
+                        if(0 < coords.size()) shapes.push_back(coords);
+                    }
+                    multdef.close();
+                    vector<vector<vector<int>>> shape_coverage;
+                    for(int i=0; i < shapes.size(); i++){
+                        std::vector<vector<int>> coverage(shapes[i][0].first,vector<int>(shapes[i][0].second));
+                        for(int j=1; j<shapes[i].size(); j++){
+                            coverage[shapes[i][j].first][shapes[i][j].second] = 1;
+                        }
+                        shape_coverage.push_back(coverage);
+                        addBaseTile(target, new BaseMultiplierXilinxGeneralizedLUT(shape_coverage.back()), tilingWeights[w]);
+                    }
+                } else {
+                    cerr << "Error when opening multiplier_shapes.tiledef file for input." << endl;
+                }
+
+            }
+
             if(useDSP) {
-                addBaseTile(target, new BaseMultiplierDSP(24, 17, 1), tilingWeights[w]);
-                addBaseTile(target, new BaseMultiplierDSP(17, 24, 1), tilingWeights[w]);
+                if(!varSizeDSP){
+                    addBaseTile(target, new BaseMultiplierDSP(24, 17, 1), tilingWeights[w]);
+                    addBaseTile(target, new BaseMultiplierDSP(17, 24, 1), tilingWeights[w]);
+                } else {
+                    for(int i = 1; i <= ((mult_wY<17)?mult_wY:17); i++) {
+                        addBaseTile(target, new BaseMultiplierDSP(((mult_wX<24)?mult_wX:24), i, 1), tilingWeights[w]);
+                    }
+                    for(int i = 1; i <= ((mult_wX<17)?mult_wX:17); i++) {
+                        addBaseTile(target, new BaseMultiplierDSP(i, ((mult_wY<24)?mult_wY:24), 1), tilingWeights[w]);
+                    }
+                }
             }
 
             if(useLUT) {

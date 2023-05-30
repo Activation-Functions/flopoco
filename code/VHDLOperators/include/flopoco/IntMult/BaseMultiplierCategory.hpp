@@ -28,14 +28,14 @@ namespace flopoco {
                     int shape_para=-1,
 					string type="undefined!",
 					bool rectangular=true,
-                    const vector<int> &output_weights = vector<int>()
-				):  tile_param{parametrize(wX, wY, isSignedX, isSignedY, shape_para, type, rectangular, output_weights)},
+                    const vector<int> &output_weights = vector<int>(),
+                    const vector<int> &output_sizes = vector<int>()
+                    ):  tile_param{parametrize(wX, wY, isSignedX, isSignedY, shape_para, type, rectangular, output_weights, output_sizes)},
 				    maxWordSizeLargeInputUnsigned_{wX},
 					maxWordSizeSmallInputUnsigned_{wY},
 					deltaWidthUnsignedSigned_{0},
                     rectangular{rectangular},
-                    type_{type},
-                    output_weights{output_weights}
+                    type_{type}
 				{}
 
 			int getDeltaWidthSigned() const { return deltaWidthUnsignedSigned_; }
@@ -88,6 +88,11 @@ namespace flopoco {
                     bool crossesSquarerDiagonal(int anchor_x, int anchor_y) const;
                     void setTilingWeight(int);
                     int getTilingWeight(void);
+                    void setOutputWeights(vector<int> weights) {output_weights = weights;};
+                    void setOutputSizes(vector<int> sizes) {cout << "osize=" << sizes.size() << endl; output_sizes = sizes;};
+                    vector<int> getOutputSizes(void) {return output_sizes;};
+
+                    const BaseMultiplierCategory *getBMC() const { return this->bmCat_;}
 
             private:
 					Parametrization(
@@ -99,6 +104,7 @@ namespace flopoco {
 							bool isFlippedXY=false,
 							int shape_para=-1,
                             vector<int> output_weights = vector<int>(),
+                            vector<int> output_sizes = vector<int>(),
                             int tilingWeight=1
 						):wX_{wX},
 						wY_{wY},
@@ -108,6 +114,7 @@ namespace flopoco {
 						shape_para_{shape_para},
 						bmCat_{multCategory},
                         output_weights{output_weights},
+                        output_sizes{output_sizes},
                         tilingWeight{tilingWeight}{}
 
 					unsigned int wX_;
@@ -117,7 +124,7 @@ namespace flopoco {
 					bool isFlippedXY_;
 					int shape_para_;
 					BaseMultiplierCategory const * bmCat_;
-                    vector<int> output_weights;
+					vector<int> output_weights, output_sizes;
                     int tilingWeight = 1;
 				friend BaseMultiplierCategory;
 			};
@@ -142,6 +149,12 @@ namespace flopoco {
             virtual int getRelativeResultMSBWeight(Parametrization const & param) const;
             virtual int getRelativeResultMSBWeight(Parametrization const & param, bool isSignedX, bool isSignedY) const;
 
+            virtual vector<vector<vector<int>>> getEqs() const {return {{}};}
+            virtual pair<vector<int>,vector<int>> getDepList() const {return {};}
+            virtual vector<pair<int,int>> getCombiEqs() const {return {};}
+            virtual vector<vector<int>> getCoverage() const {return {};}
+            virtual unsigned getUsedOutputBits() const {return 0;}
+
 			virtual Operator* generateOperator(
 					Operator *parentOp,
 					Target* target,
@@ -150,7 +163,7 @@ namespace flopoco {
 
             Parametrization parametrize(int wX, int wY, bool isSignedX, bool isSignedY, int shape_para =-1, string type="undefined!",
                                         bool rectangular=true,
-                                        const vector<int> &output_weights = vector<int>()) const;
+                                        const vector<int> &output_weights = vector<int>(), const vector<int> &output_sizes = vector<int>()) const;
             Parametrization getParametrisation(void) {return tile_param;}
             unsigned wX(void) {return tile_param.wX_;}
             unsigned wY(void) {return tile_param.wY_;}
@@ -162,16 +175,15 @@ namespace flopoco {
 
 	    protected:
             Target* target = NULL;
+            BaseMultiplierCategory::Parametrization tile_param;
 
 		private:
-            BaseMultiplierCategory::Parametrization tile_param;
 
 			int maxWordSizeLargeInputUnsigned_;
 			int maxWordSizeSmallInputUnsigned_;
 			int deltaWidthUnsignedSigned_;
             const bool rectangular;
             string type_; /**< Name to identify the corresponding base multiplier in the solution (for debug only) */
-            vector<int> output_weights;
     };
 
 	typedef BaseMultiplierCategory::Parametrization BaseMultiplierParametrization;

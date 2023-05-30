@@ -32,6 +32,7 @@
 #include "flopoco/IntMult/TilingStrategyGreedy.hpp"
 #include "flopoco/IntMult/TilingStrategyOptimalILP.hpp"
 #include "flopoco/IntMult/TilingStrategyXGreedy.hpp"
+#include "flopoco/IntMult/TilingStrategyCSV.hpp"
 #include "flopoco/Operator.hpp"
 #include "flopoco/UserInterface.hpp"
 #include "flopoco/utils.hpp"
@@ -41,7 +42,7 @@ using namespace std;
 namespace flopoco {
 
 
-    IntMultiplier::IntMultiplier (Operator *parentOp, Target* target_, int wX_, int wY_, int wOut_, bool signedIO_, float dspOccupationThreshold, int maxDSP, bool superTiles, bool use2xk, bool useirregular, bool useLUT, bool useDSP, bool useKaratsuba, int beamRange, bool optiTrunc, bool minStages, bool squarer):
+    IntMultiplier::IntMultiplier (Operator *parentOp, Target* target_, int wX_, int wY_, int wOut_, bool signedIO_, float dspOccupationThreshold, int maxDSP, bool superTiles, bool use2xk, bool useirregular, bool useLUT, bool useDSP, bool useKaratsuba, bool useGenLUT, int beamRange, bool optiTrunc, bool minStages, bool squarer):
 		Operator ( parentOp, target_ ),wX(wX_), wY(wY_), wOut(wOut_),signedIO(signedIO_), dspOccupationThreshold(dspOccupationThreshold), squarer(squarer) {
         srcFileName = "IntMultiplier";
         setCopyrightString("Martin Kumm, Florent de Dinechin, Kinga Illyes, Bogdan Popa, Bogdan Pasca, 2012");
@@ -99,7 +100,7 @@ namespace flopoco {
 		BaseMultiplierCollection baseMultiplierCollection(getTarget());
 //		baseMultiplierCollection.print();
 
-		MultiplierTileCollection multiplierTileCollection(getTarget(), &baseMultiplierCollection, wX, wY, superTiles, use2xk, useirregular, useLUT, useDSP, useKaratsuba, squarer);
+		MultiplierTileCollection multiplierTileCollection(getTarget(), &baseMultiplierCollection, wX, wY, superTiles, use2xk, useirregular, useLUT, useDSP, useKaratsuba, useGenLUT, squarer);
 
 		string tilingMethod = getTarget()->getTilingMethod();
 
@@ -214,6 +215,24 @@ namespace flopoco {
                     minStages
 			);
 
+		} else if(tilingMethod.compare("csv") == 0) {
+		    tilingStrategy = new TilingStrategyCSV(
+		            wX,
+		            wY,
+		            wOut,
+		            signedIO,
+		            &baseMultiplierCollection,
+		            baseMultiplierCollection.getPreferedMultiplier(),
+		            dspOccupationThreshold,
+		            maxDSP,
+		            useirregular,
+		            use2xk,
+		            superTiles,
+		            useKaratsuba,
+		            multiplierTileCollection,
+		            guardBits,
+		            keepBits
+		            );
 		} else {
 			THROWERROR("Tiling strategy " << tilingMethod << " unknown");
 		}
@@ -500,16 +519,6 @@ namespace flopoco {
 			int xPos = anchor.first;
 			int yPos = anchor.second;
 
-			int LSBWeight = xPos + yPos + parameters.getRelativeResultLSBWeight();
-			unsigned int outLSBWeight = (LSBWeight < 0)?0:static_cast<unsigned int>(LSBWeight);                         // calc result LSB weight corresponding to tile position
-			unsigned int truncated = (outLSBWeight < bitheapLSBWeight) ? bitheapLSBWeight - outLSBWeight : 0;           // calc result LSBs to be ignored
-			unsigned int bitHeapOffset = (outLSBWeight < bitheapLSBWeight) ? 0 : outLSBWeight - bitheapLSBWeight;       // calc bits between the tiles output LSB and the bitheaps LSB
-
-			//unsigned int toSkip = lsbZerosXIn + lsbZerosYIn + truncated;                                                // calc LSB bits to be ignored in the tiles output
-			unsigned int toSkip = ((LSBWeight < 0) ? static_cast<unsigned int>(-LSBWeight) : 0) + truncated;            // calc LSB bits to be ignored in the tiles output
-			unsigned int tokeep = parameters.getRelativeResultMSBWeight() - toSkip - parameters.getRelativeResultLSBWeight()+1;                                     // the tiles MSBs that are actually used
-			assert(tokeep > 0); //A tiling should not give a useless tile
-
 			oname.str("");
 			oname << "tile_" << i << "_output";
 			realiseTile(tile, i, oname.str());
@@ -520,18 +529,51 @@ namespace flopoco {
 			if(parameters.getOutputWeights().size()){
 			    //The multiplier tile has more then one output signal
 				for(unsigned i = 0; i < parameters.getOutputWeights().size(); i++){
-					if(i){
-						vhdl << declare(.0, ofname.str() + to_string(i), 41) << " <= " << "" << oname.str() + to_string(i) << "(40 downto 0)" << ";" << endl;
-						getSignalByName(ofname.str() + to_string(i))->setIsSigned();
-						bitheap->addSignal(ofname.str() + to_string(i), bitHeapOffset+parameters.getOutputWeights()[i] + ((squarer && tile.first.isSquarer())?0:1));
-					} else {
-						vhdl << declare(.0, ofname.str(), 41) << " <= " << "" << oname.str() << "(40 downto 0)" << ";" << endl;
-						bitheap->addSignal(ofname.str(), bitHeapOffset+parameters.getOutputWeights()[i] + ((squarer && tile.first.isSquarer())?0:1));
-					}
+				    int LSBWeight = xPos + yPos + parameters.getOutputWeights()[i];
+				    unsigned int outLSBWeight = (LSBWeight < 0)?0:static_cast<unsigned int>(LSBWeight);                         // calc result LSB weight corresponding to tile position
+				    unsigned int truncated = (outLSBWeight < bitheapLSBWeight) ? bitheapLSBWeight - outLSBWeight : 0;           // calc result LSBs to be ignored
+				    unsigned int bitHeapOffset = (outLSBWeight < bitheapLSBWeight) ? 0 : outLSBWeight - bitheapLSBWeight;       // calc bits between the tiles output LSB and the bitheaps LSB
+				    unsigned int toSkip = ((LSBWeight < 0) ? static_cast<unsigned int>(-LSBWeight) : 0) + truncated;            // calc LSB bits to be ignored in the tiles output
+				    unsigned int tokeep = parameters.getOutputSizes()[i] - toSkip;                                              // the tiles MSBs that are actually used
+				    if(tokeep < 1) continue;    //the pariticular output of the tile does not contribute to the bitheap
+
+				    unsigned int xInputLength = parameters.getTileXWordSize();
+				    unsigned int yInputLength = parameters.getTileYWordSize();
+				    bool xIsSigned = parameters.isSignedMultX();
+				    bool yIsSigned = parameters.isSignedMultY();
+
+				    if(tile.first.isSquarer()){xIsSigned=false; yIsSigned=false;}   //result of squarer tile is always unsigned
+
+				    bool bothOne = (xInputLength == 1) && (yInputLength == 1);
+				    bool signedCase = (bothOne and (xIsSigned != yIsSigned)) or ((not bothOne) and (xIsSigned or yIsSigned));
+
+				    if(i && 31 < parameters.getMultType().size() && parameters.getMultType().substr(0, 31).compare("BaseMultiplierDSPKaratsuba_size") == 0){
+				        vhdl << declare(.0, ofname.str() + ((i)?to_string(i):""), parameters.getOutputSizes()[i]) << " <= " << "" << oname.str() + ((i)?to_string(i):"") + range(toSkip + tokeep - 1, toSkip) << ";" << endl;
+				        getSignalByName(ofname.str() + ((i)?to_string(i):""))->setIsSigned();        //for Karatsuba the outputs have to be treated signed
+				    } else {
+				        vhdl << tab << declareFixPoint(.0, ofname.str() + ((i)?to_string(i):""), signedCase, tokeep-1, 0) << " <= " << ((signedCase) ? "" : "un") << "signed(" << oname.str() + ((i)?to_string(i):"") <<
+				        range(toSkip + tokeep - 1, toSkip) << ");" << endl;
+				    }
+
+				    //squarers can have tile counted twice to exploit the symmetries, and hence might require a left shift by one bit or have tiles to be considered negative to compensate for overlap.
+				    if(tile.first.getTilingWeight() == 1 || tile.first.getTilingWeight() == 2){
+				        bitheap->addSignal(ofname.str() + ((i)?to_string(i):""), bitHeapOffset + ((tile.first.getTilingWeight() == 2)?1:0) );
+				    } else {
+				        bitheap->subtractSignal(ofname.str() + ((i)?to_string(i):""), bitHeapOffset + ((tile.first.getTilingWeight() == -2)?1:0) );
+				    }
+
 					cout << "output (" << i+1 << "/" << parameters.getOutputWeights().size() << "): " << ofname.str() + to_string(i) << " shift " << bitHeapOffset+parameters.getOutputWeights()[i] << endl;
 				}
 			} else {
                 //The multiplier tile has only a single output signal
+                int LSBWeight = xPos + yPos + parameters.getRelativeResultLSBWeight();
+                unsigned int outLSBWeight = (LSBWeight < 0)?0:static_cast<unsigned int>(LSBWeight);                         // calc result LSB weight corresponding to tile position
+                unsigned int truncated = (outLSBWeight < bitheapLSBWeight) ? bitheapLSBWeight - outLSBWeight : 0;           // calc result LSBs to be ignored
+                unsigned int bitHeapOffset = (outLSBWeight < bitheapLSBWeight) ? 0 : outLSBWeight - bitheapLSBWeight;       // calc bits between the tiles output LSB and the bitheaps LSB
+                unsigned int toSkip = ((LSBWeight < 0) ? static_cast<unsigned int>(-LSBWeight) : 0) + truncated;            // calc LSB bits to be ignored in the tiles output
+                unsigned int tokeep = parameters.getRelativeResultMSBWeight() - toSkip - parameters.getRelativeResultLSBWeight()+1;                                     // the tiles MSBs that are actually used
+                assert(tokeep > 0); //A tiling should not give a useless tile
+
 				unsigned int xInputLength = parameters.getTileXWordSize();
 				unsigned int yInputLength = parameters.getTileYWordSize();
 				bool xIsSigned = parameters.isSignedMultX();
@@ -848,7 +890,7 @@ namespace flopoco {
 
 	OperatorPtr IntMultiplier::parseArguments(OperatorPtr parentOp, Target *target, std::vector<std::string> &args, UserInterface& ui) {
 		int wX,wY, wOut, maxDSP;
-		bool signedIO,superTile, use2xk, useirregular, useLUT, useDSP, useKaratsuba, optiTrunc, minStages, squarer;
+		bool signedIO,superTile, use2xk, useirregular, useLUT, useDSP, useKaratsuba, optiTrunc, minStages, squarer, useGenLUT;
 		double dspOccupationThreshold=0.0;
 		int beamRange = 0;
 
@@ -862,6 +904,7 @@ namespace flopoco {
 		ui.parseBoolean(args, "useLUT", &useLUT);
 		ui.parseBoolean(args, "useDSP", &useDSP);
 		ui.parseBoolean(args, "useKaratsuba", &useKaratsuba);
+		ui.parseBoolean(args, "useGenLUT", &useGenLUT);
 		ui.parseFloat(args, "dspThreshold", &dspOccupationThreshold);
 		ui.parseInt(args, "maxDSP", &maxDSP);
         ui.parseBoolean(args, "optiTrunc", &optiTrunc);
@@ -869,7 +912,7 @@ namespace flopoco {
 		ui.parsePositiveInt(args, "beamRange", &beamRange);
 		ui.parseBoolean(args, "squarer", &squarer);
 
-		return new IntMultiplier(parentOp, target, wX, wY, wOut, signedIO, dspOccupationThreshold, maxDSP, superTile, use2xk, useirregular, useLUT, useDSP, useKaratsuba, beamRange, optiTrunc, minStages, squarer);
+		return new IntMultiplier(parentOp, target, wX, wY, wOut, signedIO, dspOccupationThreshold, maxDSP, superTile, use2xk, useirregular, useLUT, useDSP, useKaratsuba, useGenLUT, beamRange, optiTrunc, minStages, squarer);
 	}
 
 	template <>
@@ -886,6 +929,7 @@ namespace flopoco {
 		 use2xk(bool)=false: if true, attempts to use the 2xk-LUT-Multiplier with relatively high efficiency;\
 		 useirregular(bool)=false: if true, attempts to use the irregular-LUT-Multipliers with higher area/lut efficiency than the rectangular versions;\
 		 useLUT(bool)=true: if true, attempts to use the LUT-Multipliers for tiling;\
+		useGenLUT(bool)=false: if true, attempts to use the generalized LUT Multipliers, as defined by multiplier_shapes.tiledef;\
 		 useDSP(bool)=true: if true, attempts to use the DSP-Multipliers for tiling;\
 		 useKaratsuba(bool)=false: if true, attempts to use rectangular Karatsuba for tiling;\
 		 superTile(bool)=false: if true, attempts to use the DSP adders to chain sub-multipliers. This may entail lower logic consumption, but higher latency.;\

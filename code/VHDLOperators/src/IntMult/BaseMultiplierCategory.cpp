@@ -55,7 +55,8 @@ namespace flopoco {
 			int shape_para,
 			string type,
 			bool rectangular,
-			const vector<int> &output_weights
+			const vector<int> &output_weights,
+			const vector<int> &output_sizes
 		) const
 	{
 /*		int effectiveWY = (isSignedY) ? wY - deltaWidthUnsignedSigned_ : wY;
@@ -71,7 +72,7 @@ namespace flopoco {
 			throw std::string("BaseMultiplierCategory::parametrize: error, required multiplier area is too big");
 		}
 */
-		return Parametrization(wX, wY, this, isSignedX, isSignedY, false, shape_para, output_weights);
+return Parametrization(wX, wY, this, isSignedX, isSignedY, false, shape_para, output_weights, output_sizes);
 	}
 
 	int BaseMultiplierCategory::getMaxSecondWordSize(
@@ -186,7 +187,7 @@ float BaseMultiplierCategory::shape_utilisation(int shape_x, int shape_y, int wX
         if(signedIO && (wY-m_y_pos-tile_height)== 0){
             isSignedY = true;
         }
-        return Parametrization(tile_width, tile_height, bmCat_, isSignedX, isSignedY, false, shape_para_,  output_weights, tilingWeight);
+        return Parametrization(tile_width, tile_height, bmCat_, isSignedX, isSignedY, false, shape_para_,  output_weights, output_sizes, tilingWeight);
     }
 
     BaseMultiplierCategory::Parametrization BaseMultiplierCategory::Parametrization::shrinkFitDSP(int m_x_pos, int m_y_pos, int wX, int wY) {
@@ -201,7 +202,7 @@ float BaseMultiplierCategory::shape_utilisation(int shape_x, int shape_y, int wX
             //cout << "tile overlaps at the bottom by " << -(wY-m_y_pos-tile_height) << endl;
             tile_height = tile_height + (wY-m_y_pos-tile_height);
         }
-        return Parametrization(tile_width, tile_height, bmCat_, isSignedX_, isSignedY_, false, shape_para_,  output_weights, tilingWeight);
+        return Parametrization(tile_width, tile_height, bmCat_, isSignedX_, isSignedY_, false, shape_para_,  output_weights, output_sizes, tilingWeight);
     }
 
     BaseMultiplierCategory::Parametrization BaseMultiplierCategory::Parametrization::tryDSPExpand(int m_x_pos, int m_y_pos, int wX, int wY, bool signedIO) {
@@ -222,7 +223,7 @@ float BaseMultiplierCategory::shape_utilisation(int shape_x, int shape_y, int wX
             isSignedY = true;
         }
 
-        return Parametrization(tile_width, tile_height, bmCat_, isSignedX, isSignedY, false, shape_para_,  output_weights, tilingWeight);
+        return Parametrization(tile_width, tile_height, bmCat_, isSignedX, isSignedY, false, shape_para_,  output_weights, output_sizes, tilingWeight);
     }
 
 	int BaseMultiplierCategory::wX_DSPexpanded(int m_x_pos, int m_y_pos, int wX, int wY, bool signedIO) {

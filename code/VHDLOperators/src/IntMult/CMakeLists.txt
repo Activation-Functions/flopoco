@@ -7,6 +7,7 @@ add_flopocolib_src(
     BaseMultiplierDSPKaratsuba.cpp
     BaseMultiplierDSPSuperTilesXilinx.cpp
     BaseMultiplierIrregularLUTXilinx.cpp
+    BaseMultiplierXilinxGeneralizedLUT.cpp
     BaseMultiplierLUT.cpp
     BaseMultiplierXilinx2xk.cpp
     BaseSquarerLUT.cpp
@@ -33,6 +34,7 @@ add_flopocolib_src(
     TilingStrategyGreedy.cpp
     TilingStrategyOptimalILP.cpp
     TilingStrategyXGreedy.cpp
+    TilingStrategyCSV.cpp
 )
 
 target_include_directories(FloPoCoLib PRIVATE ${flopocolib_header_root}/IntMult)
