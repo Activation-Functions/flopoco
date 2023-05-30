@@ -404,7 +404,7 @@ namespace flopoco{
 	unsigned CompressionStrategy::getStageOfArrivalForBit(Bit* bit){
 		//return 0; //!!! This is a workaround. BitHeap compression currently does not work when bits are distributed to different stages. TODO: fix
 		if(!pipelineTiles_) return 0;   //The combined optimization of tiling and compression currently does not support partial products being processed in a later stage.
-		if(!UserInterface::getUserInterface().pipelineActive_) {
+		if(!UserInterface::getUserInterface().pipelineActive_ || bitheap->getOp()->getTarget()->frequency() == 0) {
 			return 0;
 		}
 		//for a bit to be in stage i, its criticalPath delay has to be smaller or equal to boundaries[i].
