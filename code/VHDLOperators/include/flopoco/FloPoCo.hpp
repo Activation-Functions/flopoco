@@ -222,7 +222,7 @@ use withing matrix-multiplication scenarios ------------------ */
 #include "PrimitiveComponents/GenericMult.hpp"
 #include "PrimitiveComponents/GenericMux.hpp"
 #include "PrimitiveComponents/GenericLut.hpp"
-#include "PrimitiveComponents/Xilinx/Xilinx_GenericAddSub.hpp"
+#include "PrimitiveComponents/Xilinx/XilinxIntAddSub.hpp"
 #include "PrimitiveComponents/Xilinx/Xilinx_GenericMux.hpp"
 #include "PrimitiveComponents/Xilinx/Xilinx_Comparator.hpp"
 #include "PrimitiveComponents/Xilinx/Xilinx_TernaryAdd_2State.hpp"

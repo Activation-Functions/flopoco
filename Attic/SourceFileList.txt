@@ -168,8 +168,8 @@ PrimitiveComponents/Xilinx/Xilinx_MUXF8
 PrimitiveComponents/Xilinx/Xilinx_FDCE
 PrimitiveComponents/Xilinx/Xilinx_n2m_Decoder
 PrimitiveComponents/Xilinx/Xilinx_Comparator
-PrimitiveComponents/Xilinx/Xilinx_GenericAddSub
-PrimitiveComponents/Xilinx/Xilinx_GenericAddSub_slice
+PrimitiveComponents/Xilinx/XilinxIntAddSub
+PrimitiveComponents/Xilinx/XilinxIntAddSubSlice
 PrimitiveComponents/Xilinx/Xilinx_GenericMux
 PrimitiveComponents/Xilinx/Xilinx_GenericMux_slice
 PrimitiveComponents/Xilinx/Xilinx_TernaryAdd_2State

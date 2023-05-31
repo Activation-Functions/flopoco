@@ -5,8 +5,8 @@ add_flopocolib_src(
 	Xilinx_Comparator.cpp
 	Xilinx_FDCE.cpp
 	XilinxFourToTwoCompressor.cpp
-	Xilinx_GenericAddSub.cpp
-	Xilinx_GenericAddSub_slice.cpp
+		XilinxIntAddSub.cpp
+        XilinxIntAddSubSlice.cpp
 	Xilinx_GenericMux.cpp
 	Xilinx_GenericMux_slice.cpp
 	XilinxGPC.cpp

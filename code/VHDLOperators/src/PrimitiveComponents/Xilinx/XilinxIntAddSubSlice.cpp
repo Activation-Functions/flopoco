@@ -9,7 +9,7 @@
 #include "mpfr.h"
 
 // include the header of the Operator
-#include "flopoco/PrimitiveComponents/Xilinx/Xilinx_GenericAddSub_slice.hpp"
+#include "flopoco/PrimitiveComponents/Xilinx/XilinxIntAddSubSlice.hpp"
 #include "flopoco/PrimitiveComponents/Xilinx/Xilinx_LUT6.hpp"
 #include "flopoco/PrimitiveComponents/Xilinx/Xilinx_CARRY4.hpp"
 
@@ -17,7 +17,7 @@ using namespace std;
 
 namespace flopoco
 {
-  Xilinx_GenericAddSub_slice::Xilinx_GenericAddSub_slice(Operator *parentOp, Target *target, int wIn, bool initial, bool fixed, bool dss, const string &prefix) : Operator(parentOp, target)
+  XilinxIntAddSubSlice::XilinxIntAddSubSlice(Operator *parentOp, Target *target, int wIn, bool initial, bool fixed, bool dss, const string &prefix) : Operator(parentOp, target)
   {
     setCopyrightString("Marco Kleinlein");
 
@@ -27,7 +27,7 @@ namespace flopoco
 
     if (prefix.empty())
     {
-      name << "Xilinx_GenericAddSub_slice_" << wIn;
+      name << "XilinxIntAddSubSlice_" << wIn;
     }
     else
     {
@@ -46,7 +46,7 @@ namespace flopoco
 
     setNameWithFreqAndUID(name.str());
     setCombinatorial();
-    srcFileName = "Xilinx_GenericAddSub_slice";
+    srcFileName = "XilinxIntAddSubSlice";
     REPORT(DEBUG, "Building" + this->getName());
 
     if (dss)
@@ -63,7 +63,7 @@ namespace flopoco
     }
   }
 
-  void Xilinx_GenericAddSub_slice::build_normal(Operator *parentOp, Target *target, int wIn, bool initial)
+  void XilinxIntAddSubSlice::build_normal(Operator *parentOp, Target *target, int wIn, bool initial)
   {
     lut_op carry_pre_o6;
     lut_op carry_pre_o5 = lut_in(2) | lut_in(3);
@@ -156,7 +156,7 @@ namespace flopoco
     vhdl << "R <= cc_o" << range(wIn - 1, 0) << ";" << std::endl;
   }
 
-  void Xilinx_GenericAddSub_slice::build_fixed_sign(Operator *parentOp, Target *target, int wIn, bool initial)
+  void XilinxIntAddSubSlice::build_fixed_sign(Operator *parentOp, Target *target, int wIn, bool initial)
   {
     lut_op add_o5 = (~lut_in(2) & ~lut_in(3) & lut_in(0)) |
                     (lut_in(2) & ~lut_in(3) & ~lut_in(0)) |
@@ -232,7 +232,7 @@ namespace flopoco
     vhdl << "R <= cc_o" << range(wIn - 1, 0) << ";" << std::endl;
   }
 
-  void Xilinx_GenericAddSub_slice::build_with_dss(Operator *parentOp, Target *target, int wIn, bool initial)
+  void XilinxIntAddSubSlice::build_with_dss(Operator *parentOp, Target *target, int wIn, bool initial)
   {
     addInput("X", wIn);
     addInput("Y", wIn);
@@ -318,7 +318,7 @@ namespace flopoco
     vhdl << "bbus_out <= bb_t;" << std::endl;
   }
 
-  string Xilinx_GenericAddSub_slice::getLUT_dss_init()
+  string XilinxIntAddSubSlice::getLUT_dss_init()
   {
     lut_op fa_s = (lut_in(0) ^ lut_in(2)) ^ (lut_in(1) ^ lut_in(3)) ^ (lut_in(2) ^ lut_in(3));
     lut_op fa_c =
@@ -331,7 +331,7 @@ namespace flopoco
     return op.get_hex();
   }
 
-  string Xilinx_GenericAddSub_slice::getLUT_dss_sec()
+  string XilinxIntAddSubSlice::getLUT_dss_sec()
   {
     lut_op fa_s = (lut_in(0) ^ lut_in(2)) ^ (lut_in(1) ^ lut_in(3)) ^ (lut_in(2) & lut_in(3));
     lut_op fa_c =
@@ -344,7 +344,7 @@ namespace flopoco
     return op.get_hex();
   }
 
-  string Xilinx_GenericAddSub_slice::getLUT_dss_std()
+  string XilinxIntAddSubSlice::getLUT_dss_std()
   {
     lut_op fa_s = (lut_in(0) ^ lut_in(2)) ^ (lut_in(1) ^ lut_in(3));
     lut_op fa_c = ((lut_in(0) ^ lut_in(2)) & (lut_in(1) ^ lut_in(3)));

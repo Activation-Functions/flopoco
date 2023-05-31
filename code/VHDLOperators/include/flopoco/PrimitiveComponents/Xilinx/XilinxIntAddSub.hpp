@@ -8,7 +8,7 @@
 namespace flopoco {
 
 	// new operator class declaration
-	class Xilinx_GenericAddSub : public Operator {
+	class XilinxIntAddSub : public Operator {
 		const int wIn_;
 		const int signs_;
 		const bool dss_;
@@ -16,8 +16,8 @@ namespace flopoco {
 		// definition of some function for the operator
 
 		// constructor, defined there with two parameters (default value 0 for each)
-		Xilinx_GenericAddSub(Operator* parentOp, Target *target, int wIn = 10, bool dss = false );
-		Xilinx_GenericAddSub(Operator* parentOp, Target *target, int wIn = 10, int fixed_signs = -1 );
+		XilinxIntAddSub(Operator* parentOp, Target *target, int wIn = 10, bool dss = false );
+		XilinxIntAddSub(Operator* parentOp, Target *target, int wIn = 10, int fixed_signs = -1 );
 
 		void build_normal( Target *target, int wIn, bool configurable);
 
@@ -26,7 +26,7 @@ namespace flopoco {
 		void build_with_fixed_sign( Target *target, int wIn, int fixed_signs );
 
 		// destructor
-		~Xilinx_GenericAddSub();
+		~XilinxIntAddSub();
 		
 		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
 	

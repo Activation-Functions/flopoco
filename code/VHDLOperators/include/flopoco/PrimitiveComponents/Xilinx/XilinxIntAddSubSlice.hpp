@@ -12,7 +12,7 @@ namespace flopoco {
 
       public:
 		// constructor, defined there with two parameters (default value 0 for each)
-        XilinxIntAddSubSlice(Operator* parentOp, Target *target, int wIn, bool initial, bool fixed = false, bool dss = false,const std::string& prefix="" );
+        XilinxIntAddSubSlice(Operator* parentOp, Target *target, int wIn, bool initial, bool fixed = false, bool dss = false, const std::string& prefix="" );
 
 		// destructor
         ~XilinxIntAddSubSlice() {}
