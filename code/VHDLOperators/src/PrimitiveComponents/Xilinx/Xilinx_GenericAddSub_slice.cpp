@@ -124,33 +124,33 @@ namespace flopoco
         initial_lut->setGeneric("init", adder.get_hex(), 64);
       }
 
-      inPortMap(initial_lut, "i1", "X" + of(i));
-      inPortMap(initial_lut, "i0", "Y" + of(i));
-      inPortMap(initial_lut, "i3", "neg_X");
-      inPortMap(initial_lut, "i2", "neg_Y");
+      inPortMap("i1", "X" + of(i));
+      inPortMap("i0", "Y" + of(i));
+      inPortMap("i3", "neg_X");
+      inPortMap( "i2", "neg_Y");
 
       if (initial && i == 0)
       {
-        inPortMapCst(initial_lut, "i4", "'0'");
+        inPortMapCst( "i4", "'0'");
       }
       else
       {
-        inPortMapCst(initial_lut, "i4", "'1'");
+        inPortMapCst("i4", "'1'");
       }
 
-      inPortMapCst(initial_lut, "i5", "'1'");
-      outPortMap(initial_lut, "o5", "lut_o5" + of(i));
-      outPortMap(initial_lut, "o6", "lut_o6" + of(i));
+      inPortMapCst("i5", "'1'");
+      outPortMap("o5", "lut_o5" + of(i));
+      outPortMap("o6", "lut_o6" + of(i));
       vhdl << initial_lut->primitiveInstance(lut_name.str());
     }
 
     Xilinx_CARRY4 *further_cc = new Xilinx_CARRY4(this, target);
-    outPortMap(further_cc, "co", "cc_co");
-    outPortMap(further_cc, "o", "cc_o");
-    inPortMapCst(further_cc, "cyinit", "'0'");
-    inPortMap(further_cc, "ci", "Cin");
-    inPortMap(further_cc, "di", "cc_di");
-    inPortMap(further_cc, "s", "cc_s");
+    outPortMap("co", "cc_co");
+    outPortMap("o", "cc_o");
+    inPortMapCst("cyinit", "'0'");
+    inPortMap("ci", "Cin");
+    inPortMap( "di", "cc_di");
+    inPortMap( "s", "cc_s");
     vhdl << further_cc->primitiveInstance("slice_cc");
     vhdl << "Cout <= cc_co" << of(wIn - 1) << ";" << std::endl;
     vhdl << "R <= cc_o" << range(wIn - 1, 0) << ";" << std::endl;
@@ -158,7 +158,6 @@ namespace flopoco
 
   void Xilinx_GenericAddSub_slice::build_fixed_sign(Operator *parentOp, Target *target, int wIn, bool initial)
   {
-    cerr << "!!! Xilinx_GenericAddSub_slice::build_fixed_sign" << endl;
     lut_op add_o5 = (~lut_in(2) & ~lut_in(3) & lut_in(0)) |
                     (lut_in(2) & ~lut_in(3) & ~lut_in(0)) |
                     (~lut_in(2) & lut_in(3) & lut_in(0));
@@ -210,24 +209,24 @@ namespace flopoco
       lut_name << "lut_bit_" << i;
       Xilinx_LUT6_2 *initial_lut = new Xilinx_LUT6_2(this, target);
       initial_lut->setGeneric("init", adder.get_hex(), 64);
-      inPortMap(initial_lut, "i1", "X" + of(i));
-      inPortMap(initial_lut, "i0", "Y" + of(i));
-      inPortMap(initial_lut, "i3", "neg_X");
-      inPortMap(initial_lut, "i2", "neg_Y");
-      inPortMapCst(initial_lut, "i4", "'1'");
-      inPortMapCst(initial_lut, "i5", "'1'");
-      outPortMap(initial_lut, "o5", "lut_o5" + of(i));
-      outPortMap(initial_lut, "o6", "lut_o6" + of(i));
+      inPortMap("i1", "X" + of(i));
+      inPortMap("i0", "Y" + of(i));
+      inPortMap("i3", "neg_X");
+      inPortMap("i2", "neg_Y");
+      inPortMapCst("i4", "'1'");
+      inPortMapCst("i5", "'1'");
+      outPortMap("o5", "lut_o5" + of(i));
+      outPortMap("o6", "lut_o6" + of(i));
       vhdl << initial_lut->primitiveInstance(lut_name.str());
     }
 
     Xilinx_CARRY4 *further_cc = new Xilinx_CARRY4(this, target);
-    outPortMap(further_cc, "co", "cc_co");
-    outPortMap(further_cc, "o", "cc_o");
-    inPortMapCst(further_cc, "cyinit", "'0'");
-    inPortMap(further_cc, "ci", "Cin");
-    inPortMap(further_cc, "di", "cc_di");
-    inPortMap(further_cc, "s", "cc_s");
+    outPortMap("co", "cc_co");
+    outPortMap("o", "cc_o");
+    inPortMapCst("cyinit", "'0'");
+    inPortMap("ci", "Cin");
+    inPortMap("di", "cc_di");
+    inPortMap("s", "cc_s");
     vhdl << further_cc->primitiveInstance("slice_cc");
     vhdl << "Cout <= cc_co" << of(wIn - 1) << ";" << std::endl;
     vhdl << "R <= cc_o" << range(wIn - 1, 0) << ";" << std::endl;
@@ -307,12 +306,12 @@ namespace flopoco
     }
 
     Xilinx_CARRY4 *further_cc = new Xilinx_CARRY4(this, target);
-    outPortMap(further_cc, "co", "cc_co");
-    outPortMap(further_cc, "o", "cc_o");
-    inPortMapCst(further_cc, "cyinit", "'0'");
-    inPortMap(further_cc, "ci", "Cin");
-    inPortMap(further_cc, "di", "cc_di");
-    inPortMap(further_cc, "s", "cc_s");
+    outPortMap("co", "cc_co");
+    outPortMap("o", "cc_o");
+    inPortMapCst("cyinit", "'0'");
+    inPortMap("ci", "Cin");
+    inPortMap("di", "cc_di");
+    inPortMap("s", "cc_s");
     vhdl << further_cc->primitiveInstance("slice_cc");
     vhdl << "Cout <= cc_co" << of(wIn - 1) << ";" << std::endl;
     vhdl << "R <= cc_o" << range(wIn - 1, 0) << ";" << std::endl;

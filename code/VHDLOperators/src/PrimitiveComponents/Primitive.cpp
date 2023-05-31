@@ -104,7 +104,6 @@ namespace flopoco
 
   void Primitive::schedule()
   {
-    cout << "Primitive::schedule() for operator " << getName() << endl;
     for (int i = 0; i < this->ioList_.size(); i++)
     {
       if (ioList_[i]->type() == Signal::out)

@@ -31,7 +31,6 @@ namespace flopoco {
 		setCombinatorial();
 		addLUT( wIn + 1 );
 
-    cerr << "!!! fixed_signs=" << fixed_signs << endl;
 		if( fixed_signs != 0 ) {
 			build_with_fixed_sign( target, wIn, fixed_signs );
 		} else {
@@ -61,7 +60,6 @@ namespace flopoco {
 	}
 	
 	void Xilinx_GenericAddSub::build_normal( Target *target, int wIn, bool configurable ) {
-    cerr << "!!! Xilinx_GenericAddSub::build_normal" << endl;
 		addInput( "X", wIn );
 		addInput( "Y", wIn );
     if(configurable)
@@ -98,19 +96,19 @@ namespace flopoco {
 			slice_name << "slice_" << i;
 			Xilinx_GenericAddSub_slice *slice_i = new Xilinx_GenericAddSub_slice( this, target, 4, ( i == 0 ? true : false ), false, false, this->getName() );
 			addSubComponent( slice_i );
-			inPortMap( slice_i, "X", "x_int" + range( 4 * i + 3, 4 * i ) );
-			inPortMap( slice_i, "Y", "y_int" + range( 4 * i + 3, 4 * i ) );
-			inPortMap( slice_i, "neg_X", "neg_x_int" );
-			inPortMap( slice_i, "neg_Y", "neg_y_int" );
+			inPortMap( "X", "x_int" + range( 4 * i + 3, 4 * i ) );
+			inPortMap( "Y", "y_int" + range( 4 * i + 3, 4 * i ) );
+			inPortMap( "neg_X", "neg_x_int" );
+			inPortMap( "neg_Y", "neg_y_int" );
 
 			if( i == 0 ) {
-				inPortMapCst( slice_i, "Cin", "'0'" );
+				inPortMapCst( "Cin", "'0'" );
 			} else {
-				inPortMap( slice_i, "Cin" , "carry" + of( i - 1 ) );
+				inPortMap( "Cin" , "carry" + of( i - 1 ) );
 			}
 
-			outPortMap( slice_i, "Cout", "carry" + of( i ));
-			outPortMap( slice_i, "R", "sum_t" + range( 4 * i + 3, 4 * i ));
+			outPortMap( "Cout", "carry" + of( i ));
+			outPortMap( "R", "sum_t" + range( 4 * i + 3, 4 * i ));
 			vhdl << instance( slice_i, slice_name.str() );
 		}
 
@@ -119,19 +117,19 @@ namespace flopoco {
 			slice_name << "slice_" << i;
 			Xilinx_GenericAddSub_slice *slice_i = new Xilinx_GenericAddSub_slice( this, target, ws_remain, ( i == 0 ? true : false ), false, false , this->getName() );
 			addSubComponent( slice_i );
-			inPortMap( slice_i, "X", "x_int" + range( effective_ws - 1, 4 * i ) );
-			inPortMap( slice_i, "Y", "y_int" + range( effective_ws - 1, 4 * i ) );
-			inPortMap( slice_i, "neg_X", "neg_x_int" );
-			inPortMap( slice_i, "neg_Y", "neg_y_int" );
+			inPortMap( "X", "x_int" + range( effective_ws - 1, 4 * i ) );
+			inPortMap( "Y", "y_int" + range( effective_ws - 1, 4 * i ) );
+			inPortMap( "neg_X", "neg_x_int" );
+			inPortMap( "neg_Y", "neg_y_int" );
 
 			if( i == 0 ) {
-				inPortMapCst( slice_i, "Cin", "'0'" );
+				inPortMapCst( "Cin", "'0'" );
 			} else {
-				inPortMap( slice_i, "Cin" , "carry" + of( i - 1 ) );
+				inPortMap( "Cin" , "carry" + of( i - 1 ) );
 			}
 
-			outPortMap( slice_i, "Cout", "carry" + of( i ));
-			outPortMap( slice_i, "R", "sum_t" + range( effective_ws - 1, 4 * i ));
+			outPortMap( "Cout", "carry" + of( i ));
+			outPortMap( "R", "sum_t" + range( effective_ws - 1, 4 * i ));
 			vhdl << instance( slice_i, slice_name.str() );
 		}
 
@@ -168,21 +166,21 @@ namespace flopoco {
 			slice_name << "slice_" << i;
 			Xilinx_GenericAddSub_slice *slice_i = new Xilinx_GenericAddSub_slice( this, target, 4, ( i == 0 ? true : false ), false, true , this->getName() );
 			addSubComponent( slice_i );
-			inPortMap( slice_i, "X", "x_int" + range( 4 * i + 3, 4 * i ) );
-			inPortMap( slice_i, "Y", "y_int" + range( 4 * i + 3, 4 * i ) );
-			inPortMap( slice_i, "neg_X", "neg_x_int" );
-			inPortMap( slice_i, "neg_Y", "neg_y_int" );
-			inPortMap( slice_i, "bbus_in", "bbus" + range( 4 * i + 3, 4 * i ) );
-			outPortMap( slice_i, "bbus_out" , "bbus" + range( 4 * i + 4, 4 * i + 1 ));
+			inPortMap( "X", "x_int" + range( 4 * i + 3, 4 * i ) );
+			inPortMap( "Y", "y_int" + range( 4 * i + 3, 4 * i ) );
+			inPortMap( "neg_X", "neg_x_int" );
+			inPortMap( "neg_Y", "neg_y_int" );
+			inPortMap( "bbus_in", "bbus" + range( 4 * i + 3, 4 * i ) );
+			outPortMap( "bbus_out" , "bbus" + range( 4 * i + 4, 4 * i + 1 ));
 
 			if( i == 0 ) {
-				inPortMapCst( slice_i, "Cin", "'0'" );
+				inPortMapCst( "Cin", "'0'" );
 			} else {
-				inPortMap( slice_i, "Cin" , "carry" + of( i-1 ) );
+				inPortMap( "Cin" , "carry" + of( i-1 ) );
 			}
 
-			outPortMap( slice_i, "Cout", "carry" + of( i ));
-			outPortMap( slice_i, "R", "sum_t" + range( 4 * i + 3, 4 * i ));
+			outPortMap( "Cout", "carry" + of( i ));
+			outPortMap( "R", "sum_t" + range( 4 * i + 3, 4 * i ));
 			vhdl << instance( slice_i, slice_name.str() );
 		}
 
@@ -191,21 +189,21 @@ namespace flopoco {
 			slice_name << "slice_" << i;
 			Xilinx_GenericAddSub_slice *slice_i = new Xilinx_GenericAddSub_slice( this, target, ws_remain, ( i == 0 ? true : false ), false, true , this->getName() );
 			addSubComponent( slice_i );
-			inPortMap( slice_i, "X", "x_int" + range( effective_ws - 1, 4 * i ) );
-			inPortMap( slice_i, "Y", "y_int" + range( effective_ws - 1, 4 * i ) );
-			inPortMap( slice_i, "neg_X", "neg_x_int" );
-			inPortMap( slice_i, "neg_Y", "neg_y_int" );
-			inPortMap( slice_i, "bbus_in", "bbus" + range( effective_ws - 1, 4 * i ) );
-			outPortMap( slice_i, "bbus_out" , "bbus" + range( effective_ws, 4 * i + 1 ));
+			inPortMap( "X", "x_int" + range( effective_ws - 1, 4 * i ) );
+			inPortMap( "Y", "y_int" + range( effective_ws - 1, 4 * i ) );
+			inPortMap( "neg_X", "neg_x_int" );
+			inPortMap( "neg_Y", "neg_y_int" );
+			inPortMap( "bbus_in", "bbus" + range( effective_ws - 1, 4 * i ) );
+			outPortMap( "bbus_out" , "bbus" + range( effective_ws, 4 * i + 1 ));
 
 			if( i == 0 ) {
-				inPortMapCst( slice_i, "Cin", "'0'" );
+				inPortMapCst( "Cin", "'0'" );
 			} else {
-				inPortMap( slice_i, "Cin" , "carry" + of( i-1 ) );
+				inPortMap( "Cin" , "carry" + of( i-1 ) );
 			}
 
-      outPortMap( slice_i, "Cout", "carry" + of( i ));
-			outPortMap( slice_i, "R", "sum_t" + range( effective_ws - 1, 4 * i ));
+      outPortMap( "Cout", "carry" + of( i ));
+			outPortMap( "R", "sum_t" + range( effective_ws - 1, 4 * i ));
 			vhdl << instance( slice_i, slice_name.str() );
 		}
 
@@ -253,23 +251,23 @@ namespace flopoco {
 			slice_name << "slice_" << i;
 			Xilinx_GenericAddSub_slice *slice_i = new Xilinx_GenericAddSub_slice( this, target, 4, ( i == 0 ? true : false ), true, false , this->getName() );
 			addSubComponent( slice_i );
-			inPortMap( slice_i, "X", "x_int" + range( 4 * i + 3, 4 * i ) );
-			inPortMap( slice_i, "Y", "y_int" + range( 4 * i + 3, 4 * i ) );
-			inPortMapCst( slice_i, "neg_X", neg_x );
-			inPortMapCst( slice_i, "neg_Y", neg_y );
+			inPortMap( "X", "x_int" + range( 4 * i + 3, 4 * i ) );
+			inPortMap( "Y", "y_int" + range( 4 * i + 3, 4 * i ) );
+			inPortMapCst( "neg_X", neg_x );
+			inPortMapCst( "neg_Y", neg_y );
 
 			if( i == 0 ) {
 				if( fixed_signs > 0 ) {
-					inPortMapCst( slice_i, "Cin", "'1'" );
+					inPortMapCst( "Cin", "'1'" );
 				} else {
-					inPortMapCst( slice_i, "Cin", "'0'" );
+					inPortMapCst( "Cin", "'0'" );
 				}
 			} else {
-				inPortMap( slice_i, "Cin" , "carry" + of(i-1));
+				inPortMap( "Cin" , "carry" + of(i-1));
 			}
 
-			outPortMap( slice_i, "Cout", "carry" + of( i ));
-			outPortMap( slice_i, "R", "sum_t" + range( 4 * i + 3, 4 * i ));
+			outPortMap( "Cout", "carry" + of( i ));
+			outPortMap( "R", "sum_t" + range( 4 * i + 3, 4 * i ));
 			vhdl << instance( slice_i, slice_name.str() );
 		}
 
@@ -278,23 +276,23 @@ namespace flopoco {
 			slice_name << "slice_" << i;
 			Xilinx_GenericAddSub_slice *slice_i = new Xilinx_GenericAddSub_slice( this, target, ws_remain, ( i == 0 ? true : false ), true, false , this->getName() );
 			addSubComponent( slice_i );
-			inPortMap( slice_i, "X", "x_int" + range( effective_ws - 1, 4 * i ) );
-			inPortMap( slice_i, "Y", "y_int" + range( effective_ws - 1, 4 * i ) );
-			inPortMapCst( slice_i, "neg_X", neg_x );
-			inPortMapCst( slice_i, "neg_Y", neg_y );
+			inPortMap( "X", "x_int" + range( effective_ws - 1, 4 * i ) );
+			inPortMap( "Y", "y_int" + range( effective_ws - 1, 4 * i ) );
+			inPortMapCst( "neg_X", neg_x );
+			inPortMapCst( "neg_Y", neg_y );
 
 			if( i == 0 ) {
 				if( fixed_signs > 0 ) {
-					inPortMapCst( slice_i, "Cin", "'1'" );
+					inPortMapCst( "Cin", "'1'" );
 				} else {
-					inPortMapCst( slice_i, "Cin", "'0'" );
+					inPortMapCst( "Cin", "'0'" );
 				}
 			} else {
-				inPortMap( slice_i, "Cin" , "carry" + of(i-1));
+				inPortMap( "Cin" , "carry" + of(i-1));
 			}
 
-      outPortMap( slice_i, "Cout", "carry" + of(i));
-			outPortMap( slice_i, "R", "sum_t" + range( effective_ws - 1, 4 * i ));
+      outPortMap( "Cout", "carry" + of(i));
+			outPortMap( "R", "sum_t" + range( effective_ws - 1, 4 * i ));
 			vhdl << instance( slice_i, slice_name.str() );
 		}
 
