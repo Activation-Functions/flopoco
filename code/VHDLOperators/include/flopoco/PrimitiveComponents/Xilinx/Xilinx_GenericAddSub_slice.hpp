@@ -8,14 +8,14 @@
 namespace flopoco {
 
 	// new operator class declaration
-    class Xilinx_GenericAddSub_slice : public Operator {
+    class XilinxIntAddSubSlice : public Operator {
 
       public:
 		// constructor, defined there with two parameters (default value 0 for each)
-        Xilinx_GenericAddSub_slice(Operator* parentOp, Target *target, int wIn, bool initial, bool fixed = false, bool dss = false,const std::string& prefix="" );
+        XilinxIntAddSubSlice(Operator* parentOp, Target *target, int wIn, bool initial, bool fixed = false, bool dss = false,const std::string& prefix="" );
 
 		// destructor
-        ~Xilinx_GenericAddSub_slice() {}
+        ~XilinxIntAddSubSlice() {}
 
 		void build_normal(Operator* parentOp, Target *target, int wIn, bool initial );
 

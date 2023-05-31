@@ -79,8 +79,8 @@ namespace flopoco
     lut_init adder(add_o5, add_o6);
     addInput("X", wIn);
     addInput("Y", wIn);
-    addInput("neg_X");
-    addInput("neg_Y");
+    addInput("negX");
+    addInput("negY");
     addInput("Cin");
     addOutput("Cout");
     addOutput("R", wIn);
@@ -126,8 +126,8 @@ namespace flopoco
 
       inPortMap("i1", "X" + of(i));
       inPortMap("i0", "Y" + of(i));
-      inPortMap("i3", "neg_X");
-      inPortMap( "i2", "neg_Y");
+      inPortMap("i3", "negX");
+      inPortMap( "i2", "negY");
 
       if (initial && i == 0)
       {
@@ -167,8 +167,8 @@ namespace flopoco
     lut_init adder(add_o5, add_o6);
     addInput("X", wIn);
     addInput("Y", wIn);
-    addInput("neg_X");
-    addInput("neg_Y");
+    addInput("negX");
+    addInput("negY");
     addInput("Cin");
     addOutput("Cout");
     addOutput("R", wIn);
@@ -211,8 +211,8 @@ namespace flopoco
       initial_lut->setGeneric("init", adder.get_hex(), 64);
       inPortMap("i1", "X" + of(i));
       inPortMap("i0", "Y" + of(i));
-      inPortMap("i3", "neg_X");
-      inPortMap("i2", "neg_Y");
+      inPortMap("i3", "negX");
+      inPortMap("i2", "negY");
       inPortMapCst("i4", "'1'");
       inPortMapCst("i5", "'1'");
       outPortMap("o5", "lut_o5" + of(i));
@@ -236,8 +236,8 @@ namespace flopoco
   {
     addInput("X", wIn);
     addInput("Y", wIn);
-    addInput("neg_X");
-    addInput("neg_Y");
+    addInput("negX");
+    addInput("negY");
     addInput("Cin");
     addOutput("Cout");
     addOutput("R", wIn);
@@ -296,8 +296,8 @@ namespace flopoco
 
       inPortMap(cur_lut, "i0", "Y" + of(i));
       inPortMap(cur_lut, "i1", "X" + of(i));
-      inPortMap(cur_lut, "i2", "neg_Y");
-      inPortMap(cur_lut, "i3", "neg_X");
+      inPortMap(cur_lut, "i2", "negY");
+      inPortMap(cur_lut, "i3", "negX");
       inPortMap(cur_lut, "i4", "bbus_in" + of(i));
       inPortMapCst(cur_lut, "i5", "'1'");
       outPortMap(cur_lut, "o5", "bb_t" + of(i));

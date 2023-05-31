@@ -1,13 +1,11 @@
 // general c++ library for manipulating streams
 #include <iostream>
-#include <sstream>
 
 /* header of libraries to manipulate multiprecision numbers
-   There will be used in the emulate function to manipulate arbitraly large
+   There will be used in the emulate function to manipulate arbitrarily large
    entries */
 #include "flopoco/UserInterface.hpp"
 #include "gmp.h"
-#include "mpfr.h"
 
 // include the header of the Operator
 #include "flopoco/PrimitiveComponents/Xilinx/Xilinx_GenericAddSub.hpp"
@@ -64,8 +62,8 @@ namespace flopoco {
 		addInput( "Y", wIn );
     if(configurable)
     {
-      addInput( "neg_X" );
-      addInput( "neg_Y" );
+      addInput( "negX" );
+      addInput( "negY" );
     }
 		addOutput( "R", wIn );
 		addOutput( "Cout" );
@@ -76,19 +74,19 @@ namespace flopoco {
 		declare( "sum_t", effective_ws );
 		declare( "x_int", effective_ws );
 		declare( "y_int", effective_ws );
-		declare( "neg_x_int");
-		declare( "neg_y_int");
+		declare( "negx_int");
+		declare( "negy_int");
 		vhdl << tab << "x_int" << range( effective_ws - 1, 1 ) << " <= X;" << std::endl;
 		vhdl << tab << "y_int" << range( effective_ws - 1, 1 ) << " <= Y;" << std::endl;
     if(configurable)
     {
-      vhdl << tab << "neg_x_int <= neg_X;" << std::endl;
-      vhdl << tab << "neg_y_int <= neg_Y;" << std::endl;
+      vhdl << tab << "negx_int <= negX;" << std::endl;
+      vhdl << tab << "negy_int <= negY;" << std::endl;
     }
     else
     {
-      vhdl << tab << "neg_x_int <= '0';" << std::endl;
-      vhdl << tab << "neg_y_int <= '0';" << std::endl;
+      vhdl << tab << "negx_int <= '0';" << std::endl;
+      vhdl << tab << "negy_int <= '0';" << std::endl;
     }
 		int i = 0;
 		for( ; i < num_full_slices; i++ ) {
@@ -98,8 +96,8 @@ namespace flopoco {
 			addSubComponent( slice_i );
 			inPortMap( "X", "x_int" + range( 4 * i + 3, 4 * i ) );
 			inPortMap( "Y", "y_int" + range( 4 * i + 3, 4 * i ) );
-			inPortMap( "neg_X", "neg_x_int" );
-			inPortMap( "neg_Y", "neg_y_int" );
+			inPortMap( "negX", "negx_int" );
+			inPortMap( "negY", "negy_int" );
 
 			if( i == 0 ) {
 				inPortMapCst( "Cin", "'0'" );
@@ -119,8 +117,8 @@ namespace flopoco {
 			addSubComponent( slice_i );
 			inPortMap( "X", "x_int" + range( effective_ws - 1, 4 * i ) );
 			inPortMap( "Y", "y_int" + range( effective_ws - 1, 4 * i ) );
-			inPortMap( "neg_X", "neg_x_int" );
-			inPortMap( "neg_Y", "neg_y_int" );
+			inPortMap( "negX", "negx_int" );
+			inPortMap( "negY", "negy_int" );
 
 			if( i == 0 ) {
 				inPortMapCst( "Cin", "'0'" );
@@ -140,8 +138,8 @@ namespace flopoco {
 	void Xilinx_GenericAddSub::build_with_dss( Target *target, int wIn ) {
 		addInput( "X", wIn );
 		addInput( "Y", wIn );
-		addInput( "neg_X" );
-		addInput( "neg_Y" );
+		addInput( "negX" );
+		addInput( "negY" );
 		addOutput( "R", wIn );
 		addOutput( "Cout" );
 		const int effective_ws = wIn;
@@ -151,13 +149,13 @@ namespace flopoco {
 		declare( "sum_t", effective_ws );
 		declare( "x_int", effective_ws );
 		declare( "y_int", effective_ws );
-		declare( "neg_x_int" );
-		declare( "neg_y_int" );
+		declare( "negx_int" );
+		declare( "negy_int" );
 		declare( "bbus", wIn + 1 );
 		vhdl << tab << "x_int" << range( effective_ws - 1, 0 ) << " <= X;" << std::endl;
 		vhdl << tab << "y_int" << range( effective_ws - 1, 0 ) << " <= Y;" << std::endl;
-		vhdl << tab << "neg_x_int <= neg_X;" << std::endl;
-		vhdl << tab << "neg_y_int <= neg_Y;" << std::endl;
+		vhdl << tab << "negx_int <= negX;" << std::endl;
+		vhdl << tab << "negy_int <= negY;" << std::endl;
 		vhdl << tab << "bbus" << of( 0 ) << " <= '0';" << std::endl;
 		int i = 0;
 
@@ -168,8 +166,8 @@ namespace flopoco {
 			addSubComponent( slice_i );
 			inPortMap( "X", "x_int" + range( 4 * i + 3, 4 * i ) );
 			inPortMap( "Y", "y_int" + range( 4 * i + 3, 4 * i ) );
-			inPortMap( "neg_X", "neg_x_int" );
-			inPortMap( "neg_Y", "neg_y_int" );
+			inPortMap( "negX", "negx_int" );
+			inPortMap( "negY", "negy_int" );
 			inPortMap( "bbus_in", "bbus" + range( 4 * i + 3, 4 * i ) );
 			outPortMap( "bbus_out" , "bbus" + range( 4 * i + 4, 4 * i + 1 ));
 
@@ -191,8 +189,8 @@ namespace flopoco {
 			addSubComponent( slice_i );
 			inPortMap( "X", "x_int" + range( effective_ws - 1, 4 * i ) );
 			inPortMap( "Y", "y_int" + range( effective_ws - 1, 4 * i ) );
-			inPortMap( "neg_X", "neg_x_int" );
-			inPortMap( "neg_Y", "neg_y_int" );
+			inPortMap( "negX", "negx_int" );
+			inPortMap( "negY", "negy_int" );
 			inPortMap( "bbus_in", "bbus" + range( effective_ws - 1, 4 * i ) );
 			outPortMap( "bbus_out" , "bbus" + range( effective_ws, 4 * i + 1 ));
 
@@ -225,19 +223,19 @@ namespace flopoco {
 		declare( "y_int", effective_ws );
 		vhdl << tab << "x_int" << range( effective_ws - 1 , 0 ) << " <= X;" << std::endl;
 		vhdl << tab << "y_int" << range( effective_ws - 1, 0 ) << " <= Y;" << std::endl;
-		std::string neg_x, neg_y;
+		std::string negx, negy;
 
 		if( fixed_signs != 3 ) {
 			if( fixed_signs & 0x1 ) {
-				neg_x = "'1'";
+        negx = "'1'";
 			} else {
-				neg_x = "'0'";
+        negx = "'0'";
 			}
 
 			if( fixed_signs & 0x2 ) {
-				neg_y = "'1'";
+        negy = "'1'";
 			} else {
-				neg_y = "'0'";
+        negy = "'0'";
 			}
 		} else {
 			throw "up";
@@ -253,8 +251,8 @@ namespace flopoco {
 			addSubComponent( slice_i );
 			inPortMap( "X", "x_int" + range( 4 * i + 3, 4 * i ) );
 			inPortMap( "Y", "y_int" + range( 4 * i + 3, 4 * i ) );
-			inPortMapCst( "neg_X", neg_x );
-			inPortMapCst( "neg_Y", neg_y );
+			inPortMapCst( "negX", negx );
+			inPortMapCst( "negY", negy );
 
 			if( i == 0 ) {
 				if( fixed_signs > 0 ) {
@@ -278,8 +276,8 @@ namespace flopoco {
 			addSubComponent( slice_i );
 			inPortMap( "X", "x_int" + range( effective_ws - 1, 4 * i ) );
 			inPortMap( "Y", "y_int" + range( effective_ws - 1, 4 * i ) );
-			inPortMapCst( "neg_X", neg_x );
-			inPortMapCst( "neg_Y", neg_y );
+			inPortMapCst( "negX", negx );
+			inPortMapCst( "negY", negy );
 
 			if( i == 0 ) {
 				if( fixed_signs > 0 ) {
@@ -377,40 +375,40 @@ namespace flopoco {
 
   void Xilinx_GenericAddSub::emulate(TestCase *tc)
 	{
-		bool neg_a=false,neg_b=false;
+		bool nega=false,negb=false;
 		mpz_class x = tc->getInputValue("X");
 		mpz_class y = tc->getInputValue("Y");
 		mpz_class s = 0;
 		if( signs_ > 0 ){
 			if( signs_ & 0x1 )
-				neg_a = true;
+        nega = true;
 
 			if( signs_ & 0x2 )
-				neg_b = true;
+        negb = true;
 		} else {
-			mpz_class na = tc->getInputValue("neg_X");
-			mpz_class nb = tc->getInputValue("neg_Y");
+			mpz_class na = tc->getInputValue("negX");
+			mpz_class nb = tc->getInputValue("negY");
 
 			if( na > 0 )
-				neg_a = true;
+        nega = true;
 
 			if( nb > 0 )
-				neg_b = true;
+        negb = true;
 		}
 
-    if(neg_a && neg_b && !dss_)
+    if(nega && negb && !dss_)
     {
       //when dss is false, negating both inputs is not allowed and leads to result +1, this is simulated here
       s = 1;
     }
     else
     {
-      if( neg_a )
+      if( nega )
         s -= x;
       else
         s += x;
 
-      if( neg_b )
+      if( negb )
         s -= y;
       else
         s += y;
