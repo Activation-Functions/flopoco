@@ -1379,11 +1379,15 @@ namespace flopoco{
         {
             //cout << "column=" << i << " height=" << bitheap->bits[i].size() << endl;
             if(bitheap->bits[i].size() > check_height)
-                if(!max_reached && bitheap->bits[i].size() <= adderHeight+1 ){  //The adder LSB can process adderHeight+1 bits due to the Cin, but not more
-                    max_reached++;
-                    check_height = 1;
-                } else
-                    return 0;                       //Dual input adder can only handle 2 and the ternary 3 inputs
+            {
+              if(!max_reached && bitheap->bits[i].size() <= adderHeight+1 ) //The adder LSB can process adderHeight+1 bits due to the Cin, but not more
+              {
+                max_reached++;
+                check_height = 1;
+              } else {
+                return 0; //Dual input adder can only handle 2 and the ternary 3 inputs
+              }
+            }
         }
         return 1;
     }
