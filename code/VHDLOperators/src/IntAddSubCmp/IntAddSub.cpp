@@ -20,10 +20,10 @@ namespace flopoco
     name << "IntAddSub_w" << wIn << "_" << printFlags();
     setNameWithFreqAndUID(name.str());
 
-    addInput("iL", wIn);
-    addInput("iR", wIn);
+    addInput("X", wIn);
+    addInput("Y", wIn);
     if (hasFlags(TERNARY))
-      addInput("iM", wIn);
+      addInput("Z", wIn);
 
     if (hasFlags(CONF_LEFT))
       addInput("iL_c", 1, false);
@@ -90,11 +90,11 @@ namespace flopoco
       vhdl << " & (others =>'0')";
       vhdl << ";" << std::endl;
 
-      vhdl << declare("iLSE",wIn) << " <= ";
+      vhdl << declare("XSE",wIn) << " <= ";
       uint16_t mask = 1 << (c_count - 1);
       for (int i = 0; i < (1 << c_count); ++i)
       {
-        vhdl << "std_logic_vector(" << (i & (mask) ? "-" : "") << "signed(iL)) when CONF=\"";
+        vhdl << "std_logic_vector(" << (i & (mask) ? "-" : "") << "signed(X)) when CONF=\"";
         for (int j = c_count - 1; j >= 0; --j)
           vhdl << (i & (1 << j) ? "1" : "0");
           vhdl << "\" else ";
@@ -102,7 +102,7 @@ namespace flopoco
       vhdl << "(others=>'X');" << std::endl;
       /*
       vhdl << "case CONF is" << std::endl;
-      declare("iLSE", wIn); //!!!
+      declare("XSE", wIn); //!!!
       for (int i = 0; i < (1 << c_count); ++i)
       {
         vhdl << "\t" << "when \"";
@@ -113,32 +113,32 @@ namespace flopoco
         uint16_t mask = 1 << (c_count - 1);
         if (hasFlags(CONF_LEFT))
         {
-          vhdl << (i & (mask) ? "-" : "+") << "unsigned(iL)"; //!!!
-//          vhdl << "iLSE <= iL"; //!!!
+          vhdl << (i & (mask) ? "-" : "+") << "unsigned(X)"; //!!!
+//          vhdl << "XSE <= X"; //!!!
           mask >>= 1;
           if (hasFlags(TERNARY & CONF_MID))
           {
-            vhdl << (i & mask ? "-" : "+") << "unsigned(iM)";
+            vhdl << (i & mask ? "-" : "+") << "unsigned(Z)";
             mask >>= 1;
           }
           if (hasFlags(CONF_RIGHT))
           {
-            vhdl << (i & mask ? "-" : "+") << "unsigned(iR)";
+            vhdl << (i & mask ? "-" : "+") << "unsigned(Y)";
           }
         }
         else if (hasFlags(TERNARY & CONF_MID))
         {
-          vhdl << "unsigned(iL)";
-          vhdl << (i & mask ? "-" : "+") << "unsigned(iM)";
+          vhdl << "unsigned(X)";
+          vhdl << (i & mask ? "-" : "+") << "unsigned(Z)";
           mask >>= 1;
           if (hasFlags(CONF_RIGHT))
           {
-            vhdl << (i & mask ? "-" : "+") << "unsigned(iR)";
+            vhdl << (i & mask ? "-" : "+") << "unsigned(Y)";
           }
         }
         else if (hasFlags(CONF_RIGHT))
         {
-          vhdl << (i & mask ? "-" : "+") << "unsigned(iR)";
+          vhdl << (i & mask ? "-" : "+") << "unsigned(Y)";
         }
         vhdl << ");" << std::endl; //!!!
 //        vhdl << ";" << std::endl; //!!!
@@ -150,12 +150,12 @@ namespace flopoco
     else
     {
       vhdl << "\tsum_o <= std_logic_vector(" << (hasFlags(SUB_LEFT) ? "-" : "");
-      vhdl << "signed(iL)";
+      vhdl << "signed(X)";
       if (hasFlags(TERNARY))
       {
-        vhdl << (hasFlags(SUB_MID) ? "-" : "+") << "signed(iM)";
+        vhdl << (hasFlags(SUB_MID) ? "-" : "+") << "signed(Z)";
       }
-      vhdl << (hasFlags(SUB_RIGHT) ? "-" : "+") << "signed(iR));" << endl;
+      vhdl << (hasFlags(SUB_RIGHT) ? "-" : "+") << "signed(Y));" << endl;
     }
   }
 
@@ -231,23 +231,23 @@ namespace flopoco
     ui.parseStrictlyPositiveInt(args, "wIn", &wIn, false);
 
     bool isTernary;
-    bool leftNegative;
-    bool rightNegative;
-    bool middleNegative;
-    bool leftConfigurable;
-    bool rightConfigurable;
-    bool middleConfigurable;
+    bool xNegative;
+    bool yNegative;
+    bool zNegative;
+    bool xConfigurable;
+    bool yConfigurable;
+    bool zConfigurable;
     ui.parseBoolean(args, "isTernary", &isTernary);
-    ui.parseBoolean(args, "leftNegative", &leftNegative);
-    ui.parseBoolean(args, "rightNegative", &rightNegative);
-    ui.parseBoolean(args, "middleNegative", &middleNegative);
-    ui.parseBoolean(args, "leftConfigurable", &leftConfigurable);
-    ui.parseBoolean(args, "rightConfigurable", &rightConfigurable);
-    ui.parseBoolean(args, "middleConfigurable", &middleConfigurable);
+    ui.parseBoolean(args, "xNegative", &xNegative);
+    ui.parseBoolean(args, "yNegative", &yNegative);
+    ui.parseBoolean(args, "zNegative", &zNegative);
+    ui.parseBoolean(args, "xConfigurable", &xConfigurable);
+    ui.parseBoolean(args, "yConfigurable", &yConfigurable);
+    ui.parseBoolean(args, "zConfigurable", &zConfigurable);
 
-    if((middleNegative && !isTernary) || (middleConfigurable && !isTernary))
+    if((zNegative && !isTernary) || (zConfigurable && !isTernary))
     {
-      cerr << "Error: middleNegative or middleConfigurable can not be true when isTernary is false" << endl;
+      cerr << "Error: zNegative or zConfigurable can not be true when isTernary is false" << endl;
       exit(-1);
     }
 
@@ -256,27 +256,27 @@ namespace flopoco
     {
       flags |= IntAddSub::TERNARY;
     }
-    if(leftNegative)
+    if(xNegative)
     {
       flags |= IntAddSub::SUB_LEFT;
     }
-    if(rightNegative)
+    if(yNegative)
     {
       flags |= IntAddSub::SUB_RIGHT;
     }
-    if(middleNegative)
+    if(zNegative)
     {
       flags |= IntAddSub::SUB_MID;
     }
-    if(leftConfigurable)
+    if(xConfigurable)
     {
       flags |= IntAddSub::CONF_LEFT;
     }
-    if(rightConfigurable)
+    if(yConfigurable)
     {
       flags |= IntAddSub::CONF_RIGHT;
     }
-    if(middleConfigurable)
+    if(zConfigurable)
     {
       flags |= IntAddSub::CONF_MID;
     }
@@ -291,12 +291,12 @@ namespace flopoco
     "",
     "wIn(int): input size in bits;\
      isTernary(bool)=false: set to true if you want a ternary (3-input adder);\
-     leftNegative(bool)=false: set to true if left (first) input should be subtracted;\
-     rightNegative(bool)=false: set to true if right (second) input should be subtracted;\
-     middleNegative(bool)=false: set to true if middle (third) input should be subtracted, only valid when isTernary=true;\
-     leftConfigurable(bool)=false: set to true if left input should be configurable with its sign (an extra input is added to decide add/subtract operation);\
-     rightConfigurable(bool)=false: set to true if right should be configurable with its sign (an extra input is added to decide add/subtract operation);\
-     middleConfigurable(bool)=false: set to true if middle should be configurable with its sign (an extra input is added to decide add/subtract operation), only valid when isTernary=true;",
+     xNegative(bool)=false: set to true if X (first) input should be subtracted;\
+     yNegative(bool)=false: set to true if Y (second) input should be subtracted;\
+     zNegative(bool)=false: set to true if Z (third) input should be subtracted, only valid when isTernary=true;\
+     xConfigurable(bool)=false: set to true if X input should be configurable with its sign (an extra input is added to decide add/subtract operation);\
+     yConfigurable(bool)=false: set to true if Y input should be configurable with its sign (an extra input is added to decide add/subtract operation);\
+     zConfigurable(bool)=false: set to true if Z input should be configurable with its sign (an extra input is added to decide add/subtract operation), only valid when isTernary=true;",
     ""};
 
 }//namespace
