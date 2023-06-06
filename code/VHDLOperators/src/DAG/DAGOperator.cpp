@@ -133,6 +133,12 @@ commentLine              <-  ('#' / '//') (!Endl .)* &Endl
 
 		assert(static_cast<bool>(DAGparser) == true);
 
+		DAGparser.set_logger([](size_t line, size_t col, const string& msg, const string &rule) {
+			cerr << line << ":" << col << ": " << msg << "\n";
+		});
+
+
+		
 		DAGparser["entityDeclaration"] = [&](const peg::SemanticValues &vs) {
 			auto name = any_cast<string>(vs[0]);
 			fileName = name;
