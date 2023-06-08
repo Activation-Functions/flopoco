@@ -58,49 +58,76 @@ string removeSpaces(std::string str){
     	}
 	}
 
-	/* Old grammar
 
+	
+	void DAGOperator::parse(string infile) {
 
-	 */
-
-	/* remmove me? 
-
-dag                  <-  command*
-command              <- fileName / parameterDeclaration / operatorDeclaration / ioDeclaration / assignment / comment / endOfLine
-fileName             <- 'EntityName' name ';'
-parameterDeclaration <- 'Param' name '='  number ';'
+		//Grammar definition
+		peg::parser DAGparser(R"(
+dag                  <- command* EndOfFile
+command              <- parameterDeclaration / entityDeclaration / operatorDeclaration / InputDeclaration / OutputDeclaration / Assignment / Comment
+entityDeclaration   <- 'Entity' entityName ';'
+parameterDeclaration <- 'Parameter' paramName '='  number ';'
 operatorDeclaration  <- 'Operator' instanceName ':' entityName nameValuePair* ';'
 nameValuePair        <- name '=' value
-ioDeclaration     <-  ioDir  name ':' name '(' value ',' value ')' ';'
-ioDir                <-  'Input' / 'Output'
+InputDeclaration     <-  'Input' signalName ':' typeName '(' value ',' value ')' ';'
+OutputDeclaration    <-  'Output' signalName ':' typeName '(' value ',' value ')' ';'
 
-assignment     <-  name '=' instance ';'
-instance       <-  name  '('  arg (','  arg)* ')'
-arg            <-  instance / name
+Assignment     <-  signalName '=' instance ';'
+instance       <-  instanceName  '('  arg (','  arg)* ')'
+arg            <-  instance / signalName
 
-instanceName   <- name
-entityName   <- name
-
+typeName        <- name 
+instanceName    <- name 
+entityName      <- name
+paramName       <- name
+signalName      <- name
 value           <- string / number / paramValue
 string          <-  < '"' (!'"' .)* '"' >
 number          <- < '-'? [0-9]+ >
 name            <- < [a-zA-Z] [a-zA-Z0-9-_]* >
 paramValue      <- '$' name
 
-%whitespace     <- [ \t\n]*
-endl                      <-  endOfLine / endOfFile
-endOfLine                <-  '\r\n' / '\n' / '\r'
-endOfFile                <-  !.
-comment              <-  ('#' / '//') (!endl .)* &endl   
+EndOfFile       <-  < [^.] >
+Comment         <- < '#' [^\n]* '\n' > 
 
-*/
+%whitespace     <- [ \t\r\n]*
+)");
 
-	
-	void DAGOperator::parse(string infile) {
+		/*
+EndOfFile       <-  < [^.] >
+dag                  <- command* EndOfFile
+command              <- parameterDeclaration / fileName / operatorDeclaration / InputDeclaration / OutputDeclaration / Assignment / LineComment
+fileName             <- 'Entity' entityName ';'
+parameterDeclaration <- 'Parameter' paramName '='  number ';'
+operatorDeclaration  <- 'Operator' instanceName ':' entityName nameValuePair* ';'
+nameValuePair        <- name '=' value
+InputDeclaration     <-  'Input' signalName ':' typeName '(' value ',' value ')' ';'
+OutputDeclaration    <-  'Output' signalName ':' typeName '(' value ',' value ')' ';'
 
-		//Grammar definitio
-		peg::parser DAGparser(R"(
-dag                  <- command*
+Assignment     <-  signalName '=' instance ';'
+instance       <-  instanceName  '('  arg (','  arg)* ')'
+arg            <-  instance / signalName
+
+typeName        <- name 
+instanceName    <- name 
+entityName      <- name
+paramName       <- name
+signalName      <- name
+value           <- string / number / paramValue
+string          <-  < '"' (!'"' .)* '"' >
+number          <- < '-'? [0-9]+ >
+name            <- < [a-zA-Z] [a-zA-Z0-9-_]* >
+paramValue      <- '$' name
+
+
+%whitespace     <- [ \t\r\n]*
+EndOfLine       <- < [\r\n] >
+EndOfFile       <-  !.
+EndComment      <- EndOfLine / EndOfFile
+LineComment     <-  EndOfLine / (('#' / '//') (!EndComment .)* &EndComment )
+
+dag                  <- command* 
 command              <- entityDeclaration / parameterDeclaration / operatorDeclaration / ioDeclaration / assignment / commentLine / EndOfLine
 entityDeclaration             <- 'EntityName' entityName ';'
 parameterDeclaration <- 'Parameter' name '='  value ';'
@@ -123,14 +150,12 @@ number          <- < '-'? [0-9]+ >
 name            <- < [a-zA-Z] [a-zA-Z0-9-_]* >
 paramValue      <- '$' name
 
-%whitespace     <- [ \t\n]*
-Endl                      <-  EndOfLine / EndOfFile
 EndOfLine                <-  '\r\n' / '\n' / '\r'
-EndOfFile                <-  !.
-commentLine              <-  ('#' / '//') (!Endl .)* &Endl   
+commentLine              <-  ('#' / '//') (!EndOfLine .)* &EndOfLine   
+%whitespace     <- [ \t\n]*
 
-    )");
-
+*/
+		
 		assert(static_cast<bool>(DAGparser) == true);
 
 		DAGparser.set_logger([](size_t line, size_t col, const string& msg, const string &rule) {
@@ -142,18 +167,15 @@ commentLine              <-  ('#' / '//') (!Endl .)* &Endl
 		DAGparser["entityDeclaration"] = [&](const peg::SemanticValues &vs) {
 			auto name = any_cast<string>(vs[0]);
 			fileName = name;
-			REPORT(LogLevel::DEBUG,  "entityDeclaration :" << name);;
+			REPORT(LogLevel::DEBUG,  "entityDeclaration: " << name);;
 			return 0;
-		};
-
-		DAGparser["EntityName"] = [&](const peg::SemanticValues &vs) { 
-			return  any_cast<string>(vs[0]);
 		};
 		
 		DAGparser["name"] = [&](const peg::SemanticValues &vs) { 
 			return  removeSpaces(vs.token_to_string());
 		};
 
+#if 0
 		DAGparser["value"] = [&](const peg::SemanticValues &vs) { 
 			return  vs.token_to_string();
 		};
@@ -202,7 +224,6 @@ commentLine              <-  ('#' / '//') (!Endl .)* &Endl
 
 
 		
-#if 0
 
 		DAGparser["ioDeclaration"] = [&](const peg::SemanticValues &vs) {
 						cerr << this << endl;
@@ -266,8 +287,13 @@ commentLine              <-  ('#' / '//') (!Endl .)* &Endl
 			THROWERROR("problem opening " << infile);
 		}
 		int val;
-		if(DAGparser.parse(fileContent, val))
+		cerr <<"JITVB2" << endl;
+	  int error = DAGparser.parse(fileContent, val);
+		cerr <<"JITVB3" << endl;
+		if(error) {
+			cerr <<"JITVB4" << endl;
 			return ;
+		}
 
 		else{
 			THROWERROR("Parse error");
