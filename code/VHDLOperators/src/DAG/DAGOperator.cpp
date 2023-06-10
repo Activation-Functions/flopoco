@@ -64,27 +64,29 @@ string removeSpaces(std::string str){
 	void DAGOperator::parse(string infile) {
 
 		//Grammar definition
+		// If you edit any of it it is highly recommended to first validate it in the online peglib playground:
+		//   one wrong character here can lead to random segfaults which are ugly to trace down.
 		peg::parser DAGparser(R"(
+
 DAG                  <- Command* EndOfFile
-Command              <- ParameterDeclaration / EntityDeclaration / OperatorDeclaration / InputDeclaration / OutputDeclaration / Assignment / Comment
+Command              <- ParameterDeclaration / EntityDeclaration / OperatorDeclaration / IODeclaration / Assignment / Comment
 EntityDeclaration   <- 'Entity' EntityName ';'
 ParameterDeclaration <- 'Parameter' paramName '='  ConstantValue ';'
 OperatorDeclaration  <- 'Operator' instanceName ':' EntityName NameValuePair* ';'
-NameValuePair        <- Name '=' value
-InputDeclaration     <-  'Input' signalName ':' typeName '(' value ',' value ')' ';'
-OutputDeclaration    <-  'Output' signalName ':' typeName '(' value ',' value ')' ';'
+NameValuePair        <- Name '=' Value
+IODeclaration     <-  IOType  SignalName ( ','  SignalName)* ';'
+IOType            <-  'Input' / 'Output' / 'Wire'
 
-Assignment     <-  signalName '=' instance ';'
+Assignment     <-  SignalName '=' instance ';'
 instance       <-  instanceName  '('  arg (','  arg)* ')'
-arg            <-  instance / signalName
+arg            <-  instance / SignalName
 
 ConstantValue   <- String / Integer
-typeName        <- Name 
 instanceName    <- Name 
 EntityName      <- Name
 paramName       <- Name
-signalName      <- Name
-value           <- ConstantValue / ParamValue
+SignalName      <- Name
+Value           <- ConstantValue / ParamValue
 String          <-  < '"' (!'"' .)* '"' >
 Integer         <- < '-'? [0-9]+ >
 Name            <- < [a-zA-Z] [a-zA-Z0-9-_]* >
@@ -104,7 +106,7 @@ Comment         <- < '#' [^\n]* '\n' >
 		});
 
 
-		// Tokens just return the string	
+		// Tokens just return the string, since this is what we send to the flopoco commandline	
 		DAGparser["Name"] = [](const peg::SemanticValues &vs) { 
 			return  vs.token_to_string();
 		};
@@ -118,6 +120,7 @@ Comment         <- < '#' [^\n]* '\n' >
 		};
 
 		// Semantic actions for simple grammar rules
+		// No need to 
 		DAGparser["EntityDeclaration"] = [&](const peg::SemanticValues &vs) {
 			string name = any_cast<string>(vs[0]);
 			fileName = name;
@@ -128,7 +131,7 @@ Comment         <- < '#' [^\n]* '\n' >
 
 		DAGparser["ParameterDeclaration"] = [&](const peg::SemanticValues &vs) {
 			string name = any_cast<string>(vs[0]); 
-			string value = any_cast<string>(vs[1]); // parameters can be anything, not necessary integers
+			string value = any_cast<string>(vs[1]); // parameters can be anything, not necessary integersreconstructed paramreconstructed parameter list eter list 
 			parameters.insert(pair<string, string>(name,value));
 			REPORT(LogLevel::DEBUG,  "ParameterDeclaration: <" << name << "> with value <" << value<< ">");
 			return 0;
@@ -146,38 +149,60 @@ Comment         <- < '#' [^\n]* '\n' >
 			return value;
 		};
 
-#if 0
-		
+
 
 		DAGparser["OperatorDeclaration"] = [&](const peg::SemanticValues &vs) {
 			auto instanceName = any_cast<string>(vs[0]);
 			auto EntityName = any_cast<string>(vs[1]);
-			operatorEntity[instanceName] = EntityName;
-			REPORT(LogLevel::DEBUG, "OperatorDeclaration: instanceName=" << instanceName << ", EntityName="<<EntityName<<". Found " << vs.size()-2 << " parameter(s)" );
+			instanceOperator[instanceName] = EntityName;
+			REPORT(LogLevel::DEBUG, "OperatorDeclaration: instanceName=<" << instanceName << ">, EntityName=<"<<EntityName<<">. Found " << vs.size()-2 << " parameter(s)" );
+			string parameters;
 			for (size_t i=2; i<vs.size(); i++){
 				// ask Luc for a modern syntax for the following
 				auto valuePair=any_cast<pair<string,string>>(vs[i]);
 				auto name=valuePair.first;
 				auto value=valuePair.second;
-				REPORT(LogLevel::DEBUG, "   name=" << name << ", value="<<value );
+				REPORT(LogLevel::DEBUG, "   name=<" << name << ">, value=<"<<value << ">" );
+				// we reconstruct the parameter list as a single string,
+				// sounds stupid but it has been parsed and the $ parameters
+				// have been replaced with their values
+				parameters +=" " + name+"="+value;
 			}
+			instanceParameters[instanceName] = parameters;
 			return 0;		
 		};
 
-		DAGparser["nameValuePair"] = [&](const peg::SemanticValues &vs) {
-			auto name = std::any_cast<string>(vs[0]);
-			auto value = std::any_cast<string>(vs[1]);
-			REPORT(LogLevel::DEBUG, "parsing nameValuePair:  " << name << "=" << value);
+		DAGparser["NameValuePair"] = [&](const peg::SemanticValues &vs) {
+			string name = std::any_cast<string>(vs[0]);
+			string value = std::any_cast<string>(vs[1]);
+			REPORT(LogLevel::DEBUG, "NameValuePair: <" << name << "=" << value << ">");
 			return pair<string, string>(name,value);
 		};
 
 
+		DAGparser["IOType"] = [&](const peg::SemanticValues &vs) {
+			string type = vs.token_to_string();
+			REPORT(LogLevel::DEBUG, "IOType: <" << type  << ">");
+			return type;
+		};
+
+		DAGparser["IODeclaration"] = [&](const peg::SemanticValues &vs) {
+			string type = any_cast<string>(vs[0]);
+			for (size_t i=1; i<vs.size(); i++){
+				string name=any_cast<string>(vs[i]);
+				dagSignalList[name] = type;
+				REPORT(LogLevel::DEBUG, "IODeclaration: <" << name << "> of type <"<< type << ">" );
+			}
+			return 0;		
+		};
+
+#if 0
+
 		
 
-		DAGparser["ioDeclaration"] = [&](const peg::SemanticValues &vs) {
-						cerr << this << endl;
-			return 0;
-		};
+
+		
+
 
 		DAGparser["ioDir"] = [&](const peg::SemanticValues &vs) {
 			return 0;

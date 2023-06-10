@@ -41,9 +41,17 @@ namespace flopoco {
 	private:
 		void parse(string infile);
 		string fileName;
-		map<string, string> parameters;
-		map<string, string> operatorEntity; 
-		map<string, string> signalList;
+		string entityName;
+
+		/** global parameters */
+		map<string, string> parameters; // parameter name, value 
+
+		/** Signals */
+		map<string,string> dagSignalList; // the second string is "Input", "Output", "Wire"
+
+		/** flopoco commands, built at parse time, invoked later */
+		map<string, string> instanceOperator; // instanceName, Operator name
+		map<string, string> instanceParameters; // instanceName, reconstructed parameter list 
 #endif
 	};
 
