@@ -62,27 +62,24 @@ string removeSpaces(std::string str){
 
 	
 	void DAGOperator::parse(string infile) {
-
 		//Grammar definition
 		// If you edit any of it it is highly recommended to first validate it in the online peglib playground:
-		//   one wrong character here can lead to random segfaults which are ugly to trace down.
-		peg::parser DAGparser(R"(
-
-DAG                  <- Command* EndOfFile
-Command              <- ParameterDeclaration / EntityDeclaration / OperatorDeclaration / IODeclaration / Assignment / Comment
-EntityDeclaration   <- 'Entity' EntityName ';'
+		auto grammar = R"(
+DAG                  <- EntityDeclaration
+EntityDeclaration   <- 'Entity' EntityName '{' Command* '}'
+Command              <- ParameterDeclaration  / OperatorDeclaration / IODeclaration / Assignment / Comment
 ParameterDeclaration <- 'Parameter' paramName '='  ConstantValue ';'
-OperatorDeclaration  <- 'Operator' instanceName ':' EntityName NameValuePair* ';'
+OperatorDeclaration  <- 'Operator' InstanceName ':' EntityName NameValuePair* ';'
 NameValuePair        <- Name '=' Value
 IODeclaration     <-  IOType  SignalName ( ','  SignalName)* ';'
 IOType            <-  'Input' / 'Output' / 'Wire'
 
-Assignment     <-  SignalName '=' instance ';'
-instance       <-  instanceName  '('  arg (','  arg)* ')'
-arg            <-  instance / SignalName
+Assignment     <-  SignalName '<=' Instance ';'
+Instance       <-  InstanceName  '('  arg (','  arg)* ')'
+arg            <-  Instance / SignalName
 
 ConstantValue   <- String / Integer
-instanceName    <- Name 
+InstanceName    <- Name
 EntityName      <- Name
 paramName       <- Name
 SignalName      <- Name
@@ -92,18 +89,21 @@ Integer         <- < '-'? [0-9]+ >
 Name            <- < [a-zA-Z] [a-zA-Z0-9-_]* >
 ParamValue      <- '$' Name
 
-EndOfFile       <-  !.
 Comment         <- < '#' [^\n]* '\n' > 
 
 %whitespace     <- [ \t\r\n]*
-)");
+)";
 
-		
-		assert(static_cast<bool>(DAGparser) == true);
+		peg::parser DAGparser;
 
 		DAGparser.set_logger([](size_t line, size_t col, const string& msg, const string &rule) {
 			cerr << line << ":" << col << ": " << msg << "\n";
 		});
+		
+		// one wrong character here can lead to random segfaults which are ugly to trace down,
+		// so let's keep the grammar validation step.
+		auto ok = DAGparser.load_grammar(grammar);
+		assert(ok);
 
 
 		// Tokens just return the string, since this is what we send to the flopoco commandline	
@@ -125,10 +125,12 @@ Comment         <- < '#' [^\n]* '\n' >
 			string name = any_cast<string>(vs[0]);
 			fileName = name;
 			REPORT(LogLevel::DEBUG,  "EntityDeclaration: <" << name << ">");;
+			setCopyrightString("Florent de Dinechin (2023)");
+			setNameWithFreqAndUID(name);
+
 			return 0;
 		};
 		
-
 		DAGparser["ParameterDeclaration"] = [&](const peg::SemanticValues &vs) {
 			string name = any_cast<string>(vs[0]); 
 			string value = any_cast<string>(vs[1]); // parameters can be anything, not necessary integersreconstructed paramreconstructed parameter list eter list 
@@ -196,50 +198,28 @@ Comment         <- < '#' [^\n]* '\n' >
 			return 0;		
 		};
 
-#if 0
-
-		
-
-
-		
-
-
-		DAGparser["ioDir"] = [&](const peg::SemanticValues &vs) {
-			return 0;
-		};
-
-		DAGparser["assignment"] = [&](const peg::SemanticValues &vs) {
-			return 0;
-		};
-
-		DAGparser["instance"] = [&](const peg::SemanticValues &vs) {		
-			return 0;
-		};
-
-		DAGparser["arg"] = [&](const peg::SemanticValues &vs) {		
-			return 0;
-		};
-
-		// I don't know why Peglib doesnt remove the whitespaces in this case
-		DAGparser["paramName"] = [&](const peg::SemanticValues &vs) { return  removeSpaces(vs.token_to_string()); };
-
-		DAGparser["ParamValue"] = [&](const peg::SemanticValues &vs) {
-			string paramName=removeSpaces(vs.token_to_string());
-			auto value=parameters.find(paramName);
-			if(value  != parameters.end()) {
-				return value;
+		/* each instance returns the name of a signal that holds the result */ 
+		DAGparser["Instance"] = [&](const peg::SemanticValues &vs) {
+			string instanceName = any_cast<string>(vs[0]);
+			REPORT(LogLevel::DEBUG, "Instance: <" << instanceName << ">" );
+			vector<string> actualParam;
+			for (size_t i=1; i<vs.size(); i++){
+				string name=any_cast<string>(vs[i]);
+				actualParam.push_back(name);
+				REPORT(LogLevel::DEBUG, "   <" << name << ">" );
 			}
-			else {
-				cerr << ("Parameter" << paramName << " not declared");
-				return(1);
-			}
-			return paramName;
+			string actualRetSignal = "res_"+instanceName + "_"+to_string(getNewUId());	
+			REPORT(LogLevel::DEBUG, "  ret <" << actualRetSignal << ">" );
+			return actualRetSignal;
 		};
-		
 
-
-#endif
-
+		DAGparser["Assignment"] = [&](const peg::SemanticValues &vs) {
+			string lhs = any_cast<string>(vs[0]);
+			string rhs = any_cast<string>(vs[1]);
+			REPORT(LogLevel::DEBUG, "Assignment: <" << lhs << "> <= <" << rhs << ">" );
+			// TODO Add the declare
+			vhdl << tab << lhs << " <= " << rhs << ";" << endl; 
+		};
 		
 		cerr <<"JITVBn" << endl;
 		DAGparser.enable_packrat_parsing(); // Enable packrat parsing.
@@ -262,15 +242,14 @@ Comment         <- < '#' [^\n]* '\n' >
 		}
 		int val;
 		cerr <<"JITVB2" << endl;
-	  int error = DAGparser.parse(fileContent, val);
-		cerr <<"JITVB3" << endl;
-		if(error) {
+		DAGparser.parse(fileContent, val);
+		cerr <<"JITVB3 " << val << endl;
+		if(val) {
 			cerr <<"JITVB4" << endl;
 			return ;
 		}
-
 		else{
-			THROWERROR("Parse error");
+			THROWERROR("Parse error in " << infile);
 		}
 		
 	}
@@ -278,7 +257,6 @@ Comment         <- < '#' [^\n]* '\n' >
 	
 	
 DAGOperator::DAGOperator(OperatorPtr parentOp, Target* target, string infile) : Operator(parentOp, target){
-
 	parse(infile);	
 	};
 

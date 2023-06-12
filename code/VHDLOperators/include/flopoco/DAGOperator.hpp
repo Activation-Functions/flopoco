@@ -52,6 +52,7 @@ namespace flopoco {
 		/** flopoco commands, built at parse time, invoked later */
 		map<string, string> instanceOperator; // instanceName, Operator name
 		map<string, string> instanceParameters; // instanceName, reconstructed parameter list 
+
 #endif
 	};
 
