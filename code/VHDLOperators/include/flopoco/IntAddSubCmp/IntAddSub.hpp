@@ -15,23 +15,37 @@ namespace flopoco
   class IntAddSub : public Operator
   {
   public:
+
+/* !!!! remove this once IntConstMultShiftTypes is replaced !!! */
     ///
     /// \brief The ADD_SUB_FLAGS enum. Properties for primitive adders.
     ///
     enum ADD_SUB_FLAGS
     {
       TERNARY = 0x1, //!< Adder has three inputs
-      SUB_LEFT = 0x2, //!< Subtract left input
-      SUB_MID = 0x4, //!< Subtract mid input, if ternary
-      SUB_RIGHT = 0x8, //!< Subtract right input
-      CONF_LEFT = 0x10, //!< Make left input configurable
-      CONF_MID = 0x20, //!< Make mid input configurable, if ternary
-      CONF_RIGHT = 0x40, //!< Make right input configurable
+      NEG_X = 0x2, //!< Subtract X input
+      NEG_Y = 0x4, //!< Subtract Y input
+      NEG_Z = 0x8, //!< Subtract Z input, if ternary
+      CONF_X = 0x10, //!< Make X input configurable
+      CONF_Y = 0x20, //!< Make Y input configurable
+      CONF_Z = 0x40, //!< Make Z input configurable, if ternary
       CONF_ALL = 0x70, //!< Make all inputs configurable, if possible
       SIGN_EXTEND = 0x80 //!< Make sign extension, currently not supported, could be removed
     };
+
   private:
-    const uint32_t flags_; //!< Specifies the properties of the adder
+//    const uint32_t flags_; //!< Specifies the properties of the adder
+    const bool isTernary;
+    const bool xNegative;
+    const bool yNegative;
+    const bool zNegative;
+    const bool xConfigurable;
+    const bool yConfigurable;
+    const bool zConfigurable;
+    const bool isSigned;
+
+    int wIn; //word size of the input
+    int wOut; //word size of the output
   public:
     ///
     /// \brief IntAddSub constructor
@@ -39,8 +53,7 @@ namespace flopoco
     /// \param wIn The wordsize of the generated adder
     /// \param flags The properties of the generated adder
     ///
-    IntAddSub(Operator *parentOp, Target *target, const uint32_t &wIn, const uint32_t &flags = 0);
-
+    IntAddSub(Operator *parentOp, Target *target, const uint32_t &wIn, const bool isSigned=false, const bool isTernary=false, const bool xNegative=false, const bool yNegative=false, const bool zNegative=false, const bool xConfigurable=false, const bool yConfigurable=false, const bool zConfigurable=false);
     ///
     /// \brief getInputName returns the name of the input signal or the conf signal of the specific index
     /// \param index which input to return
@@ -60,7 +73,7 @@ namespace flopoco
     /// \param flag Property to check for
     /// \return Property is set
     ///
-    bool hasFlags(const uint32_t &flag) const;
+//    bool hasFlags(const uint32_t &flag) const;
 
     ///
     /// \brief getInputCount returns the input count of the adder
@@ -78,8 +91,8 @@ namespace flopoco
     {}
 
     void emulate(TestCase *tc);
-
     void buildStandardTestCases(TestCaseList *tcl);
+    static TestList unitTest(int index);
 
 //		static OperatorPtr parseArguments(Target *target , vector<string> &args);
 //		static void registerFactory();
@@ -108,7 +121,8 @@ namespace flopoco
     // User-interface stuff
     /** Factory method */
     static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface &ui);
-
+  private:
+    void generateInternalInputSignal(string name, int wIn);
   };
 }//namespace
 

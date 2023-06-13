@@ -727,15 +727,15 @@ void IntConstMultShiftAdd_BASE::build_operand_realisation(
 
 	int flag = (nb_inputs == 3) ? IntAddSub::TERNARY : 0;
 	if (t->input_is_negative[0]) {
-		flag |= IntAddSub::SUB_LEFT;
+		flag |= IntAddSub::NEG_X;
 	}
 
 	if (t->input_is_negative[1]) {
-		flag |= (nb_inputs == 3) ? IntAddSub::SUB_MID : IntAddSub::SUB_RIGHT;
+		flag |= (nb_inputs == 3) ? IntAddSub::NEG_Z : IntAddSub::NEG_Y;
 	}
 
 	if (nb_inputs > 2 && t->input_is_negative[2]) {
-		flag |= IntAddSub::SUB_RIGHT;
+		flag |= IntAddSub::NEG_Y;
 	}
 
     IntAddSub* add = new IntAddSub(

@@ -2,6 +2,7 @@
 #include <sstream>
 
 #include "gmp.h"
+#include <gmpxx.h>
 #include "mpfr.h"
 #include "flopoco/IntAddSubCmp/IntAddSub.hpp"
 #include "flopoco/PrimitiveComponents/Primitive.hpp"
@@ -9,10 +10,10 @@
 using namespace std;
 namespace flopoco
 {
-  IntAddSub::IntAddSub(Operator *parentOp, Target *target, const uint32_t &wIn, const uint32_t &flags) : Operator(parentOp, target), flags_(flags)
+  IntAddSub::IntAddSub(Operator *parentOp, Target *target, const uint32_t &wIn, const bool isSigned, const bool isTernary, const bool xNegative, const bool yNegative, const bool zNegative, const bool xConfigurable, const bool yConfigurable, const bool zConfigurable) : Operator(parentOp, target), wIn(wIn), isSigned(isSigned), isTernary(isTernary), xNegative(xNegative), yNegative(yNegative), zNegative(zNegative), xConfigurable(xConfigurable), yConfigurable(yConfigurable), zConfigurable(zConfigurable)
   {
     setShared();
-    setCopyrightString("Marco Kleinlein, Martin Kumm");
+    setCopyrightString("Martin Kumm");
     this->useNumericStd();
     //disablePipelining(); //does not change anything
     srcFileName = "IntAddSub";
@@ -22,17 +23,18 @@ namespace flopoco
 
     addInput("X", wIn);
     addInput("Y", wIn);
-    if (hasFlags(TERNARY))
+    if (isTernary)
       addInput("Z", wIn);
 
-    if (hasFlags(CONF_LEFT))
-      addInput("iL_c", 1, false);
-    if (hasFlags(CONF_RIGHT))
-      addInput("iR_c", 1, false);
-    if (hasFlags(TERNARY) && hasFlags(CONF_MID))
-      addInput("iM_c", 1, false);
+    if (xConfigurable)
+      addInput("negX", 1, false);
+    if (yConfigurable)
+      addInput("negY", 1, false);
+    if (isTernary && zConfigurable)
+      addInput("negZ", 1, false);
 
-    addOutput("sum_o", wIn);
+    wOut = wIn + (isTernary ? 2 : 1);
+    addOutput("R", wOut);
 
     if (target->useTargetOptimizations() && target->getVendor() == "Xilinx")
       buildXilinx(target, wIn);
@@ -57,106 +59,48 @@ namespace flopoco
 
   }
 
-  void IntAddSub::buildCommon(Target *target, const uint32_t &wIn)
+  void IntAddSub::generateInternalInputSignal(string name, int wIn)
   {
-    const uint16_t c_count = (hasFlags(CONF_LEFT) ? 1 : 0) + (hasFlags(CONF_RIGHT) ? 1 : 0) + (hasFlags(TERNARY & CONF_MID) ? 1 : 0);
-    if (c_count > 0)
+    vhdl << tab << declare(name + "_int",wIn) << " <= ";
+    if(xConfigurable)
     {
-      vhdl << declare("CONF", c_count) << " <= ";
-      if (hasFlags(CONF_LEFT))
-      {
-        vhdl << "iL_c";
-      }
-      if (hasFlags(TERNARY) and hasFlags(CONF_MID))
-      {
-        vhdl << "& iM_c";
-      }
-      if (hasFlags(CONF_RIGHT))
-      {
-        vhdl << "& iR_c";
-      }
-      else if (hasFlags(TERNARY) and hasFlags(CONF_MID))
-      {
-        vhdl << "iM_c";
-        if (hasFlags(CONF_RIGHT))
-        {
-          vhdl << "& iM_c";
-        }
-      }
-      else if (hasFlags(CONF_RIGHT))
-      {
-        vhdl << "& iM_c";
-      }
-      vhdl << " & (others =>'0')";
-      vhdl << ";" << std::endl;
-
-      vhdl << declare("XSE",wIn) << " <= ";
-      uint16_t mask = 1 << (c_count - 1);
-      for (int i = 0; i < (1 << c_count); ++i)
-      {
-        vhdl << "std_logic_vector(" << (i & (mask) ? "-" : "") << "signed(X)) when CONF=\"";
-        for (int j = c_count - 1; j >= 0; --j)
-          vhdl << (i & (1 << j) ? "1" : "0");
-          vhdl << "\" else ";
-      }
-      vhdl << "(others=>'X');" << std::endl;
-      /*
-      vhdl << "case CONF is" << std::endl;
-      declare("XSE", wIn); //!!!
-      for (int i = 0; i < (1 << c_count); ++i)
-      {
-        vhdl << "\t" << "when \"";
-        for (int j = c_count - 1; j >= 0; --j)
-          vhdl << (i & (1 << j) ? "1" : "0");
-        vhdl << "\"\t=> std_logic_vector(";  //!!!
-//        vhdl << "\"\t=> ";  //!!!
-        uint16_t mask = 1 << (c_count - 1);
-        if (hasFlags(CONF_LEFT))
-        {
-          vhdl << (i & (mask) ? "-" : "+") << "unsigned(X)"; //!!!
-//          vhdl << "XSE <= X"; //!!!
-          mask >>= 1;
-          if (hasFlags(TERNARY & CONF_MID))
-          {
-            vhdl << (i & mask ? "-" : "+") << "unsigned(Z)";
-            mask >>= 1;
-          }
-          if (hasFlags(CONF_RIGHT))
-          {
-            vhdl << (i & mask ? "-" : "+") << "unsigned(Y)";
-          }
-        }
-        else if (hasFlags(TERNARY & CONF_MID))
-        {
-          vhdl << "unsigned(X)";
-          vhdl << (i & mask ? "-" : "+") << "unsigned(Z)";
-          mask >>= 1;
-          if (hasFlags(CONF_RIGHT))
-          {
-            vhdl << (i & mask ? "-" : "+") << "unsigned(Y)";
-          }
-        }
-        else if (hasFlags(CONF_RIGHT))
-        {
-          vhdl << (i & mask ? "-" : "+") << "unsigned(Y)";
-        }
-        vhdl << ");" << std::endl; //!!!
-//        vhdl << ";" << std::endl; //!!!
-      }
-      vhdl << "\t" << "when others => sum_o <= (others=>'X');" << std::endl;
-      vhdl << "end case;" << std::endl;
-      */
+      vhdl << "std_logic_vector(-signed(" + name + ")) when neg" + name + "='1' else " + name;
     }
     else
     {
-      vhdl << "\tsum_o <= std_logic_vector(" << (hasFlags(SUB_LEFT) ? "-" : "");
-      vhdl << "signed(X)";
-      if (hasFlags(TERNARY))
+      if(xNegative)
       {
-        vhdl << (hasFlags(SUB_MID) ? "-" : "+") << "signed(Z)";
+        vhdl << "std_logic_vector(-signed(" + name + "))";
       }
-      vhdl << (hasFlags(SUB_RIGHT) ? "-" : "+") << "signed(Y));" << endl;
+      else
+      {
+        vhdl << name;
+      }
     }
+    vhdl <<  ";" << endl;
+  }
+
+  void IntAddSub::buildCommon(Target *target, const uint32_t &wIn)
+  {
+    generateInternalInputSignal("X", wIn);
+    generateInternalInputSignal("Y", wIn);
+    if(isTernary)
+      generateInternalInputSignal("Z", wIn);
+
+    string se_method;
+    if(isSigned)
+    {
+      se_method = "signed";
+    }
+    else
+    {
+      se_method = "unsigned";
+    }
+    vhdl << tab << "R <= std_logic_vector(resize(" << se_method << "(X_int)," << wOut << ") + resize(" << se_method << "(Y_int)," << wOut << ")";
+    if(isTernary)
+      vhdl << "+ resize(" << se_method << "(Z_int)," << wOut << ")";
+    vhdl << ");" << endl;
+
   }
 
   string IntAddSub::getInputName(const uint32_t &index, const bool &c_input) const
@@ -164,11 +108,11 @@ namespace flopoco
     switch (index)
     {
       case 0:
-        return "iL" + std::string(c_input ? "_c" : "");
+        return "X";
       case 1:
-        return std::string(hasFlags(TERNARY | CONF_MID) ? "iM" : "iR") + std::string(c_input ? "_c" : "");
+        return "Y";
       case 2:
-        return std::string(hasFlags(TERNARY | CONF_MID) ? "iR" + std::string(c_input ? "_c" : "") : "");
+        return "Z";
       default:
         return "";
     }
@@ -176,53 +120,224 @@ namespace flopoco
 
   string IntAddSub::getOutputName() const
   {
-    return "sum_o";
+    return "Y";
   }
 
+  /*
   bool IntAddSub::hasFlags(const uint32_t &flag) const
   {
     return flags_ & flag;
   }
-
+*/
   const uint32_t IntAddSub::getInputCount() const
   {
-    uint32_t c = (hasFlags(TERNARY) ? 3 : 2);
-    if (hasFlags(CONF_LEFT)) c++;
-    if (hasFlags(TERNARY) && hasFlags(CONF_MID)) c++;
-    if (hasFlags(CONF_RIGHT)) c++;
+    uint32_t c = (isTernary ? 3 : 2);
+    if (xConfigurable) c++;
+    if (yConfigurable) c++;
+    if (isTernary && zConfigurable) c++;
     return c;
   }
 
   string IntAddSub::printFlags() const
   {
     std::stringstream o;
-    o << (hasFlags(SUB_LEFT) ? "s" : "");
-    o << (hasFlags(CONF_LEFT) ? "c" : "");
-    o << "L";
+    o << (xNegative ? "s" : "");
+    o << (xConfigurable ? "c" : "");
+    o << "X";
 
-    if (hasFlags(TERNARY))
+    o << (yNegative ? "s" : "");
+    o << (yConfigurable ? "c" : "");
+    o << "Y";
+
+    if (isTernary)
     {
-      o << (hasFlags(SUB_MID) ? "s" : "");
-      o << (hasFlags(CONF_MID) ? "c" : "");
-      o << "M";
+      o << (zNegative ? "s" : "");
+      o << (zConfigurable ? "c" : "");
+      o << "Z";
     }
 
-    o << (hasFlags(SUB_RIGHT) ? "s" : "");
-    o << (hasFlags(CONF_RIGHT) ? "c" : "");
-    o << "R";
     return o.str();
   }
 
 
   void IntAddSub::emulate(TestCase *tc)
   {
+		mpz_class twoToWin = (mpz_class(1) << (wIn));
+		mpz_class twoToWin_m_1 = (mpz_class(1) << (wIn - 1));
+		mpz_class twoToWout = (mpz_class(1) << (wOut));
 
+    bool nega=false,negb=false;
+    mpz_class x = tc->getInputValue("X");
+    mpz_class y = tc->getInputValue("Y");
+    mpz_class z = 0;
+
+    if(isTernary)
+    {
+      z = tc->getInputValue("Z");
+    }
+
+    if(isSigned)
+    {
+      if(x >= twoToWin_m_1)
+      {
+        x -= twoToWin; //MSB is set, so compute the two's complement by subtracting 2^wIn
+      }
+
+      if(y >= twoToWin_m_1)
+      {
+        y -= twoToWin; //MSB is set, so compute the two's complement by subtracting 2^wIn
+      }
+      if(isTernary)
+      {
+        if(z >= twoToWin_m_1)
+        {
+          z -= twoToWin; //MSB is set, so compute the two's complement by subtracting 2^wIn
+        }
+      }
+    }
+
+    mpz_class s = 0;
+
+    mpz_class negX = 0;
+    if(xConfigurable)
+    {
+      negX = tc->getInputValue("negX");
+    }
+    mpz_class negY = 0;
+    if(yConfigurable)
+    {
+      negY = tc->getInputValue("negY");
+    }
+    mpz_class negZ = 0;
+    if(isTernary && zConfigurable)
+    {
+      negZ = tc->getInputValue("negZ");
+    }
+
+    if( xNegative || (xConfigurable && negX==1))
+      s -= x;
+    else
+      s += x;
+
+    if( yNegative || (yConfigurable && negY==1))
+      s -= y;
+    else
+      s += y;
+
+    if(isTernary)
+    {
+      if( zNegative || (zConfigurable && negZ==1))
+        s -= z;
+      else
+        s += z;
+    }
+
+    if(s < 0)
+    {
+      s += twoToWout;  //s is negative, so compute the two's complement by adding 2^wIn
+    }
+    tc->addExpectedOutput("R", s);
   }
-
 
   void IntAddSub::buildStandardTestCases(TestCaseList *tcl)
   {
     // please fill me with regression tests or corner case tests!
+  }
+
+  TestList IntAddSub::unitTest(int index)
+  {
+    TestList testStateList;
+    vector<pair<string, string>> paramList;
+
+    if(index==-1)
+    {// Unit tests
+      for(int isSigned=0; isSigned <= 1; isSigned++)
+      {
+        for(int isTernary=0; isTernary <= 1; isTernary++)
+        {
+          for(int xNegative=0; xNegative <= 1; xNegative++)
+          {
+            for(int yNegative=0; yNegative <= 1; yNegative++)
+            {
+              for(int zNegative=0; zNegative <= 1; zNegative++)
+              {
+                for(int xConfigurable=0; xConfigurable <= 1; xConfigurable++)
+                {
+                  for(int yConfigurable=0; yConfigurable <= 1; yConfigurable++)
+                  {
+                    for(int zConfigurable=0; zConfigurable <= 1; zConfigurable++)
+                    {
+                      if(!isTernary && zConfigurable) continue; //invalid parameter combination
+                      if(!isTernary && zNegative) continue; //invalid parameter combination
+                      paramList.push_back(make_pair("wIn", "10"));
+                      paramList.push_back(make_pair("isSigned", isSigned ? "true" : "false"));
+                      paramList.push_back(make_pair("isTernary", isTernary ? "true" : "false"));
+                      paramList.push_back(make_pair("xNegative", xNegative ? "true" : "false"));
+                      paramList.push_back(make_pair("yNegative", yNegative ? "true" : "false"));
+                      paramList.push_back(make_pair("zNegative", zNegative ? "true" : "false"));
+                      paramList.push_back(make_pair("xConfigurable", xConfigurable ? "true" : "false"));
+                      paramList.push_back(make_pair("yConfigurable", yConfigurable ? "true" : "false"));
+                      paramList.push_back(make_pair("zConfigurable",zConfigurable ? "true" : "false"));
+                      testStateList.push_back(paramList);
+                      paramList.clear();
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      paramList.push_back(make_pair("wIn", "10"));
+      paramList.push_back(make_pair("isSigned", "false"));
+      paramList.push_back(make_pair("isTernary", "false"));
+      paramList.push_back(make_pair("xNegative", "false"));
+      paramList.push_back(make_pair("yNegative", "false"));
+      paramList.push_back(make_pair("zNegative", "false"));
+      paramList.push_back(make_pair("xConfigurable", "false"));
+      paramList.push_back(make_pair("yConfigurable", "false"));
+      paramList.push_back(make_pair("zConfigurable", "false"));
+      testStateList.push_back(paramList);
+      paramList.clear();
+
+      paramList.push_back(make_pair("wIn", "10"));
+      paramList.push_back(make_pair("isSigned", "true"));
+      paramList.push_back(make_pair("isTernary", "false"));
+      paramList.push_back(make_pair("xNegative", "false"));
+      paramList.push_back(make_pair("yNegative", "false"));
+      paramList.push_back(make_pair("zNegative", "false"));
+      paramList.push_back(make_pair("xConfigurable", "false"));
+      paramList.push_back(make_pair("yConfigurable", "false"));
+      paramList.push_back(make_pair("zConfigurable", "false"));
+      testStateList.push_back(paramList);
+      paramList.clear();
+
+      paramList.push_back(make_pair("wIn", "10"));
+      paramList.push_back(make_pair("isSigned", "false"));
+      paramList.push_back(make_pair("isTernary", "true"));
+      paramList.push_back(make_pair("xNegative", "false"));
+      paramList.push_back(make_pair("yNegative", "false"));
+      paramList.push_back(make_pair("zNegative", "false"));
+      paramList.push_back(make_pair("xConfigurable", "false"));
+      paramList.push_back(make_pair("yConfigurable", "false"));
+      paramList.push_back(make_pair("zConfigurable", "false"));
+      testStateList.push_back(paramList);
+      paramList.clear();
+
+      paramList.push_back(make_pair("wIn", "10"));
+      paramList.push_back(make_pair("isSigned", "true"));
+      paramList.push_back(make_pair("isTernary", "true"));
+      paramList.push_back(make_pair("xNegative", "false"));
+      paramList.push_back(make_pair("yNegative", "false"));
+      paramList.push_back(make_pair("zNegative", "false"));
+      paramList.push_back(make_pair("xConfigurable", "false"));
+      paramList.push_back(make_pair("yConfigurable", "false"));
+      paramList.push_back(make_pair("zConfigurable", "false"));
+      testStateList.push_back(paramList);
+      paramList.clear();
+
+    }
+    return testStateList;
   }
 
   OperatorPtr IntAddSub::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface &ui)
@@ -230,6 +345,7 @@ namespace flopoco
     int wIn;
     ui.parseStrictlyPositiveInt(args, "wIn", &wIn, false);
 
+    bool isSigned;
     bool isTernary;
     bool xNegative;
     bool yNegative;
@@ -237,6 +353,8 @@ namespace flopoco
     bool xConfigurable;
     bool yConfigurable;
     bool zConfigurable;
+
+    ui.parseBoolean(args, "isSigned", &isSigned);
     ui.parseBoolean(args, "isTernary", &isTernary);
     ui.parseBoolean(args, "xNegative", &xNegative);
     ui.parseBoolean(args, "yNegative", &yNegative);
@@ -251,36 +369,8 @@ namespace flopoco
       exit(-1);
     }
 
-    uint32_t flags = 0;
-    if(isTernary)
-    {
-      flags |= IntAddSub::TERNARY;
-    }
-    if(xNegative)
-    {
-      flags |= IntAddSub::SUB_LEFT;
-    }
-    if(yNegative)
-    {
-      flags |= IntAddSub::SUB_RIGHT;
-    }
-    if(zNegative)
-    {
-      flags |= IntAddSub::SUB_MID;
-    }
-    if(xConfigurable)
-    {
-      flags |= IntAddSub::CONF_LEFT;
-    }
-    if(yConfigurable)
-    {
-      flags |= IntAddSub::CONF_RIGHT;
-    }
-    if(zConfigurable)
-    {
-      flags |= IntAddSub::CONF_MID;
-    }
-    return new IntAddSub(parentOp, target, wIn, flags);
+    return new IntAddSub(parentOp, target, wIn, isSigned, isTernary, xNegative, yNegative, zNegative, xConfigurable, yConfigurable, zConfigurable);
+
   }
 
   template<>
@@ -290,6 +380,7 @@ namespace flopoco
     "BasicInteger", // category
     "",
     "wIn(int): input size in bits;\
+     isSigned(bool)=false: set to true if you want a signed adder (with correct sign extension of the inputs);\
      isTernary(bool)=false: set to true if you want a ternary (3-input adder);\
      xNegative(bool)=false: set to true if X (first) input should be subtracted;\
      yNegative(bool)=false: set to true if Y (second) input should be subtracted;\
