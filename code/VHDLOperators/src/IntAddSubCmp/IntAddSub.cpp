@@ -58,21 +58,60 @@ namespace flopoco
     bool configurable = xConfigurable || yConfigurable; //if any input is configurable, create a configurable adder
     bool allowBothInputsNegative = xConfigurable && yConfigurable; //when both inputs are configurable, allow both to be negative
 
-    if(!isTernary && (xNegative != yNegative) )
+    if(!isTernary && (!xNegative || !yNegative) ) //XilinxIntAddSub covers the non-ternary case, where not both inputs are negated at the same time
     {
-      string inPortMap = "X=>X,Y=>Y";
+      cerr << "For this case, a Xilinx optimized operator is available." << endl;
+      REPORT(LogLevel::DETAIL, "For this case, a Xilinx optimized operator is available.");
+
+      int w; //word size of XilinxIntAddSub
+      if(isSigned)
+      {
+        w = wIn+1; //(sign) extend the inputs (XilinxIntAddSub computes unsigned)
+        vhdl << tab << declare("X_int",w) << " <= std_logic_vector(resize(signed(X)," << wIn + 1 << "));" << endl;
+        vhdl << tab << declare("Y_int",w) << " <= std_logic_vector(resize(signed(Y)," << wIn + 1 << "));" << endl;
+      }
+      else
+      {
+        w = wIn; //no extension required (XilinxIntAddSub computes unsigned)
+        vhdl << tab << declare("X_int",w) << " <= X;" << endl;
+        vhdl << tab << declare("Y_int",w) << " <= Y;" << endl;
+      }
+
+      string inPortMap = "X=>X_int,Y=>Y_int";
+
       if(configurable)
+      {
+        inPortMap += ",negX=>negX,negY=>negY";
+        if(!xConfigurable)
+          vhdl << tab << declare("negX") << " <= " << "'0';" << endl; //x conf port is not there, let's add a constant here
+
+        if(!yConfigurable)
+          vhdl << tab << declare("negY") << " <= " << "'0';" << endl; //y conf port is not there, let's add a constant here
+      }
+
+      declare("Cout");
+      declare("R_int",w);
 
       newInstance("XilinxIntAddSub",
                 "XilinxIntAddSub",
-                "wIn=" + std::to_string(wIn) + " xNegative=" + std::to_string(xNegative) + " yNegative=" + std::to_string(yNegative) + " configurable=" +
+                "wIn=" + std::to_string(w) + " xNegative=" + std::to_string(xNegative) + " yNegative=" + std::to_string(yNegative) + " configurable=" +
                 std::to_string(configurable) + " allowBothInputsNegative=" + std::to_string(allowBothInputsNegative),
                 inPortMap,
-                "Sr=>Y0r,Si=>Y0i");
+                "R=>R_int,Cout=>Cout");
+
+      if(isSigned)
+      {
+        vhdl << tab << "R <= R_int;" << endl;
+      }
+      else
+      {
+        vhdl << tab << "R <= Cout & R_int;" << endl;
+      }
+
     }
     else
     {
-      REPORT(LogLevel::MESSAGE, "For this case, not Xilinx optimized operator available, fall back to common.");
+      REPORT(LogLevel::DETAIL, "For this case, not Xilinx optimized operator available, fall back to common.");
       buildCommon(target, wIn);
     }
 
@@ -265,36 +304,41 @@ namespace flopoco
 
     if(index==-1)
     {// Unit tests
-      for(int isSigned=0; isSigned <= 1; isSigned++)
-      {
-        for(int isTernary=0; isTernary <= 1; isTernary++)
-        {
-          for(int xNegative=0; xNegative <= 1; xNegative++)
-          {
-            for(int yNegative=0; yNegative <= 1; yNegative++)
-            {
-              for(int zNegative=0; zNegative <= 1; zNegative++)
-              {
-                for(int xConfigurable=0; xConfigurable <= 1; xConfigurable++)
-                {
-                  for(int yConfigurable=0; yConfigurable <= 1; yConfigurable++)
-                  {
-                    for(int zConfigurable=0; zConfigurable <= 1; zConfigurable++)
-                    {
-                      if((zNegative && !isTernary) || (zConfigurable && !isTernary)) continue; //invalid parameter combination
-                      if((xNegative || yNegative || zNegative || xConfigurable || yConfigurable || zConfigurable) && !isSigned) continue; //invalid parameter combination
 
-                      paramList.push_back(make_pair("wIn", "10"));
-                      paramList.push_back(make_pair("isSigned", isSigned ? "true" : "false"));
-                      paramList.push_back(make_pair("isTernary", isTernary ? "true" : "false"));
-                      paramList.push_back(make_pair("xNegative", xNegative ? "true" : "false"));
-                      paramList.push_back(make_pair("yNegative", yNegative ? "true" : "false"));
-                      paramList.push_back(make_pair("zNegative", zNegative ? "true" : "false"));
-                      paramList.push_back(make_pair("xConfigurable", xConfigurable ? "true" : "false"));
-                      paramList.push_back(make_pair("yConfigurable", yConfigurable ? "true" : "false"));
-                      paramList.push_back(make_pair("zConfigurable",zConfigurable ? "true" : "false"));
-                      testStateList.push_back(paramList);
-                      paramList.clear();
+      for(int useTargetOptimizations=0; useTargetOptimizations <= 1; useTargetOptimizations++)
+      {
+        for(int isSigned=0; isSigned <= 1; isSigned++)
+        {
+          for(int isTernary=0; isTernary <= 1; isTernary++)
+          {
+            for(int xNegative=0; xNegative <= 1; xNegative++)
+            {
+              for(int yNegative=0; yNegative <= 1; yNegative++)
+              {
+                for(int zNegative=0; zNegative <= 1; zNegative++)
+                {
+                  for(int xConfigurable=0; xConfigurable <= 1; xConfigurable++)
+                  {
+                    for(int yConfigurable=0; yConfigurable <= 1; yConfigurable++)
+                    {
+                      for(int zConfigurable=0; zConfigurable <= 1; zConfigurable++)
+                      {
+                        if((zNegative && !isTernary) || (zConfigurable && !isTernary)) continue; //invalid parameter combination
+                        if((xNegative || yNegative || zNegative || xConfigurable || yConfigurable || zConfigurable) && !isSigned) continue; //invalid parameter combination
+
+                        paramList.push_back(make_pair("useTargetOptimizations", useTargetOptimizations ? "true" : "false"));
+                        paramList.push_back(make_pair("wIn", "10"));
+                        paramList.push_back(make_pair("isSigned", isSigned ? "true" : "false"));
+                        paramList.push_back(make_pair("isTernary", isTernary ? "true" : "false"));
+                        paramList.push_back(make_pair("xNegative", xNegative ? "true" : "false"));
+                        paramList.push_back(make_pair("yNegative", yNegative ? "true" : "false"));
+                        paramList.push_back(make_pair("zNegative", zNegative ? "true" : "false"));
+                        paramList.push_back(make_pair("xConfigurable", xConfigurable ? "true" : "false"));
+                        paramList.push_back(make_pair("yConfigurable", yConfigurable ? "true" : "false"));
+                        paramList.push_back(make_pair("zConfigurable",zConfigurable ? "true" : "false"));
+                        testStateList.push_back(paramList);
+                        paramList.clear();
+                      }
                     }
                   }
                 }
