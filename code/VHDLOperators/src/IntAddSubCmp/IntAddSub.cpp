@@ -59,7 +59,7 @@ namespace flopoco
     bool configurable = xConfigurable || yConfigurable; //if any input is configurable, create a configurable adder
     bool allowBothInputsNegative = xConfigurable && yConfigurable; //when both inputs are configurable, allow both to be negative
 
-    if(!isTernary && (!xNegative || !yNegative) ) //XilinxIntAddSub covers the non-ternary case, where not both inputs are negated at the same time
+    if(!isTernary && !(xNegative && yNegative) && !(configurable && (xNegative || yNegative)) ) //XilinxIntAddSub covers the non-ternary case, when not both inputs are negated at the same time or negation and configuration happens at the same time
     {
       cerr << "For this case, a Xilinx optimized operator is available." << endl;
       REPORT(LogLevel::DETAIL, "For this case, a Xilinx optimized operator is available.");
@@ -113,7 +113,6 @@ namespace flopoco
     else if(isTernary && !(xNegative && yNegative && zNegative) && !(xConfigurable && yConfigurable) && !(xConfigurable && zConfigurable) && !(yConfigurable && zConfigurable) ) //XilinxTernaryAddSub covers the ternary case with up to two negated or up two one configurable inputs
     {
       int w = wIn+2; //two extra bits are required for the ternary adder
-      bool configurable = xConfigurable || yConfigurable || zConfigurable; //if any input is configurable, create a configurable adder
 
       //(sign) extend the inputs
       string se_method;
@@ -140,6 +139,8 @@ namespace flopoco
       if(xConfigurable) bitmask2 |= 1;
       else if(yConfigurable) bitmask2 |= 2;
       else if(zConfigurable) bitmask2 |= 4;
+
+      bool configurable = (bitmask1 != bitmask2); //if bitmasks are different, we have a configurable one
 
       string inPortMap = "X=>X_int,Y=>Y_int,Z=>Z_int";
 
