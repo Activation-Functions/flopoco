@@ -1,18 +1,15 @@
 // general c++ library for manipulating streams
 #include <iostream>
-#include <sstream>
 
 /* header of libraries to manipulate multiprecision numbers
    There will be used in the emulate function to manipulate arbitraly large
    entries */
 #include "flopoco/UserInterface.hpp"
 #include "gmp.h"
-#include "mpfr.h"
 
 // include the header of the Operator
 #include "flopoco/PrimitiveComponents/Xilinx/XilinxTernaryAddSub.hpp"
 #include "flopoco/PrimitiveComponents/Xilinx/XilinxTernaryAddSubSlice.hpp"
-#include "flopoco/PrimitiveComponents/Xilinx/Xilinx_Primitive.hpp"
 #include "flopoco/PrimitiveComponents/Xilinx/Xilinx_LUT_compute.hpp"
 
 using namespace std;
@@ -41,9 +38,9 @@ namespace flopoco {
         addInput( "Z", wIn );
 
         if( bitmask_ == bitmask2_ ) {
-            vhdl << declare( "sel_i" ) << " <= '0';" << std::endl;
+            vhdl << declare( "sel" ) << " <= '0';" << std::endl;
         } else {
-            addInput( "sel_i" );
+            addInput( "sel" );
         }
 
         addOutput( "R", wIn );
@@ -56,7 +53,7 @@ namespace flopoco {
         declare( "carry", num_slices );
 
         if( wIn <= 0 ) {
-            throw std::runtime_error( "An adder with wordsize 0 is not possible." );
+          THROWERROR("An adder with wordsize 0 is not possible.");
         }
 
         insertCarryInit( );
@@ -70,7 +67,7 @@ namespace flopoco {
             inPortMap("x_in", "x_int" );
             inPortMap("y_in", "y_int" );
             inPortMap("z_in", "z_int" );
-            inPortMap("sel_in", "sel_i" );
+            inPortMap("sel_in", "sel" );
             inPortMap("bbus_in", "bbus" + range( wIn-1, 0 ) );
             inPortMap("carry_in", "carry_cct" );
             outPortMap( "bbus_out", "bbus" + range( wIn, 1 ));
@@ -87,7 +84,7 @@ namespace flopoco {
                     inPortMap( "x_in", "x_int" + range( 3, 0 ) );
                     inPortMap( "y_in", "y_int" + range( 3, 0 ) );
                     inPortMap( "z_in", "z_int" + range( 3, 0 ) );
-                    inPortMap( "sel_in", "sel_i" );
+                    inPortMap( "sel_in", "sel" );
                     inPortMap( "bbus_in", "bbus" + range( 3, 0 ) );
                     inPortMap( "carry_in", "carry_cct" );
                     outPortMap( "bbus_out", "bbus"  + range( 4, 1 ));
@@ -100,7 +97,7 @@ namespace flopoco {
                     inPortMap("x_in", "x_int" + range( wIn - 1, 4 * i ) );
                     inPortMap("y_in", "y_int" + range( wIn - 1, 4 * i ) );
                     inPortMap("z_in", "z_int" + range( wIn - 1, 4 * i ) );
-                    inPortMap("sel_in", "sel_i" );
+                    inPortMap("sel_in", "sel" );
                     inPortMap("bbus_in", "bbus" + range( wIn - 1, 4 * i ) );
                     inPortMap("carry_in", "carry" + of( i - 1 ) );
                     outPortMap("bbus_out", "bbus" + range( wIn, 4 * i + 1 ));
@@ -113,7 +110,7 @@ namespace flopoco {
                     inPortMap("x_in", "x_int" + range( ( 4 * i ) + 3, 4 * i ) );
                     inPortMap("y_in", "y_int" + range( ( 4 * i ) + 3, 4 * i ) );
                     inPortMap("z_in", "z_int" + range( ( 4 * i ) + 3, 4 * i ) );
-                    inPortMap("sel_in", "sel_i" );
+                    inPortMap("sel_in", "sel" );
                     inPortMap("bbus_in", "bbus" + range( ( 4 * i ) + 3, 4 * i ) );
                     inPortMap("carry_in", "carry" + of( i - 1 ) );
                     outPortMap( "bbus_out", "bbus" + range( ( 4 * i ) + 4, 4 * i + 1 ));
@@ -219,30 +216,30 @@ namespace flopoco {
             if( bitmask_ccount == 1 ) {
                 if( bitmask2_ccount == 2 ) {
                     carry_cct = "'1'";
-                    bbus = "sel_i";
+                    bbus = "sel";
                 } else {
                     carry_cct = "'0'";
-                    bbus = "not sel_i";
+                    bbus = "not sel";
                 }
             } else if( bitmask_ccount == 0 ) {
                 carry_cct = "'0'";
-                bbus = "sel_i";
+                bbus = "sel";
             } else {
                 carry_cct = "'1'";
-                bbus = "not sel_i";
+                bbus = "not sel";
             }
         } else if( abs( bitmask_ccount - bitmask2_ccount ) == 2 ) {
             if( bitmask_ccount == 0 ) {
-                carry_cct = "sel_i";
-                bbus = "sel_i";
+                carry_cct = "sel";
+                bbus = "sel";
             } else {
-                carry_cct = "not sel_i";
-                bbus = "not sel_i";
+                carry_cct = "not sel";
+                bbus = "not sel";
             }
         }
 
         if( carry_cct.empty() || bbus.empty() ) {
-            throw "No carry init found";
+            THROWERROR("No carry init found");
         }
 
         vhdl << "\tcarry_cct <= " << carry_cct <<  ";" << endl;
@@ -361,7 +358,7 @@ namespace flopoco {
         REPORT( DEBUG, debug.str() );
 
         if( bitmask_ > 0 && state_type == 0 ) {
-            throw "2State type not valid";
+            THROWERROR("2State type not valid");
         }
         
     }
@@ -372,8 +369,8 @@ namespace flopoco {
 		int wIn;
 		int bitmask,bitmask2;
 		ui.parseInt(args,"wIn",&wIn );
-		ui.parseInt(args,"AddSubBitMask",&bitmask);
-		ui.parseInt(args,"AddSubBitMask2",&bitmask2);
+		ui.parseInt(args,"bitmask1",&bitmask);
+		ui.parseInt(args,"bitmask2",&bitmask2);
 		return new XilinxTernaryAddSub(parentOp, target, wIn, bitmask, bitmask2);
 	}
 
@@ -386,8 +383,8 @@ namespace flopoco {
 			  // UserInterface.cpp
 	    "",
 	    "wIn(int): The wordsize of the adder; \
-                             AddSubBitMask(int)=0: First bitmask for input negation; \
-                             AddSubBitMask2(int)=-1: Second bitmask for configurable input negation;",
+      bitmask1(int)=0:  First bitmask for input negation, when setting one of the three LSBs to one, the corresponding input (from X to Z) is negated, hence, bitmask1 can be {0,1,...,7}; \
+      bitmask2(int)=-1: Second bitmask for configurable input negation, when different to bitmask1, a sel input selects the negation, bitmask1 is active when sel=0, bitmask2 is active when sel=1, bitmask2=-1 means same as bitmask1, so no configuration, up to two inputs can be changed by configuration at the same time;",
 	    ""};
 
 	void XilinxTernaryAddSub::emulate(TestCase *tc){
@@ -397,7 +394,7 @@ namespace flopoco {
 		mpz_class s = 0;
 		mpz_class sel = 0;
 		if( bitmask_ != bitmask2_  ){
-			sel = tc->getInputValue("sel_i");
+			sel = tc->getInputValue("sel");
 		}
 		short signs = 0;
 		if(sel==0){
@@ -437,6 +434,12 @@ namespace flopoco {
 
         if(index==-1)
         { // The unit tests
+            for(int w=2; w <= 32; w++)
+            {
+                paramList.push_back(make_pair("wIn", to_string(w)));
+                testStateList.push_back(paramList);
+                paramList.clear();
+            }
             for(int w=2; w <= 32; w++)
             {
                 paramList.push_back(make_pair("wIn", to_string(w)));

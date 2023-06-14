@@ -3,7 +3,8 @@
 #include "gmp.h"
 #include <gmpxx.h>
 #include "flopoco/IntAddSubCmp/IntAddSub.hpp"
-#include "flopoco/PrimitiveComponents/Primitive.hpp"
+#include "flopoco/PrimitiveComponents/Xilinx/XilinxIntAddSub.hpp"
+#include "flopoco/PrimitiveComponents/Xilinx/XilinxTernaryAddSub.hpp"
 
 using namespace std;
 namespace flopoco
@@ -109,9 +110,57 @@ namespace flopoco
       }
 
     }
+    else if(isTernary && !(xNegative && yNegative && zNegative) && !(xConfigurable && yConfigurable) && !(xConfigurable && zConfigurable) && !(yConfigurable && zConfigurable) ) //XilinxTernaryAddSub covers the ternary case with up to two negated or up two one configurable inputs
+    {
+      int w = wIn+2; //two extra bits are required for the ternary adder
+      bool configurable = xConfigurable || yConfigurable || zConfigurable; //if any input is configurable, create a configurable adder
+
+      //(sign) extend the inputs
+      string se_method;
+      if(isSigned)
+      {
+        se_method = "signed";
+      }
+      else
+      {
+        se_method = "unsigned";
+      }
+      vhdl << tab << declare("X_int",w) << " <= std_logic_vector(resize(" << se_method << "(X)," << w << "));" << endl;
+      vhdl << tab << declare("Y_int",w) << " <= std_logic_vector(resize(" << se_method << "(Y)," << w << "));" << endl;
+      vhdl << tab << declare("Z_int",w) << " <= std_logic_vector(resize(" << se_method << "(Z)," << w << "));" << endl;
+
+      //compute bitmask1:
+      int bitmask1=0;
+      if(xNegative) bitmask1 |= 1;
+      if(yNegative) bitmask1 |= 2;
+      if(zNegative) bitmask1 |= 4;
+
+      //compute bitmask2:
+      int bitmask2=bitmask1;
+      if(xConfigurable) bitmask2 |= 1;
+      else if(yConfigurable) bitmask2 |= 2;
+      else if(zConfigurable) bitmask2 |= 4;
+
+      string inPortMap = "X=>X_int,Y=>Y_int,Z=>Z_int";
+
+      if(configurable)
+      {
+        if(xConfigurable) vhdl << tab << declare("sel") << " <= negX;" << endl;
+        if(yConfigurable) vhdl << tab << declare("sel") << " <= negY;" << endl;
+        if(zConfigurable) vhdl << tab << declare("sel") << " <= negZ;" << endl;
+
+        inPortMap += ",sel=>sel";
+      }
+
+      newInstance("XilinxTernaryAddSub",
+                "XilinxTernaryAddSub",
+                "wIn=" + std::to_string(w) + " bitmask1=" + std::to_string(bitmask1) + " bitmask2=" + std::to_string(bitmask2),
+                inPortMap,
+                "R=>R");
+    }
     else
     {
-      REPORT(LogLevel::DETAIL, "For this case, not Xilinx optimized operator available, fall back to common.");
+      REPORT(LogLevel::DETAIL, "For this case, no Xilinx optimized operator available, fall back to common.");
       buildCommon(target, wIn);
     }
 
