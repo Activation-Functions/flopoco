@@ -18,6 +18,6 @@ add_flopocolib_src(
 	Xilinx_MUXF8.cpp
 	Xilinx_n2m_Decoder.cpp
 	Xilinx_Primitive.cpp
-	Xilinx_TernaryAdd_2State.cpp
-	Xilinx_TernaryAdd_2State_slice.cpp
+        XilinxTernaryAddSub.cpp
+		XilinxTernaryAddSubSlice.cpp
 )

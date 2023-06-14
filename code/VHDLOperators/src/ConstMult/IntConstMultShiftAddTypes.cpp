@@ -12,7 +12,7 @@
 //#include "FloPoCo.hpp"
 #include "flopoco/PrimitiveComponents/GenericLut.hpp"
 #include "flopoco/PrimitiveComponents/GenericMux.hpp"
-#include "flopoco/PrimitiveComponents/Xilinx/Xilinx_TernaryAdd_2State.hpp"
+#include "flopoco/PrimitiveComponents/Xilinx/XilinxTernaryAddSub.hpp"
 #include "flopoco/utils.hpp"
 //#include "PrimitiveComponents/Altera/Altera_TernaryAdd.hpp"
 
@@ -291,7 +291,7 @@ string IntConstMultShiftAdd_ADDSUB3_2STATE::get_realisation(map<adder_graph_base
 
     if( IntConstMultShiftAdd_BASE::target_ID == "Virtex5" || IntConstMultShiftAdd_BASE::target_ID == "Virtex6" )
     {
-        Xilinx_TernaryAdd_2State* add3 = new Xilinx_TernaryAdd_2State(base_op, target,wordsize,adderStates[0],adderStates[1]);
+        XilinxTernaryAddSub* add3 = new XilinxTernaryAddSub(base_op, target, wordsize, adderStates[0], adderStates[1]);
         base_op->addSubComponent(add3);
         base_op->vhdl << base_op->declare( "add3_" + outputSignalName + "_x",wordsize   ) << " <= "
              << getShiftAndResizeString( InfoMap[ t->inputs[0] ] , wordsize, t->input_shifts[0],false) << ";";

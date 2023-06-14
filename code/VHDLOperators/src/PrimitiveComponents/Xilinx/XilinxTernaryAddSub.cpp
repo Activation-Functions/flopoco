@@ -10,24 +10,24 @@
 #include "mpfr.h"
 
 // include the header of the Operator
-#include "flopoco/PrimitiveComponents/Xilinx/Xilinx_TernaryAdd_2State.hpp"
-#include "flopoco/PrimitiveComponents/Xilinx/Xilinx_TernaryAdd_2State_slice.hpp"
+#include "flopoco/PrimitiveComponents/Xilinx/XilinxTernaryAddSub.hpp"
+#include "flopoco/PrimitiveComponents/Xilinx/XilinxTernaryAddSubSlice.hpp"
 #include "flopoco/PrimitiveComponents/Xilinx/Xilinx_Primitive.hpp"
 #include "flopoco/PrimitiveComponents/Xilinx/Xilinx_LUT_compute.hpp"
 
 using namespace std;
 namespace flopoco {
 
-    Xilinx_TernaryAdd_2State::Xilinx_TernaryAdd_2State(Operator *parentOp, Target *target, const int &wIn, const short &bitmask, const short &bitmask2 )
+    XilinxTernaryAddSub::XilinxTernaryAddSub(Operator *parentOp, Target *target, const int &wIn, const short &bitmask, const short &bitmask2 )
         : Operator( parentOp, target ), wIn_(wIn), bitmask_(bitmask),bitmask2_(bitmask2) {
         setCopyrightString( "Marco Kleinlein, Martin Kumm" );
         if( bitmask2_ == -1 ) {
             bitmask2_ = bitmask_;
         }
 
-        srcFileName = "Xilinx_TernaryAdd_2State";
+        srcFileName = "XilinxTernaryAddSub";
         stringstream namestr;
-        namestr << "Xilinx_TernaryAdd_2State_ws" << wIn << "_s" << ( bitmask_ & 0x7 );
+        namestr << "XilinxTernaryAddSub_ws" << wIn << "_s" << ( bitmask_ & 0x7 );
 
         if( bitmask2_ != bitmask_ ) {
             namestr << "_s" << ( bitmask2_ & 0x7 );
@@ -65,7 +65,7 @@ namespace flopoco {
         vhdl << tab << "z_int <= Z;" << std::endl;
 
         if( num_slices == 1 ) {
-            Xilinx_TernaryAdd_2State_slice *single_slice = new Xilinx_TernaryAdd_2State_slice( this, target, wIn, true, lut_content );
+            XilinxTernaryAddSubSlice *single_slice = new XilinxTernaryAddSubSlice(this, target, wIn, true, lut_content );
             addSubComponent( single_slice );
             inPortMap("x_in", "x_int" );
             inPortMap("y_in", "y_int" );
@@ -82,7 +82,7 @@ namespace flopoco {
         if ( num_slices > 1 ) {
             for( uint i = 0; i < num_slices; ++i ) {
                 if( i == 0 ) {  // FIRST SLICE
-                    Xilinx_TernaryAdd_2State_slice *first_slice = new Xilinx_TernaryAdd_2State_slice( this, target, 4, true, lut_content );
+                    XilinxTernaryAddSubSlice *first_slice = new XilinxTernaryAddSubSlice(this, target, 4, true, lut_content );
                     addSubComponent( first_slice );
                     inPortMap( "x_in", "x_int" + range( 3, 0 ) );
                     inPortMap( "y_in", "y_int" + range( 3, 0 ) );
@@ -95,7 +95,7 @@ namespace flopoco {
                     outPortMap( "sum_out", "R" + range( 3, 0 ));
                     vhdl << instance( first_slice, join( "slice_", i ) ) << endl;
                 } else if( i == (num_slices - 1) ) { // LAST SLICE
-                    Xilinx_TernaryAdd_2State_slice *last_slice = new Xilinx_TernaryAdd_2State_slice( this, target, wIn - ( 4 * i ), false, lut_content );
+                    XilinxTernaryAddSubSlice *last_slice = new XilinxTernaryAddSubSlice(this, target, wIn - (4 * i ), false, lut_content );
                     addSubComponent( last_slice );
                     inPortMap("x_in", "x_int" + range( wIn - 1, 4 * i ) );
                     inPortMap("y_in", "y_int" + range( wIn - 1, 4 * i ) );
@@ -108,7 +108,7 @@ namespace flopoco {
                     outPortMap("sum_out", "R" + range( wIn - 1, 4 * i ));
                     vhdl << instance( last_slice, join( "slice_", i ) ) << endl;
                 } else {
-                    Xilinx_TernaryAdd_2State_slice *full_slice = new Xilinx_TernaryAdd_2State_slice( this, target, 4, false, lut_content );
+                    XilinxTernaryAddSubSlice *full_slice = new XilinxTernaryAddSubSlice(this, target, 4, false, lut_content );
                     addSubComponent( full_slice );
                     inPortMap("x_in", "x_int" + range( ( 4 * i ) + 3, 4 * i ) );
                     inPortMap("y_in", "y_int" + range( ( 4 * i ) + 3, 4 * i ) );
@@ -125,9 +125,9 @@ namespace flopoco {
         }
     };
 
-	Xilinx_TernaryAdd_2State::~Xilinx_TernaryAdd_2State(){}
+	XilinxTernaryAddSub::~XilinxTernaryAddSub(){}
 
-    string Xilinx_TernaryAdd_2State::computeLUT() {
+    string XilinxTernaryAddSub::computeLUT() {
         lut_op add_o5_co;
         lut_op add_o6_so;
 
@@ -183,7 +183,7 @@ namespace flopoco {
         return lut_add3.get_hex();
     }
 
-    void Xilinx_TernaryAdd_2State::insertCarryInit() {
+    void XilinxTernaryAddSub::insertCarryInit() {
         int bitmask_ccount = 0, bitmask2_ccount = 0;
 
         for( int i = 0; i < 3; i++ ) {
@@ -249,7 +249,7 @@ namespace flopoco {
         vhdl << "\tbbus(0) <= "  <<  bbus  <<  ";"  << endl;
     }
 
-    void Xilinx_TernaryAdd_2State::computeState() {
+    void XilinxTernaryAddSub::computeState() {
         if( bitmask_ == bitmask2_ ) {
             bitmask2_ = -1;
         }
@@ -365,7 +365,7 @@ namespace flopoco {
         }
         
     }
-	OperatorPtr Xilinx_TernaryAdd_2State::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui){
+	OperatorPtr XilinxTernaryAddSub::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui){
 		if( target->getVendor() != "Xilinx" )
 			throw std::runtime_error( "Can't build xilinx primitive on non xilinx target" );
 
@@ -374,11 +374,11 @@ namespace flopoco {
 		ui.parseInt(args,"wIn",&wIn );
 		ui.parseInt(args,"AddSubBitMask",&bitmask);
 		ui.parseInt(args,"AddSubBitMask2",&bitmask2);
-		return new Xilinx_TernaryAdd_2State(parentOp,target,wIn,bitmask,bitmask2);
+		return new XilinxTernaryAddSub(parentOp, target, wIn, bitmask, bitmask2);
 	}
 
 	template <>
-	const OperatorDescription<Xilinx_TernaryAdd_2State> op_descriptor<Xilinx_TernaryAdd_2State> {
+	const OperatorDescription<XilinxTernaryAddSub> op_descriptor<XilinxTernaryAddSub> {
 	    "XilinxTernaryAddSub",				      // name
 	    "A ternary adder subtractor build of xilinx primitives.", // description,
 								      // string
@@ -390,7 +390,7 @@ namespace flopoco {
                              AddSubBitMask2(int)=-1: Second bitmask for configurable input negation;",
 	    ""};
 
-	void Xilinx_TernaryAdd_2State::emulate(TestCase *tc){
+	void XilinxTernaryAddSub::emulate(TestCase *tc){
 		mpz_class x = tc->getInputValue("X");
 		mpz_class y = tc->getInputValue("Y");
 		mpz_class z = tc->getInputValue("Z");
@@ -430,7 +430,7 @@ namespace flopoco {
 		tc->addExpectedOutput("R", s);
 	}
 
-	TestList Xilinx_TernaryAdd_2State::unitTest(int index)
+	TestList XilinxTernaryAddSub::unitTest(int index)
 	{
         TestList testStateList;
         vector<pair<string,string>> paramList;
