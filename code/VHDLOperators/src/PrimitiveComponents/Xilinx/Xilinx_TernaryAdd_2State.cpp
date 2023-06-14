@@ -20,7 +20,7 @@ namespace flopoco {
 
     Xilinx_TernaryAdd_2State::Xilinx_TernaryAdd_2State(Operator *parentOp, Target *target, const int &wIn, const short &bitmask, const short &bitmask2 )
         : Operator( parentOp, target ), wIn_(wIn), bitmask_(bitmask),bitmask2_(bitmask2) {
-        setCopyrightString( "Marco Kleinlein" );
+        setCopyrightString( "Marco Kleinlein, Martin Kumm" );
         if( bitmask2_ == -1 ) {
             bitmask2_ = bitmask_;
         }
@@ -36,9 +36,9 @@ namespace flopoco {
         setNameWithFreqAndUID( namestr.str() );
         string lut_content = computeLUT( );
         setCombinatorial();
-        addInput( "x_i", wIn );
-        addInput( "y_i", wIn );
-        addInput( "z_i", wIn );
+        addInput( "X", wIn );
+        addInput( "Y", wIn );
+        addInput( "Z", wIn );
 
         if( bitmask_ == bitmask2_ ) {
             vhdl << declare( "sel_i" ) << " <= '0';" << std::endl;
@@ -46,11 +46,11 @@ namespace flopoco {
             addInput( "sel_i" );
         }
 
-        addOutput( "sum_o", wIn );
+        addOutput( "R", wIn );
         const uint num_slices = ( ( wIn - 1 ) / 4 ) + 1;
-        declare( "x", wIn );
-        declare( "y", wIn );
-        declare( "z", wIn );
+        declare( "x_int", wIn );
+        declare( "y_int", wIn );
+        declare( "z_int", wIn );
         declare( "bbus", wIn+1 );
         declare( "carry_cct" );
         declare( "carry", num_slices );
@@ -60,22 +60,22 @@ namespace flopoco {
         }
 
         insertCarryInit( );
-        vhdl << tab << "x <= x_i;" << std::endl;
-        vhdl << tab << "y <= y_i;" << std::endl;
-        vhdl << tab << "z <= z_i;" << std::endl;
+        vhdl << tab << "x_int <= X;" << std::endl;
+        vhdl << tab << "y_int <= Y;" << std::endl;
+        vhdl << tab << "z_int <= Z;" << std::endl;
 
         if( num_slices == 1 ) {
             Xilinx_TernaryAdd_2State_slice *single_slice = new Xilinx_TernaryAdd_2State_slice( this, target, wIn, true, lut_content );
             addSubComponent( single_slice );
-            inPortMap("x_in", "x" );
-            inPortMap("y_in", "y" );
-            inPortMap("z_in", "z" );
+            inPortMap("x_in", "x_int" );
+            inPortMap("y_in", "y_int" );
+            inPortMap("z_in", "z_int" );
             inPortMap("sel_in", "sel_i" );
             inPortMap("bbus_in", "bbus" + range( wIn-1, 0 ) );
             inPortMap("carry_in", "carry_cct" );
             outPortMap( "bbus_out", "bbus" + range( wIn, 1 ));
             outPortMap( "carry_out", "carry" + of( 0 ));
-            outPortMap( "sum_out", "sum_o" + range( wIn-1, 0 ));
+            outPortMap( "sum_out", "R" + range( wIn-1, 0 ));
             vhdl << instance( single_slice, "slice_i" );
         }
 
@@ -84,41 +84,41 @@ namespace flopoco {
                 if( i == 0 ) {  // FIRST SLICE
                     Xilinx_TernaryAdd_2State_slice *first_slice = new Xilinx_TernaryAdd_2State_slice( this, target, 4, true, lut_content );
                     addSubComponent( first_slice );
-                    inPortMap( "x_in", "x" + range( 3, 0 ) );
-                    inPortMap( "y_in", "y" + range( 3, 0 ) );
-                    inPortMap( "z_in", "z" + range( 3, 0 ) );
+                    inPortMap( "x_in", "x_int" + range( 3, 0 ) );
+                    inPortMap( "y_in", "y_int" + range( 3, 0 ) );
+                    inPortMap( "z_in", "z_int" + range( 3, 0 ) );
                     inPortMap( "sel_in", "sel_i" );
                     inPortMap( "bbus_in", "bbus" + range( 3, 0 ) );
                     inPortMap( "carry_in", "carry_cct" );
                     outPortMap( "bbus_out", "bbus"  + range( 4, 1 ));
                     outPortMap( "carry_out", "carry" + of( 0 ));
-                    outPortMap( "sum_out", "sum_o" + range( 3, 0 ));
+                    outPortMap( "sum_out", "R" + range( 3, 0 ));
                     vhdl << instance( first_slice, join( "slice_", i ) ) << endl;
                 } else if( i == (num_slices - 1) ) { // LAST SLICE
                     Xilinx_TernaryAdd_2State_slice *last_slice = new Xilinx_TernaryAdd_2State_slice( this, target, wIn - ( 4 * i ), false, lut_content );
                     addSubComponent( last_slice );
-                    inPortMap("x_in", "x" + range( wIn - 1, 4 * i ) );
-                    inPortMap("y_in", "y" + range( wIn - 1, 4 * i ) );
-                    inPortMap("z_in", "z" + range( wIn - 1, 4 * i ) );
+                    inPortMap("x_in", "x_int" + range( wIn - 1, 4 * i ) );
+                    inPortMap("y_in", "y_int" + range( wIn - 1, 4 * i ) );
+                    inPortMap("z_in", "z_int" + range( wIn - 1, 4 * i ) );
                     inPortMap("sel_in", "sel_i" );
                     inPortMap("bbus_in", "bbus" + range( wIn - 1, 4 * i ) );
                     inPortMap("carry_in", "carry" + of( i - 1 ) );
                     outPortMap("bbus_out", "bbus" + range( wIn, 4 * i + 1 ));
                     outPortMap("carry_out", "carry" + of( i ));
-                    outPortMap("sum_out", "sum_o" + range( wIn - 1, 4 * i ));
+                    outPortMap("sum_out", "R" + range( wIn - 1, 4 * i ));
                     vhdl << instance( last_slice, join( "slice_", i ) ) << endl;
                 } else {
                     Xilinx_TernaryAdd_2State_slice *full_slice = new Xilinx_TernaryAdd_2State_slice( this, target, 4, false, lut_content );
                     addSubComponent( full_slice );
-                    inPortMap("x_in", "x" + range( ( 4 * i ) + 3, 4 * i ) );
-                    inPortMap("y_in", "y" + range( ( 4 * i ) + 3, 4 * i ) );
-                    inPortMap("z_in", "z" + range( ( 4 * i ) + 3, 4 * i ) );
+                    inPortMap("x_in", "x_int" + range( ( 4 * i ) + 3, 4 * i ) );
+                    inPortMap("y_in", "y_int" + range( ( 4 * i ) + 3, 4 * i ) );
+                    inPortMap("z_in", "z_int" + range( ( 4 * i ) + 3, 4 * i ) );
                     inPortMap("sel_in", "sel_i" );
                     inPortMap("bbus_in", "bbus" + range( ( 4 * i ) + 3, 4 * i ) );
                     inPortMap("carry_in", "carry" + of( i - 1 ) );
                     outPortMap( "bbus_out", "bbus" + range( ( 4 * i ) + 4, 4 * i + 1 ));
                     outPortMap( "carry_out", "carry" + of( i ));
-                    outPortMap( "sum_out", "sum_o" + range( ( 4 * i ) + 3, 4 * i ));
+                    outPortMap( "sum_out", "R" + range( ( 4 * i ) + 3, 4 * i ));
                     vhdl << instance( full_slice, join( "slice_", i ) ) << endl;
                 }
             }
@@ -391,9 +391,9 @@ namespace flopoco {
 	    ""};
 
 	void Xilinx_TernaryAdd_2State::emulate(TestCase *tc){
-		mpz_class x = tc->getInputValue("x_i");
-		mpz_class y = tc->getInputValue("y_i");
-		mpz_class z = tc->getInputValue("z_i");
+		mpz_class x = tc->getInputValue("X");
+		mpz_class y = tc->getInputValue("Y");
+		mpz_class z = tc->getInputValue("Z");
 		mpz_class s = 0;
 		mpz_class sel = 0;
 		if( bitmask_ != bitmask2_  ){
@@ -427,7 +427,7 @@ namespace flopoco {
 		mpz_class mask = ((one<<wIn_)-1);
 		s = s & mask;
 
-		tc->addExpectedOutput("sum_o", s);
+		tc->addExpectedOutput("R", s);
 	}
 
 	TestList Xilinx_TernaryAdd_2State::unitTest(int index)
