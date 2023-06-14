@@ -65,8 +65,7 @@ namespace flopoco {
       addInput( "negX" );
       addInput( "negY" );
     }
-		addOutput( "R", wIn );
-		addOutput( "Cout" );
+		addOutput( "R", wIn+1 );
 		const int effective_ws = wIn + 1;
 		const int ws_remain = ( effective_ws ) % 4;
 		const int num_full_slices = floor( ( effective_ws - ws_remain ) / 4 );
@@ -131,8 +130,7 @@ namespace flopoco {
 			vhdl << instance( slice_i, slice_name.str() );
 		}
 
-		vhdl << tab << "R <= sum_t" << range( effective_ws - 1, 1 ) << ";" << std::endl;
-		vhdl << tab << "Cout <= carry" << of( i ) << ";" << std::endl;
+		vhdl << tab << "R <= carry" << of( i ) << " & sum_t" << range( effective_ws - 1, 1 ) << ";" << std::endl;
 	}
 
 	void XilinxIntAddSub::build_with_dss(Target *target, int wIn ) {
@@ -140,8 +138,7 @@ namespace flopoco {
 		addInput( "Y", wIn );
 		addInput( "negX" );
 		addInput( "negY" );
-		addOutput( "R", wIn );
-		addOutput( "Cout" );
+		addOutput( "R", wIn+1);
 		const int effective_ws = wIn;
 		const int ws_remain = ( effective_ws ) % 4;
 		const int num_full_slices = ( effective_ws - ws_remain ) / 4;
@@ -205,15 +202,13 @@ namespace flopoco {
 			vhdl << instance( slice_i, slice_name.str() );
 		}
 
-		vhdl << tab << "R <= sum_t" << range( effective_ws - 1, 0 ) << ";" << std::endl;
-    vhdl << tab << "Cout <= carry" << of( i ) << ";" << std::endl;
+		vhdl << tab << "R <= carry" << of( i ) << " & sum_t" << range( effective_ws - 1, 0 ) << ";" << std::endl;
 	}
 
 	void XilinxIntAddSub::build_with_fixed_sign(Target *target, int wIn, int fixed_signs ) {
 		addInput( "X", wIn );
 		addInput( "Y", wIn );
-		addOutput( "R", wIn );
-		addOutput( "Cout" );
+		addOutput( "R", wIn + 1);
 		const int effective_ws = wIn;
 		const int ws_remain = ( effective_ws ) % 4;
 		const int num_full_slices = ( effective_ws - ws_remain ) / 4;
@@ -266,6 +261,7 @@ namespace flopoco {
 
 			outPortMap( "Cout", "carry" + of( i ));
 			outPortMap( "R", "sum_t" + range( 4 * i + 3, 4 * i ));
+
 			vhdl << instance( slice_i, slice_name.str() );
 		}
 
@@ -294,8 +290,8 @@ namespace flopoco {
 			vhdl << instance( slice_i, slice_name.str() );
 		}
 
-		vhdl << tab << "R <= sum_t" << range( effective_ws - 1, 0 ) << ";" << std::endl;
-    vhdl << tab << "Cout <= carry" << of( i ) << ";" << std::endl;
+
+		vhdl << tab << "R <= carry" << of( i ) << " & sum_t" << range( effective_ws - 1, 0 ) << ";" << std::endl;
 	}
 
 	XilinxIntAddSub::~XilinxIntAddSub() {}
@@ -410,8 +406,8 @@ namespace flopoco {
       else
         s += y;
 
-      mpz_class mask = ((1<<wIn_)-1);
-      s = s & mask;
+//      mpz_class mask = ((1<<wIn_)-1);
+//      s = s & mask;
     }
 
 		tc->addExpectedOutput("R", s);
