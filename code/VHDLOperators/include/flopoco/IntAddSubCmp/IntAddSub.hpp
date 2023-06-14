@@ -7,19 +7,14 @@
 
 namespace flopoco
 {
-///
-/// \brief The IntAddSub class. A junction for primitive implementations.
-///
-/// The IntAddSub desides on the specific Target which primitive implementation to take.
-///
+/// \brief The IntAddSub class is a reconfigurable add/subtractor with flexible input signs, including a ternary adder
+/// It provides a basic VHDL model but uses tatget optimized versions whenever possible
   class IntAddSub : public Operator
   {
   public:
 
-/* !!!! remove this once IntConstMultShiftTypes is replaced !!! */
-    ///
     /// \brief The ADD_SUB_FLAGS enum. Properties for primitive adders.
-    ///
+    /// !!!! remove this once IntConstMultShiftTypes is replaced !!!
     enum ADD_SUB_FLAGS
     {
       TERNARY = 0x1, //!< Adder has three inputs
@@ -34,7 +29,6 @@ namespace flopoco
     };
 
   private:
-//    const uint32_t flags_; //!< Specifies the properties of the adder
     const bool isTernary;
     const bool xNegative;
     const bool yNegative;
@@ -47,14 +41,13 @@ namespace flopoco
     int wIn; //word size of the input
     int wOut; //word size of the output
   public:
-    ///
+
     /// \brief IntAddSub constructor
     /// \param target The current Target
-    /// \param wIn The wordsize of the generated adder
-    /// \param flags The properties of the generated adder
+    /// \param wIn The input word size of the generated adder
     ///
     IntAddSub(Operator *parentOp, Target *target, const uint32_t &wIn, const bool isSigned=false, const bool isTernary=false, const bool xNegative=false, const bool yNegative=false, const bool zNegative=false, const bool xConfigurable=false, const bool yConfigurable=false, const bool zConfigurable=false);
-    ///
+
     /// \brief getInputName returns the name of the input signal or the conf signal of the specific index
     /// \param index which input to return
     /// \param c_input wether to return the input signal or the configuration signal
@@ -62,26 +55,16 @@ namespace flopoco
     ///
     std::string getInputName(const uint32_t &index, const bool &c_input = false) const;
 
-    ///
     /// \brief getOutputName return the name of the output signal
     /// \return Name of the output signal
     ///
     std::string getOutputName() const;
 
-    ///
-    /// \brief hasFlags checks if a property flag is set
-    /// \param flag Property to check for
-    /// \return Property is set
-    ///
-//    bool hasFlags(const uint32_t &flag) const;
-
-    ///
     /// \brief getInputCount returns the input count of the adder
     /// \return Input count of the adder (3 for ternary otherwise 2)
     ///
     const uint32_t getInputCount() const;
 
-    ///
     /// \brief printFlags returns the properties as a string
     /// \return Property string.
     ///
@@ -94,22 +77,14 @@ namespace flopoco
     void buildStandardTestCases(TestCaseList *tcl);
     static TestList unitTest(int index);
 
-//		static OperatorPtr parseArguments(Target *target , vector<string> &args);
-//		static void registerFactory();
   public:
-    ///
-    /// \brief buildXilinx builds the Xilinx implementation of the primitive adder
-    /// \param target The current Target
-    /// \param wIn The input wordsize
-    ///
-    void buildXilinx(Target *target, const uint32_t &wIn);
 
-    ///
-    /// \brief buildAltera builds the Altera implementation of the primitive adder
+    /// \brief buildXilinxIntAddSub builds the Xilinx implementation of the primitive adder
     /// \param target The current Target
     /// \param wIn The input wordsize
     ///
-    void buildAltera(Target *target, const uint32_t &wIn);
+    void buildXilinxIntAddSub(Target *target, const uint32_t &wIn);
+
 
     ///
     /// \brief buildCommon builds the VHDL-code implementation of the primitive adder
@@ -122,7 +97,7 @@ namespace flopoco
     /** Factory method */
     static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface &ui);
   private:
-    void generateInternalInputSignal(string name, int wIn);
+    void generateInternalInputSignal(string name, int wIn, bool isConfigurable, bool isNegative);
   };
 }//namespace
 

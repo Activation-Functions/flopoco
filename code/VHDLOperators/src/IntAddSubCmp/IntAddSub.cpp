@@ -1,9 +1,7 @@
 #include <iostream>
-#include <sstream>
 
 #include "gmp.h"
 #include <gmpxx.h>
-#include "mpfr.h"
 #include "flopoco/IntAddSubCmp/IntAddSub.hpp"
 #include "flopoco/PrimitiveComponents/Primitive.hpp"
 
@@ -15,6 +13,17 @@ namespace flopoco
     setShared();
     setCopyrightString("Martin Kumm");
     this->useNumericStd();
+
+    if((zNegative && !isTernary) || (zConfigurable && !isTernary))
+    {
+      THROWERROR("Error: zNegative or zConfigurable can not be true when isTernary is false");
+    }
+
+    if((xNegative || yNegative || zNegative || xConfigurable || yConfigurable || zConfigurable) && !isSigned)
+    {
+      THROWERROR("Error: isSigned must be true when input is negative or configurable!");
+    }
+
     //disablePipelining(); //does not change anything
     srcFileName = "IntAddSub";
     ostringstream name;
@@ -33,42 +42,53 @@ namespace flopoco
     if (isTernary && zConfigurable)
       addInput("negZ", 1, false);
 
+
     wOut = wIn + (isTernary ? 2 : 1);
     addOutput("R", wOut);
 
     if (target->useTargetOptimizations() && target->getVendor() == "Xilinx")
-      buildXilinx(target, wIn);
-    else if (target->useTargetOptimizations() && target->getVendor() == "Altera")
-      buildAltera(target, wIn);
+      buildXilinxIntAddSub(target, wIn);
     else
       buildCommon(target, wIn);
 
   }
 
-  void IntAddSub::buildXilinx(Target *target, const uint32_t &wIn)
+  void IntAddSub::buildXilinxIntAddSub(Target *target, const uint32_t &wIn)
   {
-    REPORT(LogLevel::MESSAGE, "Xilinx junction not fully implemented, fall back to common.");
-    buildCommon(target, wIn);
+    bool configurable = xConfigurable || yConfigurable; //if any input is configurable, create a configurable adder
+    bool allowBothInputsNegative = xConfigurable && yConfigurable; //when both inputs are configurable, allow both to be negative
+
+    if(!isTernary && (xNegative != yNegative) )
+    {
+      string inPortMap = "X=>X,Y=>Y";
+      if(configurable)
+
+      newInstance("XilinxIntAddSub",
+                "XilinxIntAddSub",
+                "wIn=" + std::to_string(wIn) + " xNegative=" + std::to_string(xNegative) + " yNegative=" + std::to_string(yNegative) + " configurable=" +
+                std::to_string(configurable) + " allowBothInputsNegative=" + std::to_string(allowBothInputsNegative),
+                inPortMap,
+                "Sr=>Y0r,Si=>Y0i");
+    }
+    else
+    {
+      REPORT(LogLevel::MESSAGE, "For this case, not Xilinx optimized operator available, fall back to common.");
+      buildCommon(target, wIn);
+    }
+
 
   }
 
-  void IntAddSub::buildAltera(Target *target, const uint32_t &wIn)
-  {
-    REPORT(LogLevel::MESSAGE, "Altera junction not fully implemented, fall back to common.");
-    buildCommon(target, wIn);
-
-  }
-
-  void IntAddSub::generateInternalInputSignal(string name, int wIn)
+  void IntAddSub::generateInternalInputSignal(string name, int wIn, bool isConfigurable, bool isNegative)
   {
     vhdl << tab << declare(name + "_int",wIn) << " <= ";
-    if(xConfigurable)
+    if(isConfigurable)
     {
       vhdl << "std_logic_vector(-signed(" + name + ")) when neg" + name + "='1' else " + name;
     }
     else
     {
-      if(xNegative)
+      if(isNegative)
       {
         vhdl << "std_logic_vector(-signed(" + name + "))";
       }
@@ -82,10 +102,10 @@ namespace flopoco
 
   void IntAddSub::buildCommon(Target *target, const uint32_t &wIn)
   {
-    generateInternalInputSignal("X", wIn);
-    generateInternalInputSignal("Y", wIn);
+    generateInternalInputSignal("X", wIn, xConfigurable, xNegative);
+    generateInternalInputSignal("Y", wIn, yConfigurable, yNegative);
     if(isTernary)
-      generateInternalInputSignal("Z", wIn);
+      generateInternalInputSignal("Z", wIn, zConfigurable, zNegative);
 
     string se_method;
     if(isSigned)
@@ -123,12 +143,6 @@ namespace flopoco
     return "Y";
   }
 
-  /*
-  bool IntAddSub::hasFlags(const uint32_t &flag) const
-  {
-    return flags_ & flag;
-  }
-*/
   const uint32_t IntAddSub::getInputCount() const
   {
     uint32_t c = (isTernary ? 3 : 2);
@@ -267,8 +281,9 @@ namespace flopoco
                   {
                     for(int zConfigurable=0; zConfigurable <= 1; zConfigurable++)
                     {
-                      if(!isTernary && zConfigurable) continue; //invalid parameter combination
-                      if(!isTernary && zNegative) continue; //invalid parameter combination
+                      if((zNegative && !isTernary) || (zConfigurable && !isTernary)) continue; //invalid parameter combination
+                      if((xNegative || yNegative || zNegative || xConfigurable || yConfigurable || zConfigurable) && !isSigned) continue; //invalid parameter combination
+
                       paramList.push_back(make_pair("wIn", "10"));
                       paramList.push_back(make_pair("isSigned", isSigned ? "true" : "false"));
                       paramList.push_back(make_pair("isTernary", isTernary ? "true" : "false"));
@@ -288,54 +303,6 @@ namespace flopoco
           }
         }
       }
-      paramList.push_back(make_pair("wIn", "10"));
-      paramList.push_back(make_pair("isSigned", "false"));
-      paramList.push_back(make_pair("isTernary", "false"));
-      paramList.push_back(make_pair("xNegative", "false"));
-      paramList.push_back(make_pair("yNegative", "false"));
-      paramList.push_back(make_pair("zNegative", "false"));
-      paramList.push_back(make_pair("xConfigurable", "false"));
-      paramList.push_back(make_pair("yConfigurable", "false"));
-      paramList.push_back(make_pair("zConfigurable", "false"));
-      testStateList.push_back(paramList);
-      paramList.clear();
-
-      paramList.push_back(make_pair("wIn", "10"));
-      paramList.push_back(make_pair("isSigned", "true"));
-      paramList.push_back(make_pair("isTernary", "false"));
-      paramList.push_back(make_pair("xNegative", "false"));
-      paramList.push_back(make_pair("yNegative", "false"));
-      paramList.push_back(make_pair("zNegative", "false"));
-      paramList.push_back(make_pair("xConfigurable", "false"));
-      paramList.push_back(make_pair("yConfigurable", "false"));
-      paramList.push_back(make_pair("zConfigurable", "false"));
-      testStateList.push_back(paramList);
-      paramList.clear();
-
-      paramList.push_back(make_pair("wIn", "10"));
-      paramList.push_back(make_pair("isSigned", "false"));
-      paramList.push_back(make_pair("isTernary", "true"));
-      paramList.push_back(make_pair("xNegative", "false"));
-      paramList.push_back(make_pair("yNegative", "false"));
-      paramList.push_back(make_pair("zNegative", "false"));
-      paramList.push_back(make_pair("xConfigurable", "false"));
-      paramList.push_back(make_pair("yConfigurable", "false"));
-      paramList.push_back(make_pair("zConfigurable", "false"));
-      testStateList.push_back(paramList);
-      paramList.clear();
-
-      paramList.push_back(make_pair("wIn", "10"));
-      paramList.push_back(make_pair("isSigned", "true"));
-      paramList.push_back(make_pair("isTernary", "true"));
-      paramList.push_back(make_pair("xNegative", "false"));
-      paramList.push_back(make_pair("yNegative", "false"));
-      paramList.push_back(make_pair("zNegative", "false"));
-      paramList.push_back(make_pair("xConfigurable", "false"));
-      paramList.push_back(make_pair("yConfigurable", "false"));
-      paramList.push_back(make_pair("zConfigurable", "false"));
-      testStateList.push_back(paramList);
-      paramList.clear();
-
     }
     return testStateList;
   }
@@ -363,12 +330,6 @@ namespace flopoco
     ui.parseBoolean(args, "yConfigurable", &yConfigurable);
     ui.parseBoolean(args, "zConfigurable", &zConfigurable);
 
-    if((zNegative && !isTernary) || (zConfigurable && !isTernary))
-    {
-      cerr << "Error: zNegative or zConfigurable can not be true when isTernary is false" << endl;
-      exit(-1);
-    }
-
     return new IntAddSub(parentOp, target, wIn, isSigned, isTernary, xNegative, yNegative, zNegative, xConfigurable, yConfigurable, zConfigurable);
 
   }
@@ -380,7 +341,7 @@ namespace flopoco
     "BasicInteger", // category
     "",
     "wIn(int): input size in bits;\
-     isSigned(bool)=false: set to true if you want a signed adder (with correct sign extension of the inputs);\
+     isSigned(bool)=false: set to true if you want a signed adder (with correct sign extension of the inputs) or not, unsigned only works when not input is negative or configurable (as negative output numbers may occur);\
      isTernary(bool)=false: set to true if you want a ternary (3-input adder);\
      xNegative(bool)=false: set to true if X (first) input should be subtracted;\
      yNegative(bool)=false: set to true if Y (second) input should be subtracted;\

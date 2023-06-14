@@ -369,9 +369,6 @@ namespace flopoco {
       "allowBothInputsNegative(bool)=false: Allows both inputs to be negative in the runtime configurable configuration (at the cost of a slower implementation)"
       ,
 	    ""};
-/*
-*/
-
 
   void XilinxIntAddSub::emulate(TestCase *tc)
 	{
