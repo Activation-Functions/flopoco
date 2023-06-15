@@ -44,7 +44,7 @@ public:
 	static OperatorPtr parseArguments(OperatorPtr parentOp, Target* target, vector<string>& args, UserInterface& ui);
 	
 	void emulate(TestCase* tc);
-	static TestList unitTest(int index);
+	static TestList unitTest(int testLevel);
 
 protected:
 	bool signedIn;

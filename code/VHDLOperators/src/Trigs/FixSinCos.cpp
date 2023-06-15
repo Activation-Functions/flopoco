@@ -163,11 +163,11 @@ namespace flopoco{
 
 
 
-	TestList FixSinCos::unitTest(int index)	{
+	TestList FixSinCos::unitTest(int testLevel)	{
 		TestList testStateList;
 		vector<pair<string,string>> paramList;
 		
-		if(index==-1) 
+		if(testLevel >= TestLevel::SUBSTANTIAL)
 		{ // The unit tests
 			for(int method=0; method<=2; method++) {
 				for(int w=5; w<=32; w++) {
@@ -180,11 +180,11 @@ namespace flopoco{
 				}
 			}
 		}
-		else     
+		else
 		{
-				// finite number of random test computed out of index
+				// finite number of random test computed out of testLevel
 			// TODO
-		}	
+		}
 
 		return testStateList;
 	}

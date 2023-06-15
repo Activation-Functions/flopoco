@@ -38,7 +38,7 @@ namespace flopoco{
 
 //		void emulate(TestCase* tc);
 //        void buildStandardTestCases(TestCaseList* tcl);
-		static TestList unitTest(int index);
+		static TestList unitTest(int testLevel);
 
         static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
 	private:

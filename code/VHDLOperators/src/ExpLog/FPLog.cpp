@@ -141,14 +141,14 @@ namespace flopoco{
 
 
 
-		TestList FPLog::unitTest(int index)
+		TestList FPLog::unitTest(int testLevel)
 		{
 		// the static list of mandatory tests
 			TestList testStateList;
 			vector<pair<string,string>> paramList;
 			
-			if(index==-1) 
-		{ // The unit tests
+			if(testLevel >= TestLevel::SUBSTANTIAL)
+		  { // The substantial unit tests
 
 			// First test with plainVHDL, then with cool multipliers
 			for(int wF=5; wF<53; wF+=1) // test various input widths
@@ -179,7 +179,7 @@ namespace flopoco{
 		}
 		else     
 		{
-				// finite number of random test computed out of index
+				// finite number of random test computed out of testLevel
 		}	
 
 		return testStateList;

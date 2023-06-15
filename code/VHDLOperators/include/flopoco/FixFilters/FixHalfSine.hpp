@@ -23,7 +23,7 @@ namespace flopoco{
 
 		/** Factory method */
 		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
-		static TestList unitTest(int index);
+		static TestList unitTest(int testLevel);
 
 	private: 
 		int N; /* FixFIR::n = 2*N */

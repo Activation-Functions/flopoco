@@ -36,7 +36,7 @@ namespace flopoco {
         static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args, UserInterface& ui);
         /** Register the factory */
         static void registerFactory();
-        static TestList unitTest(int index);
+        static TestList unitTest(int testLevel);
 
 		Operator *generateOperator(
 				Operator *parentOp,

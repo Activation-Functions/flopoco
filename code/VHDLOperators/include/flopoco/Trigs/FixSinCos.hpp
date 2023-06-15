@@ -30,7 +30,7 @@ namespace flopoco{
 		/** Factory method that parses arguments and calls the constructor */
 		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
 	
-		static TestList unitTest(int index);
+		static TestList unitTest(int testLevel);
 
 	protected:
 		int lsb; /** LSB of both input and output, each a signed number in [-1, 1) */

@@ -31,15 +31,14 @@ namespace flopoco
 
 	}
 
-	TestList FixFixConstMult::unitTest(int index)
+	TestList FixFixConstMult::unitTest(int testLevel)
 	{
 		// the static list of mandatory tests
 		TestList testStateList;
 		vector<pair<string,string>> paramList;
 
-		if(index==-1)
-		{ // The unit tests
-
+    if(testLevel >= TestLevel::SUBSTANTIAL)
+    { // The substantial unit tests
 			vector<string> constantList; // The list of constants we want to test
 			constantList.push_back("\"0\"");
 			constantList.push_back("\"0.125\"");
@@ -79,7 +78,7 @@ namespace flopoco
 		}
 		else
 		{
-			// finite number of random test computed out of index
+			// finite number of random test computed out of testLevel
 		}
 
 		return testStateList;

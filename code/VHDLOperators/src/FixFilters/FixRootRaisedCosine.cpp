@@ -48,14 +48,14 @@ namespace flopoco{
 	}
 
 
-	TestList FixRootRaisedCosine::unitTest(int index)
+	TestList FixRootRaisedCosine::unitTest(int testLevel)
 	{
 		// the static list of mandatory tests
 		TestList testStateList;
 		vector<pair<string,string>> paramList;
 		
-		if(index==-1) 
-		{ // The unit tests
+    if(testLevel >= TestLevel::SUBSTANTIAL)
+    { // The substantial unit tests
 			for(int lsbIn=-3; lsbIn>=-12; lsbIn-=3) {
 				for(int lsbOut = min(lsbIn,-5); lsbOut>=-18; lsbOut-=3)	{
 					for(int n = 3; n<8; n++)	{
@@ -73,7 +73,7 @@ namespace flopoco{
 		}
 		else     
 			{
-				// finite number of random test computed out of index
+				// finite number of random test computed out of testLevel
 				// TODO
 			}	
 		return testStateList;
