@@ -942,39 +942,40 @@ namespace flopoco {
 								// parsed
 		""};
 
-	TestList IntMultiplier::unitTest(int )
+	TestList IntMultiplier::unitTest(int testLevel)
 	{
 		// the static list of mandatory tests
 		TestList testStateList;
 		vector<pair<string,string>> paramList;
 
-		list<pair<int,int>> wordSizes = {{1,1},{2,2},{3,3},{4,4},{8,8},{16,8},{8,16},{13,17},{24,24},{27,41},{35,35},{53,53},{64,64},{10,99},{99,10},{100,100}};
+    list<pair<int,int>> wordSizes;
+    if(testLevel == TestLevel::QUICK)
+    { // The quick tests
+      wordSizes = {{1,1},{2,2},{3,3},{4,4},{10,10}};
+    }
+    else if(testLevel >= TestLevel::SUBSTANTIAL)
+    { // The substantial unit tests
+      wordSizes = {{1,1},{2,2},{3,3},{4,4},{8,8},{16,8},{8,16},{13,17},{24,24},{27,41},{35,35},{53,53},{64,64},{10,99},{99,10},{100,100}};
+    }
 
-		for (auto wordSizePair : wordSizes)
-			{
-				int wX = wordSizePair.first;
-				int wY = wordSizePair.second;
-				for(int sign=0; sign < 2; sign++)
-					{
-						paramList.push_back(make_pair("wX", to_string(wX)));
-						paramList.push_back(make_pair("wY", to_string(wY)));
-						paramList.push_back(make_pair("signedIO", sign ? "true" : "false"));
-#if 0		// commented by Florent: better leave the default if you don't actually test various values
+    for (auto wordSizePair : wordSizes)
+    {
+      int wX = wordSizePair.first;
+      int wY = wordSizePair.second;
+      for(int sign=0; sign < 2; sign++)
+        {
+          paramList.push_back(make_pair("wX", to_string(wX)));
+          paramList.push_back(make_pair("wY", to_string(wY)));
+          paramList.push_back(make_pair("signedIO", sign ? "true" : "false"));
+          testStateList.push_back(paramList);
 
-						paramList.push_back(make_pair("dspThreshold", to_string(1.0)));
-						paramList.push_back(make_pair("maxDSP", to_string(0)));
-#endif
+          // same parameters, but truncate (to the size of the smallest input for no particular reason)
+          paramList.push_back(make_pair("wOut", to_string(wX)));
+          testStateList.push_back(paramList);
 
-						testStateList.push_back(paramList);
-
-						// same parameters, but truncate (to the size of the smallest input for no particular reason)
-						paramList.push_back(make_pair("wOut", to_string(wX)));
-						testStateList.push_back(paramList);
-
-						paramList.clear();
-					}
-			}
-
+          paramList.clear();
+        }
+    }
 		return testStateList;
 	}
 
