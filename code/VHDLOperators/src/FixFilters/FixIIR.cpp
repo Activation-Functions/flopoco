@@ -460,13 +460,13 @@ namespace flopoco {
 		return new FixIIR(parentOp, target, lsbIn, lsbOut, inputb, inputa, h, heps, buildWorstCaseTestBench);
 	}
 
-	TestList FixIIR::unitTest(int index)
+	TestList FixIIR::unitTest(int testLevel)
 	{
 		TestList testStateList;
 		vector<pair<string,string>> paramList;
 		
-	if(index==-1)
-		{ // The unit tests
+    if(testLevel >= TestLevel::SUBSTANTIAL)
+    { // The substantial unit tests
 			// No parameter sweep here, just a few representative examples
 
 			// A Butterworth
@@ -488,7 +488,7 @@ namespace flopoco {
 		}
 	else
 		{
-			// finite number of random test computed out of index
+			// finite number of random test computed out of testLevel
 		}
 
 	return testStateList;

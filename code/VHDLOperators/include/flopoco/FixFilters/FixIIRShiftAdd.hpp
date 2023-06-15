@@ -51,7 +51,7 @@ namespace flopoco{
         // User-interface stuff
         /** Factory method */
         static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
-        static TestList unitTest(int index);
+        static TestList unitTest(int testLevel);
 
     private:
         int lsbIn;					/**< weight of the LSB in the input, considered as a signed number in (-1,1) */

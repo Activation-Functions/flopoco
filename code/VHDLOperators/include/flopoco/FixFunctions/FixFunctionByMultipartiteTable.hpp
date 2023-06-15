@@ -43,7 +43,7 @@ namespace flopoco
 		//---------------------------------------Public standard methods
 		void buildStandardTestCases(TestCaseList* tcl);
 		void emulate(TestCase * tc);
-		static TestList unitTest(int index);
+		static TestList unitTest(int testLevel);
 		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
 
 	private:

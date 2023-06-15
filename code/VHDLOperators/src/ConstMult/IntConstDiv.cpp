@@ -634,15 +634,15 @@ namespace flopoco{
 
 
 
-	// if index==-1, run the unit tests, otherwise just compute one single test state  out of index, and return it
-	TestList IntConstDiv::unitTest(int index)
+	// if testLevel==-1, run the unit tests, otherwise just compute one single test state  out of testLevel, and return it
+	TestList IntConstDiv::unitTest(int testLevel)
 	{
 		// the static list of mandatory tests
 		TestList testStateList;
 		vector<pair<string,string>> paramList;
 		
-		if(index==-1) // The unit tests
-			{ 
+    if(testLevel >= TestLevel::SUBSTANTIAL)
+    { // The substantial unit tests
 
 #if 1
 				for(int wIn=8; wIn<34; wIn+=1) 
@@ -670,7 +670,7 @@ namespace flopoco{
 			}
 		else     
 			{
-				// finite number of random test computed out of index
+				// finite number of random test computed out of testLevel
 			}	
 
 		return testStateList;

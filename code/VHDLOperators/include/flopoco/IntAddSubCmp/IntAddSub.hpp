@@ -75,7 +75,7 @@ namespace flopoco
 
     void emulate(TestCase *tc);
     void buildStandardTestCases(TestCaseList *tcl);
-    static TestList unitTest(int index);
+    static TestList unitTest(int testLevel);
 
   public:
 

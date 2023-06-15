@@ -249,15 +249,15 @@ namespace flopoco{
 
 
 	
-	TestList IntConstantComparator::unitTest(int index)
+	TestList IntConstantComparator::unitTest(int testLevel)
 	{
 		// the static list of mandatory tests
 		TestList testStateList;
 		vector<pair<string,string>> paramList;
 		FloPoCoRandomState::init(10, false);
 
-		if(index==-1) 
-		{ // The unit tests
+    if(testLevel >= TestLevel::SUBSTANTIAL)
+    { // The substantial unit tests
 
 			for(int w=4; w<1000; w+=1+(w<10?0:2)+(w<30?0:17)+(w<100?0:300)) {
 				for(int flags=1; flags<(w<100?8:3); flags++) { 
@@ -277,7 +277,7 @@ namespace flopoco{
 		}
 		else     
 		{
-			// finite number of random test computed out of index
+			// finite number of random test computed out of testLevel
 			// TODO
 		}	
 		

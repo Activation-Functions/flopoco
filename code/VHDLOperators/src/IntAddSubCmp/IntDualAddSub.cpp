@@ -214,14 +214,14 @@ namespace flopoco{
 
 
 
-	TestList IntDualAddSub::unitTest(int index)
+	TestList IntDualAddSub::unitTest(int testLevel)
 	{
 		// the static list of mandatory tests
 		TestList testStateList;
 		vector<pair<string,string>> paramList;
 		
-		if(index==-1) 
-		{ // The unit tests
+    if(testLevel >= TestLevel::SUBSTANTIAL)
+    { // The substantial unit tests
 			
 			for(int wIn=5; wIn<100; wIn+=30) // test various input widths
 				{
@@ -235,7 +235,7 @@ namespace flopoco{
 		}
 		else     
 			{
-				// finite number of random test computed out of index
+				// finite number of random test computed out of testLevel
 				// TODO ?
 			}	
 

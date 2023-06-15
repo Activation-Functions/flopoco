@@ -524,15 +524,14 @@ namespace flopoco{
 	}
 
 
-	TestList IEEEFPAdd::unitTest(int index)
+	TestList IEEEFPAdd::unitTest(int testLevel)
 	{
 		// the static list of mandatory tests
 		TestList testStateList;
 		vector<pair<string,string>> paramList;
 		
-		if(index==-1) 
-		{
-			// The unit tests
+    if(testLevel >= TestLevel::SUBSTANTIAL)
+    { // The substantial unit tests
 			for (auto format : IEEEFloatFormat::getStandardFormats()) {
 				paramList.clear();
 				paramList.push_back(make_pair("wE", to_string(format.wE)));
@@ -542,7 +541,7 @@ namespace flopoco{
 		}
 		else     
 		{
-				// finite number of random test computed out of index
+				// finite number of random test computed out of testLevel
 		}	
 
 		return testStateList;

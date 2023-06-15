@@ -114,12 +114,13 @@ namespace flopoco{
 
 
 	
-	TestList IntMultiAdder::unitTest(int index)
+	TestList IntMultiAdder::unitTest(int testLevel)
 	{
 		// the static list of mandatory tests
 		TestList testStateList;
 		vector<pair<string,string>> paramList;
-		if(index==-1) 	{ // The unit tests
+    if(testLevel >= TestLevel::SUBSTANTIAL)
+    { // The substantial unit tests
 			for (int n=2; n<=8; n++) {
 				for(int s=0; s<2; s++) {
 					for(int wIn=1+(s?1:0); wIn<8; wIn++) { // 1+s because no 2's complement on 1 bit...

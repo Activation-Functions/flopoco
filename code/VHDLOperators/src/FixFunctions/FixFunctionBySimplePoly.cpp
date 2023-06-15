@@ -194,7 +194,7 @@ namespace flopoco{
 
 
 
-	TestList FixFunctionBySimplePoly::unitTest(int index)
+	TestList FixFunctionBySimplePoly::unitTest(int testLevel)
 	{
 		// the static list of mandatory tests
 		TestList testStateList;
@@ -205,8 +205,8 @@ namespace flopoco{
 		functionList.push_back("exp(x)");
 		functionList.push_back("log(x/2+1)");
 		
-		if(index==-1) 
-		{ // The unit tests
+    if(testLevel >= TestLevel::SUBSTANTIAL)
+    { // The substantial unit tests
 			for (size_t i=0; i<functionList.size(); i++) {
 					// first deg 2 and 3, 15 bits, exhaustive test, then deg 5 for 25 bits 
 					string f = functionList[i];
@@ -242,7 +242,7 @@ namespace flopoco{
 	}
 		else     
 		{
-				// finite number of random test computed out of index
+				// finite number of random test computed out of testLevel
 		}	
 
 		return testStateList;

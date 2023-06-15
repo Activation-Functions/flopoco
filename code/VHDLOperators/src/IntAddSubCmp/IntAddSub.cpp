@@ -347,13 +347,50 @@ namespace flopoco
     // please fill me with regression tests or corner case tests!
   }
 
-  TestList IntAddSub::unitTest(int index)
+  TestList IntAddSub::unitTest(int testLevel)
   {
     TestList testStateList;
     vector<pair<string, string>> paramList;
 
-    if(index==-1)
-    {// Unit tests
+    if(testLevel == TestLevel::QUICK)
+    { // The quick tests
+      paramList.push_back(make_pair("wIn", "10"));
+      testStateList.push_back(paramList);
+      paramList.clear();
+
+      paramList.push_back(make_pair("wIn", "10"));
+      paramList.push_back(make_pair("useTargetOptimizations", "true"));
+      testStateList.push_back(paramList);
+      paramList.clear();
+
+      paramList.push_back(make_pair("useTargetOptimizations", "true"));
+      paramList.push_back(make_pair("wIn", "10"));
+      paramList.push_back(make_pair("isSigned", "true"));
+      paramList.push_back(make_pair("isTernary", "true"));
+      paramList.push_back(make_pair("xNegative", "true"));
+      paramList.push_back(make_pair("yNegative", "true"));
+      paramList.push_back(make_pair("zNegative", "false"));
+      paramList.push_back(make_pair("xConfigurable", "false"));
+      paramList.push_back(make_pair("yConfigurable", "false"));
+      paramList.push_back(make_pair("zConfigurable","false"));
+      testStateList.push_back(paramList);
+      paramList.clear();
+
+      paramList.push_back(make_pair("useTargetOptimizations", "true"));
+      paramList.push_back(make_pair("wIn", "10"));
+      paramList.push_back(make_pair("isSigned", "true"));
+      paramList.push_back(make_pair("isTernary", "false"));
+      paramList.push_back(make_pair("xNegative", "false"));
+      paramList.push_back(make_pair("yNegative", "false"));
+      paramList.push_back(make_pair("zNegative", "false"));
+      paramList.push_back(make_pair("xConfigurable", "true"));
+      paramList.push_back(make_pair("yConfigurable", "true"));
+      paramList.push_back(make_pair("zConfigurable","false"));
+      testStateList.push_back(paramList);
+      paramList.clear();
+    }
+    else if(testLevel >= TestLevel::SUBSTANTIAL)
+    { // The substantial unit tests
 
       for(int useTargetOptimizations=0; useTargetOptimizations <= 1; useTargetOptimizations++)
       {

@@ -254,14 +254,14 @@ namespace flopoco{
 
 
 	
-	TestList IntComparator::unitTest(int index)
+	TestList IntComparator::unitTest(int testLevel)
 	{
 		// the static list of mandatory tests
 		TestList testStateList;
 		vector<pair<string,string>> paramList;
 		
-		if(index==-1) 
-		{ // The unit tests
+    if(testLevel >= TestLevel::SUBSTANTIAL)
+    { // The substantial unit tests
 
 			for(int w=4; w<1000; w+=(w<10?1:300)) { // 4 is an exhaustive test. The others test the decomposition in chunks
 				for(int flags=1; flags<8; flags++) { // exhaustive test. 
@@ -277,7 +277,7 @@ namespace flopoco{
 		}
 		else     
 		{
-			// finite number of random test computed out of index
+			// finite number of random test computed out of testLevel
 			// TODO
 		}	
 		

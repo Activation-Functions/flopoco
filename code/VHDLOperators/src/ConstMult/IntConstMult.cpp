@@ -1656,14 +1656,14 @@ namespace flopoco{
 
 
 
-	// if index==-1, run the unit tests, otherwise just compute one single test state  out of index, and return it
-	TestList IntConstMult::unitTest(int index)
+	// if testLevel==-1, run the unit tests, otherwise just compute one single test state  out of testLevel, and return it
+	TestList IntConstMult::unitTest(int testLevel)
 	{
 		TestList testStateList;
 		vector<pair<string,string>> paramList;
 
-		if(index==-1) {// Unit tests
-			// Only exhaustive tests here
+    if(testLevel >= TestLevel::SUBSTANTIAL)
+    { // The substantial unit tests
 			paramList.push_back(make_pair("n", "17"));
 			paramList.push_back(make_pair("wIn", "12"));
 			paramList.push_back(make_pair("TestBench n=", "-2"));

@@ -64,7 +64,7 @@ namespace flopoco
         BaseMultiplierXilinxGeneralizedLUTOp(Operator *parentOp, Target* target, bool isSignedX, bool isSignedY, const vector<vector<int>> &coverage, const pair<vector<int>,vector<int>> &xy_dependency_list, const vector<vector<vector<int>>> &equations, const vector<pair<int,int>> &combined_eqs, const unsigned usedOutBits);
 
         void emulate(TestCase* tc);
-        static TestList unitTest(int index);
+        static TestList unitTest(int testLevel);
 
     private:
         int wX, wY, wR ;       //formal word sizes, actual word sizes

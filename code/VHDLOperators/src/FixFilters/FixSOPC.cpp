@@ -383,8 +383,8 @@ namespace flopoco{
 		return new FixSOPC(parentOp, target, msbIn, lsbIn, msbOut, lsbOut, coeffs);
 	}
 
-	TestList FixSOPCInterfaced::unitTest(int index) {
-		return FixSOPC::unitTest(index);
+	TestList FixSOPCInterfaced::unitTest(int testLevel) {
+		return FixSOPC::unitTest(testLevel);
 	}
 
 	template <>
@@ -447,13 +447,14 @@ namespace flopoco{
 	}
 
 	
-	TestList FixSOPC::unitTest(int index)
+	TestList FixSOPC::unitTest(int testLevel)
 	{
 		// the static list of mandatory tests
 		TestList testStateList;
 		vector<pair<string,string>> paramList;
 		
-		if(index==-1) 	{ // The unit tests
+    if(testLevel >= TestLevel::SUBSTANTIAL)
+    { // The substantial unit tests
 			for(int n=3; n<9; n+=2){
 
 				// build stupid coeff list with positive and negative numbers. I don't think this corresponds to an actual filter.
@@ -490,7 +491,7 @@ namespace flopoco{
 		}
 		else     
 		{
-				// finite number of random test computed out of index
+				// finite number of random test computed out of testLevel
 		}	
 
 		return testStateList;

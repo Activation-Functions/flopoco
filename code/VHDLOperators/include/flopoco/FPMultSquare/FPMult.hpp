@@ -42,7 +42,7 @@ namespace flopoco{
 		 */
 		void emulate(TestCase * tc);
 
-		static TestList unitTest(int index);
+		static TestList unitTest(int testLevel);
 		
 		// User-interface stuff
 		/** Factory method */

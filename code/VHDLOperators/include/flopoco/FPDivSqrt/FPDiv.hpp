@@ -54,7 +54,7 @@ namespace flopoco{
 		/* Overloading the Operator method */
 		void buildStandardTestCases(TestCaseList* tcl);
 
-		static TestList unitTest(int index);
+		static TestList unitTest(int testLevel);
 
 		// User-interface stuff
 		/** Factory method */

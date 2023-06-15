@@ -24,7 +24,7 @@ namespace flopoco{
 		/** Factory method that parses arguments and calls the constructor */
 		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
 
-		static TestList unitTest(int index);
+		static TestList unitTest(int testLevel);
 
 		/** emulate() function  */
 		void emulate(TestCase * tc);

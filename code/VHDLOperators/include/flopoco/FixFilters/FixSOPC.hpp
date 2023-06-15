@@ -74,7 +74,7 @@ namespace flopoco{
 		pair<mpz_class,mpz_class> computeSOPCForEmulate(vector<mpz_class> x);
 
 		// User-interface stuff
-		static TestList unitTest(int index);
+		static TestList unitTest(int testLevel);
 
 	protected:
 		int n;							        /**< number of products, also size of the vectors coeff, msbIn and lsbIn */
@@ -100,7 +100,7 @@ namespace flopoco{
 
 	struct FixSOPCInterfaced  {
 		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
-		static TestList unitTest(int index);
+		static TestList unitTest(int testLevel);
 	};
 
 

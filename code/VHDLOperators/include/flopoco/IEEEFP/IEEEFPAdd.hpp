@@ -33,7 +33,7 @@ namespace flopoco{
 		void buildStandardTestCases(TestCaseList* tcl);
 		TestCase* buildRandomTestCase(int i);
 
-		static TestList unitTest(int index);
+		static TestList unitTest(int testLevel);
 
 		// User-interface stuff
 		/** Factory method */

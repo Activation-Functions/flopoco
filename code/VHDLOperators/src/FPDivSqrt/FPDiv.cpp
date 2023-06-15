@@ -964,14 +964,14 @@ rox P						or wi is 26 bits long
 		return new FPDiv(parentOp, target, wE, wF, srt);
 	}
 
-	TestList FPDiv::unitTest(int index)
+	TestList FPDiv::unitTest(int testLevel)
 	{
 		// the static list of mandatory tests
 		TestList testStateList;
 		vector<pair<string,string>> paramList;
 
-		if(index==-1)
-		{ // The unit tests
+    if(testLevel >= TestLevel::SUBSTANTIAL)
+    { // The substantial unit tests
 
 			for(int wF=5; wF<53; wF+=1) // test various input widths
 			{
@@ -999,7 +999,7 @@ rox P						or wi is 26 bits long
 		}
 		else
 		{
-				// finite number of random test computed out of index
+				// finite number of random test computed out of testLevel
 		}
 		return testStateList;
 	}
