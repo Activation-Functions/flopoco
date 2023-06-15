@@ -275,7 +275,6 @@ namespace {
 				++id;
 			}
 			hasRun = true;
-			std::cout << "\n";
 		}
 
 		void printStats(std::ostream& out) {
@@ -286,7 +285,7 @@ namespace {
       }
       else
       {
-        out << "Tests for " << opFact->name() << ":\n";
+        out << endl << "Tests for " << opFact->name() << endl;
         size_t nbGenOk{nbGenerationOK()}, nbSimOk{nbSimulationOk()};
         auto plural = [](int val){if (val > 1) return std::string_view{"tests"}; else return std::string_view{"test"};};
         double percentageGen = 0.;
