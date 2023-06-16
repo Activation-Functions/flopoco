@@ -40,19 +40,32 @@ namespace flopoco {
 #ifdef DAGOPERATOR_IMPLEM
 	private:
 		void parse(string infile);
-		string fileName;
+		void checkDAG(); /**< various static checks */
+		void typeInference();
+		void build();
 		string entityName;
 
 		/** global parameters */
 		map<string, string> parameters; // parameter name, value 
 
+		// The following few maps capture the AST built by the parser
 		/** Signals */
 		map<string,string> dagSignalList; // the second string is "Input", "Output", "Wire"
+		map<string,int> dagSignalBitwidth; // 
 
-		/** flopoco commands, built at parse time, invoked later */
-		map<string, string> instanceOperator; // instanceName, Operator name
-		map<string, string> instanceParameters; // instanceName, reconstructed parameter list 
+		/* flopoco commands, built at parse time, invoked later */
+		/** which flopoco Operator for each declared component */
+		map<string, string> componentOperator;
 
+		/** which Operator parameters for each declared component */
+		map<string, vector<string>> componentParameters; // instanceName, reconstructed parameter list 
+		/** which Component for each instance in the DAG */
+		map<string, string> instanceComponent; // instanceName, componentName
+
+		// The AST node is all string-based.
+		// A node is either a signal or the name of an instance with its arguments 
+		map<string, vector<string>> dagNode; /**< ultra simple AST */
+		map<string, string> assignment; /**< ultra simple AST */
 #endif
 	};
 
