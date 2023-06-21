@@ -29,6 +29,7 @@
 using namespace std;
 
 #include "flopoco/UserInterface.hpp"
+#include "flopoco/AutoTest/AutoTest.hpp"
 
 namespace flopoco {
 	// global const variables

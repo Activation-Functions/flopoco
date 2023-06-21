@@ -18,13 +18,6 @@ namespace flopoco {
     FULL = 4
   };
 
-  enum TestLevel {
-    QUICK = 0,  //< 1 second per operator
-    SUBSTANTIAL = 1,
-    EXHAUSTIVE = 2,
-    INFINITE = 3  //may take forever
-  };
-
   bool is_log_lvl_enabled(LogLevel lvl);
 
   void set_log_lvl(LogLevel lvl);

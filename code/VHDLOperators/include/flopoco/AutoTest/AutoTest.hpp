@@ -8,6 +8,13 @@
 
 namespace flopoco{
 
+  enum TestLevel {
+    QUICK = 0,  //< 1 second per operator
+    SUBSTANTIAL = 1,
+    EXHAUSTIVE = 2,
+    INFINITE = 3  //may take forever
+  };
+
 	class AutoTest 
 	{
 
@@ -22,7 +29,7 @@ namespace flopoco{
 		static string defaultTestBenchSize(std::map<std::string, std::string> const & unitTestParam, int testLevel);
 
   private:
-    int testLevel;
+    int testLevel; //see TestLevel enum for possible values
 	};
 };
 #endif
