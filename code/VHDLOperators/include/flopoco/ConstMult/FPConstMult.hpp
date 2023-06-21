@@ -6,7 +6,7 @@
 
 #include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/Operator.hpp"
-#include "IntConstMult.hpp"
+#include "IntConstMultShiftAddPlain.hpp"
 #include "flopoco/UserInterface.hpp"
 
 
@@ -51,7 +51,7 @@ namespace flopoco{
 		bool mantissa_is_one; /**< is the mantissa equal to 1? */
 		bool constant_is_zero; /**< is the constant equal to 0? */
 
-		IntConstMult *icm;
+		IntConstMultShiftAddPlain *icm;
 		int icm_depth;
 
 

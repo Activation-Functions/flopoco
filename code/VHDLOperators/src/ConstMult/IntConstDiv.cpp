@@ -21,7 +21,7 @@
 #include <algorithm>
 
 #include "flopoco/ConstMult/IntConstDiv.hpp"
-#include "flopoco/ConstMult/IntConstMult.hpp"
+#include "flopoco/ConstMult/IntConstMultShiftAddPlain.hpp"
 #include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/Tables/TableOperator.hpp"
 
@@ -213,7 +213,7 @@ namespace flopoco{
 				// wInCurrent = getSignalByName(join("Q",i+1))->width();
 				ostringstream multParams;
 				multParams << "wIn=" << intlog2(currentDivProd) << " n=" << divisors[i-1];
-				newInstance("IntConstMult", join("rMult",i), multParams.str(), "X=>"+join("RR",i+1), "R=>"+join("M",i));
+				newInstance("IntConstMultShiftAddPlain", join("rMult",i), multParams.str(), "X=>"+join("RR",i+1), "R=>"+join("M",i));
 				currentDivProd *= divisors[i-1];
 				int sizeRR = intlog2(currentDivProd);
 				int sizeM  = getSignalByName(join("M",i))->width();
@@ -557,14 +557,14 @@ namespace flopoco{
 			mpz_class tdiv = (mpz_class(1)<<optkp) / d; // This is the floor
 			
 			mpz_class ap = (tmod==0? tdiv : tdiv+1);
-			IntConstMult* multp = new IntConstMult(parentOp, target, wIn, ap);
+			IntConstMultShiftAddPlain* multp = new IntConstMultShiftAddPlain(parentOp, target, wIn, ap);
 			int costp = multp -> getArea(); 
 			
 			// Attempt to build the optkm
 			// We need the ceil of 2^k/d
 			mpz_class am = (mpz_class(1)<<optkm) / d; // This is the floor
 
-			IntConstMult* multm = new IntConstMult(parentOp, target, wIn, am);
+			IntConstMultShiftAddPlain* multm = new IntConstMultShiftAddPlain(parentOp, target, wIn, am);
 			// TODO this interface is ugly
 			int costm = multm -> getArea() + wIn; 
 
@@ -574,7 +574,7 @@ namespace flopoco{
 			// Finally get to VHDL generation
 			ostringstream multParams;
 			multParams << "wIn=" << wIn << " n=" << (costp<costm? ap : am);
-			newInstance("IntConstMult", "recipMult", multParams.str(), "X=>X", "R=>P");
+			newInstance("IntConstMultShiftAddPlain", "recipMult", multParams.str(), "X=>X", "R=>P");
 			int pSize=getSignalByName("P")->width();
 
 			if(costp<costm) {
@@ -596,7 +596,7 @@ namespace flopoco{
 			if(computeRemainder) {
 				ostringstream multParams;
 				multParams << "wIn=" << qSize << " n=" << d;
-				newInstance("IntConstMult", "remMult", multParams.str(), "X=>Q1", "R=>QD");
+				newInstance("IntConstMultShiftAddPlain", "remMult", multParams.str(), "X=>Q1", "R=>QD");
 				vhdl << tab << declare("R0",wIn) << " <= X - QD" << range(wIn-1,0) << ";" << endl;
 				vhdl << tab << "R <= R0" << range(rSize-1,0) <<";" << endl;
 				

@@ -19,7 +19,7 @@
 #include <gmpxx.h>
 #include <mpfr.h>
 
-#include "flopoco/ConstMult/IntConstMult.hpp"
+#include "flopoco/ConstMult/IntConstMultShiftAddPlain.hpp"
 #include "flopoco/ConstMult/ShiftAddDag.hpp"
 #include "flopoco/ConstMult/ShiftAddOp.hpp"
 #include "flopoco/Operator.hpp"
@@ -77,7 +77,7 @@ namespace flopoco{
 		return 0; 	// should never be reached, added to suppress a warning
 	}
 
-	ShiftAddDag::ShiftAddDag(IntConstMult* icm) : icm(icm) {
+	ShiftAddDag::ShiftAddDag(IntConstMultShiftAddPlain* icm) : icm(icm) {
 		//initialize with  the  ShiftAddOp that computes X
 		PX = new ShiftAddOp(this, X);
 	};

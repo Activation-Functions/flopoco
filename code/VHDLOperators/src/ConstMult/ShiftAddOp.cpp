@@ -20,7 +20,7 @@
 #include <gmpxx.h>
 #include <mpfr.h>
 
-#include "flopoco/ConstMult/IntConstMult.hpp"
+#include "flopoco/ConstMult/IntConstMultShiftAddPlain.hpp"
 #include "flopoco/ConstMult/ShiftAddDag.hpp"
 #include "flopoco/ConstMult/ShiftAddOp.hpp"
 #include "flopoco/utils.hpp"
