@@ -953,7 +953,11 @@ namespace flopoco {
     { // The quick tests
       wordSizes = {{1,1},{2,2},{3,3},{4,4},{10,10}};
     }
-    else if(testLevel >= TestLevel::SUBSTANTIAL)
+    else if(testLevel == TestLevel::SUBSTANTIAL)
+    { // The substantial unit tests
+      wordSizes = {{1,1},{2,2},{3,3},{4,4},{10,10},{16,16},{32,32},{10,20},{20,10}};
+    }
+    else if(testLevel >= TestLevel::EXHAUSTIVE)
     { // The substantial unit tests
       wordSizes = {{1,1},{2,2},{3,3},{4,4},{8,8},{16,8},{8,16},{13,17},{24,24},{27,41},{35,35},{53,53},{64,64},{10,99},{99,10},{100,100}};
     }
