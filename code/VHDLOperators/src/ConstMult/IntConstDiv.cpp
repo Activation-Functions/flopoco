@@ -595,7 +595,7 @@ namespace flopoco{
 				}
 			if(computeRemainder) {
 				ostringstream multParams;
-				multParams << "wIn=" << qSize << " n=" << d;
+				multParams << "wIn=" << qSize << " constant=" << d;
 				newInstance("IntConstMultShiftAddPlain", "remMult", multParams.str(), "X=>Q1", "R=>QD");
 				vhdl << tab << declare("R0",wIn) << " <= X - QD" << range(wIn-1,0) << ";" << endl;
 				vhdl << tab << "R <= R0" << range(rSize-1,0) <<";" << endl;
