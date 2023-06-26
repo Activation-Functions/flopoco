@@ -212,7 +212,7 @@ namespace flopoco{
 				//				currentDivProd *= divisors[i];
 				// wInCurrent = getSignalByName(join("Q",i+1))->width();
 				ostringstream multParams;
-				multParams << "wIn=" << intlog2(currentDivProd) << " n=" << divisors[i-1];
+				multParams << "wIn=" << intlog2(currentDivProd) << " constant=" << divisors[i-1];
 				newInstance("IntConstMultShiftAddPlain", join("rMult",i), multParams.str(), "X=>"+join("RR",i+1), "R=>"+join("M",i));
 				currentDivProd *= divisors[i-1];
 				int sizeRR = intlog2(currentDivProd);
@@ -573,7 +573,7 @@ namespace flopoco{
 
 			// Finally get to VHDL generation
 			ostringstream multParams;
-			multParams << "wIn=" << wIn << " n=" << (costp<costm? ap : am);
+			multParams << "wIn=" << wIn << " constant=" << (costp<costm? ap : am);
 			newInstance("IntConstMultShiftAddPlain", "recipMult", multParams.str(), "X=>X", "R=>P");
 			int pSize=getSignalByName("P")->width();
 
