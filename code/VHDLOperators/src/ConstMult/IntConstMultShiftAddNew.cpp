@@ -1,0 +1,722 @@
+#include "flopoco/ConstMult/IntConstMultShiftAddNew.hpp"
+#include "flopoco/InterfacedOperator.hpp"
+#include "flopoco/UserInterface.hpp"
+
+#if defined(HAVE_PAGLIB)
+
+#include <iostream>
+#include <sstream>
+#include <string>
+
+#include <cstdlib>
+#include <unistd.h>
+#include <sys/wait.h>
+#include <stdio.h>
+#include <sys/types.h>
+#include <fcntl.h>
+
+/*
+#include <map>
+#include <vector>
+#include <set>
+
+#include "flopoco/ConstMult/adder_cost.hpp"
+*/
+
+/* header of libraries to manipulate multiprecision numbers
+   There will be used in the emulate function to manipulate arbitraly large
+   entries */
+#include "gmp.h"
+#include "mpfr.h"
+#include "pagsuite/log2_64.h"
+// include the header of the Operator
+#include "flopoco/PrimitiveComponents/Primitive.hpp"
+//#include "rpag/rpag.h"
+#include "flopoco/IntAddSubCmp/IntAddSub.hpp"
+
+#include "flopoco/ConstMult/WordLengthCalculator.hpp"
+
+using namespace std;
+using namespace PAGSuite;
+
+
+namespace flopoco {
+
+
+	IntConstMultShiftAddNew::IntConstMultShiftAddNew(
+	    Operator* parentOp,
+	    Target* target,
+	    int wIn_,
+	    string adder_graph_str,
+      bool isSigned,
+	    int epsilon_,
+	    string truncations
+	)
+	    : Operator(parentOp, target),
+	      wIn(wIn_),
+        isSigned(isSigned),
+	      epsilon(epsilon_)
+	{
+		ostringstream name;
+		name << "IntConstMultShiftAddNew_" << wIn;
+		setNameWithFreqAndUID(name.str());
+
+		if(adder_graph_str.empty()) return; //in case the realization string is not defined, don't further process it.
+
+		cerr << "reading adder_graph_str=" << adder_graph_str << endl;
+
+    if(is_log_lvl_enabled(LogLevel::DEBUG))
+      adder_graph.quiet = false; //enable debug output
+    else
+      adder_graph.quiet = true; //disable debug output, except errors
+
+    REPORT(LogLevel::VERBOSE, "parse graph...")
+		bool validParse = adder_graph.parse_to_graph(adder_graph_str);
+
+		if(validParse) {
+			adder_graph.drawdot("pag_input_graph.dot");
+
+      if(is_log_lvl_enabled(LogLevel::DEBUG))
+        adder_graph.print_graph();
+
+      //TODO: Determine no of inputs & configurations
+      noOfInputs=-1;
+      noOfConfigurations=-1;
+
+      map<pair<mpz_class, int>, vector<int> > wordSizeMap;
+      bool enableTruncations=false;
+      if(!truncations.empty() || (epsilon > 0))
+      {
+        enableTruncations=true;
+        if(!truncations.empty())
+        {
+          REPORT(LogLevel::DETAIL,  "Parsing truncations...");
+
+          parseTruncation(wordSizeMap, truncations);
+        }
+        if(epsilon > 0)
+        {
+          REPORT(LogLevel::DETAIL,  "Found non-zero epsilon=" << epsilon << ", computing word sizes of truncated MCM");
+
+#if defined(HAVE_PAGLIB) && defined(HAVE_SCALP)
+          WordLengthCalculator wlc = WordLengthCalculator(adder_graph, wIn, epsilon, target);
+          wordSizeMap = wlc.optimizeTruncation();
+
+          REPORT(LogLevel::DETAIL, "Finished computing word sizes of truncated MCM");
+
+#else
+          THROWERROR("The word length's in IntConstMultShiftAdd can not be obtained without ScaLP library, please build with ScaLP library.");
+#endif
+        }
+
+        REPORT(LogLevel::DETAIL, "Using the following truncations (format: \"const, stage: trunc_input_0, trunc_input_1, ...)\":");
+        if(is_log_lvl_enabled(LogLevel::DETAIL))
+        {
+          for(auto & it : wordSizeMap) {
+            std::cout << it.first.first << ", " << it.first.second << ": ";
+            for(auto & itV : it.second)
+              std::cout << itV << " ";
+            std::cout << std::endl;
+          }
+        }
+
+      }
+
+      generateAdderGraph(&adder_graph);
+		}
+  };
+
+  void IntConstMultShiftAddNew::parseTruncation(map<pair<mpz_class, int>, vector<int> > &wordSizeMap, string truncationList)
+  {
+    static const string fieldDelimiter{" "};
+    auto getNextField = [](string& val)->string{
+      long unsigned int offset = val.find(fieldDelimiter);
+      string ret = val.substr(0, offset);
+      if (offset != string::npos) {
+        offset += 1;
+      }
+      val.erase(0, offset);
+      return ret;
+    };
+    while(truncationList.length() > 0)
+      parseTruncationRecord(wordSizeMap, getNextField(truncationList));
+  }
+
+  void IntConstMultShiftAddNew::parseTruncationRecord(map<pair<mpz_class, int>, vector<int> > &wordSizeMap, string record)
+  {
+    static const string identDelimiter{':'};
+    static const string fieldDelimiter{','};
+
+    auto getNextField = [](string& val)->mpz_class{
+      long unsigned int offset = val.find(fieldDelimiter);
+      string ret = val.substr(0, offset);
+      if (offset != string::npos) {
+        offset += 1;
+      }
+      val.erase(0, offset);
+      return mpz_class(ret);
+    };
+
+    long unsigned int  offset = record.find(identDelimiter);
+    if (offset == string::npos) {
+      throw string{"IntConstMultShiftAdd::TruncationRegister::parseRecord : "
+      "wrong format "} + record;
+    }
+    string recordIdStr = record.substr(0, offset);
+    record.erase(0, offset + 1);
+    string& valuesStr = record;
+
+    mpz_class factor = getNextField(recordIdStr);
+    int stage = getNextField(recordIdStr).get_si();
+
+    vector<int> truncats;
+
+    while(valuesStr.length() > 0) {
+      truncats.push_back(getNextField(valuesStr).get_si());
+    }
+
+    wordSizeMap.insert({make_pair(factor, stage), truncats});
+
+    if(is_log_lvl_enabled(DEBUG))
+    {
+      cerr << "(" << factor << "," << stage << "):";
+      for(int t : truncats)
+        cerr << t << " ";
+      cerr << endl;
+    }
+  }
+
+  void IntConstMultShiftAddNew::generateAdderGraph(PAGSuite::adder_graph_t* adder_graph)
+  {
+    REPORT(DETAIL,"Generating adder graph using " << (getTarget()->plainVHDL() ? "plain" : "structured") << "VHDL");
+
+    for(adder_graph_base_node_t* node : adder_graph->nodes_list)
+    {
+      if(is_a<input_node_t>(*node))
+      {
+        generateInputNode((input_node_t*) node);
+      }
+      else if(is_a<output_node_t>(*node))
+      {
+        generateOutputNode((output_node_t*) node);
+      }
+      else if(is_a<adder_subtractor_node_t>(*node))
+      {
+        generateAdderSubtractorNode((adder_subtractor_node_t*) node);
+      }
+      else if(is_a<register_node_t>(*node))
+      {
+        generateRegisterNode((register_node_t*) node);
+      }
+      else if(is_a<mux_node_t>(*node))
+      {
+        generateMuxNode((mux_node_t*) node);
+      }
+      else if(is_a<conf_adder_subtractor_node_t>(*node))
+      {
+        generateConfAdderSubtractorNode((conf_adder_subtractor_node_t*) node);
+      }
+      else
+      {
+        cerr << "Error: Unknown node " << node << endl;
+      }
+
+    }
+
+  }
+
+  void IntConstMultShiftAddNew::generateInputNode(PAGSuite::input_node_t* node)
+  {
+    cerr << "processing input " << node->output_factor << endl;
+
+    assert(node->output_factor.size() > 0);
+    int inputNo=0;
+    for(int i=0; i < node->output_factor[0].size(); i++)
+    {
+      if(node->output_factor[0][i] == 1)
+        break;
+      inputNo++;
+    }
+
+    string inputname = "X" + to_string(inputNo);
+    cerr << "adding input " << inputname << endl;
+    addInput(inputname, wIn);
+
+    vhdl << tab << declare(generateSignalName(node->output_factor,node->stage),wIn) << " <= " << inputname << ";" << endl;
+
+  }
+
+  void IntConstMultShiftAddNew::generateOutputNode(PAGSuite::output_node_t* node)
+  {
+    string name = "R_" + factorToString(node->output_factor);
+
+    int result_word_size = computeWordSize(node->output_factor, wIn);
+    cerr << "generating output " << name << " storing " << node->output_factor << " in stage " << node->stage << " using " << result_word_size << " bits" << endl;
+    addOutput(name, result_word_size);
+
+    string signed_str = isSigned ? "signed" : "unsigned";
+    vhdl << tab << name << " <= std_logic_vector(unsigned(shift_left(resize(" << signed_str << "(" << generateSignalName(node->input->output_factor,node->stage) << ")," << computeWordSize(node->output_factor,wIn) << ")," << node->input_shift << ")));" << endl;
+  }
+
+  void IntConstMultShiftAddNew::generateRegisterNode(PAGSuite::register_node_t* node)
+  {
+    string name = generateSignalName(node->output_factor,node->stage);
+
+    int result_word_size = computeWordSize(node->output_factor, wIn);
+    cerr << "generating register " << name << " storing " << node->output_factor << " in stage " << node->stage << " using " << result_word_size << " bits" << endl;
+
+    vhdl << tab << declare(name, result_word_size) << " <= " << generateSignalName(node->input->output_factor, node->stage - 1) << ";" << endl;
+  }
+
+  void IntConstMultShiftAddNew::generateAdderSubtractorNode(PAGSuite::adder_subtractor_node_t* node)
+  {
+
+    int result_word_size = computeWordSize(node->output_factor,wIn);
+
+    cerr << "processing adder computing " << generateSignalName(node->output_factor,node->stage) << " =";
+    for(int i=0; i < node->inputs.size(); i++)
+    {
+      if(node->input_is_negative[i])
+      {
+        cerr << " - ";
+      }
+      else
+      {
+        if(i > 0)
+          cerr << " + ";
+      }
+      cerr << generateSignalName(node->inputs[i]->output_factor,node->inputs[i]->stage);
+      if(node->input_shifts[i] > 0)
+      {
+        cerr << " << " << node->input_shifts[i];
+      }
+    }
+    cerr << " using " << result_word_size << " bits for the result";
+    cerr <<  endl;
+
+
+    int wAdd = wIn;
+
+    //determine flags for the mode of the Adder / Sub:
+/*
+    int nb_inputs = node->inputs.size();
+    int flag = (nb_inputs == 3) ? IntAddSub::TERNARY : 0;
+    if (node->input_is_negative[0]) {
+      flag |= IntAddSub::SUB_LEFT;
+    }
+    if (node->input_is_negative[1]) {
+      flag |= (nb_inputs == 3) ? IntAddSub::SUB_MID : IntAddSub::SUB_RIGHT;
+    }
+
+    if (nb_inputs > 2 && node->input_is_negative[2]) {
+      flag |= IntAddSub::SUB_RIGHT;
+    }
+*/
+    bool isSigned=false;
+    bool isTernary=false;
+    bool xNegative=false;
+    bool yNegative=false;
+    bool zNegative=false;
+    bool xConfigurable=false;
+    bool yConfigurable=false;
+    bool zConfigurable=false;
+
+
+
+    IntAddSub* add = new IntAddSub(
+      this,
+      getTarget(),
+      wAdd,isSigned, isTernary, xNegative, yNegative, zNegative, xConfigurable, yConfigurable, zConfigurable
+    );
+
+    addSubComponent(add);
+
+    /*
+
+    vector<string> operandNames(nb_inputs);
+    for (size_t i = 0 ; i < nb_inputs ; ++i)
+    {
+      string operandName = generateSignalName(node->inputs[i]->output_factor) + "_";
+      operandNames.push_back();
+      declare(0., signal_name, adder_word_size);
+    }
+
+    for (size_t i = 0 ; i < nb_inputs ; ++i)
+    {
+      inPortMap(add->getInputName(i), operandNames[i]);
+    }
+    base_op->outPortMap(add->getOutputName(), msb_signame);
+
+    base_op->vhdl << base_op->instance(add,"generic_add_sub_"+outputSignalName);
+
+    string leftshiftedoutput = outputSignalName + "_tmp";
+
+//  base_op->vhdl << "\t" << declare(leftshiftedoutput, wordsize + finalRightShifts) << " <= " << msb_signame;
+    base_op->vhdl << "\t" << declare(leftshiftedoutput, wordsize) << " <= " << msb_signame;
+*/
+
+  }
+
+  void IntConstMultShiftAddNew::generateMuxNode(PAGSuite::mux_node_t* node)
+  {
+    cerr << "processing MUX computing " << node->output_factor << " in stage " << node->stage << endl;
+
+  }
+
+  void IntConstMultShiftAddNew::generateConfAdderSubtractorNode(PAGSuite::conf_adder_subtractor_node_t* node)
+  {
+    cerr << "processing configurable adder/subtractor computing " << node->output_factor << " in stage " << node->stage << endl;
+
+  }
+
+
+
+  void IntConstMultShiftAddNew::emulate(TestCase * tc)
+	{
+		vector<mpz_class> input_vec;
+
+		unsigned int confVal=emu_conf;
+
+		if( noOfConfigurations > 1 )
+			tc->addInput("config_no",emu_conf);
+
+		for(int i=0;i<noOfInputs;i++ )
+		{
+			stringstream inputName;
+			inputName << "X" << i;
+
+			mpz_class inputVal = tc->getInputValue(inputName.str());
+
+			mpz_class big1 = (mpz_class(1) << (wIn));
+			mpz_class big1P = (mpz_class(1) << (wIn-1));
+
+			if ( inputVal >= big1P)
+				inputVal = inputVal - big1;
+
+			input_vec.push_back(inputVal);
+		}
+
+		mpz_class expectedResult;
+
+
+		for(list<output_signal_info>::iterator out_it= output_signals.begin();out_it!=output_signals.end();++out_it  )
+		{
+			expectedResult = 0;
+			stringstream comment;
+			for(int i=0; i < noOfInputs; i++)
+			{
+				mpz_class output_factor;
+				if ((int)confVal<noOfConfigurations)
+					output_factor= (long signed int) (*out_it).output_factors[confVal][i];
+				else
+					output_factor= (long signed int) (*out_it).output_factors[noOfConfigurations-1][i];
+
+				expectedResult += input_vec[i] * output_factor;
+				if(i != 0) comment << " + ";
+				else comment << "\t";
+				comment << input_vec[i] << " * " << output_factor;
+			}
+			comment << " == " << expectedResult << endl;
+
+			int output_ws = computeWordSize((*out_it).output_factors,wIn);
+			if ( expectedResult < mpz_class(0) )
+			{
+				mpz_class min_val = -1 * (mpz_class(1) << (output_ws-1));
+				if( expectedResult < min_val )
+				{
+					std::stringstream err;
+					err << "ERROR in testcase <" << comment.str() << ">" << std::endl;
+					err << "Wordsize of outputfactor ("<< output_ws << ") does not match given (" << computeWordSize((*out_it).output_factors,wIn) << ")";
+					THROWERROR( err.str() )
+				}
+			}
+			else
+			{
+				mpz_class max_val = (mpz_class(1) << (output_ws-1)) -1;
+				if( expectedResult > max_val )
+				{
+					std::stringstream err;
+					err << "ERROR in testcase <" << comment.str() << ">\n";
+					err << "Outputfactor does not fit in given wordsize" << endl;
+					THROWERROR( err.str() )
+				}
+			}
+
+			try
+			{
+				tc->addComment(comment.str());
+				tc->addExpectedOutput((*out_it).signal_name,expectedResult);
+			}
+			catch(string errorstr)
+			{
+				cout << errorstr << endl;
+			}
+		}
+
+		if(emu_conf < noOfConfigurations-1 && noOfConfigurations!=1)
+			emu_conf++;
+		else
+			emu_conf=0;
+	}
+
+	void IntConstMultShiftAddNew::buildStandardTestCases(TestCaseList * tcl)
+	{
+		TestCase* tc;
+
+		int min_val = -1 * (1 << (wIn-1));
+		int max_val = (1 << (wIn-1)) -1;
+
+		stringstream max_str;
+		max_str << "Test MAX: " << max_val;
+
+		stringstream min_str;
+		min_str << "Test MIN: " << min_val;
+
+		for(int i=0;i<noOfConfigurations;i++)
+		{
+			tc = new TestCase (this);
+			tc->addComment("Test ZERO");
+			if( noOfConfigurations > 1 )
+			{
+				tc->addInput("config_no",i);
+			}
+			for(list<string>::iterator inp_it = input_signals.begin();inp_it!=input_signals.end();++inp_it )
+			{
+				tc->addInput(*inp_it,0 );
+			}
+			emulate(tc);
+			tcl->add(tc);
+		}
+
+		for(int i=0;i<noOfConfigurations;i++)
+		{
+			tc = new TestCase (this);
+			tc->addComment("Test ONE");
+			if( noOfConfigurations > 1 )
+			{
+				tc->addInput("config_no",i);
+			}
+			for(list<string>::iterator inp_it = input_signals.begin();inp_it!=input_signals.end();++inp_it )
+			{
+				tc->addInput(*inp_it,1 );
+			}
+			emulate(tc);
+			tcl->add(tc);
+		}
+
+		for(int i=0;i<noOfConfigurations;i++)
+		{
+			tc = new TestCase (this);
+			tc->addComment(min_str.str());
+			if( noOfConfigurations > 1 )
+			{
+				tc->addInput("config_no",i);
+			}
+			for(list<string>::iterator inp_it = input_signals.begin();inp_it!=input_signals.end();++inp_it )
+			{
+				tc->addInput(*inp_it,min_val );
+			}
+			emulate(tc);
+			tcl->add(tc);
+		}
+
+		for(int i=0;i<noOfConfigurations;i++)
+		{
+			tc = new TestCase (this);
+			tc->addComment(max_str.str());
+			if( noOfConfigurations > 1 )
+			{
+				tc->addInput("config_no",i);
+			}
+			for(list<string>::iterator inp_it = input_signals.begin();inp_it!=input_signals.end();++inp_it )
+			{
+				tc->addInput(*inp_it,max_val );
+			}
+			emulate(tc);
+			tcl->add(tc);
+		}
+	}
+
+	TestList IntConstMultShiftAddNew::unitTest(int testLevel)
+	{
+		// the static list of mandatory tests
+		TestList testStateList;
+		vector<pair<string,string>> paramList;
+
+		list<string> graphs;
+
+		//simplest adder graph possible, multiply by 1:
+		graphs.push_back("\"{{'O',[1],1,[1],0,0}}\"");
+
+		//SCM by 123, obtained from rpag 123:
+		graphs.push_back("\"{{'R',[1],1,[1],0},{'A',[5],1,[1],0,0,[1],0,2},{'A',[123],2,[1],1,7,[-5],1,0},{'O',[123],2,[123],2,0}}\"");
+
+		//MCM by 123, 321, obtained from rpag 123 321:
+		graphs.push_back("\"{{'R',[1],1,[1],0},{'A',[5],1,[1],0,0,[1],0,2},{'A',[123],2,[1],1,7,[-5],1,0},{'A',[321],2,[1],1,0,[5],1,6},{'O',[123],2,[123],2,0},{'O',[321],2,[321],2,0}}\"");
+
+		//SCM by 100000000 using ternary adders, obtained from rpag --ternary_adders 100000000:
+		graphs.push_back("\"{{'A',[191],1,[1],0,6,[1],0,7,[-1],0,0},{'A',[543],1,[1],0,5,[1],0,9,[-1],0,0},{'A',[390625],2,[191],1,11,[-543],1,0},{'O',[100000000],2,[390625],2,8}}\"");
+
+		//MCM by 123, 321 using ternary adders, obtained from rpag --ternary_adders 123 321:
+		graphs.push_back("\"{{'A',[123],1,[1],0,7,[-1],0,2,[-1],0,0},{'A',[321],1,[1],0,6,[1],0,8,[1],0,0},{'O',[123],1,[123],1,0},{'O',[321],1,[321],1,0}}\"");
+
+		//MCM by 11280171, 13342037 using ternary adders, obtained from rpag --ternary_adders 11280171 13342037:
+		graphs.push_back("\"{{'A',[21],1,[1],0,2,[1],0,4,[1],0,0},{'A',[8065],1,[1],0,13,[-1],0,7,[1],0,0},{'A',[10941],2,[21],1,3,[21],1,9,[21],1,0},{'A',[104833],2,[21],1,9,[21],1,12,[8065],1,0},{'A',[11280171],3,[10941],2,3,[10941],2,10,[-10941],2,0},{'A',[13342037],3,[10941],2,0,[-10941],2,3,[104833],2,7},{'O',[11280171],3,[11280171],3,0},{'O',[13342037],3,[13342037],3,0}}\""); //
+
+		//CMM of 123*x1+321*x2 345*x1-543*x2, obtained from rpag --cmm 123,321 345,-543:
+		graphs.push_back("\"{{'A',[0,5],1,[0,1],0,0,[0,1],0,2},{'A',[0,17],1,[0,1],0,0,[0,1],0,4},{'A',[5,0],1,[1,0],0,0,[1,0],0,2},{'A',[128,1],1,[0,1],0,0,[1,0],0,7},{'A',[257,0],1,[1,0],0,0,[1,0],0,8},{'R',[0,5],2,[0,5],1},{'A',[5,68],2,[0,17],1,2,[5,0],1,0},{'A',[123,1],2,[128,1],1,0,[-5,0],1,0},{'A',[385,1],2,[128,1],1,0,[257,0],1,0},{'A',[123,321],3,[0,5],2,6,[123,1],2,0},{'A',[345,-543],3,[385,1],2,0,[-5,-68],2,3},{'O',[123,321],3,[123,321],3,0},{'O',[345,-543],3,[345,-543],3,0}}\"");
+
+		//CMM of 123*x1+321*x2 345*x1-543*x2 using ternary adders, obtained from rpag --ternary_adders --cmm 123,321 345,-543:
+		graphs.push_back("\"{{'A',[1,-4],1,[1,0],0,0,[0,-1],0,2},{'A',[2,5],1,[0,1],0,0,[0,1],0,2,[1,0],0,1},{'A',[5,-1],1,[1,0],0,2,[0,-1],0,0,[1,0],0,0},{'A',[7,-1],1,[1,0],0,3,[0,-1],0,0,[-1,0],0,0},{'A',[123,321],2,[2,5],1,6,[-5,1],1,0},{'A',[345,-543],2,[1,-4],1,7,[7,-1],1,5,[-7,1],1,0},{'O',[123,321],2,[123,321],2,0},{'O',[345,-543],2,[345,-543],2,0}}\""); //
+
+		//MCM's including right shifts:
+		graphs.push_back("\"{{'R',[1],1,[1],0},{'A',[31],1,[1],0,5,[-1],0,0},{'A',[511],1,[1],0,9,[-1],0,0},{'A',[2049],1,[1],0,0,[1],0,11},{'A',[123],2,[31],1,2,[-1],1,0},{'A',[6127],2,[511],1,4,[-2049],1,0},{'A',[1049119],2,[31],1,0,[2049],1,9},{'A',[5079583],3,[123],2,15,[1049119],2,0},{'A',[6274171],3,[123],2,0,[6127],2,10},{'A',[5676877],4,[5079583],3,-1,[6274171],3,-1},{'A',[25397915],4,[5079583],3,0,[5079583],3,2},{'O',[50795830],4,[25397915],4,1},{'O',[90830032],4,[5676877],4,4}}\"");
+		graphs.push_back("\"{{'O',[6],3,[3],2,1},{'O',[10],3,[5],1,1},{'A',[3],2,[1],0,-1,[5],1,-1},{'A',[5],1,[1],0,2,[1],0,0}}\""); //
+
+    /*RSCM of 1;2;3;4;5
+     * obtained from:
+     * ./rpag 1 2 3 4 5
+     * ./pag_split "{{'R',[1],1,[1],0},{'A',[3],1,[1],0,0,[1],0,1},{'A',[5],1,[1],0,0,[1],0,2},{'O',[1],1,[1],1,0},{'O',[2],1,[1],1,1},{'O',[3],1,[3],1,0},{'O',[4],1,[1],1,2},{'O',[5],1,[5],1,0}}" "1;2;3;4;5" --pag_fusion_input
+     * ./pag_fusion --if pag_fusion_input.txt
+     */
+    graphs.push_back("\"{{'M',[1;2;2;4;4],1,[1;1;1;1;1],0,[0;1;1;2;2]},{'M',[0;0;1;0;1],1,[1;1;1;1;1],0,[NaN;NaN;0;NaN;0]},{'A',[1;2;3;4;5],2,[1;2;2;4;4],1,0,[0;0;1;0;1],1,0}}\"");
+
+    /*RMCM of 123;543;412 345;321;654
+     * obtained from:
+     * ./rpag 123 345 543 654 321 412
+     * ./pag_split "{{'R',[1],1,[1],0},{'A',[17],1,[1],0,0,[1],0,4},{'R',[1],2,[1],1},{'A',[15],2,[1],1,4,[-1],1,0},{'A',[69],2,[1],1,0,[17],1,2},{'A',[153],2,[17],1,0,[17],1,3},{'A',[103],3,[1],2,8,[-153],2,0},{'A',[123],3,[69],2,1,[-15],2,0},{'A',[321],3,[15],2,0,[153],2,1},{'A',[327],3,[15],2,5,[-153],2,0},{'A',[345],3,[69],2,0,[69],2,2},{'A',[543],3,[153],2,2,[-69],2,0},{'O',[123],3,[123],3,0},{'O',[321],3,[321],3,0},{'O',[345],3,[345],3,0},{'O',[412],3,[103],3,2},{'O',[543],3,[543],3,0},{'O',[654],3,[327],3,1}}" "123;543;412 345;321;654" --pag_fusion_input
+     * ./pag_fusion --if pag_fusion_input.txt
+     */
+    graphs.push_back("\"{{'R',[1;1;1],1,[1;1;1],0},{'A',[17;17;17],1,[1;1;1],0,0,[1;1;1],0,4},{'M',[16;1;16],2,[1;1;1],1,[4;0;4]},{'M',[1;0;1],2,[1;1;1],1,[0;NaN;0]},{'A',[15;1;15],3,[16;1;16],2,0,[-1;0;-1],2,0},{'R',[1;1;1],2,[1;1;1],1},{'R',[17;17;17],2,[17;17;17],1},{'A',[69;69;69],3,[1;1;1],2,0,[17;17;17],2,2},{'A',[153;153;153],3,[17;17;17],2,0,[17;17;17],2,3},{'M',[69;306;306],4,[69;69;69],3,[0;NaN;NaN],[153;153;153],3,[NaN;1;1]},{'M',[15;1024;69],4,[15;1;15],3,[0;10;NaN],[69;69;69],3,[NaN;NaN;0]},{'A',[123;412;543],5,[69;-306;306],4,1,[-15;1024;-69],4,0},{'M',[15;69;960],4,[15;1;15],3,[0;NaN;6],[69;69;69],3,[NaN;0;NaN]},{'M',[153;138;153],4,[153;153;153],3,[0;NaN;0],[69;69;69],3,[NaN;1;NaN]},{'A',[321;345;654],5,[15;69;960],4,0,[153;138;-153],4,1}}\"");
+
+    /*RCMM with two inputs and two configurations
+     * obtained from:
+     * ./rpag --cmm 123+321 345+543 567+765 789+987 --file_output
+     * ./pag_split "{{'A',[1,-64],1,[1,0],0,0,[0,-1],0,6},{'A',[1,-1],1,[1,0],0,0,[0,-1],0,0},{'A',[3,0],1,[1,0],0,0,[1,0],0,1},{'R',[1,-1],2,[1,-1],1},{'A',[47,64],2,[3,0],1,4,[-1,64],1,0},{'A',[33,-33],3,[1,-1],2,0,[1,-1],2,5},{'A',[189,255],3,[1,-1],2,0,[47,64],2,2},{'A',[123,321],4,[189,255],3,0,[-33,33],3,1},{'A',[345,543],4,[189,255],3,1,[-33,33],3,0},{'A',[567,765],4,[189,255],3,0,[189,255],3,1},{'A',[789,987],4,[33,-33],3,0,[189,255],3,2},{'O',[123,321],4,[123,321],4,0},{'O',[345,543],4,[345,543],4,0},{'O',[567,765],4,[567,765],4,0},{'O',[789,987],4,[789,987],4,0}}" "123,321;345,543 567,765;789,987" --pag_fusion_input
+     * ./pag_fusion --if pag_fusion_input.txt
+    */
+    graphs.push_back("\"{{'A',[1,-64;1,-64],1,[1,0;1,0],0,0,[0,-1;0,-1],0,6},{'A',[1,-1;1,-1],1,[1,0;1,0],0,0,[0,-1;0,-1],0,0},{'A',[3,0;3,0],1,[1,0;1,0],0,0,[1,0;1,0],0,1},{'A',[47,64;47,64],2,[3,0;3,0],1,4,[-1,64;-1,64],1,0},{'R',[1,-1;1,-1],2,[1,-1;1,-1],1},{'R',[1,-1;1,-1],3,[1,-1;1,-1],2},{'M',[8,-8;47,64],3,[1,-1;1,-1],2,[3;NaN],[47,64;47,64],2,[NaN;0]},{'A',[33,-33;189,255],4,[1,-1;1,-1],3,0,[8,-8;47,64],3,2},{'M',[47,64;8,-8],3,[47,64;47,64],2,[0;NaN],[1,-1;1,-1],2,[NaN;3]},{'A',[189,255;33,-33],4,[1,-1;1,-1],3,0,[47,64;8,-8],3,2},{'R',[189,255;33,-33],5,[189,255;33,-33],4},{'R',[33,-33;189,255],5,[33,-33;189,255],4},{'A',[123,321;345,543],6,[189,255;-33,33],5,0,[-33,33;189,255],5,1},{'M',[189,255;378,510],5,[189,255;33,-33],4,[0;NaN],[33,-33;189,255],4,[NaN;1]},{'A',[567,765;789,987],6,[189,255;33,-33],5,0,[189,255;378,510],5,1}}\"");
+
+
+//  graphs.push_back("\"\""); //
+//  graphs.push_back("\"\""); //
+
+    if(testLevel == TestLevel::QUICK)
+    {
+      for(auto g : graphs)
+      {
+        paramList.push_back(make_pair("wIn", "10"));
+        paramList.push_back(make_pair("graph", g));
+        testStateList.push_back(paramList);
+        paramList.clear();
+      }
+    }
+    else
+    {
+      for(int wIn=10; wIn<=32; wIn+=22) // test various input widths
+      {
+        for(auto g : graphs)
+        {
+          paramList.push_back(make_pair("wIn", to_string(wIn)));
+          paramList.push_back(make_pair("graph", g));
+          testStateList.push_back(paramList);
+          paramList.clear();
+        }
+      }
+    }
+
+		return testStateList;
+	}
+
+	string IntConstMultShiftAddNew::generateSignalName(std::vector<std::vector<int64_t> > factor, int stage)
+	{
+		stringstream signalName;
+    signalName << "x_" << factorToString(factor) << "_s" << stage;
+
+		return signalName.str();
+	}
+
+  string IntConstMultShiftAddNew::factorToString(std::vector<std::vector<int64_t> > factor)
+  {
+    stringstream signalName;
+    for(int c=0; c < factor.size(); c++ ) //loop over configurations
+    {
+      signalName << "c";
+      for(int i=0; i < factor[c].size(); i++) // loop over inputs
+      {
+        if(i > 0) signalName << "v";
+        if(factor[c][i] != DONT_CARE )
+        {
+          if(factor[c][i] < 0 )
+          {
+            signalName << "m";
+          }
+          signalName << abs( factor[c][i] );
+        }
+        else
+          signalName << "d";
+      }
+    }
+    return signalName.str();
+  }
+
+  /*
+  int flopoco::IntConstMultShiftAddNew::computeWordSize(std::vector<std::vector<int64_t> > factor)
+  {
+    int no_of_extra_bits=-1;
+    for(int c=0; c < factor.size(); c++ ) //loop over configurations
+    {
+      int64_t sum=0;
+      for (int i = 0; i < factor[c].size(); i++) // loop over inputs
+      {
+        sum += factor[c][i];
+      }
+      no_of_extra_bits = max(no_of_extra_bits,log2c_64(sum));
+    }
+    return no_of_extra_bits;
+  }
+*/
+	OperatorPtr flopoco::IntConstMultShiftAddNew::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui)
+	{
+		if (target->getVendor() != "Xilinx")
+			throw std::runtime_error("Can't build xilinx primitive on non xilinx target");
+
+		int wIn, sync_every = 0;
+		std::string adder_graph, truncations;
+    bool isSigned;
+		int epsilon;
+
+		ui.parseInt(args, "wIn", &wIn);
+		ui.parseString(args, "graph", &adder_graph);
+    ui.parseBoolean(args, "signed", &isSigned);
+		ui.parseString( args, "truncations", &truncations);
+		ui.parseInt(args, "epsilon", &epsilon);
+
+		if (truncations == "\"\"") {
+			truncations = "";
+		}
+
+		return new IntConstMultShiftAddNew(parentOp, target, wIn, adder_graph, isSigned, epsilon, truncations);
+	}
+
+
+}//namespace
+
+
+namespace flopoco {
+	template <>
+	const OperatorDescription<IntConstMultShiftAddNew> op_descriptor<IntConstMultShiftAddNew> {
+	    "IntConstMultShiftAddNew", // name
+	    "A component for building constant multipliers based on "
+	    "pipelined adder graphs (PAGs).", // description, string
+	    "ConstMultDiv", // category, from the list defined in UserInterface.cpp
+	    "",
+	    "wIn(int): Wordsize of pag inputs; \
+       graph(string): Realization string of the adder graph; \
+       signed(bool)=true: signedness of input and output; \
+       epsilon(int)=0: Allowable error for truncated constant multipliers; \
+       truncations(string)=\"\": provides the truncations for intermediate values (format const1,stage:trunc_input_0,trunc_input_1,... const2,stage:trunc_input_0,trunc_input_1,...)",""};
+       // (format const1,stage:trunc_input_0,trunc_input_1,...;const2,stage:trunc_input_0,trunc_input_1,...;...)
+}//namespace
+
+#endif // HAVE_PAGLIB
