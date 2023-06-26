@@ -9,6 +9,7 @@
 #include <string>
 
 #include <cstdlib>
+#include <cassert>
 #include <unistd.h>
 #include <sys/wait.h>
 #include <stdio.h>
