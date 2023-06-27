@@ -84,16 +84,15 @@ namespace flopoco {
       noOfInputs=-1;
       noOfConfigurations=-1;
 
-      map<pair<mpz_class, int>, vector<int> > wordSizeMap;
-      bool enableTruncations=false;
+      isTruncated=false;
       if(!truncations.empty() || (epsilon > 0))
       {
-        enableTruncations=true;
+        isTruncated=true;
         if(!truncations.empty())
         {
           REPORT(LogLevel::DETAIL,  "Parsing truncations...");
 
-          parseTruncation(wordSizeMap, truncations);
+          parseTruncation(truncations);
         }
         if(epsilon > 0)
         {
@@ -127,7 +126,7 @@ namespace flopoco {
 		}
   };
 
-  void IntConstMultShiftAddNew::parseTruncation(map<pair<mpz_class, int>, vector<int> > &wordSizeMap, string truncationList)
+  void IntConstMultShiftAddNew::parseTruncation(string truncationList)
   {
     static const string fieldDelimiter{" "};
     auto getNextField = [](string& val)->string{
@@ -140,10 +139,10 @@ namespace flopoco {
       return ret;
     };
     while(truncationList.length() > 0)
-      parseTruncationRecord(wordSizeMap, getNextField(truncationList));
+      parseTruncationRecord(getNextField(truncationList));
   }
 
-  void IntConstMultShiftAddNew::parseTruncationRecord(map<pair<mpz_class, int>, vector<int> > &wordSizeMap, string record)
+  void IntConstMultShiftAddNew::parseTruncationRecord(string record)
   {
     static const string identDelimiter{':'};
     static const string fieldDelimiter{','};
@@ -271,29 +270,59 @@ namespace flopoco {
 
   void IntConstMultShiftAddNew::generateAdderSubtractorNode(PAGSuite::adder_subtractor_node_t* node)
   {
-
-    int result_word_size = computeWordSize(node->output_factor,wIn);
-
-    cerr << "processing adder computing " << generateSignalName(node->output_factor,node->stage) << " =";
+    //The following steps are performed
+    //0: Determine constants: input word sizes of arguments X, Y and Z, output word size
+    int wAddOut = computeWordSize(node->output_factor, wIn);
+    vector<int> wAddIn(node->inputs.size());
     for(int i=0; i < node->inputs.size(); i++)
+      wAddIn[i] = computeWordSize(node->inputs[i]->output_factor, wIn);
+
+    if(is_log_lvl_enabled(DETAIL))
     {
-      if(node->input_is_negative[i])
+      cerr << "processing adder computing " << generateSignalName(node->output_factor,node->stage) << " =";
+      for(int i=0; i < node->inputs.size(); i++)
       {
-        cerr << " - ";
+        if(node->input_is_negative[i])
+        {
+          cerr << " - ";
+        }
+        else
+        {
+          if(i > 0)
+            cerr << " + ";
+        }
+        cerr << generateSignalName(node->inputs[i]->output_factor,node->inputs[i]->stage);
+        if(node->input_shifts[i] > 0)
+        {
+          cerr << " << " << node->input_shifts[i];
+        }
       }
-      else
+      cerr << " using " << wAddOut << " output bits and ";
+      for(int i=0; i < node->inputs.size(); i++)
       {
-        if(i > 0)
-          cerr << " + ";
+        cerr << wAddIn[i];
+        if(i < node->inputs.size()-1) cerr << ", ";
       }
-      cerr << generateSignalName(node->inputs[i]->output_factor,node->inputs[i]->stage);
-      if(node->input_shifts[i] > 0)
+      cerr << " input bits, respectively" <<  endl;
+    }
+
+    //1: create truncated versions of the input signals, adjust input word sizes
+    if(isTruncated)
+    {
+      mpz_class of((signed long int) node->output_factor[0][0]);
+      vector<int> &truncations = wordSizeMap.at(make_pair(of,node->stage));
+
+      for(int i=0; i < node->inputs.size(); i++)
       {
-        cerr << " << " << node->input_shifts[i];
+        string signalName = generateSignalName(node->inputs[i]->output_factor, node->inputs[i]->stage);
+        wAddIn[i] -= truncations[i];
+        vhdl << tab << declare(signalName + "_in" + to_string(i) + "_trunc", wAddIn[i]) << " <= " << signalName << range(wAddIn[i] + truncations[i] - 1, truncations[i]) << ";" << endl;
       }
     }
-    cerr << " using " << result_word_size << " bits for the result";
-    cerr <<  endl;
+    //2: split output parts that belong to one of the inputs and assign it to the outputs
+    //3: in signed case: sign-extend inputs
+    //4:
+
 
 
     int wAdd = wIn;

@@ -55,11 +55,14 @@ namespace flopoco
     bool isSigned;
     double epsilon;
 
+    bool isTruncated; //if true, the operator is truncated truncated
+    map<pair<mpz_class, int>, vector<int> > wordSizeMap; //stores the truncations of inputs; key is a pair of constant and stage, value is a vector of the number of truncated bits
+
     bool RPAGused;
     int emu_conf;
 
-    void parseTruncation(map<pair<mpz_class, int>, vector<int> > &wordSizeMap, string truncationList);
-    void parseTruncationRecord(map<pair<mpz_class, int>, vector<int> > &wordSizeMap, string record);
+    void parseTruncation(string truncationList);
+    void parseTruncationRecord(string record);
 
     void generateAdderGraph(PAGSuite::adder_graph_t* adder_graph);
     void generateInputNode(PAGSuite::input_node_t* node);
