@@ -64,8 +64,14 @@ void TilingStrategyOptimalILP::solve()
 #ifndef HAVE_SCALP
     throw "Error, TilingStrategyOptimalILP::solve() was called but FloPoCo was not built with ScaLP library";
 #else
-    cout << "using ILP solver " << target->getILPSolver() << endl;
     solver = new ScaLP::Solver(ScaLP::newSolverDynamic({target->getILPSolver(),"Gurobi","CPLEX","SCIP","LPSolve"}));
+    cout << "using ILP solver " << solver->getBackendName() << " (whish was " << target->getILPSolver() << ")" << endl;
+
+    if(solver->getBackendName().find("LPSolve") != std::string::npos)
+    {
+      cout << "LPSolve is used, disabling presolve as this caused problems in the past" << endl;
+      solver->presolve = false;
+    }
     solver->timeout = target->getILPTimeout();
 
     long long optTruncNumericErr = 0;
