@@ -64,6 +64,8 @@ namespace flopoco {
 
 		if(adder_graph_str.empty()) return; //in case the realization string is not defined, don't further process it.
 
+    useNumericStd();
+
 		cerr << "reading adder_graph_str=" << adder_graph_str << endl;
 
     if(is_log_lvl_enabled(LogLevel::DEBUG))
@@ -73,6 +75,8 @@ namespace flopoco {
 
     REPORT(LogLevel::VERBOSE, "parse graph...")
 		bool validParse = adder_graph.parse_to_graph(adder_graph_str);
+
+		adder_graph.check_and_correct();
 
 		if(validParse) {
 			adder_graph.drawdot("pag_input_graph.dot");
@@ -189,16 +193,21 @@ namespace flopoco {
   void IntConstMultShiftAddNew::generateAdderGraph(PAGSuite::adder_graph_t* adder_graph)
   {
     REPORT(DETAIL,"Generating adder graph using " << (getTarget()->plainVHDL() ? "plain" : "structured") << "VHDL");
-
+    noOfInputs=0;
+    noOfOutputs=0;
     for(adder_graph_base_node_t* node : adder_graph->nodes_list)
     {
       if(is_a<input_node_t>(*node))
       {
         generateInputNode((input_node_t*) node);
+  //      input_signals.push_back(generateSignalName(node->output_factor, node->stage));
+        noOfInputs++;
       }
       else if(is_a<output_node_t>(*node))
       {
         generateOutputNode((output_node_t*) node);
+
+        noOfOutputs++;
       }
       else if(is_a<adder_subtractor_node_t>(*node))
       {
@@ -277,9 +286,19 @@ namespace flopoco {
     for(int i=0; i < node->inputs.size(); i++)
       wAddIn[i] = computeWordSize(node->inputs[i]->output_factor, wIn);
 
+    string signalNameOut = generateSignalName(node->output_factor,node->stage);
+    declare(signalNameOut,wAddOut); //output signal of the adder equals signalName
+    string signalNameIn[node->inputs.size()];
+    for(int i=0; i < node->inputs.size(); i++)
+    {
+      signalNameIn[i] = signalNameOut + "_in" + to_string(i);
+      vhdl << tab << declare(signalNameIn[i],wAddIn[i]) << " <= " << generateSignalName(node->inputs[i]->output_factor,node->inputs[i]->stage) << ";" << endl;
+    }
+
+    //some detailed output about what is computed:
     if(is_log_lvl_enabled(DETAIL))
     {
-      cerr << "processing adder computing " << generateSignalName(node->output_factor,node->stage) << " =";
+      cerr << "processing adder computing " << signalNameOut << " =";
       for(int i=0; i < node->inputs.size(); i++)
       {
         if(node->input_is_negative[i])
@@ -306,26 +325,164 @@ namespace flopoco {
       cerr << " input bits, respectively" <<  endl;
     }
 
-    //1: create truncated versions of the input signals, adjust input word sizes
+    cerr << "input shifts after step 0:" << endl;
+    for(int i=0; i < node->input_shifts.size(); i++)
+    {
+      //adjust shifts with respect to the minimum shift due to truncation
+      cerr << "input shift of input " << i << " is " << node->input_shifts[i] << endl;
+    }
+
+    //Step 1: create truncated versions of the input signals (if any), adjust input word sizes
+    vector<int> truncations(node->inputs.size(),0);
     if(isTruncated)
     {
       mpz_class of((signed long int) node->output_factor[0][0]);
-      vector<int> &truncations = wordSizeMap.at(make_pair(of,node->stage));
-
+      truncations = wordSizeMap.at(make_pair(of,node->stage));
       for(int i=0; i < node->inputs.size(); i++)
       {
-        string signalName = generateSignalName(node->inputs[i]->output_factor, node->inputs[i]->stage);
-        wAddIn[i] -= truncations[i];
-        vhdl << tab << declare(signalName + "_in" + to_string(i) + "_trunc", wAddIn[i]) << " <= " << signalName << range(wAddIn[i] + truncations[i] - 1, truncations[i]) << ";" << endl;
+        wAddIn[i] -= truncations[i];  //set input word size to the truncated size
+        node->input_shifts[i] += truncations[i]; //adjust shifts with respect to the truncated signal
+        vhdl << tab << declare(signalNameIn[i] + "_trunc", wAddIn[i]) << " <= " << signalNameIn[i] << range(wAddIn[i] + truncations[i] - 1, truncations[i]) << ";" << endl;
       }
     }
-    //2: split output parts that belong to one of the inputs and assign it to the outputs
-    //3: in signed case: sign-extend inputs
-    //4:
+
+    cerr << "input shifts after step 1:" << endl;
+    for(int i=0; i < node->input_shifts.size(); i++)
+    {
+      //adjust shifts with respect to the minimum shift due to truncation
+      cerr << "input shift of input " << i << " is " << node->input_shifts[i] << endl;
+    }
+
+    //determine zero LSB positions (typically come from truncations)
+    int zeroLSBs=INT_MAX;
+    for(int i=0; i < node->input_shifts.size(); i++)
+    {
+      if(node->input_shifts[i] < zeroLSBs)
+      {
+        zeroLSBs = node->input_shifts[i];
+      }
+    }
+    if(zeroLSBs > 0)
+    {
+      REPORT(DETAIL,"There are " << zeroLSBs << " LSB positions in the result that are zero");
+      for(int i=0; i < node->input_shifts.size(); i++)
+      {
+        //adjust shifts with respect to the minimum shift due to truncation
+        node->input_shifts[i] -= zeroLSBs;
+      }
+    }
+
+    //Step 2: split output parts that belong to one of the inputs and assign it to the outputs
+
+    //determine the difference between smallest shift (incl. truncation) of a non-negative input and second smallest shift (incl. truncation)
+    int minShift=INT_MAX;
+    int inputMinShift=-1;
+    for(int i=0; i < node->input_shifts.size(); i++)
+    {
+      if(node->input_is_negative[i] == false)
+      {
+        if(node->input_shifts[i] < minShift)
+        {
+          minShift = node->input_shifts[i];
+          inputMinShift = i;
+        }
+      }
+    }
+    int minShiftSecond=INT_MAX;;
+    for(int i=0; i < node->input_shifts.size(); i++)
+    {
+      if((node->input_shifts[i] < minShiftSecond) && (node->input_shifts[i] != minShift))
+        minShiftSecond = node->input_shifts[i];
+    }
+    int forwardedLSBs;
+    if((minShift != INT_MAX) && (minShiftSecond != INT_MAX))
+      forwardedLSBs = minShiftSecond - minShift;
+    else
+      forwardedLSBs = 0;
+
+    if(forwardedLSBs > 0)
+    {
+      assert(inputMinShift != -1);
+      REPORT(DETAIL,"Second smallest shift of non-negative input is " << minShiftSecond << ", hence " << forwardedLSBs << " LSBs can be copied to the result.");
+      vhdl << tab << declare(signalNameOut + "_LSBs",forwardedLSBs) << " <= " << signalNameIn[inputMinShift] << (isTruncated ? "_trunc" : "") << range(forwardedLSBs - 1, 0) << ";" << endl;
+      vhdl << tab << declare(signalNameIn[inputMinShift] + "_MSBs", wAddIn[inputMinShift] - forwardedLSBs) << " <= " << signalNameIn[inputMinShift] << (isTruncated ? "_trunc" : "") << range(wAddIn[inputMinShift] - 1, forwardedLSBs) << ";" << endl;
+
+      for(int i=0; i < node->input_shifts.size(); i++)
+      {
+        //adjust shifts with respect to the forwarded LSBs
+        if(i != inputMinShift)
+          node->input_shifts[i] -= forwardedLSBs;
+
+        //adjust word sizes
+        if(i == inputMinShift)
+          wAddIn[i]-= forwardedLSBs;
+      }
+
+    }
+
+    //Step 3: shift input signals, and sign-extend inputs in signed case
+    int wMaxInclShift=-1;
+    //search for the maximum MSB position:
+    for(int i=0; i < node->input_shifts.size(); i++)
+    {
+      if(node->input_shifts[i]+wAddIn[i] > wMaxInclShift)
+      {
+        wMaxInclShift = node->input_shifts[i] + wAddIn[i];
+      }
+    }
+    REPORT(DETAIL,"Max. MSB position found at " << wMaxInclShift << ", sign extending signals");
+    int wAdd = wMaxInclShift + 1; //wordsize in which the addition is performed, +1 for carry out
+    for(int i=0; i < node->inputs.size(); i++)
+    {
+//      wAddIn[i]+= node->input_shifts[i];
+
+      string conversionFunction;
+      if(isSigned)
+      {
+        conversionFunction = "signed";
+      }
+      else
+      {
+        conversionFunction = "unsigned";
+      }
+
+      vhdl << tab << declare(signalNameIn[i] + "_shifted", wAdd) << " <= std_logic_vector(shift_left(resize(" << conversionFunction << "(" << signalNameIn[i] << ((forwardedLSBs > 0) && (i == inputMinShift) ? "_MSBs" : (isTruncated ? "_trunc" : "")) << ")," << wAdd << ")," << node->input_shifts[i] << "));" << endl;
+    }
+
+    //Step 4: Perform addition
+    vhdl << tab << declare(signalNameOut + "_MSBs",wAdd) << " <= std_logic_vector(";
+    for(int i=0; i < node->inputs.size(); i++)
+    {
+      string conversionFunction;
+      if(isSigned)
+        conversionFunction = "signed";
+      else
+        conversionFunction = "unsigned";
+
+      vhdl << (node->input_is_negative[i] ? "-" : (i == 0 ? "" : "+")) << conversionFunction << "(" << signalNameIn[i] + "_shifted" << ")";
+    }
+    vhdl << ");" << endl;
+
+    //Step 5: Merge results
+//    assert(wAdd + forwardedLSBs + zeroLSBs == wAddOut);
+    vhdl << tab << signalNameOut << " <= " << signalNameOut << "_MSBs";
+    if(forwardedLSBs > 0)
+    {
+       vhdl << " & " << signalNameOut << "_LSBs";
+    }
+    if(zeroLSBs > 0)
+    {
+      vhdl << " & \"";
+      for(int i=0; i < zeroLSBs; i++)
+      {
+        vhdl << "0";
+      }
+      vhdl << "\"";
+    }
+    vhdl << ";" << endl;
 
 
 
-    int wAdd = wIn;
 
     //determine flags for the mode of the Adder / Sub:
 /*
@@ -342,6 +499,11 @@ namespace flopoco {
       flag |= IntAddSub::SUB_RIGHT;
     }
 */
+
+
+/*
+ TODO: integrate this!
+
     bool isSigned=false;
     bool isTernary=false;
     bool xNegative=false;
@@ -360,8 +522,9 @@ namespace flopoco {
     );
 
     addSubComponent(add);
+*/
 
-    /*
+  /*
 
     vector<string> operandNames(nb_inputs);
     for (size_t i = 0 ; i < nb_inputs ; ++i)
@@ -403,12 +566,39 @@ namespace flopoco {
 
   void IntConstMultShiftAddNew::emulate(TestCase * tc)
 	{
+		vector<mpz_class> inputVector(noOfInputs);
+
+		for(int i=0 ; i < noOfInputs ; i++)
+		{
+			inputVector[i] = tc->getInputValue("X" + to_string(i));
+    }
+
+    cerr << "Input vector(s)";
+		for(int i=0 ; i < noOfInputs ; i++)
+      cerr << inputVector[i] << " ";
+    cerr << endl;
+
+    for(adder_graph_base_node_t* node : adder_graph.nodes_list)
+    {
+      if(is_a<output_node_t>(*node))
+      {
+        //tc->addExpectedOutput()
+
+        // ... to be continued ...
+      }
+    }
+
+
+/*
 		vector<mpz_class> input_vec;
 
 		unsigned int confVal=emu_conf;
 
 		if( noOfConfigurations > 1 )
 			tc->addInput("config_no",emu_conf);
+
+    mpz_class big1 = (mpz_class(1) << (wIn));
+    mpz_class big1P = (mpz_class(1) << (wIn-1));
 
 		for(int i=0;i<noOfInputs;i++ )
 		{
@@ -417,13 +607,12 @@ namespace flopoco {
 
 			mpz_class inputVal = tc->getInputValue(inputName.str());
 
-			mpz_class big1 = (mpz_class(1) << (wIn));
-			mpz_class big1P = (mpz_class(1) << (wIn-1));
-
 			if ( inputVal >= big1P)
 				inputVal = inputVal - big1;
 
 			input_vec.push_back(inputVal);
+
+			cerr << "inputVal=" << inputVal << " ";
 		}
 
 		mpz_class expectedResult;
@@ -476,6 +665,7 @@ namespace flopoco {
 			{
 				tc->addComment(comment.str());
 				tc->addExpectedOutput((*out_it).signal_name,expectedResult);
+				cerr << "expectedResult=" << expectedResult << endl;
 			}
 			catch(string errorstr)
 			{
@@ -487,8 +677,11 @@ namespace flopoco {
 			emu_conf++;
 		else
 			emu_conf=0;
+
+*/
 	}
 
+/*
 	void IntConstMultShiftAddNew::buildStandardTestCases(TestCaseList * tcl)
 	{
 		TestCase* tc;
@@ -566,6 +759,7 @@ namespace flopoco {
 			tcl->add(tc);
 		}
 	}
+*/
 
 	TestList IntConstMultShiftAddNew::unitTest(int testLevel)
 	{

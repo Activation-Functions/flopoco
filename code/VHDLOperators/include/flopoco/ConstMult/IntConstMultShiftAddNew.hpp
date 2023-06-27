@@ -35,7 +35,7 @@ namespace flopoco
 
     void emulate(TestCase *tc);
 
-    void buildStandardTestCases(TestCaseList *tcl);
+//    void buildStandardTestCases(TestCaseList *tcl);
 
     static TestList unitTest(int testLevel);
 
@@ -58,8 +58,8 @@ namespace flopoco
     bool isTruncated; //if true, the operator is truncated truncated
     map<pair<mpz_class, int>, vector<int> > wordSizeMap; //stores the truncations of inputs; key is a pair of constant and stage, value is a vector of the number of truncated bits
 
-    bool RPAGused;
-    int emu_conf;
+//    bool RPAGused;
+//    int emu_conf;
 
     void parseTruncation(string truncationList);
     void parseTruncationRecord(string record);
@@ -78,13 +78,15 @@ namespace flopoco
 
     vector<vector<int64_t> > output_coefficients;
     PAGSuite::adder_graph_t adder_graph;
-    list<string> input_signals;
+//    list<string> input_signals;
 
-    list<output_signal_info> output_signals;
+//    list<output_signal_info> output_signals;
+
+    list<mpz_class> output_constants;
 
     int noOfInputs=-1;
+    int noOfOutputs=-1;
     int noOfConfigurations=-1;
-
   };
 }//namespace
 
