@@ -39,6 +39,8 @@ namespace flopoco
 
     static TestList unitTest(int testLevel);
 
+//    std::list<std::vector<std::vector<int64_t> > > output_factors;
+/*
     struct output_signal_info
     {
       string signal_name;
@@ -47,7 +49,7 @@ namespace flopoco
     };
 
     list<output_signal_info> &GetOutputList();
-
+*/
     static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface &ui);
 
   protected:
@@ -73,6 +75,7 @@ namespace flopoco
     void generateAdderSubtractorNode(PAGSuite::adder_subtractor_node_t* node);
 
     string generateSignalName(std::vector<std::vector<int64_t> > factor, int stage=-1);
+    string generateSelectName() { return "SEL"; };
     string factorToString(std::vector<std::vector<int64_t> > factor);
     //    int computeWordSize(std::vector<std::vector<int64_t> > factor);
 

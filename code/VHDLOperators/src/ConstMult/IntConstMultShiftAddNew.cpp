@@ -84,10 +84,6 @@ namespace flopoco {
       if(is_log_lvl_enabled(LogLevel::DEBUG))
         adder_graph.print_graph();
 
-      //TODO: Determine no of inputs & configurations
-      noOfInputs=-1;
-      noOfConfigurations=-1;
-
       isTruncated=false;
       if(!truncations.empty() || (epsilon > 0))
       {
@@ -207,6 +203,26 @@ namespace flopoco {
       {
         generateOutputNode((output_node_t*) node);
 
+        if(noOfConfigurations == -1)
+        {
+          noOfConfigurations = node->output_factor.size();
+          REPORT(DETAIL,"Found " << noOfConfigurations << " different configuration(s).");
+
+          if(noOfConfigurations > 1)
+          {
+            //more than one configuration found, declare select input:
+            int wSel = log2(noOfConfigurations+1);
+            declare(generateSelectName(),wSel);
+          }
+        }
+        else
+        {
+          //check for consistency
+          if(noOfConfigurations != node->output_factor.size())
+          {
+            THROWERROR("Missmatch of no of configurations in node computing " << node->output_factor << "(" << node->output_factor.size() << ") and other nodes (" << noOfConfigurations << ")");
+          }
+        }
         noOfOutputs++;
       }
       else if(is_a<adder_subtractor_node_t>(*node))
@@ -258,13 +274,14 @@ namespace flopoco {
   void IntConstMultShiftAddNew::generateOutputNode(PAGSuite::output_node_t* node)
   {
     string name = "R_" + factorToString(node->output_factor);
+//    output_factors.push_back(node->output_factor);
 
     int result_word_size = computeWordSize(node->output_factor, wIn);
     cerr << "generating output " << name << " storing " << node->output_factor << " in stage " << node->stage << " using " << result_word_size << " bits" << endl;
     addOutput(name, result_word_size);
 
     string signed_str = isSigned ? "signed" : "unsigned";
-    vhdl << tab << name << " <= std_logic_vector(unsigned(shift_left(resize(" << signed_str << "(" << generateSignalName(node->input->output_factor,node->stage) << ")," << computeWordSize(node->output_factor,wIn) << ")," << node->input_shift << ")));" << endl;
+    vhdl << tab << name << " <= std_logic_vector(" << signed_str << "(shift_left(resize(" << signed_str << "(" << generateSignalName(node->input->output_factor,node->stage) << ")," << computeWordSize(node->output_factor,wIn) << ")," << node->input_shift << ")));" << endl;
   }
 
   void IntConstMultShiftAddNew::generateRegisterNode(PAGSuite::register_node_t* node)
@@ -396,9 +413,14 @@ namespace flopoco {
     }
     int forwardedLSBs;
     if((minShift != INT_MAX) && (minShiftSecond != INT_MAX))
+    {
       forwardedLSBs = minShiftSecond - minShift;
+      forwardedLSBs = forwardedLSBs < 0 ? 0 : forwardedLSBs;
+    }
     else
+    {
       forwardedLSBs = 0;
+    }
 
     if(forwardedLSBs > 0)
     {
@@ -431,7 +453,13 @@ namespace flopoco {
       }
     }
     REPORT(DETAIL,"Max. MSB position found at " << wMaxInclShift << ", sign extending signals");
-    int wAdd = wMaxInclShift + 1; //wordsize in which the addition is performed, +1 for carry out
+
+//    int wAdd = wMaxInclShift + 1; //wordsize in which the addition is performed, +1 for carry out
+    int wAdd = computeWordSize(node->output_factor, wIn) - forwardedLSBs;
+
+    cerr << "computeWordSize(node->output_factor, wIn)=" << computeWordSize(node->output_factor, wIn) << endl;
+    cerr << "forwardedLSBs=" << forwardedLSBs << endl;
+
     for(int i=0; i < node->inputs.size(); i++)
     {
 //      wAddIn[i]+= node->input_shifts[i];
@@ -568,25 +596,56 @@ namespace flopoco {
 	{
 		vector<mpz_class> inputVector(noOfInputs);
 
+    mpz_class msbp1 = (mpz_class(1) << (wIn));
+    mpz_class msb = (mpz_class(1) << (wIn - 1));
+
 		for(int i=0 ; i < noOfInputs ; i++)
 		{
 			inputVector[i] = tc->getInputValue("X" + to_string(i));
+
+      if(isSigned)
+      {
+        if (inputVector[i] >= msb)
+          inputVector[i] = inputVector[i] - msbp1;
+      }
+
     }
 
-    cerr << "Input vector(s)";
+    cerr << "Input vector(s): ";
 		for(int i=0 ; i < noOfInputs ; i++)
       cerr << inputVector[i] << " ";
-    cerr << endl;
 
+    mpz_class conf_mpz;
+    if(noOfConfigurations > 1)
+    {
+      conf_mpz = tc->getInputValue(generateSelectName());
+    }
+    else
+    {
+      conf_mpz = 0;
+    }
+    int conf = conf_mpz.get_ui();
+
+    cerr << " | output value(s): ";
     for(adder_graph_base_node_t* node : adder_graph.nodes_list)
     {
       if(is_a<output_node_t>(*node))
       {
-        //tc->addExpectedOutput()
+        signed long int outputValue=0;
+    		for(int i=0 ; i < noOfInputs ; i++)
+        {
+          outputValue += inputVector[i].get_si() * node->output_factor[conf][i];
+        }
+        string outputName = "R_" + factorToString(node->output_factor);
+        mpz_class outputValue_mpz = outputValue;
+        tc->addExpectedOutput(outputName, outputValue_mpz);
+
+        cerr << outputValue << " ";
 
         // ... to be continued ...
       }
     }
+    cerr << endl;
 
 
 /*
@@ -597,7 +656,7 @@ namespace flopoco {
 		if( noOfConfigurations > 1 )
 			tc->addInput("config_no",emu_conf);
 
-    mpz_class big1 = (mpz_class(1) << (wIn));
+    mpz_class msbp1 = (mpz_class(1) << (wIn));
     mpz_class big1P = (mpz_class(1) << (wIn-1));
 
 		for(int i=0;i<noOfInputs;i++ )
@@ -608,7 +667,7 @@ namespace flopoco {
 			mpz_class inputVal = tc->getInputValue(inputName.str());
 
 			if ( inputVal >= big1P)
-				inputVal = inputVal - big1;
+				inputVal = inputVal - msbp1;
 
 			input_vec.push_back(inputVal);
 
