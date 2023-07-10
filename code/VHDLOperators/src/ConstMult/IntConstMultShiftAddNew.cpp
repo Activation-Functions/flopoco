@@ -288,12 +288,12 @@ namespace flopoco {
     string name = "R_" + factorToString(node->output_factor);
 //    output_factors.push_back(node->output_factor);
 
-    int result_word_size = computeWordSize(node->output_factor, wIn);
-    REPORT(DEBUG,"generating output " << name << " storing " << node->output_factor << " in stage " << node->stage << " using " << result_word_size << " bits");
-    addOutput(name, result_word_size);
+    int wOut = computeWordSize(node->output_factor, wIn);
+    REPORT(DEBUG,"generating output " << name << " storing " << node->output_factor << " in stage " << node->stage << " using " << wOut << " bits");
+    addOutput(name, wOut);
 
     string signed_str = isSigned ? "signed" : "unsigned";
-    vhdl << tab << name << " <= std_logic_vector(" << signed_str << "(shift_left(resize(" << signed_str << "(" << generateSignalName(node->input->output_factor,node->stage) << ")," << computeWordSize(node->output_factor,wIn) << ")," << node->input_shift << ")));" << endl;
+    vhdl << tab << name << " <= std_logic_vector(" << signed_str << "(shift_left(resize(" << signed_str << "(" << generateSignalName(node->input->output_factor,node->stage) << ")," << wOut << ")," << node->input_shift << ")));" << endl;
   }
 
   void IntConstMultShiftAddNew::generateRegisterNode(PAGSuite::register_node_t* node)
@@ -425,7 +425,29 @@ namespace flopoco {
       assert(inputMinShift != -1);
       REPORT(DETAIL,"Second smallest shift of non-negative input is " << minShiftSecond << ", hence " << forwardedLSBs << " LSBs can be copied to the result.");
       vhdl << tab << declare(signalNameOut + "_LSBs",forwardedLSBs) << " <= " << signalNameIn[inputMinShift] << (isTruncated ? "_trunc" : "") << range(forwardedLSBs - 1, 0) << ";" << endl;
-      vhdl << tab << declare(signalNameIn[inputMinShift] + "_MSBs", wAddIn[inputMinShift] - forwardedLSBs) << " <= " << signalNameIn[inputMinShift] << (isTruncated ? "_trunc" : "") << range(wAddIn[inputMinShift] - 1, forwardedLSBs) << ";" << endl;
+
+      if(wAddIn[inputMinShift] > forwardedLSBs) //if this condition is true, there is nothing left to add (because of the shift)
+      {
+        vhdl << tab << declare(signalNameIn[inputMinShift] + "_MSBs", wAddIn[inputMinShift] - forwardedLSBs) << " <= " << signalNameIn[inputMinShift] << (isTruncated ? "_trunc" : "") << range(wAddIn[inputMinShift] - 1, forwardedLSBs) << ";" << endl;
+      }
+      else
+      {
+        REPORT(DETAIL,"Input " << inputMinShift << " does not contribute to the addition.");
+
+        //the simple solution here is to add a 0 (unsigned) or the sign bit (signed case) (0 in unsigned case is later optimized by synthesis, potential of improvement for version using primitives!)
+        string source;
+        if(isSigned)
+        {
+          source = signalNameIn[inputMinShift] + range(wIn-1,wIn-1);
+        }
+        else
+        {
+          source = "\"0\""; //assign MSB to 0
+        }
+
+        vhdl << tab << declare(signalNameIn[inputMinShift] + "_MSBs", 1) << " <= " << source << ";" << endl;
+
+      }
 
       for(int i=0; i < node->input_shifts.size(); i++)
       {
@@ -454,6 +476,7 @@ namespace flopoco {
 
     int wAdd = computeWordSize(node->output_factor, wIn) - forwardedLSBs;
 
+    int rightShift=0;
     for(int i=0; i < node->inputs.size(); i++)
     {
 //      wAddIn[i]+= node->input_shifts[i];
@@ -468,7 +491,28 @@ namespace flopoco {
         conversionFunction = "unsigned";
       }
 
-      vhdl << tab << declare(signalNameIn[i] + "_shifted", wAdd) << " <= std_logic_vector(shift_left(resize(" << conversionFunction << "(" << signalNameIn[i] << ((forwardedLSBs > 0) && (i == inputMinShift) ? "_MSBs" : (isTruncated ? "_trunc" : "")) << ")," << wAdd << ")," << node->input_shifts[i] << "));" << endl;
+      int leftShift=node->input_shifts[i];
+      if(leftShift < 0)
+      {
+        //we have a right shift
+        if(rightShift != 0)
+        {
+          if(rightShift != -leftShift)
+          {
+            THROWERROR("adder with different negative input shifts (right shifts) detected. This is not possible.");
+          }
+        }
+        else
+        {
+          rightShift=-leftShift; //store right shift for later (after addition)
+          wAdd += rightShift;    //increase adder word size by the right shift
+          wAddOut += rightShift; //increase adder result by the right shift
+        }
+        leftShift=0; //reset shift to 0
+      }
+
+//      if(!((i == inputMinShift) && (wAddIn[inputMinShift] > forwardedLSBs))) //filter signal that does not contribute to the addition
+      vhdl << tab << declare(signalNameIn[i] + "_shifted", wAdd) << " <= std_logic_vector(shift_left(resize(" << conversionFunction << "(" << signalNameIn[i] << ((forwardedLSBs > 0) && (i == inputMinShift) ? "_MSBs" : (isTruncated ? "_trunc" : "")) << ")," << wAdd << ")," << leftShift << "));" << endl;
     }
 
     //Step 4: Perform addition
@@ -485,9 +529,13 @@ namespace flopoco {
     }
     vhdl << ");" << endl;
 
-    //Step 5: Merge results
-//    assert(wAdd + forwardedLSBs + zeroLSBs == wAddOut);
-    vhdl << tab << signalNameOut << " <= " << signalNameOut << "_MSBs";
+    //Step 5: Merge results, perform right shift if necessary
+    vhdl << tab << signalNameOut << " <= ";
+    vhdl << signalNameOut << "_MSBs";
+    if(rightShift > 0)
+    {
+      vhdl << range(wAddOut-1,rightShift);
+    }
     if(forwardedLSBs > 0)
     {
        vhdl << " & " << signalNameOut << "_LSBs";
@@ -840,6 +888,9 @@ namespace flopoco {
 		//SCM by 100000000 using ternary adders, obtained from rpag --ternary_adders 100000000:
 		graphs.push_back("\"{{'A',[191],1,[1],0,6,[1],0,7,[-1],0,0},{'A',[543],1,[1],0,5,[1],0,9,[-1],0,0},{'A',[390625],2,[191],1,11,[-543],1,0},{'O',[100000000],2,[390625],2,8}}\"");
 
+		//simple SCM by 11 using ternary adders for which one bit can be forwarded
+		graphs.push_back("\"{{'A',[11],1,[1],0,0,[1],0,1,[1],0,3},{'O',[11],1,[11],1,0}}\"");
+
 		//MCM by 123, 321 using ternary adders, obtained from rpag --ternary_adders 123 321:
 		graphs.push_back("\"{{'A',[123],1,[1],0,7,[-1],0,2,[-1],0,0},{'A',[321],1,[1],0,6,[1],0,8,[1],0,0},{'O',[123],1,[123],1,0},{'O',[321],1,[321],1,0}}\"");
 
@@ -852,9 +903,19 @@ namespace flopoco {
 		//CMM of 123*x1+321*x2 345*x1-543*x2 using ternary adders, obtained from rpag --ternary_adders --cmm 123,321 345,-543:
 		graphs.push_back("\"{{'A',[1,-4],1,[1,0],0,0,[0,-1],0,2},{'A',[2,5],1,[0,1],0,0,[0,1],0,2,[1,0],0,1},{'A',[5,-1],1,[1,0],0,2,[0,-1],0,0,[1,0],0,0},{'A',[7,-1],1,[1,0],0,3,[0,-1],0,0,[-1,0],0,0},{'A',[123,321],2,[2,5],1,6,[-5,1],1,0},{'A',[345,-543],2,[1,-4],1,7,[7,-1],1,5,[-7,1],1,0},{'O',[123,321],2,[123,321],2,0},{'O',[345,-543],2,[345,-543],2,0}}\""); //
 
-		//MCM's including right shifts:
+		//simple SCM including right shifts:
+		graphs.push_back("\"{{'A',[3],1,[1],0,1,[1],0,0},{'A',[7],1,[1],0,3,[-1],0,0},{'A',[5],2,[3],1,-1,[7],1,-1},{'O',[5],2,[5],2,0}}\"");
+
+		//More comples MCM's including right shifts:
 		graphs.push_back("\"{{'R',[1],1,[1],0},{'A',[31],1,[1],0,5,[-1],0,0},{'A',[511],1,[1],0,9,[-1],0,0},{'A',[2049],1,[1],0,0,[1],0,11},{'A',[123],2,[31],1,2,[-1],1,0},{'A',[6127],2,[511],1,4,[-2049],1,0},{'A',[1049119],2,[31],1,0,[2049],1,9},{'A',[5079583],3,[123],2,15,[1049119],2,0},{'A',[6274171],3,[123],2,0,[6127],2,10},{'A',[5676877],4,[5079583],3,-1,[6274171],3,-1},{'A',[25397915],4,[5079583],3,0,[5079583],3,2},{'O',[50795830],4,[25397915],4,1},{'O',[90830032],4,[5676877],4,4}}\"");
 		graphs.push_back("\"{{'O',[6],3,[3],2,1},{'O',[10],3,[5],1,1},{'A',[3],2,[1],0,-1,[5],1,-1},{'A',[5],1,[1],0,2,[1],0,0}}\""); //
+
+		//SCM by 1025 which can be implemented without addition when wIn<10 bits:
+		graphs.push_back("\"{{'A',[1025],1,[1],0,0,[1],0,10},{'O',[2025],1,[1025],1,0}}\"");
+
+		//SCM by 3073 using one ternary adder where one argument can be forwarded to the output when wIn<10 bits:
+		graphs.push_back("\"{{'A',[3073],1,[1],0,0,[1],0,10,[1],0,11},{'O',[3073],1,[3073],1,0}}\"");
+
 
     /*RSCM of 1;2;3;4;5
      * obtained from:
