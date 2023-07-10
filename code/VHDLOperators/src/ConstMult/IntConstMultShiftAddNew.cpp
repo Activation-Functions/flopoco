@@ -66,7 +66,7 @@ namespace flopoco {
 
     useNumericStd();
 
-		cerr << "reading adder_graph_str=" << adder_graph_str << endl;
+    REPORT(DEBUG,"reading adder_graph_str=" << adder_graph_str);
 
     if(is_log_lvl_enabled(LogLevel::DEBUG))
       adder_graph.quiet = false; //enable debug output
@@ -193,6 +193,20 @@ namespace flopoco {
     noOfOutputs=0;
     for(adder_graph_base_node_t* node : adder_graph->nodes_list)
     {
+      if(!isSigned) //in unsigned case, check all factors to be positive
+      {
+        for(int c=0; c < node->output_factor.size(); c++)
+        {
+          for(int i=0; i < node->output_factor[i].size(); i++)
+          {
+            if(node->output_factor[c][i] < 0)
+            {
+              THROWERROR("Found negative factor " << node->output_factor << " in an unsigned operator, select isSigned=true to build this operator");
+            }
+          }
+        }
+      }
+
       if(is_a<input_node_t>(*node))
       {
         generateInputNode((input_node_t*) node);
@@ -252,8 +266,6 @@ namespace flopoco {
 
   void IntConstMultShiftAddNew::generateInputNode(PAGSuite::input_node_t* node)
   {
-    cerr << "processing input " << node->output_factor << endl;
-
     assert(node->output_factor.size() > 0);
     int inputNo=0;
     for(int i=0; i < node->output_factor[0].size(); i++)
@@ -264,7 +276,7 @@ namespace flopoco {
     }
 
     string inputname = "X" + to_string(inputNo);
-    cerr << "adding input " << inputname << endl;
+    REPORT(DEBUG,"processing input " << node->output_factor << ", adding input " << inputname);
     addInput(inputname, wIn);
 
     vhdl << tab << declare(generateSignalName(node->output_factor,node->stage),wIn) << " <= " << inputname << ";" << endl;
@@ -277,7 +289,7 @@ namespace flopoco {
 //    output_factors.push_back(node->output_factor);
 
     int result_word_size = computeWordSize(node->output_factor, wIn);
-    cerr << "generating output " << name << " storing " << node->output_factor << " in stage " << node->stage << " using " << result_word_size << " bits" << endl;
+    REPORT(DEBUG,"generating output " << name << " storing " << node->output_factor << " in stage " << node->stage << " using " << result_word_size << " bits");
     addOutput(name, result_word_size);
 
     string signed_str = isSigned ? "signed" : "unsigned";
@@ -289,7 +301,7 @@ namespace flopoco {
     string name = generateSignalName(node->output_factor,node->stage);
 
     int result_word_size = computeWordSize(node->output_factor, wIn);
-    cerr << "generating register " << name << " storing " << node->output_factor << " in stage " << node->stage << " using " << result_word_size << " bits" << endl;
+    REPORT(DEBUG,"generating register " << name << " storing " << node->output_factor << " in stage " << node->stage << " using " << result_word_size << " bits");
 
     vhdl << tab << declare(name, result_word_size) << " <= " << generateSignalName(node->input->output_factor, node->stage - 1) << ";" << endl;
   }
@@ -342,13 +354,6 @@ namespace flopoco {
       cerr << " input bits, respectively" <<  endl;
     }
 
-    cerr << "input shifts after step 0:" << endl;
-    for(int i=0; i < node->input_shifts.size(); i++)
-    {
-      //adjust shifts with respect to the minimum shift due to truncation
-      cerr << "input shift of input " << i << " is " << node->input_shifts[i] << endl;
-    }
-
     //Step 1: create truncated versions of the input signals (if any), adjust input word sizes
     vector<int> truncations(node->inputs.size(),0);
     if(isTruncated)
@@ -361,13 +366,6 @@ namespace flopoco {
         node->input_shifts[i] += truncations[i]; //adjust shifts with respect to the truncated signal
         vhdl << tab << declare(signalNameIn[i] + "_trunc", wAddIn[i]) << " <= " << signalNameIn[i] << range(wAddIn[i] + truncations[i] - 1, truncations[i]) << ";" << endl;
       }
-    }
-
-    cerr << "input shifts after step 1:" << endl;
-    for(int i=0; i < node->input_shifts.size(); i++)
-    {
-      //adjust shifts with respect to the minimum shift due to truncation
-      cerr << "input shift of input " << i << " is " << node->input_shifts[i] << endl;
     }
 
     //determine zero LSB positions (typically come from truncations)
@@ -396,7 +394,7 @@ namespace flopoco {
     int inputMinShift=-1;
     for(int i=0; i < node->input_shifts.size(); i++)
     {
-      if(node->input_is_negative[i] == false)
+      if(node->input_is_negative[i] == false) //ignore negative inputs as they can't be forwarded to the output
       {
         if(node->input_shifts[i] < minShift)
         {
@@ -408,7 +406,7 @@ namespace flopoco {
     int minShiftSecond=INT_MAX;;
     for(int i=0; i < node->input_shifts.size(); i++)
     {
-      if((node->input_shifts[i] < minShiftSecond) && (node->input_shifts[i] != minShift))
+      if((node->input_shifts[i] < minShiftSecond) && (i != inputMinShift))
         minShiftSecond = node->input_shifts[i];
     }
     int forwardedLSBs;
@@ -454,11 +452,7 @@ namespace flopoco {
     }
     REPORT(DETAIL,"Max. MSB position found at " << wMaxInclShift << ", sign extending signals");
 
-//    int wAdd = wMaxInclShift + 1; //wordsize in which the addition is performed, +1 for carry out
     int wAdd = computeWordSize(node->output_factor, wIn) - forwardedLSBs;
-
-    cerr << "computeWordSize(node->output_factor, wIn)=" << computeWordSize(node->output_factor, wIn) << endl;
-    cerr << "forwardedLSBs=" << forwardedLSBs << endl;
 
     for(int i=0; i < node->inputs.size(); i++)
     {
@@ -611,10 +605,11 @@ namespace flopoco {
 
     }
 
+/*
     cerr << "Input vector(s): ";
 		for(int i=0 ; i < noOfInputs ; i++)
       cerr << inputVector[i] << " ";
-
+*/
     mpz_class conf_mpz;
     if(noOfConfigurations > 1)
     {
@@ -626,7 +621,7 @@ namespace flopoco {
     }
     int conf = conf_mpz.get_ui();
 
-    cerr << " | output value(s): ";
+//    cerr << " | output value(s): ";
     for(adder_graph_base_node_t* node : adder_graph.nodes_list)
     {
       if(is_a<output_node_t>(*node))
@@ -640,12 +635,12 @@ namespace flopoco {
         mpz_class outputValue_mpz = outputValue;
         tc->addExpectedOutput(outputName, outputValue_mpz);
 
-        cerr << outputValue << " ";
+  //      cerr << outputValue << " ";
 
         // ... to be continued ...
       }
     }
-    cerr << endl;
+//    cerr << endl;
 
 
 /*
@@ -740,85 +735,90 @@ namespace flopoco {
 */
 	}
 
-/*
 	void IntConstMultShiftAddNew::buildStandardTestCases(TestCaseList * tcl)
 	{
 		TestCase* tc;
 
-		int min_val = -1 * (1 << (wIn-1));
-		int max_val = (1 << (wIn-1)) -1;
+    if(isSigned)
+    {
+      for(int c=0; c < noOfConfigurations; c++)
+      {
+        tc = new TestCase (this);
+        tc->addComment("Test ZERO");
+        if( noOfConfigurations > 1 )
+        {
+          tc->addInput(generateSelectName(), c);
+        }
+        for(int i=0; i < noOfInputs; i++)
+        {
+          tc->addInput("X" + to_string(i),0 );
+        }
+        emulate(tc);
+        tcl->add(tc);
+      }
+    }
 
-		stringstream max_str;
-		max_str << "Test MAX: " << max_val;
-
-		stringstream min_str;
-		min_str << "Test MIN: " << min_val;
-
-		for(int i=0;i<noOfConfigurations;i++)
-		{
-			tc = new TestCase (this);
-			tc->addComment("Test ZERO");
-			if( noOfConfigurations > 1 )
-			{
-				tc->addInput("config_no",i);
-			}
-			for(list<string>::iterator inp_it = input_signals.begin();inp_it!=input_signals.end();++inp_it )
-			{
-				tc->addInput(*inp_it,0 );
-			}
-			emulate(tc);
-			tcl->add(tc);
-		}
-
-		for(int i=0;i<noOfConfigurations;i++)
+		for(int c=0; c < noOfConfigurations; c++)
 		{
 			tc = new TestCase (this);
 			tc->addComment("Test ONE");
 			if( noOfConfigurations > 1 )
 			{
-				tc->addInput("config_no",i);
+				tc->addInput(generateSelectName(), c);
 			}
-			for(list<string>::iterator inp_it = input_signals.begin();inp_it!=input_signals.end();++inp_it )
-			{
-				tc->addInput(*inp_it,1 );
-			}
-			emulate(tc);
-			tcl->add(tc);
-		}
-
-		for(int i=0;i<noOfConfigurations;i++)
-		{
-			tc = new TestCase (this);
-			tc->addComment(min_str.str());
-			if( noOfConfigurations > 1 )
-			{
-				tc->addInput("config_no",i);
-			}
-			for(list<string>::iterator inp_it = input_signals.begin();inp_it!=input_signals.end();++inp_it )
-			{
-				tc->addInput(*inp_it,min_val );
+      for(int i=0; i < noOfInputs; i++)
+      {
+        tc->addInput("X" + to_string(i),1 );
 			}
 			emulate(tc);
 			tcl->add(tc);
 		}
 
-		for(int i=0;i<noOfConfigurations;i++)
+    long int min_val, max_val;
+    if(isSigned)
+    {
+      min_val = -1 * (1 << (wIn-1));
+      max_val = (1 << (wIn-1)) -1;
+    }
+    else
+    {
+      min_val = 0;
+      max_val = (1 << wIn) -1;
+    }
+
+		for(int c=0; c < noOfConfigurations; c++)
 		{
 			tc = new TestCase (this);
-			tc->addComment(max_str.str());
+			tc->addComment("Test min value");
 			if( noOfConfigurations > 1 )
 			{
-				tc->addInput("config_no",i);
+				tc->addInput(generateSelectName(), c);
 			}
-			for(list<string>::iterator inp_it = input_signals.begin();inp_it!=input_signals.end();++inp_it )
+      for(int i=0; i < noOfInputs; i++)
+      {
+        tc->addInput("X" + to_string(i),min_val );
+			}
+			emulate(tc);
+			tcl->add(tc);
+		}
+
+		for(int c=0; c < noOfConfigurations; c++)
+		{
+			tc = new TestCase (this);
+			tc->addComment("Test max value");
+			if( noOfConfigurations > 1 )
 			{
-				tc->addInput(*inp_it,max_val );
+				tc->addInput(generateSelectName(), c);
+			}
+      for(int i=0; i < noOfInputs; i++)
+      {
+        tc->addInput("X" + to_string(i),max_val );
 			}
 			emulate(tc);
 			tcl->add(tc);
 		}
 	}
-*/
+
 
 	TestList IntConstMultShiftAddNew::unitTest(int testLevel)
 	{
@@ -927,7 +927,7 @@ namespace flopoco {
       signalName << "c";
       for(int i=0; i < factor[c].size(); i++) // loop over inputs
       {
-        if(i > 0) signalName << "v";
+        if(i > 0) signalName << "_c";
         if(factor[c][i] != DONT_CARE )
         {
           if(factor[c][i] < 0 )

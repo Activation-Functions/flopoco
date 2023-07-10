@@ -18,8 +18,8 @@ namespace flopoco
   class IntConstMultShiftAddNew : public Operator
   {
   public:
-    static ostream nostream;
-    int noOfPipelineStages;
+//    static ostream nostream;
+//    int noOfPipelineStages;
 
     IntConstMultShiftAddNew(
       Operator *parentOp,
@@ -35,7 +35,7 @@ namespace flopoco
 
     void emulate(TestCase *tc);
 
-//    void buildStandardTestCases(TestCaseList *tcl);
+    void buildStandardTestCases(TestCaseList *tcl);
 
     static TestList unitTest(int testLevel);
 
