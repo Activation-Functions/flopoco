@@ -216,33 +216,57 @@ namespace flopoco{
 		// the static list of mandatory tests
 		TestList testStateList;
 		vector<pair<string,string>> paramList;
-		
-    if(testLevel >= TestLevel::SUBSTANTIAL)
-    { // The substantial unit tests
 
-			for(int wF=5; wF<53; wF+=1) {
-				for(int dualPath = 0; dualPath <2; dualPath++)	{
-					for(int sub = 0; sub <2; sub++)	{
-						int wE = 6+(wF/10);
-						while(wE>wF)
-							wE -= 2;
-					
-						paramList.push_back(make_pair("wF",to_string(wF)));
-						paramList.push_back(make_pair("wE",to_string(wE)));
-						paramList.push_back(make_pair("sub",to_string(sub)));
-						paramList.push_back(make_pair("dualPath",to_string(dualPath)));
-						testStateList.push_back(paramList);
-						paramList.clear();
-					}
-					
+		// The quick unit tests
+		list<pair<int,int>> wordSizes;
+		wordSizes = {{5,10},{8,23},{11,52}};
+
+    for (auto wordSizePair : wordSizes)
+    {
+      int wE = wordSizePair.first;
+      int wF = wordSizePair.second;
+			for(int dualPath = 0; dualPath <2; dualPath++)	{
+				for(int onlyPositiveIO = 0;  onlyPositiveIO<2; onlyPositiveIO++)	{
+					paramList.push_back(make_pair("wF",to_string(wF)));
+					paramList.push_back(make_pair("wE",to_string(wE)));
+					paramList.push_back(make_pair("dualPath",to_string(dualPath)));
+					paramList.push_back(make_pair("onlyPositiveIO",to_string(onlyPositiveIO)));
+					testStateList.push_back(paramList);
+					paramList.clear();
 				}
 			}
 		}
+		
+		
+    if(testLevel >= TestLevel::SUBSTANTIAL)
+			{ // The substantial unit tests
+				
+				for(int wF=5; wF<53; wF+=1) {
+					for(int dualPath = 0; dualPath <2; dualPath++)	{
+						for(int sub = 0; sub <2; sub++)	{
+							for(int onlyPositiveIO = 0;  onlyPositiveIO<2; onlyPositiveIO++)	{
+								int wE = 6+(wF/10);
+								while(wE>wF)
+									wE -= 2;
+								
+								paramList.push_back(make_pair("wF",to_string(wF)));
+								paramList.push_back(make_pair("wE",to_string(wE)));
+								paramList.push_back(make_pair("sub",to_string(sub)));
+								paramList.push_back(make_pair("dualPath",to_string(dualPath)));
+								paramList.push_back(make_pair("onlyPositiveIO",to_string(onlyPositiveIO)));
+								testStateList.push_back(paramList);
+								paramList.clear();
+							}
+							
+						}
+					}
+				}
+			}
 		else     
-		{
+			{
 				// finite number of random test computed out of testLevel
-			// TODO
-		}	
+				// TODO
+			}	
 
 		return testStateList;
 	}
