@@ -74,9 +74,10 @@ namespace flopoco
     void generateConfAdderSubtractorNode(PAGSuite::conf_adder_subtractor_node_t* node);
     void generateAdderSubtractorNode(PAGSuite::adder_subtractor_node_t* node);
 
-    string generateSignalName(std::vector<std::vector<int64_t> > factor, int stage=-1);
+    string generateSignalName(std::vector<std::vector<int64_t> > factor, int stage);
     string generateSelectName() { return "SEL"; };
     string factorToString(std::vector<std::vector<int64_t> > factor);
+    string dec2binstr(int x);
     //    int computeWordSize(std::vector<std::vector<int64_t> > factor);
 
     vector<vector<int64_t> > output_coefficients;

@@ -81,7 +81,10 @@ namespace flopoco {
 		if(validParse) {
 			adder_graph.drawdot("pag_input_graph.dot");
 
-      REPORT(DEBUG,"Parsed graph is " << adder_graph.get_adder_graph_as_string());
+      stringstream outstream;
+      adder_graph.writesyn(outstream);
+      REPORT(DEBUG,"Parsed graph is " << outstream.str());
+//      REPORT(DEBUG,"Parsed graph is " << adder_graph.get_adder_graph_as_string());
 
       if(is_log_lvl_enabled(LogLevel::DEBUG))
         adder_graph.print_graph();
@@ -209,6 +212,29 @@ namespace flopoco {
         }
       }
 
+      //check no of configurations:
+      if(noOfConfigurations == -1)
+      {
+        noOfConfigurations = node->output_factor.size();
+        REPORT(DETAIL,"Found " << noOfConfigurations << " different configuration(s).");
+
+        if(noOfConfigurations > 1)
+        {
+          //more than one configuration found, declare select input:
+          int wSel = log2(noOfConfigurations+1);
+          addInput(generateSelectName(),wSel);
+        }
+      }
+      else
+      {
+        //check for consistency
+        if(noOfConfigurations != node->output_factor.size())
+        {
+          THROWERROR("Missmatch of no of configurations in node computing " << node->output_factor << "(" << node->output_factor.size() << ") and other nodes (" << noOfConfigurations << ")");
+        }
+      }
+
+
       if(is_a<input_node_t>(*node))
       {
         generateInputNode((input_node_t*) node);
@@ -219,26 +245,6 @@ namespace flopoco {
       {
         generateOutputNode((output_node_t*) node);
 
-        if(noOfConfigurations == -1)
-        {
-          noOfConfigurations = node->output_factor.size();
-          REPORT(DETAIL,"Found " << noOfConfigurations << " different configuration(s).");
-
-          if(noOfConfigurations > 1)
-          {
-            //more than one configuration found, declare select input:
-            int wSel = log2(noOfConfigurations+1);
-            declare(generateSelectName(),wSel);
-          }
-        }
-        else
-        {
-          //check for consistency
-          if(noOfConfigurations != node->output_factor.size())
-          {
-            THROWERROR("Missmatch of no of configurations in node computing " << node->output_factor << "(" << node->output_factor.size() << ") and other nodes (" << noOfConfigurations << ")");
-          }
-        }
         noOfOutputs++;
       }
       else if(is_a<adder_subtractor_node_t>(*node))
@@ -264,6 +270,10 @@ namespace flopoco {
 
     }
 
+    if(noOfOutputs==0)
+    {
+      THROWERROR("Adder graph does not contain any output node");
+    }
   }
 
   void IntConstMultShiftAddNew::generateInputNode(PAGSuite::input_node_t* node)
@@ -521,19 +531,25 @@ namespace flopoco {
     }
 
     //Step 4: Perform addition
-    vhdl << tab << declare(signalNameOut + "_MSBs",wAdd) << " <= std_logic_vector(";
-    for(int i=0; i < node->inputs.size(); i++)
+    if(getTarget()->plainVHDL())
     {
-      string conversionFunction;
-      if(isSigned)
-        conversionFunction = "signed";
-      else
-        conversionFunction = "unsigned";
+      vhdl << tab << declare(signalNameOut + "_MSBs",wAdd) << " <= std_logic_vector(";
+      for(int i=0; i < node->inputs.size(); i++)
+      {
+        string conversionFunction;
+        if(isSigned)
+          conversionFunction = "signed";
+        else
+          conversionFunction = "unsigned";
 
-      vhdl << (node->input_is_negative[i] ? "-" : (i == 0 ? "" : "+")) << conversionFunction << "(" << signalNameIn[i] + "_shifted" << ")";
+        vhdl << (node->input_is_negative[i] ? "-" : (i == 0 ? "" : "+")) << conversionFunction << "(" << signalNameIn[i] + "_shifted" << ")";
+      }
+      vhdl << ");" << endl;
     }
-    vhdl << ");" << endl;
-
+    else
+    {
+      THROWERROR("Target specific optimization not complete yes, use plainVHDL=1 instead");
+    }
     //Step 5: Merge results, perform right shift if necessary
     vhdl << tab << signalNameOut << " <= ";
     vhdl << signalNameOut << "_MSBs";
@@ -629,12 +645,37 @@ namespace flopoco {
   {
     cerr << "processing MUX computing " << node->output_factor << " in stage " << node->stage << endl;
 
+    int wMUX=computeWordSize(node->output_factor, wIn);
+		vhdl << tab << "with (" << generateSelectName() << ") select " << endl;
+    vhdl << tab << declare(generateSignalName(node->output_factor, node->stage),wMUX) << " <= " << endl << tab << tab << tab;;
+    string signed_str = isSigned ? "signed" : "unsigned";
+    int i=0;
+    for (adder_graph_base_node_t *input_node: ((mux_node_t *) node)->inputs)
+    {
+      vhdl << "std_logic_vector(" << signed_str << "(shift_left(resize(" << signed_str << "(" << generateSignalName(input_node->output_factor, input_node->stage) << ")," << wMUX << ")," << ((mux_node_t *) node)->input_shifts[i] << "))) when ";
+      if(i < ((mux_node_t *) node)->inputs.size() - 1)
+        vhdl << "\"" << dec2binstr(i) << "\"," << endl << tab << tab << tab;
+      else
+        vhdl << "others;" << endl;
+      i++;
+    }
+
+    i=0;
+    for (adder_graph_base_node_t *input_node: ((mux_node_t *) node)->inputs)
+    {
+      cerr << "   input " << i << ": " << input_node->output_factor << " shifted " << ((mux_node_t *) node)->input_shifts[i] << endl;
+      i++;
+    }
+
+
+//    THROWERROR("error, not implemented yet, sorry");
   }
 
   void IntConstMultShiftAddNew::generateConfAdderSubtractorNode(PAGSuite::conf_adder_subtractor_node_t* node)
   {
     cerr << "processing configurable adder/subtractor computing " << node->output_factor << " in stage " << node->stage << endl;
 
+    THROWERROR("error, not implemented yet, sorry");
   }
 
 
@@ -939,6 +980,14 @@ namespace flopoco {
 
 
 #ifdef RMCM_SUPPORT
+    /*RSCM of 5;9 using one adder
+     * obtained from:
+     * ./rpag 5 9
+     * ./pag_split "{{'A',[5],1,[1],0,0,[1],0,2},{'A',[9],1,[1],0,0,[1],0,3},{'O',[5],1,[5],1,0},{'O',[9],1,[9],1,0}}" "5;9" --pag_fusion_input
+     * ./pag_fusion --if pag_fusion_input.txt
+     */
+    graphs.push_back({{'R',[1;1],1,[1;1],0},{'M',[1;2],1,[1;1],0,[0;1]},{'A',[5;9],2,[1;1],1,0,[1;2],1,2}});
+
 
     /*RSCM of 1;2;3;4;5
      * obtained from:
@@ -1028,6 +1077,22 @@ namespace flopoco {
 
 		return signalName.str();
 	}
+
+  string IntConstMultShiftAddNew::dec2binstr(int x)
+  {
+    string s;
+
+    int w = log2(x+1);
+    for(int i=w; i >= 0; i--)
+    {
+      if((1 << i) & x)
+        s += "1";
+      else
+        s += "0";
+    }
+
+    return s;
+  }
 
   string IntConstMultShiftAddNew::factorToString(std::vector<std::vector<int64_t> > factor)
   {
