@@ -295,7 +295,6 @@ namespace flopoco {
     addOutput(name, wOut);
 
     string signed_str = isSigned ? "signed" : "unsigned";
-    cerr << "node->input->output_factor=" << node->input->output_factor << endl;
     vhdl << tab << name << " <= std_logic_vector(" << signed_str << "(shift_left(resize(" << signed_str << "(" << generateSignalName(node->input->output_factor,node->input->stage) << ")," << wOut << ")," << node->input_shift << ")));" << endl;
   }
 
@@ -926,7 +925,11 @@ namespace flopoco {
 		graphsUnsigned.push_back("{{'R',[1],1,[1],0},{'A',[3],3,[1],0,0,[1],1,1},{'O',[6],5,[3],3,1}}");
 
 
-    //adder graphs having negative outputs (can be only evaluated for signed):
+    //adder graph having negative outputs (can be only evaluated for signed):
+		graphsSigned.push_back("{{'A',[-7],1,[-1],0,3,[1],0,0},{'O',[-7],1,[-7],1,0}}");
+
+    //adder graph having a non-common order of nodes (output first):
+		graphsSigned.push_back("{{'O',[-7],1,[-7],1,0},{'A',[-7],1,[-1],0,3,[1],0,0}}");
 
 		//CMM of 123*x1+321*x2 345*x1-543*x2, obtained from rpag --cmm 123,321 345,-543:
 		graphsSigned.push_back("{{'A',[0,5],1,[0,1],0,0,[0,1],0,2},{'A',[0,17],1,[0,1],0,0,[0,1],0,4},{'A',[5,0],1,[1,0],0,0,[1,0],0,2},{'A',[128,1],1,[0,1],0,0,[1,0],0,7},{'A',[257,0],1,[1,0],0,0,[1,0],0,8},{'R',[0,5],2,[0,5],1},{'A',[5,68],2,[0,17],1,2,[5,0],1,0},{'A',[123,1],2,[128,1],1,0,[-5,0],1,0},{'A',[385,1],2,[128,1],1,0,[257,0],1,0},{'A',[123,321],3,[0,5],2,6,[123,1],2,0},{'A',[345,-543],3,[385,1],2,0,[-5,-68],2,3},{'O',[123,321],3,[123,321],3,0},{'O',[345,-543],3,[345,-543],3,0}}");
