@@ -226,7 +226,7 @@ namespace flopoco{
       int wE = wordSizePair.first;
       int wF = wordSizePair.second;
 			for(int dualPath = 0; dualPath <2; dualPath++)	{
-				for(int onlyPositiveIO = 0;  onlyPositiveIO<2; onlyPositiveIO++)	{
+				for(int onlyPositiveIO = 0;  onlyPositiveIO<dualPath+1; onlyPositiveIO++)	{
 					paramList.push_back(make_pair("wF",to_string(wF)));
 					paramList.push_back(make_pair("wE",to_string(wE)));
 					paramList.push_back(make_pair("dualPath",to_string(dualPath)));
@@ -244,7 +244,7 @@ namespace flopoco{
 				for(int wF=5; wF<53; wF+=1) {
 					for(int dualPath = 0; dualPath <2; dualPath++)	{
 						for(int sub = 0; sub <2; sub++)	{
-							for(int onlyPositiveIO = 0;  onlyPositiveIO<2; onlyPositiveIO++)	{
+							for(int onlyPositiveIO = 0;  onlyPositiveIO<dualPath+1; onlyPositiveIO++)	{
 								int wE = 6+(wF/10);
 								while(wE>wF)
 									wE -= 2;
@@ -280,7 +280,7 @@ namespace flopoco{
 			wF(int): mantissa size in bits; \
 			sub(bool)=false: implement a floating-point subtractor instead of an adder;\
 			dualPath(bool)=false: use a dual-path algorithm, more expensive but shorter latency;\
-			onlyPositiveIO(bool)=false: optimize for only positive input and output numbers;",
+			onlyPositiveIO(bool)=false: only for dualPath adders, optimize for only positive input and output numbers;",
 	    "Single-path is lower hardware, longer latency than dual-path.<br> "
 	    "The difference between single-path and dual-path is well "
 	    "explained in textbooks such as Ercegovac and Lang's <em>Digital "
