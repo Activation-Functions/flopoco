@@ -292,6 +292,7 @@ Comment         <- < '#' [^\n]* '\n' >
 		// Now we have all it takes to fill the vhdl,
 		// but first we need to do a bit of type inference
 		// so we create a dummy operator with untyped signals first
+		UserInterface::getUserInterface().pushAndClearGlobalOpList();
 		Operator dummy(NULL, getTarget());
 		for (auto i: dagSignalList) {
 			string name=i.first;
@@ -408,6 +409,9 @@ Comment         <- < '#' [^\n]* '\n' >
 		for(auto i:dagSignalBitwidth){
 			cerr << " typed signal " << i.first << ":"  << i.second <<endl;
 		}
+
+
+		UserInterface::getUserInterface().popGlobalOpList();
 	}
 		
 	void DAGOperator::build(){
