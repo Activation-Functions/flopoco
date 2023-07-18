@@ -1519,7 +1519,7 @@ namespace flopoco{
 		vector<string> parametersVector;
 		string portName, signalName, mapping;
 
-		REPORT(LogLevel::DEBUG, "entering newInstance("<< opName << ", " << instanceName <<")" );
+		REPORT(LogLevel::DEBUG, "entering newSharedInstance("<< opName << ", " << instanceName <<")" );
 		REPORT(LogLevel::VERBOSE, "An instance corresponding to :    flopoco " + opName  + " " + parameters); 
 		
 		schedule(); // Schedule the parent operator, so the subcomponent may get timing information about its inputs.
@@ -1544,19 +1544,19 @@ namespace flopoco{
 		//parse the input port mappings
 		parsePortMappings(outPortMaps, 2);
 
-		REPORT(LogLevel::DEBUG, "   newInstance("<< opName << ", " << instanceName <<"): after parsePortMapping" );
+		REPORT(LogLevel::DEBUG, "   newSharedInstance("<< opName << ", " << instanceName <<"): after parsePortMapping" );
 		for (auto i: parametersVector){
 			REPORT(LogLevel::DEBUG, i);
 		}
 		//create the operator
 		instance = instanceOpFactory->parseArguments(this, target_, parametersVector, UserInterface::getUserInterface());
 
-		REPORT(LogLevel::DEBUG, "   newInstance("<< opName << ", " << instanceName <<"): after factory call" );
+		REPORT(LogLevel::DEBUG, "   newSharedInstance("<< opName << ", " << instanceName <<"): after factory call" );
 
 		//create the instance
 		vhdl << this->instance(instance, instanceName, false);
 		// false means: no warning. Eventually the code of instance() should be inlined here, this is a transitionnal measure to support legacy constructor code
-		REPORT(LogLevel::DEBUG, "   newInstance("<< opName << ", " << instanceName <<"): after instance()" );
+		REPORT(LogLevel::DEBUG, "   newSharedInstance("<< opName << ", " << instanceName <<"): after instance()" );
 
 		return instance;
 	}

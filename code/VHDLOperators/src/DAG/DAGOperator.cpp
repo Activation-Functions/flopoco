@@ -75,8 +75,8 @@ IODeclaration     <-  IOType  SignalName ( ','  SignalName)* ';'
 IOType            <-  'Input' / 'Output'
 
 Assignment     <-  SignalName '<=' Arg ';'
-Instance       <-  InstanceName  '('  Arg (','  Arg)* ')'
 Arg            <-  Instance / SignalName
+Instance       <-  InstanceName  '('  Arg (','  Arg)* ')'
 
 ConstantValue   <- String / Integer
 InstanceName    <- Name
@@ -207,7 +207,8 @@ Comment         <- < '#' [^\n]* '\n' >
 			return 0;		
 		};
 
-		/* each instance returns the name of a signal that holds the result */ 
+		/* each instance fills the DAG data structure, 
+			 then returns the name of a signal that holds the result */ 
 		DAGparser["Instance"] = [&](const peg::SemanticValues &vs) {
 			string componentName = any_cast<string>(vs[0]);
 			// check we have an Operator for it
@@ -215,8 +216,9 @@ Comment         <- < '#' [^\n]* '\n' >
 				THROWERROR("No Operator for component "<< componentName);
 			}
 			vector<string> astNode; // it will go to dagNode
-			string instanceName = componentName + "_"+to_string(getNewUId());	
-			astNode.push_back(instanceName); 
+			// create a unique instance name
+			string uniqueInstanceName = componentName + "_uid"+to_string(getNewUId());	
+			// astNode.push_back(uniqueInstanceName); 
 			for (size_t i=1; i<vs.size(); i++){
 				string name=any_cast<string>(vs[i]);
 				if(dagSignalList.find(name) == dagSignalList.end()) {
@@ -224,17 +226,19 @@ Comment         <- < '#' [^\n]* '\n' >
 				}
 				astNode.push_back(name);
 			}
-			instanceComponent[instanceName] = componentName;
-			dagNode[instanceName] = astNode;
-			dagSignalList[instanceName] = "Wire";
+			instanceComponent[uniqueInstanceName] = componentName;
+			dagNode[uniqueInstanceName] = astNode;
+			// add an implicit intermediate wire with the same name
+			dagSignalList[uniqueInstanceName] = "Wire";
 			// A bit of reporting
-			string s = "<"+instanceName + ">(";
-			for (size_t i=1; i<vs.size(); i++){s += "<" +astNode[i] + ">";}
+			string s = "<"+uniqueInstanceName + ">(";
+			for (size_t i=1; i<vs.size(); i++){s += "<" +astNode[i-1] + ">";}
 			s+=")";
-			REPORT(LogLevel::DEBUG, "Instance: " << "<" << instanceName << "> (component <"<< componentName << ">, Operator <" << componentOperator[componentName] << ">) <= " << s << ">"  );
-			return instanceName;
+			REPORT(LogLevel::DEBUG, "Instance: " << "<" << uniqueInstanceName << "> (component <"<< componentName << ">, Operator <" << componentOperator[componentName] << ">) <= " << s << ">"  );
+			return uniqueInstanceName;
 		};
 
+		
 		DAGparser["Assignment"] = [&](const peg::SemanticValues &vs) {
 			string lhs = any_cast<string>(vs[0]);
 			string rhs = any_cast<string>(vs[1]);
@@ -288,7 +292,7 @@ Comment         <- < '#' [^\n]* '\n' >
 		// Now we have all it takes to fill the vhdl,
 		// but first we need to do a bit of type inference
 		// so we create a dummy operator with untyped signals first
-		Operator dummy(getParentOp(), getTarget());
+		Operator dummy(NULL, getTarget());
 		for (auto i: dagSignalList) {
 			string name=i.first;
 			string type=i.second;
@@ -326,43 +330,42 @@ Comment         <- < '#' [^\n]* '\n' >
 		int countOfUntypedSignals = dagSignalList.size();
 		do {
 			progress=false;
-			// build instances for which the signals are inputs or
+			// build instances for which the signals are inputs or already known
 			for (auto i: dagNode) {
-				auto instanceName=i.first;
+				auto uniqueInstanceName=i.first;
 				auto args=i.second;
 				bool allInputsKnown=true;
-				for(size_t i=1; i<args.size(); i++) {
+				for(size_t i=0; i<args.size(); i++) {
 					allInputsKnown &= (dagSignalBitwidth.count(args[i])>0); // boolean and
 				}	
-				if(allInputsKnown && !builtInstance[instanceName]) { // build the operator, the scheduler will not complain
+				if(allInputsKnown && !builtInstance[uniqueInstanceName]) { // build the operator, the scheduler will not complain
 					// Here comes a big restriction: this only works for Operators
 					// whose inputs are X,Y,Z... and output is R
-					string inPortMap = "X=>" + args[1];
-					for(char i=2; i<args.size(); i++) {
-						char c='X'+i-1;
+					string inPortMap = "X=>" + args[0];
+					for(char i=1; i<args.size(); i++) {
+						char c='X'+i;
 						string pm = (string)(",") + c + "=>" + args[i];
 						inPortMap+=pm;
 					}
-					string returnSignalName="R_"+ instanceName;
-					string outPortMap = "R=>" + instanceName; // signalname==instance name, we'll see
-					string instanceName=args[0];
-					string componentName=instanceComponent[instanceName];
+					string returnSignalName="R_"+ uniqueInstanceName;
+					string outPortMap = "R=>" + uniqueInstanceName; // signalname==instance name, we'll see
+					string componentName=instanceComponent[uniqueInstanceName];
 					string opName=componentOperator[componentName];
 					auto parameters = componentParameters[componentName];
 					string parameterString;
 					for(auto i : parameters) {
 						parameterString += i + " ";
 					}
-					cerr << " dummy instance "<< builtComponentCount<<": "<< instanceName << " ("  << componentName << "): " << opName << "  " << parameterString << "  " << inPortMap << " --- " << outPortMap << endl;
-					OperatorPtr op= dummy.newInstance(opName, instanceName, parameterString, inPortMap, outPortMap);
-					builtInstance[instanceName]=true;
+					cerr << " dummy instance "<< builtComponentCount<<": "<< uniqueInstanceName << " ("  << componentName << "): " << opName << "  " << parameterString << "  " << inPortMap << " --- " << outPortMap << endl;
+					OperatorPtr op= dummy.newInstance(opName, uniqueInstanceName, parameterString, inPortMap, outPortMap);
+					builtInstance[uniqueInstanceName]=true;
 					builtComponentCount++;
 					progress=true;
 
 
 					// Now we may type the IO signals 
 					int sigSize=op->getSignalByName("R")->width();
-					dagSignalBitwidth[instanceName] = sigSize;
+					dagSignalBitwidth[uniqueInstanceName] = sigSize;
 					for(char i=1; i<args.size(); i++) {
 						char c='X'+i-1;
 						string formal = "";
@@ -377,7 +380,6 @@ Comment         <- < '#' [^\n]* '\n' >
 			for (auto i: assignment) {
 				string lhs = i.first;
 				string rhs = i.second;
-				cerr << " ZZZZZZZZZ " << lhs << "<="  << rhs << endl;
 				if(dagSignalBitwidth.count(rhs)>0 && dagSignalBitwidth.count(lhs)==0) {
 					dagSignalBitwidth[lhs] = dagSignalBitwidth[rhs];
 					progress=true;
@@ -408,7 +410,94 @@ Comment         <- < '#' [^\n]* '\n' >
 		}
 	}
 		
-	void DAGOperator::build(){}
+	void DAGOperator::build(){
+		// For the schedule to work, we must generate instances from the leaves on.
+		// This will be a stupid iteration looking for already produced values
+		
+		map<string,bool> availableArg; //initialized to all false except inputs
+		for (auto i: instanceComponent) {	
+			string name=i.first;
+			availableArg[name] = false;
+		}
+		for (auto i: dagSignalList) {	
+			string name=i.first;
+			string iotype=i.second;
+			availableArg[name] = (iotype=="Input");
+		}
+		
+#if 0 // probably useless
+		map<string,bool> builtInstance; //initialized to all false
+		for (auto i: instanceComponent) {	
+			string name=i.first;
+			builtInstance[name] = false;
+		}
+#endif
+
+		// a map to ensure VHDL is output only once 
+		map<string,bool> declaredSignal;
+		for (auto i: dagSignalList) {	
+			string name=i.first;
+			string iotype=i.second;
+			if (iotype=="Wire") declaredSignal[name] = false;
+		}
+
+		bool progress=true; // detection of infinite loops
+		while(progress) {
+			progress=false;
+
+			// First check if we can build some operator
+			for (auto i: dagNode) {
+				auto uniqueInstanceName=i.first;
+				if (!availableArg[uniqueInstanceName]) {
+					auto args=i.second;
+					bool allInputsAvailable=true;
+					for(size_t i=0; i<args.size(); i++) {
+						allInputsAvailable &= availableArg[args[i]]; // boolean and
+					}
+					if(allInputsAvailable) {
+						cerr << "AIA: instance " << uniqueInstanceName << " can be built" << endl;
+						availableArg[uniqueInstanceName] = true;
+						progress=true;
+
+						// now built it for good
+#if 0
+						string inPortMap = "X=>" + args[1];
+						for(char i=1; i<args.size(); i++) {
+							char c='X'+i;
+							string pm = (string)(",") + c + "=>" + args[i];
+							inPortMap+=pm;
+						}
+						//string returnSignalName="R_"+ uniqueInstanceName;
+						string outPortMap = "R=>" + uniqueInstanceName; // signalname==instance name, we'll see if it works
+						string componentName=instanceComponent[uniqueInstanceName];
+						string opName=componentOperator[componentName];
+						auto parameters = componentParameters[componentName];
+						string parameterString;
+						for(auto i : parameters) {
+						parameterString += i + " ";
+						}
+						cerr << " dummy instance "<< builtComponentCount<<": "<< uniqueInstanceName << " ("  << componentName << "): " << opName << "  " << parameterString << "  " << inPortMap << " --- " << outPortMap << endl;
+						OperatorPtr op= dummy.newInstance(opName, uniqueInstanceName, parameterString, inPortMap, outPortMap);
+
+#endif
+					}
+				}
+			} // end loop on dagNode
+			
+			// Next check if we can propagate this information through the assignments
+			for (auto i: assignment) {
+				string lhs = i.first;
+				string rhs = i.second;
+				if(availableArg[rhs] && !declaredSignal[lhs]) {
+					vhdl << tab << declare(lhs, dagSignalBitwidth[lhs]) << " <= " << rhs << ";" << endl  ;
+					availableArg[rhs] = true;
+					declaredSignal[lhs] =true;
+					progress=true;
+				}
+			}
+			
+		} // end while progress
+	}
 	
 	
 DAGOperator::DAGOperator(OperatorPtr parentOp, Target* target, string infile) : Operator(parentOp, target){

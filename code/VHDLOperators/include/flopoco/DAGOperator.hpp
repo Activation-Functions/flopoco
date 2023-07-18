@@ -58,14 +58,14 @@ namespace flopoco {
 		map<string, string> componentOperator;
 
 		/** which Operator parameters for each declared component */
-		map<string, vector<string>> componentParameters; // instanceName, reconstructed parameter list 
+		map<string, vector<string>> componentParameters; // componentName, reconstructed parameter list 
 		/** which Component for each instance in the DAG */
-		map<string, string> instanceComponent; // instanceName, componentName
+		map<string, string> instanceComponent; // uniqueInstanceName, componentName
 
 		// The AST node is all string-based.
-		// A node is either a signal or the name of an instance with its arguments 
-		map<string, vector<string>> dagNode; /**< ultra simple AST */
-		map<string, string> assignment; /**< ultra simple AST */
+		map<string, vector<string>> dagNode; /**< ultra simple AST. 
+			  maps an instance name to its arguments (either signal names or instance names) */
+		map<string, string> assignment; /**< ultra simple AST. first is LHS signal name, second is  */
 #endif
 	};
 
