@@ -479,14 +479,17 @@ Comment         <- < '#' [^\n]* '\n' >
 						progress=true;
 
 						// now built it for good
-						string inPortMap = "X=>" + args[0];
+						// VHDL won't accept that an instance name is also a signal name, so we extend istance names
+						string actualRHS = (dagNode.count(args[0])==0 ? "":"R_") + args[0];
+						string inPortMap = "X=>" + actualRHS;
 						for(char i=1; i<args.size(); i++) {
 							char c='X'+i;
-							string pm = (string)(",") + c + "=>" + args[i];
+							actualRHS = (dagNode.count(args[i])==0 ? "":"R_") + args[i];
+							string pm = (string)(",") + c + "=>" + actualRHS;
 							inPortMap+=pm;
 						}
-						//string returnSignalName="R_"+ uniqueInstanceName;
-						string outPortMap = "R=>" + uniqueInstanceName; // signalname==instance name, we'll see if it works
+						string returnSignalName="R_"+ uniqueInstanceName;
+						string outPortMap = "R=>" + returnSignalName; // signalname==instance name, we'll see if it works
 						string componentName=instanceComponent[uniqueInstanceName];
 						string opName=componentOperator[componentName];
 						auto parameters = componentParameters[componentName];
@@ -505,11 +508,12 @@ Comment         <- < '#' [^\n]* '\n' >
 				string lhs = i.first;
 				string rhs = i.second;
 				if(availableArg[rhs] && !declaredSignal[lhs]) {
+					string actualRHS = (dagNode.count(rhs)==0 ? "":"R_") + rhs;
 					if(dagSignalList[lhs]=="Wire") {
-						vhdl << tab << declare(lhs, dagSignalBitwidth[lhs]) << " <= " << rhs << ";" << endl  ;
+						vhdl << tab << declare(lhs, dagSignalBitwidth[lhs]) << " <= " << actualRHS << ";" << endl  ;
 					}
 					else { // it is an Output
-						vhdl << tab << lhs << " <= " << rhs << ";" << endl  ;
+						vhdl << tab << lhs << " <= " << actualRHS << ";" << endl  ;
 					}
 					availableArg[lhs] = true;
 					declaredSignal[lhs] =true;
