@@ -561,9 +561,9 @@ DAGOperator::DAGOperator(OperatorPtr parentOp, Target* target, string infile) : 
 	template <>
 	const OperatorDescription<DAGOperator> op_descriptor<DAGOperator> {
 	 	  "DAGOperator", // name
-			"DAG operator for FloPoCo.", // description, string
+			"DAG operator for FloPoCo. Example input files in doc/web/DAGOperator/", // description, string
 			"Miscellaneous", // category, from the list defined in UserInterface.cpp
-			"", //seeAlso
+			"The grammar of the DAG files can be found in DAG/DAGOperator.cpp", //seeAlso
 			// Now comes the parameter description string.
 			"infile(string): name of the file containing the DAG specification",
 			// More documentation for the HTML pages. If you want to link to your blog, it is here.
