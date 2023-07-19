@@ -8,6 +8,6 @@ add_flopocolib_src(
 	FixSinCosCORDIC.cpp
 	FixSinCos.cpp
 	FixSinCosPoly.cpp
-	#FixSinOrCos.cpp
+	FixSinOrCos.cpp
 	FixSinPoly.cpp
 )

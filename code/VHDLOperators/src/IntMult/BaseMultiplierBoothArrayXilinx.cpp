@@ -127,28 +127,30 @@ void BaseMultiplierBoothArrayXilinxOp::emulate(TestCase* tc)
 }
 
 //copied from 2xk
-TestList BaseMultiplierBoothArrayXilinx::unitTest(int index)
+TestList BaseMultiplierBoothArrayXilinx::unitTest(int testLevel)
 {
     // the static list of mandatory tests
     TestList testStateList;
     vector<pair<string,string>> paramList;
 
-    //test square multiplications:
-    for(int w=1; w <= 6; w++)
-    {
-        paramList.push_back(make_pair("wY", to_string(w)));
-        paramList.push_back(make_pair("wX", to_string(2)));
-        testStateList.push_back(paramList);
-        paramList.clear();
+    if(testLevel >= TestLevel::SUBSTANTIAL)
+    { // The substantial unit tests
+      //test square multiplications:
+      for(int w=1; w <= 6; w++)
+      {
+          paramList.push_back(make_pair("wY", to_string(w)));
+          paramList.push_back(make_pair("wX", to_string(2)));
+          testStateList.push_back(paramList);
+          paramList.clear();
+      }
+      for(int w=1; w <= 6; w++)
+      {
+          paramList.push_back(make_pair("wX", to_string(w)));
+          paramList.push_back(make_pair("wY", to_string(2)));
+          testStateList.push_back(paramList);
+          paramList.clear();
+      }
     }
-    for(int w=1; w <= 6; w++)
-    {
-        paramList.push_back(make_pair("wX", to_string(w)));
-        paramList.push_back(make_pair("wY", to_string(2)));
-        testStateList.push_back(paramList);
-        paramList.clear();
-    }
-
     return testStateList;
 }
 

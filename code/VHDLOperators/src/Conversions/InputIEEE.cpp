@@ -411,15 +411,14 @@ namespace flopoco{
 		return new InputIEEE(parentOp, target, wEIn, wFIn, wEOut, wFOut, flushToZero);
 	}
 
-	TestList InputIEEE::unitTest(int index)
+	TestList InputIEEE::unitTest(int testLevel)
 	{
 		// the static list of mandatory tests
 		TestList testStateList;
 		vector<pair<string,string>> paramList;
 
-		if(index == -1)
-		{
-			// The unit tests
+    if(testLevel >= TestLevel::SUBSTANTIAL)
+    { // The substantial unit tests
 			for (auto formatIn : IEEEFloatFormat::getStandardFormats()) {
 				for (auto formatOut : IEEEFloatFormat::getStandardFormats()) {
 					paramList.clear();
@@ -433,7 +432,7 @@ namespace flopoco{
 		}
 		else
 		{
-			// finite number of random test computed out of index
+			// finite number of random test computed out of testLevel
 		}
 
 		return testStateList;

@@ -105,13 +105,13 @@ namespace flopoco {
 
 
 
-	TestList Fix2DNorm::unitTest(int index)
+	TestList Fix2DNorm::unitTest(int testLevel)
 	{
 		// the static list of mandatory tests
 		TestList testStateList;
 		vector<pair<string,string>> paramList;
 		
-		if(index==-1) 
+		if(testLevel >= TestLevel::SUBSTANTIAL)
 		{ // The unit tests
 			int method=0;
 			for(int wIn=4; wIn<33; wIn+=(wIn<16?1:3)) {
@@ -141,7 +141,7 @@ namespace flopoco {
 			}
 		}
 		else     		{
-				// finite number of random test computed out of index
+				// finite number of random test computed out of testLevel
 				// TODO
 		}	
 		cerr << "************* "<< testStateList.size() <<endl;

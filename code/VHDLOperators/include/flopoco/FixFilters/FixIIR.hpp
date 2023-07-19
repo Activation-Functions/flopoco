@@ -30,7 +30,7 @@ namespace flopoco{
 		// User-interface stuff
 		/** Factory method */
 		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
-		static TestList unitTest(int index);
+		static TestList unitTest(int testLevel);
 
 	private:
 		void computeImpulseResponse(); // evaluates the filter on an impulsion

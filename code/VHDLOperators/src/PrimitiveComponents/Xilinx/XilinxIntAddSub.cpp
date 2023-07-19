@@ -369,9 +369,6 @@ namespace flopoco {
       "allowBothInputsNegative(bool)=false: Allows both inputs to be negative in the runtime configurable configuration (at the cost of a slower implementation)"
       ,
 	    ""};
-/*
-*/
-
 
   void XilinxIntAddSub::emulate(TestCase *tc)
 	{
@@ -420,14 +417,20 @@ namespace flopoco {
 		tc->addExpectedOutput("R", s);
 	}
 
-  TestList XilinxIntAddSub::unitTest(int index)
+  TestList XilinxIntAddSub::unitTest(int testLevel)
   {
     TestList testStateList;
     vector<pair<string, string>> paramList;
 
-    if(index==-1)
-    {// Unit tests
 
+    if(testLevel == TestLevel::QUICK) //quick test checks only one word size
+    {
+      paramList.push_back(make_pair("wIn", "10"));
+      testStateList.push_back(paramList);
+      paramList.clear();
+    }
+    else //other tests check more word sizes
+    {
       //this tests all different cases (< 1 slice, > 1 slice up to 3 fully used slices:
       for(int wIn=1; wIn<=12; wIn++){
         string wInStr = to_string(wIn);
@@ -435,15 +438,18 @@ namespace flopoco {
         testStateList.push_back(paramList);
         paramList.clear();
       }
+    }
 
-      paramList.push_back(make_pair("wIn", "10"));
-      paramList.push_back(make_pair("xNegative", "true"));
-      paramList.push_back(make_pair("yNegative", "false"));
-      paramList.push_back(make_pair("configurable", "false"));
-      paramList.push_back(make_pair("allowBothInputsNegative", "false"));
-      testStateList.push_back(paramList);
-      paramList.clear();
+    paramList.push_back(make_pair("wIn", "10"));
+    paramList.push_back(make_pair("xNegative", "true"));
+    paramList.push_back(make_pair("yNegative", "false"));
+    paramList.push_back(make_pair("configurable", "false"));
+    paramList.push_back(make_pair("allowBothInputsNegative", "false"));
+    testStateList.push_back(paramList);
+    paramList.clear();
 
+    if(testLevel > TestLevel::QUICK) //other tests check more word sizes
+    {
       paramList.push_back(make_pair("wIn", "10"));
       paramList.push_back(make_pair("xNegative", "false"));
       paramList.push_back(make_pair("yNegative", "true"));
@@ -451,15 +457,18 @@ namespace flopoco {
       paramList.push_back(make_pair("allowBothInputsNegative", "false"));
       testStateList.push_back(paramList);
       paramList.clear();
+    }
 
-      paramList.push_back(make_pair("wIn", "10"));
-      paramList.push_back(make_pair("xNegative", "false"));
-      paramList.push_back(make_pair("yNegative", "false"));
-      paramList.push_back(make_pair("configurable", "true"));
-      paramList.push_back(make_pair("allowBothInputsNegative", "false"));
-      testStateList.push_back(paramList);
-      paramList.clear();
+    paramList.push_back(make_pair("wIn", "10"));
+    paramList.push_back(make_pair("xNegative", "false"));
+    paramList.push_back(make_pair("yNegative", "false"));
+    paramList.push_back(make_pair("configurable", "true"));
+    paramList.push_back(make_pair("allowBothInputsNegative", "false"));
+    testStateList.push_back(paramList);
+    paramList.clear();
 
+    if(testLevel > TestLevel::QUICK) //other tests check more word sizes
+    {
       paramList.push_back(make_pair("wIn", "10"));
       paramList.push_back(make_pair("xNegative", "false"));
       paramList.push_back(make_pair("yNegative", "false"));
@@ -468,6 +477,7 @@ namespace flopoco {
       testStateList.push_back(paramList);
       paramList.clear();
     }
+
     return testStateList;
   }
 }//namespace

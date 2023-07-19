@@ -257,7 +257,7 @@ namespace flopoco
 
       if (4 - wIn == 1)
       {
-        fillup << "'0'";
+        fillup << "\"0\"";
       }
       else
       {

@@ -269,45 +269,49 @@ const OperatorDescription<IntKaratsubaRectangular> op_descriptor<IntKaratsubaRec
     "1, otherwise quadratic tiles are used",
     ""};
 
-TestList IntKaratsubaRectangular::unitTest(int index)
+TestList IntKaratsubaRectangular::unitTest(int testLevel)
 {
 	// the static list of mandatory tests
 	TestList testStateList;
 	vector<pair<string,string>> paramList;
 
-	//test Karatsuba with square tiles:
-	for(int w=17; w <= 136; w+=17)
-	{
-		paramList.push_back(make_pair("wX", to_string(w)));
-		paramList.push_back(make_pair("wY", to_string(w)));
-		paramList.push_back(make_pair("useKaratsuba", "1"));
-		paramList.push_back(make_pair("useRectangularTiles", "0"));
-		testStateList.push_back(paramList);
-		paramList.clear();
-	}
+  if(testLevel >= TestLevel::SUBSTANTIAL)
+  { // The substantial unit tests
 
-	//test Karatsuba and standard tiling with rectangular tiles:
-	for(int useKaratsuba=0; useKaratsuba < 2; useKaratsuba++)
-	{
-		paramList.push_back(make_pair("wX", "64"));
-		paramList.push_back(make_pair("wY", "72"));
-		paramList.push_back(make_pair("useKaratsuba", to_string(useKaratsuba)));
-		testStateList.push_back(paramList);
-		paramList.clear();
+    //test Karatsuba with square tiles:
+    for(int w=17; w <= 136; w+=17)
+    {
+      paramList.push_back(make_pair("wX", to_string(w)));
+      paramList.push_back(make_pair("wY", to_string(w)));
+      paramList.push_back(make_pair("useKaratsuba", "1"));
+      paramList.push_back(make_pair("useRectangularTiles", "0"));
+      testStateList.push_back(paramList);
+      paramList.clear();
+    }
 
-		paramList.push_back(make_pair("wX", "96"));
-		paramList.push_back(make_pair("wY", "96"));
-		paramList.push_back(make_pair("useKaratsuba", to_string(useKaratsuba)));
-		testStateList.push_back(paramList);
-		paramList.clear();
+    //test Karatsuba and standard tiling with rectangular tiles:
+    for(int useKaratsuba=0; useKaratsuba < 2; useKaratsuba++)
+    {
+      paramList.push_back(make_pair("wX", "64"));
+      paramList.push_back(make_pair("wY", "72"));
+      paramList.push_back(make_pair("useKaratsuba", to_string(useKaratsuba)));
+      testStateList.push_back(paramList);
+      paramList.clear();
 
-		paramList.push_back(make_pair("wX", "112"));
-		paramList.push_back(make_pair("wY", "120"));
-		paramList.push_back(make_pair("useKaratsuba", to_string(useKaratsuba)));
-		testStateList.push_back(paramList);
-		paramList.clear();
-	}
+      paramList.push_back(make_pair("wX", "96"));
+      paramList.push_back(make_pair("wY", "96"));
+      paramList.push_back(make_pair("useKaratsuba", to_string(useKaratsuba)));
+      testStateList.push_back(paramList);
+      paramList.clear();
 
+      paramList.push_back(make_pair("wX", "112"));
+      paramList.push_back(make_pair("wY", "120"));
+      paramList.push_back(make_pair("useKaratsuba", to_string(useKaratsuba)));
+      testStateList.push_back(paramList);
+      paramList.clear();
+    }
+  }
+  
 	return testStateList;
 }
 

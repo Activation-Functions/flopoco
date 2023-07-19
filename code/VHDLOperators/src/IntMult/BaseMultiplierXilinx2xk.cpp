@@ -79,28 +79,42 @@ void BaseMultiplierXilinx2xkOp::emulate(TestCase* tc)
     tc->addExpectedOutput("R", svR);
 }
 
-TestList BaseMultiplierXilinx2xk::unitTest(int index)
+TestList BaseMultiplierXilinx2xk::unitTest(int testLevel)
 {
     // the static list of mandatory tests
     TestList testStateList;
     vector<pair<string,string>> paramList;
 
-    //test square multiplications:
-    for(int w=1; w <= 6; w++)
+    if(testLevel == TestLevel::QUICK)
     {
-        paramList.push_back(make_pair("wY", to_string(w)));
-        paramList.push_back(make_pair("wX", to_string(2)));
+        paramList.push_back(make_pair("wX", "2"));
+        paramList.push_back(make_pair("wY", "10"));
         testStateList.push_back(paramList);
         paramList.clear();
-    }
-    for(int w=1; w <= 6; w++)
-    {
-        paramList.push_back(make_pair("wX", to_string(w)));
-        paramList.push_back(make_pair("wY", to_string(2)));
-        testStateList.push_back(paramList);
-        paramList.clear();
-    }
 
+        paramList.push_back(make_pair("wY", "10"));
+        paramList.push_back(make_pair("wX", "2"));
+        testStateList.push_back(paramList);
+        paramList.clear();
+    }
+    else if(testLevel >= TestLevel::SUBSTANTIAL)
+    { // The substantial unit tests
+      //test square multiplications:
+      for(int w=1; w <= 6; w++)
+      {
+          paramList.push_back(make_pair("wX", "2"));
+          paramList.push_back(make_pair("wY", to_string(w)));
+          testStateList.push_back(paramList);
+          paramList.clear();
+      }
+      for(int w=1; w <= 6; w++)
+      {
+          paramList.push_back(make_pair("wX", to_string(w)));
+          paramList.push_back(make_pair("wY", "2"));
+          testStateList.push_back(paramList);
+          paramList.clear();
+      }
+    }
     return testStateList;
 }
 

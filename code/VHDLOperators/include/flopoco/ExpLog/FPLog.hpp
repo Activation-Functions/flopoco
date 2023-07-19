@@ -19,7 +19,7 @@ namespace flopoco{
 		//		Overloading the virtual functions of Operator
 		void emulate(TestCase * tc);
 		void buildStandardTestCases(TestCaseList* tcl);
-		static TestList unitTest(int index);
+		static TestList unitTest(int testLevel);
 		/**Overloading the function of Operator with a function that tests only positive FP numbers (full range)*/
 		TestCase* buildRandomTestCase(int i);
 		// User-interface stuff

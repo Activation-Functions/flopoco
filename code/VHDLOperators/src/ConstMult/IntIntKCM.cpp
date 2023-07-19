@@ -423,13 +423,13 @@ namespace flopoco{
 	}
 
 	
-	TestList FixRealKCM::unitTest(int index)
+	TestList FixRealKCM::unitTest(int testLevel)
 	{
 		// the static list of mandatory tests
 		TestList testStateList;
 			
-		if(index==-1) 
-		{ // The unit tests
+    if(testLevel >= TestLevel::SUBSTANTIAL)
+    { // The substantial unit tests
 
 			// TODO!
 		}

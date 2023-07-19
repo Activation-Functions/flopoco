@@ -983,48 +983,48 @@ namespace flopoco{
 
 
 
-		TestList FPExp::unitTest(int index)
+		TestList FPExp::unitTest(int testLevel)
 		{
 		// the static list of mandatory tests
 			TestList testStateList;
 			vector<pair<string,string>> paramList;
 
-			if(index==-1)
-		{ // The unit tests
+      if(testLevel >= TestLevel::SUBSTANTIAL)
+      { // The substantial unit tests
 
-			// First test with plainVHDL, then with cool multipliers
-			for(int wF=5; wF<53; wF+=1) // test various input widths
-			{
-				int nbByteWE = 6+(wF/10);
-				while(nbByteWE>wF){
-					nbByteWE -= 2;
-				}
+        // First test with plainVHDL, then with cool multipliers
+        for(int wF=5; wF<53; wF+=1) // test various input widths
+        {
+          int nbByteWE = 6+(wF/10);
+          while(nbByteWE>wF){
+            nbByteWE -= 2;
+          }
 
-				paramList.push_back(make_pair("wF",to_string(wF)));
-				paramList.push_back(make_pair("wE",to_string(nbByteWE)));
-				paramList.push_back(make_pair("plainVHDL","true"));
-				testStateList.push_back(paramList);
-				paramList.clear();
-			}
-			for(int wF=5; wF<53; wF+=1) // test various input widths
-			{
-				int nbByteWE = 6+(wF/10);
-				while(nbByteWE>wF){
-					nbByteWE -= 2;
-				}
+          paramList.push_back(make_pair("wF",to_string(wF)));
+          paramList.push_back(make_pair("wE",to_string(nbByteWE)));
+          paramList.push_back(make_pair("plainVHDL","true"));
+          testStateList.push_back(paramList);
+          paramList.clear();
+        }
+        for(int wF=5; wF<53; wF+=1) // test various input widths
+        {
+          int nbByteWE = 6+(wF/10);
+          while(nbByteWE>wF){
+            nbByteWE -= 2;
+          }
 
-				paramList.push_back(make_pair("wF",to_string(wF)));
-				paramList.push_back(make_pair("wE",to_string(nbByteWE)));
-				testStateList.push_back(paramList);
-				paramList.clear();
-			}
-		}
-		else
-		{
-				// finite number of random test computed out of index
-		}
+          paramList.push_back(make_pair("wF",to_string(wF)));
+          paramList.push_back(make_pair("wE",to_string(nbByteWE)));
+          testStateList.push_back(paramList);
+          paramList.clear();
+        }
+      }
+      else
+      {
+          // finite number of random test computed out of testLevel
+      }
 
-		return testStateList;
+  		return testStateList;
 	}
 
 	template <>

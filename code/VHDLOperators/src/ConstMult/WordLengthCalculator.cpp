@@ -12,6 +12,7 @@ TODO
 #include <cmath>
 
 #include "flopoco/ConstMult/WordLengthCalculator.hpp"
+#include "flopoco/report.hpp"
 
 using namespace std;
 using namespace PAGSuite;
@@ -79,8 +80,10 @@ namespace flopoco {
                 if(target_)
                     s.timeout = target_->getILPTimeout();
 
-                s.quiet = true;
-//                s.quiet = false;
+                if(is_log_lvl_enabled(LogLevel::DEBUG))
+                  s.quiet = false;
+                else
+                  s.quiet = true;
 
                 bool useBigM;
 				if(!s.featureSupported(ScaLP::Feature::INDICATOR_CONSTRAINTS))

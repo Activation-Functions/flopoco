@@ -35,7 +35,7 @@ namespace flopoco{
 		/** The standard constructor, inputs the number to implement */ 
         IntConstMultShiftAddRPAG(Operator* parentOp, Target* target, int wIn, list<mpz_class> &coeffList, bool syncInOut=true, int epsilon=0);
 
-		static TestList unitTest(int index);
+		static TestList unitTest(int testLevel);
         static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
 	private:
         stringstream adderGraph;

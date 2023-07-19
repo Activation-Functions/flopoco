@@ -276,14 +276,14 @@ namespace flopoco{
 		return new FPComparator(parentOp, target, wE, wF, flags, method);
 	}
 
-	TestList FPComparator::unitTest(int index)
+	TestList FPComparator::unitTest(int testLevel)
 	{
 		// the static list of mandatory tests
 		TestList testStateList;
 		vector<pair<string,string>> paramList;
 		
-		if(index==-1) 
-		{ // The unit tests
+    if(testLevel >= TestLevel::SUBSTANTIAL)
+    { // The substantial unit tests
 
 			for(int flags=1;flags<32; flags++) {
 				paramList.push_back(make_pair("flags",to_string(flags)));
@@ -310,7 +310,7 @@ namespace flopoco{
 		}
 		else     
 			{
-			// finite number of random test computed out of index
+			// finite number of random test computed out of testLevel
 			// TODO
 		}	
 		

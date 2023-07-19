@@ -21,18 +21,18 @@ Operator* BaseMultiplierDSPSuperTilesXilinx::generateOperator(
 		);
 }
 
-const int BaseMultiplierDSPSuperTilesXilinx::shape_size[12][5] =    {{41, 34, 41+1, 58+1, 17},  // A (x,y,r,MSB,LSB)
-                                                                     {41, 41, 41+1, 58+1, 17},  // B
-                                                                     {41, 41, 41+1, 65+1, 24},  // C
-                                                                     {34, 41, 41+1, 58+1, 17},  // D
-                                                                     {24, 34, 58, 58,  0},  // E
-                                                                     {48, 24, 58, 65,  7},  // F
-                                                                     {24, 41, 58, 65,  7},  // G
-                                                                     {41, 24, 58, 58,  0},  // H
-                                                                     {41, 24, 58, 65,  7},  // I
-                                                                     {24, 41, 58, 58,  0},  // J
-                                                                     {34, 24, 58, 58,  0},  // K
-                                                                     {24, 48, 58, 65,  7}}; // L
+const int BaseMultiplierDSPSuperTilesXilinx::shape_size[12][5] =    {{41, 34, 41+1, 57+1, 17},  // A (x,y,r,MSB,LSB)
+                                                                     {41, 41, 41+1, 57+1, 17},  // B
+                                                                     {41, 41, 41+1, 64+1, 24},  // C
+                                                                     {34, 41, 41+1, 57+1, 17},  // D
+                                                                     {24, 34, 58, 57,  0},  // E
+                                                                     {48, 24, 58, 64,  7},  // F
+                                                                     {24, 41, 58, 64,  7},  // G
+                                                                     {41, 24, 58, 57,  0},  // H
+                                                                     {41, 24, 58, 64,  7},  // I
+                                                                     {24, 41, 58, 57,  0},  // J
+                                                                     {34, 24, 58, 57,  0},  // K
+                                                                     {24, 48, 58, 64,  7}}; // L
 
 int BaseMultiplierDSPSuperTilesXilinx::getRelativeResultLSBWeight(Parametrization const& param) const
 {

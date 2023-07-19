@@ -455,14 +455,14 @@ rattrapper les erreurs sur guess degree des fonctions très méchantes
 	}
 
 
-	TestList FixFunctionByVaryingPiecewisePoly::unitTest(int index)
+	TestList FixFunctionByVaryingPiecewisePoly::unitTest(int testLevel)
 	{
 		// the static list of mandatory tests
 		TestList testStateList;
 		vector<pair<string,string>> paramList;
 
-		if(index==-1)
-		{ // The unit tests
+    if(testLevel >= TestLevel::SUBSTANTIAL)
+    { // The substantial unit tests
 			// A few regression tests, first deg2, exhaustive on 15 bits, then deg 3 for 24 bits
 			paramList.push_back(make_pair("f","\"sin(x)\""));
 			paramList.push_back(make_pair("plainVHDL","true"));

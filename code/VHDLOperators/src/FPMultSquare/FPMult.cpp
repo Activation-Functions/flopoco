@@ -225,14 +225,14 @@ namespace flopoco{
 	}
 
 
-	TestList FPMult::unitTest(int index)
+	TestList FPMult::unitTest(int testLevel)
 	{
 		// the static list of mandatory tests
 		TestList testStateList;
 		vector<pair<string,string>> paramList;
 		
-		if(index==-1) 
-		{ // The unit tests
+    if(testLevel >= TestLevel::SUBSTANTIAL)
+    { // The substantial unit tests
 
 			paramList.push_back(make_pair("wE","5"));
 			paramList.push_back(make_pair("wF","10"));
@@ -259,7 +259,7 @@ namespace flopoco{
 		}
 		else     
 		{
-				// finite number of random test computed out of index
+				// finite number of random test computed out of testLevel
 			// TODO
 		}	
 		return testStateList;

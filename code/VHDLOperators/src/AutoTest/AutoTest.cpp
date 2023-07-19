@@ -103,9 +103,18 @@ namespace {
 		OperatorFactory const *const opFact;
 		fs::path testRoot;
 
-		void registerTests(int index)
+		int testLevel;
+
+	public:
+		OperatorTester(OperatorFactory const *fact, fs::path const &autotestOutputRoot, int testLevel)
+		    : hasRun{false}, opFact{fact}, testLevel(testLevel)
 		{
-			auto unitTestsList = opFact->unitTestGenerator(index);
+			testRoot = autotestOutputRoot / opFact->name();
+		}
+
+		void registerTests()
+		{
+			auto unitTestsList = opFact->unitTestGenerator(testLevel);
 			auto paramNames = opFact->param_names();
 
 			// Get the default values for factory parameters
@@ -140,7 +149,7 @@ namespace {
 					}
 				}
 				if (testBenchString == "") {
-					testBenchString = AutoTest::defaultTestBenchSize(unitTestParam);
+					testBenchString = AutoTest::defaultTestBenchSize(unitTestParam, testLevel);
 				}
 				tests.emplace_back(TestConfig{std::move(unitTestParam),
 						   std::move(testBenchString), 0});
@@ -150,14 +159,7 @@ namespace {
 					  << std::endl;
 		}
 
-	public:
-		OperatorTester(OperatorFactory const *fact,
-			       fs::path const &autotestOutputRoot)
-		    : hasRun{false}, opFact{fact}
-		{
-			testRoot = autotestOutputRoot / opFact->name();
-		}
-
+/*
 		void registerUnitTests() {
 			registerTests(-1);
 		}
@@ -165,7 +167,7 @@ namespace {
 		void registerRandomTests() {
 			registerTests(0);
 		}
-
+*/
 		size_t getNbTests() {
 			return tests.size();
 		}
@@ -273,24 +275,30 @@ namespace {
 				++id;
 			}
 			hasRun = true;
-			std::cout << "\n";
 		}
 
 		void printStats(std::ostream& out) {
-			out << "Tests for " << opFact->name() << ":\n";
-			size_t nbGenOk{nbGenerationOK()}, nbSimOk{nbSimulationOk()};
-			auto plural = [](int val){if (val > 1) return std::string_view{"tests"}; else return std::string_view{"test"};};
-			size_t nbTests = tests.size();
-			double percentageGen = 0.;
-			out << "\t" << nbTests << " " << plural(nbTests) << " in total\n";
-			if (nbTests > 0) {
-				out << "\t" << nbGenOk << " correctly generated (" << ((100.0 * nbGenOk) / nbTests) << " \% of all tests)\n";
-				out << "\t" << nbSimOk << " correctly simulated";
-				if (nbGenOk > 0) {
-					out << " (" << ((100.0 * nbSimOk) / nbGenOk) << " \% of correctly generated cases)";
-				}
-				out << "\n";
-			}
+      size_t nbTests = tests.size();
+		  if(nbTests == 0)
+      {
+        out << "No tests defined for " << opFact->name() << " at test level " << testLevel << endl;
+      }
+      else
+      {
+        out << endl << "Tests for " << opFact->name() << endl;
+        size_t nbGenOk{nbGenerationOK()}, nbSimOk{nbSimulationOk()};
+        auto plural = [](int val){if (val > 1) return std::string_view{"tests"}; else return std::string_view{"test"};};
+        double percentageGen = 0.;
+        out << "\t" << nbTests << " " << plural(nbTests) << " in total\n";
+        if (nbTests > 0) {
+          out << "\t" << nbGenOk << " correctly generated (" << ((100.0 * nbGenOk) / nbTests) << " \% of all tests)\n";
+          out << "\t" << nbSimOk << " correctly simulated";
+          if (nbGenOk > 0) {
+            out << " (" << ((100.0 * nbSimOk) / nbGenOk) << " \% of correctly generated cases)";
+          }
+          out << "\n";
+        }
+      }
 		}
 	};
 } // namespace
@@ -302,8 +310,10 @@ namespace flopoco
 	{
 		string opName;
 		ui.parseString(args, "Operator", &opName);
+		int testLevel;
+		ui.parseInt(args, "testLevel", &testLevel);
 
-		AutoTest AutoTest(opName);
+		AutoTest AutoTest(opName, testLevel);
 
 		return nullptr;
 	}
@@ -314,11 +324,12 @@ namespace flopoco
 		"A tester for operators.",
 		"AutoTest",
 		"", //seeAlso
-		"Operator(string): name of the operator to test, All if we need to test all the operators;",
+		"Operator(string): name of the operator to test, All if we need to test all the operators;"
+    "testLevel(int)=0: test level (0-3), 0=only quick tests (< 1 second per operator), 1=substantial tests, 2=exhaustive tests, 3=infinite tests (which produce random parameter combinations which may take forever) ;",
 		""
 	};
 
-	AutoTest::AutoTest(string opName)
+	AutoTest::AutoTest(string opName, const int testLevel) : testLevel(testLevel)
 	{
 		TempDirectoryManager tmpDirHolder{};
 		if (!(tmpDirHolder.inGoodState())) {
@@ -375,13 +386,18 @@ namespace flopoco
 
 		// For each tested Operator, we run a number of tests defined in the Operator's unitTest method
 		for(auto op: testedOperator)	{
-			auto iter = testerMap.emplace(op, OperatorTester{factRegistry.getFactoryByName(op), *(tmpDirHolder.tmpPath)}).first;
+			auto iter = testerMap.emplace(op, OperatorTester{factRegistry.getFactoryByName(op), *(tmpDirHolder.tmpPath), testLevel}).first;
 			auto& tester = iter->second;
+
+			//register the tests
+			tester.registerTests();
+
+/*
 			// First we register the unitTest for each tested Operator
 			if (doUnitTest) tester.registerUnitTests();
 			// Then we register random Tests for each tested Operator
 			if(doRandomTest) tester.registerRandomTests();
-			
+*/
 			// Real run of the tests
 			tester.runTests();
 			tester.printStats(cout);
@@ -399,7 +415,7 @@ namespace flopoco
 		cout << "Tests are finished" << endl;
 	}
 
-	string AutoTest::defaultTestBenchSize(map<string,string> const & unitTestParam)
+	string AutoTest::defaultTestBenchSize(map<string,string> const & unitTestParam, int testLevel)
 	{
 		// This  was definitely fragile, we can't rely on information extracted this way
 		// Better make it explicit in the unitTest methods
@@ -426,8 +442,13 @@ namespace flopoco
 		}
 #endif
 
-		string testBench = "1000";
-		
+		string testBench;
+
+    if(testLevel == TestLevel::QUICK)
+		 testBench = "100";
+		else
+		 testBench = "1000";
+
 		return testBench;
 	}
 };

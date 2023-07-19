@@ -211,14 +211,14 @@ namespace flopoco{
 			return new FPAddSinglePath(parentOp, target, wE, wF, sub);
 	}
 
-	TestList FPAdd::unitTest(int index)
+	TestList FPAdd::unitTest(int testLevel)
 	{
 		// the static list of mandatory tests
 		TestList testStateList;
 		vector<pair<string,string>> paramList;
 		
-		if(index==-1) 
-		{ // The unit tests
+    if(testLevel >= TestLevel::SUBSTANTIAL)
+    { // The substantial unit tests
 
 			for(int wF=5; wF<53; wF+=1) {
 				for(int dualPath = 0; dualPath <2; dualPath++)	{
@@ -240,7 +240,7 @@ namespace flopoco{
 		}
 		else     
 		{
-				// finite number of random test computed out of index
+				// finite number of random test computed out of testLevel
 			// TODO
 		}	
 

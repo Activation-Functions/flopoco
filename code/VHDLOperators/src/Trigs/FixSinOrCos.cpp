@@ -8,26 +8,20 @@
 #include "gmp.h"
 #include "mpfr.h"
 
-#include "flopoco/FixSinOrCos.hpp"
+#include "flopoco/Trigs/FixSinOrCos.hpp"
 
 using namespace std;
 
 namespace flopoco{
 
 
-	FixSinOrCos::FixSinOrCos(Target* target, int w_, int degree_, map<string, double> inputDelays) 
-		: Operator(target), w(w_), degree(degree_)
+	FixSinOrCos::FixSinOrCos(OperatorPtr parentOp, Target* target, int w_, int degree_) 
+		: Operator(parentOp, target), w(w_), degree(degree_)
 	{
-
 		srcFileName="FixSinOrCos";
-		ostringstream name;
-
-		setCopyrightString ( "Matei Istoan, Florent de Dinechin (2008-2012)" );
-		if(getTarget()->isPipelined())
-			name << "FixSinOrCos_" << w <<"_f"<< getTarget()->frequencyMHz() << "_uid" << getNewUId();
-		else
-			name << "FixSinOrCos_" << w << "_uid" << getNewUId();
-		setNameWithFreqAndUID( name.str() );
+		setCopyrightString ( "Matei Istoan, Florent de Dinechin (2008-2023)" );
+		string name = "FixSinOrCos_" + to_string(w) + "_uid" +  to_string(getNewUId());
+		setNameWithFreqAndUID( name );
 
 		// declaring inputs
 		addInput("X",1+w,true);
@@ -65,8 +59,8 @@ namespace flopoco{
 
 		vhdl << tab << declare("shortXin", w) << " <= shortXinSin when effectiveSin = '1' else shortXinCos;" << endl; 
 
-		nextCycle();
 		//compute the sine and the cosine
+#if 0
 		ostringstream fun;
 		fun << "(1-1b-"<<w<<")*sin(x*Pi),0,1,1";
 		FunctionEvaluator* sinCosEvaluator = new FunctionEvaluator(target, fun.str(), w, w, degree);
@@ -75,9 +69,7 @@ namespace flopoco{
 		inPortMap(sinCosEvaluator, "X", "shortXin");
 		outPortMap(sinCosEvaluator, "R", "intSinCos");
 		vhdl << instance(sinCosEvaluator, "sinEvaluator") << endl;
-
-		syncCycleFromSignal("intSinCos");
-		nextCycle();
+#endif
 
 		
 		//extract the needed bits from the function output
@@ -238,26 +230,51 @@ namespace flopoco{
 
 	
 	OperatorPtr FixSinOrCos::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
-		int wE, degree;
+		int w, degree;
 		ui.parseStrictlyPositiveInt(args, "w", &w); 
 		ui.parseInt(args, "degree", &degree);
-		return new FixSinOrCos(target, w, degree);
+		return new FixSinOrCos(parentOp, target, w, degree);
 	}
 
-	
-	void FixSinOrCos::registerFactory(){
-		UserInterface::add("FixSinOrCos", // name
-											 "Computes (1-2^(-w)) sin(pi*x) or (1-2^(-w)) cos(pi*x) for x in -[1,1[.",
-											 UserInterface::ElementaryFunctions,
-											 "", // seeAlso
-											 "w(int): fixed-point precision of inputs and outputs in bits; \
-                        degree(int): degree of the polynomial-based method (-1 should default to something sensible )",
-											 "",
-											 FixSinOrCos::parseArguments
-											 ) ;
+	TestList FixSinOrCos::unitTest(int testLevel)	{
+		TestList testStateList;
+		vector<pair<string,string>> paramList;
 		
+		if(testLevel >= TestLevel::SUBSTANTIAL)
+		{ // The unit tests
+			for(int degree=1; degree<=3; degree++) {
+				for(int w=5; w<=32; w++) {
+					paramList.push_back(make_pair("lsb",to_string(-w)));
+					paramList.push_back(make_pair("degree",to_string(degree)));
+					if(w<17)
+						paramList.push_back(make_pair("TestBench n=","-2"));			
+					testStateList.push_back(paramList);
+					paramList.clear();
+				}
+			}
+		}
+		else
+		{
+				// finite number of random test computed out of testLevel
+			// TODO
+		}
+
+		return testStateList;
 	}
 
+	template <>
+	const OperatorDescription<FixSinOrCos> op_descriptor<FixSinOrCos> {
+		"FixSinOrCos", // name
+			"Computes (1-2^(-w)) sin(pi*x) or (1-2^(-w)) cos(pi*x) for x in -[1,1[.",
+			"ElementaryFunctions",
+			"", // seeAlso
+			"w(int): fixed-point precision of inputs and outputs in bits; \
+       degree(int): degree of the polynomial-based method (-1 should default to something sensible )",
+			"For a fixed-point 2's complement input x in [-1,1[, evaluates "
+	    "(1-2^(lsbIn))*sin(pi*x) or (1-2^(lsbIn))*sin(pi*x) depending on the input SinCosbar."
+			"<br>For more details, see <a href=\"bib/flopoco.html#DinIstSer2013-HEART-SinCos\">this "
+	    "article</a>."
+			};
 
 	
 }

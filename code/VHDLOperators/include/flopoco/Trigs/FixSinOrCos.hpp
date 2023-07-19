@@ -3,7 +3,7 @@
 
 #include "flopoco/Operator.hpp"
 #include "flopoco/utils.hpp"
-#include "flopoco/FixFunctions/FunctionEvaluator.hpp"
+#include "flopoco/FixFunctions/FixFunctionByPiecewisePoly.hpp"
 
 namespace flopoco{ 
 
@@ -16,12 +16,12 @@ namespace flopoco{
 		mpfr_t scale;
 	  
 		// constructor, defined there with two parameters (default value 0 for each)
-		FixSinOrCos(Target* target, int w, int degree, map<string, double> inputDelays = emptyDelayMap);
+		FixSinOrCos(OperatorPtr parentOp, Target* target, int w, int degree);
 
 		// destructor
 		~FixSinOrCos();
 		
-		void changeName(std::string operatorName);
+		//????		void changeName(std::string operatorName);
 
 
 		// Below all the functions needed to test the operator
@@ -34,6 +34,8 @@ namespace flopoco{
 
 		/** Factory method that parses arguments and calls the constructor */
 		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
+
+		static TestList unitTest(int testLevel);
 		
 		/** Factory register method */ 
 		static void registerFactory();

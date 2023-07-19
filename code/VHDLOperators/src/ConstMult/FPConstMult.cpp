@@ -96,7 +96,7 @@ namespace flopoco{
 
 			if(!mantissa_is_one) {
 				// sub component
-				icm = new IntConstMult(parentOp, target, wF_in+1, cstIntSig);
+				icm = new IntConstMultShiftAddPlain(parentOp, target, wF_in+1, cstIntSig);
 			}
 
 		}
@@ -304,7 +304,7 @@ namespace flopoco{
 			REPORT(LogLevel::VERBOSE, "Periodic pattern has " << patternLSBZeroes << " zero(s) at the LSB");
 
 
-			icm = new IntConstMult(parentOp, target, wF_in+1, cstIntSig, periodicPattern, patternLSBZeroes, periodSize, header, headerSize, i, j);
+			icm = new IntConstMultShiftAddPlain(parentOp, target, wF_in+1, cstIntSig, periodicPattern, patternLSBZeroes, periodSize, header, headerSize, i, j);
 
 		}
 		
@@ -372,7 +372,7 @@ namespace flopoco{
 		normalizeCst();
 		
 		if(!constant_is_zero && !mantissa_is_one) {
-			icm = new IntConstMult(parentOp, target, wF_in+1, cstIntSig);
+			icm = new IntConstMultShiftAddPlain(parentOp, target, wF_in+1, cstIntSig);
 		}
 			
 		

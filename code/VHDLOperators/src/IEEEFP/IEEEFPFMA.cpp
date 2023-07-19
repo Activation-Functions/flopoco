@@ -1000,14 +1000,14 @@ namespace flopoco{
 			wF(int): mantissa size in bits;",
 	    ""};
 
-	TestList IEEEFPFMA::unitTest(int index)
+	TestList IEEEFPFMA::unitTest(int testLevel)
 	{
 		// the static list of mandatory tests
 		TestList testStateList;
 		vector<pair<string,string>> paramList;
 
-		if(index == -1)
-		{
+    if(testLevel >= TestLevel::SUBSTANTIAL)
+    { // The substantial unit tests
 			// The unit tests
 			for (auto format : IEEEFloatFormat::getStandardFormats()) {
 				paramList.clear();
@@ -1018,7 +1018,7 @@ namespace flopoco{
 		}
 		else
 		{
-			// finite number of random test computed out of index
+			// finite number of random test computed out of testLevel
 		}
 
 		return testStateList;

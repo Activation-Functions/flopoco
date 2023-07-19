@@ -265,18 +265,28 @@ namespace flopoco
         tc->addExpectedOutput("R", svR);
     }
 
-    TestList BaseMultiplierIrregularLUTXilinxOp::unitTest(int index)
+    TestList BaseMultiplierIrregularLUTXilinxOp::unitTest(int testLevel)
     {
         // the static list of mandatory tests
         TestList testStateList;
         vector<pair<string,string>> paramList;
 
-        //test square multiplications:
-        for(int w=1; w <= 6; w++)
-        {
-            paramList.push_back(make_pair("wS", to_string(w)));
-            testStateList.push_back(paramList);
-            paramList.clear();
+        if(testLevel == TestLevel::QUICK)
+        { // The quick tests
+              paramList.push_back(make_pair("wS", "6"));
+              testStateList.push_back(paramList);
+              paramList.clear();
+        }
+        else if(testLevel >= TestLevel::SUBSTANTIAL)
+        { // The substantial unit tests
+
+          //test square multiplications:
+          for(int w=1; w <= 6; w++)
+          {
+              paramList.push_back(make_pair("wS", to_string(w)));
+              testStateList.push_back(paramList);
+              paramList.clear();
+          }
         }
 
         return testStateList;

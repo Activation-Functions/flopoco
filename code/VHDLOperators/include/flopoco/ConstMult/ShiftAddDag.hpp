@@ -11,12 +11,12 @@
 
 namespace flopoco{
 
-	class IntConstMult;
+	class IntConstMultShiftAddPlain;
 	class ShiftAddOp;
 
 	class ShiftAddDag {
 	public:
-		IntConstMult* icm;
+		IntConstMultShiftAddPlain* icm;
 		vector<ShiftAddOp*> saolist;  // the shift-and-add operators computed so far
 		ShiftAddOp* PX;
 		ShiftAddOp* result;
@@ -25,7 +25,7 @@ namespace flopoco{
 		vector<ShiftAddOp*> saoHeadlist;  // the shift-and-add operators computed so far which are heads of the DAG
 		vector<int> saoHeadShift;		  // the shift of the heads of the DAG, relative to the weight of the lsb
 
-		ShiftAddDag(IntConstMult* icm);
+		ShiftAddDag(IntConstMultShiftAddPlain* icm);
 
 		ShiftAddDag(ShiftAddDag* reference); //copy constructor. This perform a deep copy of saolist and PX and copies only the pointer icm (not the instance)
 

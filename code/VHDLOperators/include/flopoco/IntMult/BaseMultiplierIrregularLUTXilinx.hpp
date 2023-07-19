@@ -89,7 +89,7 @@ namespace flopoco
                                            BaseMultiplierIrregularLUTXilinx::TILE_SHAPE shape, int wsx, int wsy);
 
         void emulate(TestCase* tc);
-        static TestList unitTest(int index);
+        static TestList unitTest(int testLevel);
         static int get_pattern(BaseMultiplierIrregularLUTXilinx::TILE_SHAPE shape) { return bit_pattern[(int)shape-1];};
 
     private:
