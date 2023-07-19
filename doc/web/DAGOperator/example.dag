@@ -1,13 +1,15 @@
 Entity QuadraticEquation { 
 
-# Declare parameters wE and wF
+# Declare parameters (int or string should work)
+# The idea is that you may explore different values of the parameters by changing just a few lines here.
 
 Parameter wE = 17;
 Parameter wF = 7; 
 
 
-# Declare operators you will use, as well as operator parameters
-# The same operator may be used several times, instances will have the operator name and append a unique id
+# Declare the FloPoCo operators you will use, using command-line syntax
+# The same operator may be used several times, instances in the VHDL will have a unique id appended
+# Here the idea is that you may explore different variants of the operators easily
 
 Operator Mul  : FPMult wE = $wE wF = $wF;
 Operator Square: FPMult  wE = $wE wF = $wF; # to replace with a squarer
@@ -18,18 +20,22 @@ Operator Sub   : FPAdd wE = $wE wF = $wF sub=1;
 Operator Div   : FPDiv wE = $wE wF = $wF;
 Operator Sqrt   : FPSqrt wE = $wE wF = $wF;
 
-# Declare I/O Signals
+# Declare Input/Output signals -- these will be the IOs of the top-level entity
 
 Input A, B, C;
 Output mX1, X2;
 
 # Assemble the operators
 # the following is the tree version of b*b-4*a*c
+# It involves several intermediate signals (example Delta below);
+# You don't need to declare them, their bit size is inferred.
+
 Delta  <= Sub(Square(B, B),  Mul4(Mul(A,C)));
 SqrtDelta <= Sqrt(Delta); 
 TwoA <= Mul2(A);
-TwoACopy <= TwoA;
+TwoACopy <= TwoA; # just for test
 mX1 <= Div(Add(B, SqrtDelta), TwoA);  # -(b+sqrt(delta))/2a
-X2  <= Div(Sub(SqrtDelta, B), TwoACopy);  # -b+sqrt(delta)/2a -- the copy is useless, just to test that signal copy works.
-# Seems we miss a Neg operator, or an option to FPAdd. So wrong formula, we output -X1 but never mind
+X2  <= Div(Sub(SqrtDelta, B), TwoACopy);  # -b+sqrt(delta)/2a -- the copy is useless, it is just to test that signal copy works.
+# Seems we miss a Neg operator, or an option to FPAdd.
+# So wrong formula, we output -X1 but never mind
 }
