@@ -357,7 +357,10 @@ Comment         <- < '#' [^\n]* '\n' >
 					for(auto i : parameters) {
 						parameterString += i + " ";
 					}
-					cerr << " dummy instance "<< builtComponentCount<<": "<< uniqueInstanceName << " ("  << componentName << "): " << opName << "  " << parameterString << "  " << inPortMap << " --- " << outPortMap << endl;
+					REPORT(LogLevel::DEBUG,
+								 "First pass with dummy instance " << builtComponentCount
+								 <<": "<< uniqueInstanceName << " ("  << componentName << "): " << opName
+								 << "  " << parameterString << "  " << inPortMap << " --- " << outPortMap );
 					OperatorPtr op= dummy.newInstance(opName, uniqueInstanceName, parameterString, inPortMap, outPortMap);
 					builtInstance[uniqueInstanceName]=true;
 					builtComponentCount++;
@@ -384,7 +387,7 @@ Comment         <- < '#' [^\n]* '\n' >
 				if(dagSignalBitwidth.count(rhs)>0 && dagSignalBitwidth.count(lhs)==0) {
 					dagSignalBitwidth[lhs] = dagSignalBitwidth[rhs];
 					progress=true;
-					cerr << "                " << lhs << " now "  << dagSignalBitwidth[lhs] << endl;
+					// cerr << "                " << lhs << " now "  << dagSignalBitwidth[lhs] << endl;
 				}
 			}
 			if (!progress) {
@@ -399,17 +402,18 @@ Comment         <- < '#' [^\n]* '\n' >
 				}						
 					THROWERROR(message);			
 			}
-			cerr << " ***************** " << builtComponentCount << ":"  << instanceComponent.size() <<endl;
+			// cerr << " ***************** " << builtComponentCount << ":"  << instanceComponent.size() <<endl;
 			
 		} while(dagSignalBitwidth.size() < dagSignalList.size());
 
+#if 0 // debug info
 		for(auto i:dagSignalList){
 			cerr << " signal " << i.first << ":"  << i.second <<endl;
 		}
 		for(auto i:dagSignalBitwidth){
 			cerr << " typed signal " << i.first << ":"  << i.second <<endl;
 		}
-
+#endif
 
 		UserInterface::getUserInterface().popGlobalOpList();
 	}
@@ -474,7 +478,8 @@ Comment         <- < '#' [^\n]* '\n' >
 						allInputsAvailable &= availableArg[args[i]]; // boolean and
 					}
 					if(allInputsAvailable) {
-						cerr << "AIA: instance " << uniqueInstanceName << " can be built" << endl;
+						REPORT(LogLevel::DEBUG,
+									 "AIA: instance " << uniqueInstanceName << " can be built");
 						availableArg[uniqueInstanceName] = true;
 						progress=true;
 
@@ -497,7 +502,10 @@ Comment         <- < '#' [^\n]* '\n' >
 						for(auto i : parameters) {
 						parameterString += i + " ";
 						}
-						cerr << " building instance: "<< uniqueInstanceName << " ("  << componentName << "): " << opName << "  " << parameterString << "  " << inPortMap << " --- " << outPortMap << endl;
+						REPORT(LogLevel::DEBUG,
+									 "actually building instance: "<< uniqueInstanceName
+									 << " ("  << componentName << "): " << opName << "  " << parameterString
+									 << "  " << inPortMap << " --- " << outPortMap);
 						newInstance(opName, uniqueInstanceName, parameterString, inPortMap, outPortMap);
 					}
 				}
