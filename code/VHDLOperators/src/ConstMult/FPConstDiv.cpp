@@ -165,7 +165,6 @@ namespace flopoco{
 				divisorsString+=  colon + to_string(factor) ;
 				colon=":";
 			}
-			cerr << "***** " << divisorsString;
 			newInstance("IntConstDiv",
 									"intconstdiv",
 									"wIn=" + to_string(intDivSize) + " d="+ divisorsString

@@ -28,8 +28,11 @@ namespace flopoco{
 		 * @param[in]		wER			the width of the exponent for the multiplication result
 		 * @param[in]		wFR			the width of the fraction for the multiplication result
 		 **/
-		FPMult(OperatorPtr parentOp, Target* target, int wEX, int wFX, int wEY, int wFY, int wER, int wFR,
-		             bool norm = true, bool correctlyRounded=true, float dspOccupationThreshold = 0.0);
+		FPMult(OperatorPtr parentOp, Target* target,
+					 int wEX, int wFX, int wEY, int wFY, int wER, int wFR,
+					 bool norm = true, bool correctlyRounded=true, float dspOccupationThreshold = 0.0);
+		/** Factory method */
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
 
 		/**
 		 * FPMult destructor
@@ -44,9 +47,6 @@ namespace flopoco{
 
 		static TestList unitTest(int testLevel);
 		
-		// User-interface stuff
-		/** Factory method */
-		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
 
 	protected:
 

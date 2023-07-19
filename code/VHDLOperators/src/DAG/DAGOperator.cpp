@@ -361,6 +361,11 @@ Comment         <- < '#' [^\n]* '\n' >
 								 "First pass with dummy instance " << builtComponentCount
 								 <<": "<< uniqueInstanceName << " ("  << componentName << "): " << opName
 								 << "  " << parameterString << "  " << inPortMap << " --- " << outPortMap );
+					auto f=FactoryRegistry::getFactoryRegistry().getFactoryByName(opName);
+					if(f==NULL) {
+						THROWERROR("(DAGOperator): " << opName << "  doesn't seem to be a FloPoCo operator")
+					}
+
 					OperatorPtr op= dummy.newInstance(opName, uniqueInstanceName, parameterString, inPortMap, outPortMap);
 					builtInstance[uniqueInstanceName]=true;
 					builtComponentCount++;

@@ -35,9 +35,10 @@ namespace flopoco{
 	FPMult::FPMult(OperatorPtr parentOp, Target* target, int wEX, int wFX, int wEY, int wFY, int wER, int wFR,
 	                           bool norm, bool correctlyRounded, float dspOccupationThreshold) :
 		Operator(parentOp, target), wEX_(wEX), wFX_(wFX), wEY_(wEY), wFY_(wFY), wER_(wER), wFR_(wFR), normalized_(norm), correctlyRounded_(correctlyRounded), dspOccupationThreshold(dspOccupationThreshold)  {
-
 		ostringstream name;
-		name << "FPMult_"<<wEX_<<"_"<<wFX_<<"_"<<wEY_<<"_"<<wFY_<<"_"<<wER_<<"_"<<wFR_<<"_uid"<<getNewUId();
+		// name << "FPMult_"<<wEX_<<"_"<<wFX_<<"_"<<wEY_<<"_"<<wFY_<<"_"<<wER_<<"_"<<wFR_<<"_uid"<<getNewUId();
+		// time to assume we do not manage the case when the input sizes are different
+		name << "FPMult_"<<wEX_<<"_"<<wFX_<<"_uid"<<getNewUId();
 		setNameWithFreqAndUID(name.str());
 		setCopyrightString("Bogdan Pasca, Florent de Dinechin 2008-2021");
 
@@ -177,6 +178,7 @@ namespace flopoco{
 				vhdl << tab << "ResultException <= finalExc;" << endl;
 				vhdl << tab << "ResultSign <= sign;" << endl;
 		}
+
 	} // end constructor
 
 	FPMult::~FPMult() {
@@ -270,7 +272,6 @@ namespace flopoco{
 		int wEX, wFX, wEY, wFY, wEOut, wFOut;
 		bool correctlyRounded;
 		double dspOccupationThreshold=0.0;
-
 		ui.parseStrictlyPositiveInt(args, "wE", &wEX);
 		ui.parseStrictlyPositiveInt(args, "wF", &wFX);
 		ui.parsePositiveInt(args, "wEY", &wEY);
@@ -279,6 +280,7 @@ namespace flopoco{
 		ui.parsePositiveInt(args, "wFOut", &wFOut);
 		ui.parseBoolean(args, "correctlyRounded", &correctlyRounded);
 		ui.parseFloat(args, "dspThreshold", &dspOccupationThreshold);
+
 		if(wEY==0)
 			wEY=wEX;
 		if(wFY==0)
@@ -299,12 +301,12 @@ namespace flopoco{
 	    "BasicFloatingPoint", // categories
 	    "",
 	    "wE(int): input exponent size in bits, for X or for both X and Y; \
-                           wF(int): input significand fraction size in bits, for X or for both X and Y;  \
-                           wEY(int)=0: second input exponent size in bits (0 means wEY=wE);						\
-                           wFY(int)=0: second input significand fraction size in bits (0 means wFY=wF);  \
-                           wEOut(int)=0: result exponent size in bits (0 means wEOout=wE); \
-                           wFOut(int)=0: result significand fraction size in bits (0 means wFOout=wF); \
-						   correctlyRounded(bool)=true: correct (true) or faithful (false) rounding;\
-						   dspThreshold(real)=0.0: threshold of relative occupation ratio of a DSP multiplier to be used or not", // This string will be parsed
+       wF(int): input significand fraction size in bits, for X or for both X and Y;	\
+       wEY(int)=0: second input exponent size in bits (0 means wEY=wE);	\
+       wFY(int)=0: second input significand fraction size in bits (0 means wFY=wF);  \
+       wEOut(int)=0: result exponent size in bits (0 means wEOout=wE); \
+       wFOut(int)=0: result significand fraction size in bits (0 means wFOout=wF); \
+			 correctlyRounded(bool)=true: correct (true) or faithful (false) rounding;\
+			 dspThreshold(real)=0.0: threshold of relative occupation ratio of a DSP multiplier to be used or not", // This string will be parsed
 	    ""};
 }
