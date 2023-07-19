@@ -1517,6 +1517,9 @@ namespace flopoco{
 	OperatorPtr Operator::newInstance(string opName, string instanceName, string parameters, string inPortMaps, string outPortMaps, string inPortMapsCst)
 	{
 		auto instanceOpFactory = FactoryRegistry::getFactoryRegistry().getFactoryByName(opName);
+		if(instanceOpFactory==NULL) {
+			THROWERROR( opName << "  doesn't seem to be a FloPoCo operator");
+		}
 
 		OperatorPtr instance = nullptr;
 		vector<string> parametersVector;
