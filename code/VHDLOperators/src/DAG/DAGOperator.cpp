@@ -294,6 +294,7 @@ Comment         <- < '#' [^\n]* '\n' >
 		// so we create a dummy operator with untyped signals first
 		UserInterface::getUserInterface().pushAndClearGlobalOpList();
 		Operator dummy(NULL, getTarget());
+
 		for (auto i: dagSignalList) {
 			string name=i.first;
 			string type=i.second;
@@ -375,8 +376,8 @@ Comment         <- < '#' [^\n]* '\n' >
 					// Now we may type the IO signals 
 					int sigSize=op->getSignalByName("R")->width();
 					dagSignalBitwidth[uniqueInstanceName] = sigSize;
-					for(char i=1; i<args.size(); i++) {
-						char c='X'+i-1;
+					for(char i=0; i<args.size(); i++) {
+						char c='X'+i;
 						string formal = "";
 						formal+=c;
 						string actual = args[i];
