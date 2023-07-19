@@ -51,7 +51,8 @@ namespace flopoco{
 		srcFileName="FPConstMult";
 		ostringstream name;
 		name <<"FPConstMult_"<<(cstSgn==0?"":"M") <<mpz2string(cstIntSig)<<"b"<<(cst_exp_when_mantissa_int<0?"M":"")<<abs(cst_exp_when_mantissa_int)<<"_"<<wE_in<<"_"<<wF_in<<"_"<<wE_out<<"_"<<wF_out;
-		uniqueName_=name.str();
+
+		setNameWithFreqAndUID(name.str());
 
 		if(wE_in<3 || wE_out <3){
 			ostringstream error;
@@ -313,7 +314,7 @@ namespace flopoco{
 		name <<"FPConstMultRational_"
 				 <<wE_in<<"_"<<wF_in<<"_"<<wE_out<<"_"<<wF_out<<"_"
 				 <<(cstSgn==0?"":"M") <<a<<"div"<<b<<"_"<<(correctRounding?"CR":"faithful");
-		uniqueName_=name.str();
+		setNameWithFreqAndUID(name.str());
 		
 		buildVHDL();
 
@@ -381,7 +382,7 @@ namespace flopoco{
 		name <<"FPConstMult_"<<(cstSgn==0?"":"M") <<cstIntSig<<"b"
 				 <<(cst_exp_when_mantissa_int<0?"M":"")<<abs(cst_exp_when_mantissa_int)
 				 <<"_"<<wE_in<<"_"<<wF_in<<"_"<<wE_out<<"_"<<wF_out;
-		uniqueName_=name.str();
+		setNameWithFreqAndUID(name.str());
 		
 		
 		buildVHDL();

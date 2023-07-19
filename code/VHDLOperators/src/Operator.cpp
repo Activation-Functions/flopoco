@@ -1512,9 +1512,12 @@ namespace flopoco{
 		vhdl << this->instance(op, instanceName, false);
 	}
 
+
+
 	OperatorPtr Operator::newInstance(string opName, string instanceName, string parameters, string inPortMaps, string outPortMaps, string inPortMapsCst)
 	{
 		auto instanceOpFactory = FactoryRegistry::getFactoryRegistry().getFactoryByName(opName);
+
 		OperatorPtr instance = nullptr;
 		vector<string> parametersVector;
 		string portName, signalName, mapping;
@@ -1549,7 +1552,9 @@ namespace flopoco{
 			REPORT(LogLevel::DEBUG, i);
 		}
 		//create the operator
+
 		instance = instanceOpFactory->parseArguments(this, target_, parametersVector, UserInterface::getUserInterface());
+	
 
 		REPORT(LogLevel::DEBUG, "   newInstance("<< opName << ", " << instanceName <<"): after factory call" );
 

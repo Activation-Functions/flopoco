@@ -1,0 +1,31 @@
+Entity Average3 { 
+
+# This example is small and stupid but at least its pipeline works :)
+
+# Declare parameters (int or string should work)
+# The idea is that you may explore different values of the parameters by changing just a few lines here.
+
+Parameter wE = 7;
+Parameter wF = 17; 
+
+
+# Declare the FloPoCo operators you will use, using command-line syntax
+# The same operator may be used several times, instances in the VHDL will have a unique id appended
+# Here the idea is that you may explore different variants of the operators easily
+
+Operator Add   : FPAdd wE = $wE wF = $wF;
+Operator Div3   : FPConstDiv wE = $wE wF = $wF d=3;
+
+# Declare Input/Output signals -- these will be the IOs of the top-level entity
+
+Input A, B, C;
+Output S;
+
+# Assemble the operators
+# the following is the tree version of b*b-4*a*c
+# It involves several intermediate signals (example Delta below);
+# You don't need to declare them, their bit size is inferred.
+
+S <= Div3(Add(Add(A,B), C));
+
+}

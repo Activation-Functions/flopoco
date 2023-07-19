@@ -241,7 +241,7 @@ namespace flopoco{
 			vhdl << tab << declare(join("w", nDigit-1), wF+6) << " <=  \"00\" & prescaledfX;" << endl; //TODO : review that, maybe MSB 0 to save
 
 			vector<mpz_class> tableContent = selFunctionTable(0.75, 1.0, nbBitsD, nbBitsW, alpha, radix);
-			auto* selfunctiontable = new TableOperator(this, target, tableContent,"selFunction7_4", nbBitsD+nbBitsW, 4);
+			auto* selfunctiontable = new TableOperator(parentOp, target, tableContent,"selFunction7_4", nbBitsD+nbBitsW, 4);
 
 			for(i=nDigit-1; i>=1; i--) {
 
@@ -418,7 +418,7 @@ namespace flopoco{
 #endif
 
 
-			selfunctiontable = new TableOperator(this, target, tableContent,"selFunction", nbBitsD+nbBitsW, 3);
+			selfunctiontable = new TableOperator(parentOp, target, tableContent,"selFunction", nbBitsD+nbBitsW, 3);
 			selfunctiontable->setShared();
 
 			////////////////////// Main SRT loop, unrolled ///////////////////////

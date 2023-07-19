@@ -29,7 +29,9 @@ namespace flopoco {
     if (is_log_lvl_enabled(lvl)) {
         std::ostream& out = (lvl < 0) ? std::cerr : std::cout;
 				if(lvl>=3)	{
-					out << "" << filename << ":" << line <<" (" << funcname << "): ";
+					// the full file name annoys me
+					//					out << "" << filename << ":" << line <<" (" << funcname << "): ";
+					out << "" << fs::path{filename}.filename() << ":" << line <<" (" << funcname << "): ";
 				}
 				else {
 					out << "" << fs::path{filename}.filename() << ": ";

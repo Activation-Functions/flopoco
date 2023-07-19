@@ -1429,6 +1429,7 @@ namespace flopoco
 
 
 	OperatorPtr OperatorFactory::parseArguments(OperatorPtr parentOp, Target* target, vector<string> &args, UserInterface& ui) const {
+		
 		return m_parser(parentOp, target, args, ui);
 	}
 

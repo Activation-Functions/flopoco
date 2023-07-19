@@ -1,17 +1,17 @@
 # Name your source file name
-Name QuadraticEquationDelta; 
+EntityName QuadraticEquationDelta; 
 
 # Declare parameters wE and wF
 
-Param wE = 17;
-Param wF = 7; 
+Parameter wE = 17;
+Parameter wF = 7; 
 
 
 # Declare operators you will use as well as operator parameters
 
-Operator Mul1  : FPMult wE = $wE wF = $wF;
+Operator Mul1  : FPMult wE = $wE wF = $wF f="sin( 1+x)";
 Operator Square: FPMult  wE = $wE wF = $wF; # to replace with a squarer
-Operator Mul4  : FPConstMult constant=4 wE = $wE wF = $wF; 
+Operator Mul4  : FPConstMult constant=4 wE = $wE wF = $wF ; 
 Operator Add   : FPAdd wE = $wE wF = $wF;
 Operator Sub   : FPAdd wE = $wE wF = $wF sub = 1;
 
