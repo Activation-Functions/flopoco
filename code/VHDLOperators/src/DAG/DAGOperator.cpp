@@ -413,8 +413,23 @@ Comment         <- < '#' [^\n]* '\n' >
 
 		UserInterface::getUserInterface().popGlobalOpList();
 	}
-		
+
+
+	
 	void DAGOperator::build(){
+
+		// First the IOs, now that we know their size
+		for (auto i: dagSignalList) {	
+			string name=i.first;
+			string iotype=i.second;
+			if(iotype=="Input") {
+				addInput(name, dagSignalBitwidth[name]);
+			};
+			if(iotype=="Output") {
+				addOutput(name, dagSignalBitwidth[name]);
+			};
+		}
+
 		// For the schedule to work, we must generate instances from the leaves on.
 		// This will be a stupid iteration looking for already produced values
 		
@@ -464,8 +479,7 @@ Comment         <- < '#' [^\n]* '\n' >
 						progress=true;
 
 						// now built it for good
-#if 0
-						string inPortMap = "X=>" + args[1];
+						string inPortMap = "X=>" + args[0];
 						for(char i=1; i<args.size(); i++) {
 							char c='X'+i;
 							string pm = (string)(",") + c + "=>" + args[i];
@@ -480,10 +494,8 @@ Comment         <- < '#' [^\n]* '\n' >
 						for(auto i : parameters) {
 						parameterString += i + " ";
 						}
-						cerr << " dummy instance "<< builtComponentCount<<": "<< uniqueInstanceName << " ("  << componentName << "): " << opName << "  " << parameterString << "  " << inPortMap << " --- " << outPortMap << endl;
-						OperatorPtr op= dummy.newInstance(opName, uniqueInstanceName, parameterString, inPortMap, outPortMap);
-
-#endif
+						cerr << " building instance: "<< uniqueInstanceName << " ("  << componentName << "): " << opName << "  " << parameterString << "  " << inPortMap << " --- " << outPortMap << endl;
+						newInstance(opName, uniqueInstanceName, parameterString, inPortMap, outPortMap);
 					}
 				}
 			} // end loop on dagNode
@@ -493,8 +505,13 @@ Comment         <- < '#' [^\n]* '\n' >
 				string lhs = i.first;
 				string rhs = i.second;
 				if(availableArg[rhs] && !declaredSignal[lhs]) {
-					vhdl << tab << declare(lhs, dagSignalBitwidth[lhs]) << " <= " << rhs << ";" << endl  ;
-					availableArg[rhs] = true;
+					if(dagSignalList[lhs]=="Wire") {
+						vhdl << tab << declare(lhs, dagSignalBitwidth[lhs]) << " <= " << rhs << ";" << endl  ;
+					}
+					else { // it is an Output
+						vhdl << tab << lhs << " <= " << rhs << ";" << endl  ;
+					}
+					availableArg[lhs] = true;
 					declaredSignal[lhs] =true;
 					progress=true;
 				}
