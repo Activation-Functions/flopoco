@@ -22,9 +22,6 @@ Input A, B, C;
 Output S;
 
 # Assemble the operators
-# the following is the tree version of b*b-4*a*c
-# It involves several intermediate signals (example Delta below);
-# You don't need to declare them, their bit size is inferred.
 
 S <= Div3(Add(Add(A,B), C));
 
