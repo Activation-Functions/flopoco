@@ -331,7 +331,7 @@ namespace flopoco{
 
 	// The parser version
 	FPConstMult::FPConstMult(OperatorPtr parentOp, Target* target, int wE_in_, int wF_in_, int wE_out_, int wF_out_, int wF_C, string constant):
-		Operator(target), 
+		Operator(parentOp,target), 
 		wE_in(wE_in_), wF_in(wF_in_), wE_out(wE_out_), wF_out(wF_out_), cstWidth(wF_C), mantissa_is_one(false), constant_is_zero(false)
 	{
 		sollya_obj_t node;
@@ -486,7 +486,7 @@ namespace flopoco{
 
 
 	FPConstMult::FPConstMult(OperatorPtr parentOp, Target* target, int wE_in, int wF_in, int wE_out, int wF_out):
-		Operator(target),
+		Operator(parentOp,target),
 		wE_in(wE_in), wF_in(wF_in), wE_out(wE_out), wF_out(wF_out) 
 	{
 	}

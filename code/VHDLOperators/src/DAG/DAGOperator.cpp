@@ -508,7 +508,7 @@ Comment         <- < '#' [^\n]* '\n' >
 						for(auto i : parameters) {
 						parameterString += i + " ";
 						}
-						REPORT(LogLevel::DEBUG,
+						REPORT(LogLevel::DETAIL,
 									 "actually building instance: "<< uniqueInstanceName
 									 << " ("  << componentName << "): " << opName << "  " << parameterString
 									 << "  " << inPortMap << " --- " << outPortMap);
