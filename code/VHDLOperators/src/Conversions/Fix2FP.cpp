@@ -45,8 +45,8 @@ namespace flopoco{
 #define DEBUGVHDL 0
 
 
-	Fix2FP::Fix2FP(Target* target, bool Signed, int MSBI, int LSBI, int wER, int wFR) :
-		Operator(target), MSBI(MSBI), LSBI(LSBI), Signed(Signed),wER(wER), wFR(wFR) {
+	Fix2FP::Fix2FP(OperatorPtr parentOp, Target* target, bool Signed, int MSBI, int LSBI, int wER, int wFR) :
+		Operator(parentOp, target), MSBI(MSBI), LSBI(LSBI), Signed(Signed),wER(wER), wFR(wFR) {
 
 		ostringstream name;
 	
@@ -565,7 +565,7 @@ namespace flopoco{
 		ui.parseInt(args, "LSB", &LSB); 
 		ui.parseStrictlyPositiveInt(args, "wE", &wE); 
 		ui.parseStrictlyPositiveInt(args, "wF", &wF);
-		return new Fix2FP(target,  signedO, MSB, LSB, wE, wF);
+		return new Fix2FP(parentOp, target,  signedO, MSB, LSB, wE, wF);
 	}
 
 	template <>

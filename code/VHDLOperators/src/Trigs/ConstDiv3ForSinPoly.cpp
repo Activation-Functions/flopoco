@@ -105,7 +105,7 @@ namespace flopoco{
 
 
 	ConstDiv3ForSinPoly::ConstDiv3ForSinPoly(Operator* parentOp, Target* target, int wIn_, int d_, int alpha_, int nbZeros_,  bool remainderOnly_)
-		: Operator(target), wIn(wIn_), d(d_), remainderOnly(remainderOnly_), alpha(alpha_), nbZeros(nbZeros_)
+		: Operator(parentOp, target), wIn(wIn_), d(d_), remainderOnly(remainderOnly_), alpha(alpha_), nbZeros(nbZeros_)
 	{
 		setCopyrightString("Florent de Dinechin, Matei Istoan (2013)");
 		srcFileName="ConstDiv3ForSinPoly";

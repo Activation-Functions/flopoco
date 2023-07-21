@@ -58,10 +58,6 @@ namespace flopoco{
 	int Operator::uid = 0; 										//init of the uid static member of Operator
 	int verbose=0;
 
-	Operator::Operator(Target* target): Operator(nullptr, target){
-		REPORT(LogLevel::DETAIL, "Operator  constructor without parentOp is deprecated");
-	}
-
 	Operator::Operator(Operator* parentOp, Target* target){
 		vhdl.setOperator(this);
 		stdLibType_                 = 0;						// unfortunately this is the historical default.

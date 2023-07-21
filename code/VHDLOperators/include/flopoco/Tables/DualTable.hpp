@@ -45,9 +45,8 @@ namespace flopoco{
 		 * @param[in] wIn    the width of the input in bits
 		 * @param[in] wOut   the width of the output in bits  
 		 **/
-		DualTable(Target* target, int _wIn, int _wOut, int _minIn=0, int _maxIn=-1);
+		DualTable(OperatorPtr parentOp, Target* target, int _wIn, int _wOut, int _minIn=0, int _maxIn=-1);
 		
-		DualTable(Target* target);
 
 		virtual ~DualTable();
 

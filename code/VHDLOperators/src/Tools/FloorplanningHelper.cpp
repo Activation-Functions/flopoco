@@ -55,7 +55,7 @@ namespace flopoco{
 		//create a new virtual module for the resources that are between
 		//	two modules, and add it to the corresponding lists
 		std::ostringstream result;
-		Operator* virtualComponent = new Operator(target);
+		Operator* virtualComponent = new Operator(parentOp, target);
 		std::string moduleName = join("virtual_module_", virtualModuleId);
 
 		result << "";

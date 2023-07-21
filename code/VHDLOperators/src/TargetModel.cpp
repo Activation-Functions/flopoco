@@ -19,7 +19,7 @@ namespace flopoco {
 
 
 
-	TargetModel::TargetModel(Target* target, int type_) : Operator(target), type(type_) {
+	TargetModel::TargetModel(Target* target, int type_) : Operator(nullptr, target), type(type_) {
 		/* constructor of the TargetModel
 		   Target is the targeted FPGA : Stratix, Virtex ... (see Target.hpp for more informations)
 		*/

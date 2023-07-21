@@ -58,8 +58,8 @@ namespace flopoco{
 
 
 
-	DualTable::DualTable(Target* target, int _wIn, int _wOut, int _minIn, int _maxIn) :
-		Operator(target),
+	DualTable::DualTable(OperatorPtr parentOp, Target* target, int _wIn, int _wOut, int _minIn, int _maxIn) :
+		Operator(parentOp, target),
 		wIn(_wIn), wOut(_wOut), minIn(_minIn), maxIn(_maxIn),target(target)
 	{
 
@@ -116,12 +116,6 @@ namespace flopoco{
 	}
 
 	DualTable::~DualTable(){};
-
-	DualTable::DualTable(Target* target) :
-		Operator(target)
-	{
-		setCopyrightString("Radu Tudoran (2010)");
-	}
 
 
 	void DualTable::outputVHDL(std::ostream& o, std::string name)
@@ -259,7 +253,7 @@ namespace flopoco{
 
 
 	DualTable::primitiveDualMemory::primitiveDualMemory(Target* target, int _wIn, int _wOut, int _minIn, int _maxIn) :
-		Operator(target),
+		Operator(parentOp, target),
 		wIn(_wIn), wOut(_wOut), minIn(_minIn), maxIn(_maxIn)
 	{
 		 setCopyrightString("Radu Tudoran, Florent de Dinechin (2009)");

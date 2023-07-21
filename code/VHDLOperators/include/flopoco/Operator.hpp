@@ -87,13 +87,6 @@ namespace flopoco {
 		 */
 		Operator(Operator* parentOp, Target* target);
 
-		/**
-		 * Operator Constructor. DEPRECATED, REMOVE ME
-		 * Creates an operator instance with an instantiated target for deployment.
-		 * @param target_ The deployment target of the operator.
-		 */
-		Operator(Target* target);
-
 
 		/**
 		 * Operator Destructor.

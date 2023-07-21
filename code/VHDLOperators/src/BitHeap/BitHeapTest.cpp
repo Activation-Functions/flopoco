@@ -11,7 +11,7 @@ namespace flopoco{
 
 
 	BitheapTest::BitheapTest(Target * target_, int msb_, int lsb_, int nbInputs_, bool isSigned_, int weight_)
-		: Operator(target_),
+		: Operator(nullptr, target_),
 		  nbInputs(nbInputs_),
 		  weight(weight_),
 		  size(msb_-lsb_+1),
