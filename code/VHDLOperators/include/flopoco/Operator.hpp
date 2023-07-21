@@ -651,19 +651,12 @@ namespace flopoco {
 		 */
 		void outPortMap(string componentPortName, string actualSignalName);
 
-		/** Obsolete method, because refactoring takes ages */
-		void outPortMap(OperatorPtr op, string componentPortName, string actualSignalName);
-
-
 		/**
 		 * Use a signal as input of a subcomponent
 		 * @param componentPortName is the name of the port on the component
 		 * @param actualSignalName is the name of the signal (of this) mapped to this port
 		 */
 		void inPortMap(string componentPortName, string actualSignalName);
-
-		/** Obsolete method, because refactoring takes ages */
-		void inPortMap(OperatorPtr op, string componentPortName, string actualSignalName);
 
 		/**
 		 * Use a constant signal as input of a subcomponent.
@@ -672,8 +665,6 @@ namespace flopoco {
 		 */
 		void inPortMapCst(string componentPortName, string constantValue);
 
-		/** Obsolete method, because refactoring takes ages */
-		void inPortMapCst(OperatorPtr op, string componentPortName, string constantValue);
 
 
 		/**

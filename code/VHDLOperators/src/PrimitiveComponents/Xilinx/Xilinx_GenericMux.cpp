@@ -83,9 +83,9 @@ namespace flopoco {
         for( int i = 0; i < num_full_slices; i++ ) {
             Xilinx_GenericMux_slice *slice = new Xilinx_GenericMux_slice( parentOp, target, slice_variant, bit_per_slice );
             addSubComponent(slice);
-            inPortMap( slice, "m_in", "mux_connector" + range( ( i + 1 ) * 16 - 1, i * 16 ) );
-            inPortMap( slice, "s_in", "s_in" );
-            outPortMap( slice, "m_out", "x_out" + range( ( i + 1 )*bit_per_slice - 1, i * bit_per_slice ));
+            inPortMap("m_in", "mux_connector" + range( ( i + 1 ) * 16 - 1, i * 16 ) );
+            inPortMap("s_in", "s_in" );
+            outPortMap("m_out", "x_out" + range( ( i + 1 )*bit_per_slice - 1, i * bit_per_slice ));
             stringstream slice_name;
             slice_name << "full_slice" << i;
             vhdl << instance( slice, slice_name.str() );
@@ -94,9 +94,9 @@ namespace flopoco {
         if( bits_remaining > 0 ) {
             Xilinx_GenericMux_slice *part_slice = new Xilinx_GenericMux_slice( parentOp, target, slice_variant, bits_remaining );
             addSubComponent(part_slice);
-            inPortMap( part_slice, "m_in", "mux_connector" + range( ( num_full_slices ) * 16 + build_width * bits_remaining - 1, num_full_slices * 16 ) );
-            inPortMap( part_slice, "s_in", "s_in" );
-            outPortMap( part_slice, "m_out", "x_out" + range( ( num_full_slices * bit_per_slice ) + bits_remaining - 1, ( num_full_slices * bit_per_slice ) ));
+            inPortMap("m_in", "mux_connector" + range( ( num_full_slices ) * 16 + build_width * bits_remaining - 1, num_full_slices * 16 ) );
+            inPortMap("s_in", "s_in" );
+            outPortMap("m_out", "x_out" + range( ( num_full_slices * bit_per_slice ) + bits_remaining - 1, ( num_full_slices * bit_per_slice ) ));
             vhdl << instance( part_slice, "part_slice" );
         }
     };

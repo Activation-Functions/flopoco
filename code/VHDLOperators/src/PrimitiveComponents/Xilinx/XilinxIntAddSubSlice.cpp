@@ -294,14 +294,14 @@ namespace flopoco
         cur_lut->setGeneric("init", getLUT_dss_std(), 64);
       }
 
-      inPortMap(cur_lut, "i0", "Y" + of(i));
-      inPortMap(cur_lut, "i1", "X" + of(i));
-      inPortMap(cur_lut, "i2", "negY");
-      inPortMap(cur_lut, "i3", "negX");
-      inPortMap(cur_lut, "i4", "bbus_in" + of(i));
-      inPortMapCst(cur_lut, "i5", "'1'");
-      outPortMap(cur_lut, "o5", "bb_t" + of(i));
-      outPortMap(cur_lut, "o6", "lut_o6" + of(i));
+      inPortMap("i0", "Y" + of(i));
+      inPortMap("i1", "X" + of(i));
+      inPortMap("i2", "negY");
+      inPortMap("i3", "negX");
+      inPortMap("i4", "bbus_in" + of(i));
+      inPortMapCst("i5", "'1'");
+      outPortMap("o5", "bb_t" + of(i));
+      outPortMap("o6", "lut_o6" + of(i));
       vhdl << cur_lut->primitiveInstance(lut_name.str());
     }
 

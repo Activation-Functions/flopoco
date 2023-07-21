@@ -73,14 +73,14 @@ namespace flopoco {
             for( int i = 0; i < ( wIn - ( wIn % 2 ) ) / 2; i++ ) {
 				Xilinx_LUT6_2 *luts = new Xilinx_LUT6_2( parentOp, target );
                 luts->setGeneric( "init", "current_lut_init", 64 );
-                inPortMap( luts, join( "i", 0 ), "m_in" + of( 4 * i + 0 ) );
-                inPortMap( luts, join( "i", 1 ), "m_in" + of( 4 * i + 1 ) );
-                inPortMap( luts, join( "i", 2 ), "m_in" + of( 4 * i + 2 ) );
-                inPortMap( luts, join( "i", 3 ), "m_in" + of( 4 * i + 3 ) );
-                inPortMap( luts, join( "i", 4 ), "s_in" );
-                inPortMapCst( luts, join( "i", 5 ), "'1'" );
-                outPortMap( luts, "o5", "m_out" + of(2 * i));
-                outPortMap( luts, "o6", "m_out" + of(2 * i + 1));
+                inPortMap( join( "i", 0 ), "m_in" + of( 4 * i + 0 ) );
+								inPortMap( join( "i", 1 ), "m_in" + of( 4 * i + 1 ) );
+								inPortMap( join( "i", 2 ), "m_in" + of( 4 * i + 2 ) );
+								inPortMap( join( "i", 3 ), "m_in" + of( 4 * i + 3 ) );
+								inPortMap( join( "i", 4 ), "s_in" );
+                inPortMapCst( join( "i", 5 ), "'1'" );
+                outPortMap( "o5", "m_out" + of(2 * i));
+								outPortMap( "o6", "m_out" + of(2 * i + 1));
                 stringstream lutname;
                 lutname << "full_lut" << i;
                 vhdl << luts->primitiveInstance( lutname.str() );
@@ -89,13 +89,13 @@ namespace flopoco {
             if( wIn % 2 ) {
 				Xilinx_LUT6_2 *hluts = new Xilinx_LUT6_2( parentOp, target );
                 hluts->setGeneric( "init", "current_lut_init", 64 );
-                inPortMap( hluts, join( "i", 0 ), "m_in" + of( wIn * 2 - 2 ) );
-                inPortMap( hluts, join( "i", 1 ), "m_in" + of( wIn * 2 - 1 ) );
-                inPortMapCst( hluts, join( "i", 2 ), "'0'" );
-                inPortMapCst( hluts, join( "i", 3 ), "'0'" );
-                inPortMap( hluts, join( "i", 4 ), "s_in" );
-                inPortMapCst( hluts, join( "i", 5 ), "'1'" );
-                outPortMap( hluts, "o5", "m_out" + of( wIn - 1 ));
+                inPortMap( join( "i", 0 ), "m_in" + of( wIn * 2 - 2 ) );
+								inPortMap( join( "i", 1 ), "m_in" + of( wIn * 2 - 1 ) );
+                inPortMapCst( join( "i", 2 ), "'0'" );
+								inPortMapCst( join( "i", 3 ), "'0'" );
+                inPortMap( join( "i", 4 ), "s_in" );
+                inPortMapCst( join( "i", 5 ), "'1'" );
+                outPortMap( "o5", "m_out" + of( wIn - 1 ));
                 vhdl << hluts->primitiveInstance( "half_lut" );
             }
         } else {
@@ -116,13 +116,13 @@ namespace flopoco {
                 for( int i = 0; i < wIn; i++ ) {
 					Xilinx_LUT6 *luts = new Xilinx_LUT6( parentOp, target );
                     luts->setGeneric( "init", "current_lut_init", 64 );
-                    inPortMap( luts, join( "i", 0 ), "m_in" + of( 4 * i + 0 ) );
-                    inPortMap( luts, join( "i", 1 ), "m_in" + of( 4 * i + 1 ) );
-                    inPortMap( luts, join( "i", 2 ), "m_in" + of( 4 * i + 2 ) );
-                    inPortMap( luts, join( "i", 3 ), "m_in" + of( 4 * i + 3 ) );
-                    inPortMap( luts, join( "i", 4 ), "s_in" + of( 0 ) );
-                    inPortMap( luts, join( "i", 5 ), "s_in" + of( 1 ) );
-                    outPortMap( luts, "o",  "m_out" + of( i ));
+                    inPortMap(join( "i", 0 ), "m_in" + of( 4 * i + 0 ) );
+										inPortMap(join( "i", 1 ), "m_in" + of( 4 * i + 1 ) );
+										inPortMap(join( "i", 2 ), "m_in" + of( 4 * i + 2 ) );
+										inPortMap(join( "i", 3 ), "m_in" + of( 4 * i + 3 ) );
+										inPortMap(join( "i", 4 ), "s_in" + of( 0 ) );
+										inPortMap(join( "i", 5 ), "s_in" + of( 1 ) );
+                    outPortMap( "o",  "m_out" + of( i ));
                     stringstream lutname;
                     lutname << "full_lut" << i;
                     vhdl << luts->primitiveInstance( lutname.str() );
@@ -135,13 +135,13 @@ namespace flopoco {
                 for( int i = 0; i < 2 * wIn; i++ ) {
 					Xilinx_LUT6_L *luts = new Xilinx_LUT6_L( parentOp,target );
                     luts->setGeneric( "init", "current_lut_init", 64 );
-                    inPortMap( luts, join( "i", 0 ), "m_in" + of( 4 * i + 0 ) );
-                    inPortMap( luts, join( "i", 1 ), "m_in" + of( 4 * i + 1 ) );
-                    inPortMap( luts, join( "i", 2 ), "m_in" + of( 4 * i + 2 ) );
-                    inPortMap( luts, join( "i", 3 ), "m_in" + of( 4 * i + 3 ) );
-                    inPortMap( luts, join( "i", 4 ), "s_in" + of( 0 ) );
-                    inPortMap( luts, join( "i", 5 ), "s_in" + of( 1 ) );
-                    outPortMap( luts, "lo", "intercon_L6_to_M7" + of( i ));
+                    inPortMap( join( "i", 0 ), "m_in" + of( 4 * i + 0 ) );
+										inPortMap( join( "i", 1 ), "m_in" + of( 4 * i + 1 ) );
+										inPortMap( join( "i", 2 ), "m_in" + of( 4 * i + 2 ) );
+										inPortMap( join( "i", 3 ), "m_in" + of( 4 * i + 3 ) );
+										inPortMap( join( "i", 4 ), "s_in" + of( 0 ) );
+										inPortMap( join( "i", 5 ), "s_in" + of( 1 ) );
+										outPortMap( "lo", "intercon_L6_to_M7" + of( i ));
                     stringstream lutname;
                     lutname << "full_lut" << i;
                     vhdl << luts->primitiveInstance( lutname.str() );
@@ -149,10 +149,10 @@ namespace flopoco {
 
                 for( int i = 0; i < wIn; i++ ) {
 					Xilinx_MUXF7 *mux7 = new Xilinx_MUXF7( parentOp,target );
-                    inPortMap( mux7, join( "i", 0 ), "intercon_L6_to_M7" + of( i * 2 ) );
-                    inPortMap( mux7, join( "i", 1 ), "intercon_L6_to_M7" + of( i * 2 + 1 ) );
-                    inPortMap( mux7, "s", "s_in" + of( 2 ) );
-                    outPortMap( mux7, "o", "m_out" + of( i ));
+                    inPortMap( join( "i", 0 ), "intercon_L6_to_M7" + of( i * 2 ) );
+                    inPortMap(  join( "i", 1 ), "intercon_L6_to_M7" + of( i * 2 + 1 ) );
+                    inPortMap(  "s", "s_in" + of( 2 ) );
+                    outPortMap(  "o", "m_out" + of( i ));
                     stringstream muxname;
                     muxname << "gen_mux7_" << i;
                     vhdl << mux7->primitiveInstance( muxname.str() );
@@ -166,13 +166,13 @@ namespace flopoco {
                 for( int i = 0; i < wIn * 4; i++ ) {
 					Xilinx_LUT6_L *luts = new Xilinx_LUT6_L( parentOp,target );
                     luts->setGeneric( "init", "current_lut_init", 64 );
-                    inPortMap( luts, join( "i", 0 ), "m_in" + of( 4 * i + 0 ) );
-                    inPortMap( luts, join( "i", 1 ), "m_in" + of( 4 * i + 1 ) );
-                    inPortMap( luts, join( "i", 2 ), "m_in" + of( 4 * i + 2 ) );
-                    inPortMap( luts, join( "i", 3 ), "m_in" + of( 4 * i + 3 ) );
-                    inPortMap( luts, join( "i", 4 ), "s_in" + of( 0 ) );
-                    inPortMap( luts, join( "i", 5 ), "s_in" + of( 1 ) );
-                    outPortMap( luts, "lo", "intercon_L6_to_M7" + of( i ));
+                    inPortMap( join( "i", 0 ), "m_in" + of( 4 * i + 0 ) );
+										inPortMap( join( "i", 1 ), "m_in" + of( 4 * i + 1 ) );
+										inPortMap( join( "i", 2 ), "m_in" + of( 4 * i + 2 ) );
+										inPortMap( join( "i", 3 ), "m_in" + of( 4 * i + 3 ) );
+										inPortMap( join( "i", 4 ), "s_in" + of( 0 ) );
+										inPortMap( join( "i", 5 ), "s_in" + of( 1 ) );
+										outPortMap( "lo", "intercon_L6_to_M7" + of( i ));
                     stringstream lutname;
                     lutname << "full_lut" << i;
                     vhdl << luts->primitiveInstance( lutname.str() );
@@ -180,20 +180,20 @@ namespace flopoco {
 
                 for( int i = 0; i < wIn * 2; i++ ) {
 					Xilinx_MUXF7_L *mux7 = new Xilinx_MUXF7_L( parentOp,target );
-                    inPortMap( mux7, join( "i", 0 ), "intercon_L6_to_M7" + of( i * 2 ) );
-                    inPortMap( mux7, join( "i", 1 ), "intercon_L6_to_M7" + of( i * 2 + 1 ) );
-                    inPortMap( mux7, "s", "s_in" + of( 2 ) );
-                    outPortMap( mux7, "o", "intercon_M7_to_M8" + of( i ));
+                    inPortMap( join( "i", 0 ), "intercon_L6_to_M7" + of( i * 2 ) );
+										inPortMap( join( "i", 1 ), "intercon_L6_to_M7" + of( i * 2 + 1 ) );
+										inPortMap( "s", "s_in" + of( 2 ) );
+                    outPortMap( "o", "intercon_M7_to_M8" + of( i ));
                     stringstream muxname;
                     muxname << "gen_mux7_" << i;
                     vhdl << mux7->primitiveInstance( muxname.str() );
                 }
 
 				Xilinx_MUXF8 *mux8 = new Xilinx_MUXF8( parentOp,target );
-                inPortMap( mux8, join( "i", 0 ), "intercon_M7_to_M8" + of( 0 ) );
-                inPortMap( mux8, join( "i", 1 ), "intercon_M7_to_M8" + of( 1 ) );
-                inPortMap( mux8, "s", "s_in" + of( 3 ) );
-                outPortMap( mux8, "o", "m_out" + of( 0 ));
+                inPortMap( join( "i", 0 ), "intercon_M7_to_M8" + of( 0 ) );
+								inPortMap( join( "i", 1 ), "intercon_M7_to_M8" + of( 1 ) );
+								inPortMap( "s", "s_in" + of( 3 ) );
+								outPortMap( "o", "m_out" + of( 0 ));
                 vhdl << mux8->primitiveInstance( "gen_mux8" );
             }
         }

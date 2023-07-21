@@ -30,10 +30,6 @@
 	As the signal graph is built in-place to be scheduled, what we want to replicate in shared instance is _their signals (with timing labels)_, not the Operator itself with its VHDL.
 
 
-	TODO the op input of inPortMap is no longer used.
-
-
-
 */
 
 #include <cassert>
@@ -1142,10 +1138,7 @@ namespace flopoco{
 	}
 
 
-	void Operator::outPortMap(OperatorPtr op, string componentPortName, string actualSignalName){
-		REPORT(LogLevel::MESSAGE, "Here is an obsolete version of outPortMap. Ignoring op...");
-		outPortMap(componentPortName, actualSignalName);
-	}
+	
 
 	void Operator::outPortMap(string componentPortName, string actualSignalName){
 
@@ -1172,13 +1165,6 @@ namespace flopoco{
 		*/
 		// add the mapping to the output mapping list of Op
 		tmpOutPortMap_[componentPortName] = actualSignalName;
-	}
-
-
-
-	void Operator::inPortMap(OperatorPtr op, string componentPortName, string actualSignalName){
-		REPORT(LogLevel::MESSAGE, "Here is an obsolete version of inPortMap. Ignoring op...");
-		inPortMap(componentPortName, actualSignalName);
 	}
 
 
@@ -1213,11 +1199,7 @@ namespace flopoco{
 		setGeneric( name, std::to_string( value ), width, isBus );
 	}
 
-	void Operator::inPortMapCst(OperatorPtr op, string componentPortName, string constantValue){
-		REPORT(LogLevel::MESSAGE, "Here is an obsolete version of inPortMapCst. Ignoring op...");
-		inPortMapCst(componentPortName, constantValue);
-	}
-
+	
 	void Operator::inPortMapCst(string componentPortName, string constantValue){
 		Signal *s;
 		string name;
