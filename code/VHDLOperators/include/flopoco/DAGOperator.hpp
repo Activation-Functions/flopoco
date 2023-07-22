@@ -40,9 +40,9 @@ namespace flopoco {
 #ifdef DAGOPERATOR_IMPLEM
 	private:
 		void parse(string infile);
-		void checkDAG(); /**< various static checks */
 		void typeInference();
 		void build();
+		void check(); /**< final static checks */
 		string entityName;
 
 		/** global parameters */

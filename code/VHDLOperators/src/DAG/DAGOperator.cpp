@@ -12,7 +12,12 @@
 
   */
 
-// TODO replace all the cerr / cout with REPORT
+/* TODOS
+   - line numbers in error messages
+	 - constants
+	 - static check: bit sizes
+	 - manage operators with more than one output (eg normalizer) but I have no clue how
+*/
 
 /* header of libraries to manipulate multiprecision numbers
    There will be used in the emulate function to manipulate arbitrary large
@@ -285,8 +290,8 @@ Comment         <- < '#' [^\n]* '\n' >
 
 	}
 
-	void DAGOperator::checkDAG(){
-	}
+
+
 	
 	void DAGOperator::typeInference(){
 		// Now we have all it takes to fill the vhdl,
@@ -329,7 +334,6 @@ Comment         <- < '#' [^\n]* '\n' >
 		}
 		
 		bool progress=true; // detection of infinite loops
-		int countOfUntypedSignals = dagSignalList.size();
 		do {
 			progress=false;
 			// build instances for which the signals are inputs or already known
@@ -364,10 +368,29 @@ Comment         <- < '#' [^\n]* '\n' >
 								 << "  " << parameterString << "  " << inPortMap << " --- " << outPortMap );
 					auto f=FactoryRegistry::getFactoryRegistry().getFactoryByName(opName);
 					if(f==NULL) {
-						THROWERROR("(DAGOperator): " << opName << "  doesn't seem to be a FloPoCo operator");
+						THROWERROR(opName << "  doesn't seem to be a FloPoCo operator");
 					}
 
 					OperatorPtr op= dummy.newInstance(opName, uniqueInstanceName, parameterString, inPortMap, outPortMap);
+
+					// now check that the Operator input count matches the one in the DAG.
+					// This is a pure act of gentlemanship: any mismatch results in later errors anyway
+					// but these errors are far from being explicit
+					int opInputCount=0;
+					int opOutputCount=0;
+					for(auto i: *(op->getIOList())) 	{
+						if(i->type() == Signal::in)	  {	opInputCount ++;	}
+						if(i->type() == Signal::out)	{	opOutputCount ++; }
+					}
+
+					if(opInputCount != args.size()) {
+						THROWERROR("Input count mismatch: Operator " << opName << " has " << opInputCount
+											 << " inputs, but DAG node " << uniqueInstanceName << " has " << args.size() << " inputs");
+					}
+					if(opOutputCount !=1) {
+						THROWERROR(opName << " has more than one output, this is currently not managed");
+					}
+					// Mark progress
 					builtInstance[uniqueInstanceName]=true;
 					builtComponentCount++;
 					progress=true;
@@ -538,12 +561,18 @@ Comment         <- < '#' [^\n]* '\n' >
 		} // end while progress
 	}
 	
+
+	void DAGOperator::check(){
+	}
+
+
 	
 DAGOperator::DAGOperator(OperatorPtr parentOp, Target* target, string infile) : Operator(parentOp, target){
+	srcFileName="DAGOperator";
 	parse(infile);
-	checkDAG();
 	typeInference();
 	build();
+	check();
 	};
 
 
