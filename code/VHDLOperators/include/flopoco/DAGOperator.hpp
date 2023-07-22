@@ -6,11 +6,6 @@ namespace flopoco {
 	// new operator class declaration
 	class DAGOperator : public Operator {
 	public:
-		/* operatorInfo is a user defined parameter (not a part of Operator class) for
-		   stocking information about the operator. The user is able to defined any number of parameter in this class, as soon as it does not affect Operator parameters undeliberatly*/
-		string infile;
-
-	public:
 		// definition of some function for the operator    
 
 		// constructor, defined there with two parameters (default value 0 for each)
@@ -39,10 +34,12 @@ namespace flopoco {
 
 #ifdef DAGOPERATOR_IMPLEM
 	private:
-		void parse(string infile);
+		string infile;
+		void parse();
 		void typeInference();
 		void build();
 		void check(); /**< final static checks */
+
 		string entityName;
 
 		/** global parameters */
@@ -61,6 +58,7 @@ namespace flopoco {
 		map<string, vector<string>> componentParameters; // componentName, reconstructed parameter list 
 		/** which Component for each instance in the DAG */
 		map<string, string> instanceComponent; // uniqueInstanceName, componentName
+		map<string, pair <size_t, size_t>> instanceLineInfo; // uniqueInstanceName, (line, column)
 
 		// The AST node is all string-based.
 		map<string, vector<string>> dagNode; /**< ultra simple AST. 

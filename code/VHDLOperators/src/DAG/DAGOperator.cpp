@@ -13,7 +13,6 @@
   */
 
 /* TODOS
-   - line numbers in error messages
 	 - constants
 	 - static check: bit sizes
 	 - manage operators with more than one output (eg normalizer) but I have no clue how
@@ -47,11 +46,6 @@ using namespace std;
 
 namespace flopoco {
 
-string removeSpaces(std::string str){
-	return str; // testing if this function is really useful
-	str.erase(remove(str.begin(), str.end(), ' '), str.end());
-	return str;
-}
 
 	// OpInstanceToRetSignalName function for argument parsing for DAG operator e.g FPAdd(FPMult(A,B),B) -> FPAdd(FPMultR,B)
   	string opInstanceToRetSignalName(std::string const& s){
@@ -65,8 +59,22 @@ string removeSpaces(std::string str){
 	}
 
 
+	// two auxiliary methods for detailed error reporting
+	string lineInfo(string infile, std::pair<size_t, size_t> lc) {
+		size_t line=lc.first;
+		size_t column=lc.second;
+		string s = "line " + to_string(line) + ", column " +  to_string(column) + " of " + infile + ": ";
+		return s;
+	}
+
+	string lineInfo(string infile, const peg::SemanticValues &vs) {
+		std::pair<size_t, size_t> lc = vs.line_info();
+		return lineInfo(infile, lc);
+	}
+
+
 	
-	void DAGOperator::parse(string infile) {
+	void DAGOperator::parse() {
 		//Grammar definition
 		// If you edit any of it it is highly recommended to first validate it in the online peglib playground:
 		auto grammar = R"(
@@ -148,7 +156,7 @@ Comment         <- < '#' [^\n]* '\n' >
 		DAGparser["ParamValue"] = [&](const peg::SemanticValues &vs) { 
 			string paramName = any_cast<string>(vs[0]);
 			if(parameters.find(paramName)  == parameters.end()) {
-				THROWERROR("Parameter <" << paramName << "> not declared");
+				THROWERROR(lineInfo(infile, vs) << "Parameter <" << paramName << "> not declared");
 			}
 			auto value=parameters[paramName];
 			REPORT(LogLevel::DEBUG,  "ParamValue : found that the value of $" << paramName << " is " << value);
@@ -206,7 +214,7 @@ Comment         <- < '#' [^\n]* '\n' >
 					dagSignalList[name] = type;
 				}
 				else {
-					THROWERROR("Signal "<< name << " already declared");
+					THROWERROR(lineInfo(infile, vs) << "Signal "<< name << " already declared");
 				}
 			}
 			return 0;		
@@ -218,16 +226,20 @@ Comment         <- < '#' [^\n]* '\n' >
 			string componentName = any_cast<string>(vs[0]);
 			// check we have an Operator for it
 			if(componentOperator.find(componentName) == componentOperator.end()) {
-				THROWERROR("No Operator for component "<< componentName);
+				THROWERROR(lineInfo(infile, vs) <<  "No Operator for component "<< componentName);
 			}
 			vector<string> astNode; // it will go to dagNode
 			// create a unique instance name
 			string uniqueInstanceName = componentName + "_uid"+to_string(getNewUId());	
-			// astNode.push_back(uniqueInstanceName); 
+
+			std::pair<size_t, size_t> li = vs.line_info();
+			instanceLineInfo[uniqueInstanceName] = li; // for later error reporting
+
 			for (size_t i=1; i<vs.size(); i++){
 				string name=any_cast<string>(vs[i]);
 				if(dagSignalList.find(name) == dagSignalList.end()) {
-					THROWERROR("Signal "<< name << " does not seems to be declared");
+					string lis = lineInfo(infile, li);
+					THROWERROR(lis << "Signal "<< name << " does not seems to be declared");
 				}
 				astNode.push_back(name);
 			}
@@ -252,7 +264,7 @@ Comment         <- < '#' [^\n]* '\n' >
 					dagSignalList[lhs] = "Wire";
 				}
 			else if (dagSignalList[lhs]== "Input"){
-				THROWERROR("Attempting to assign to "<< lhs << " which is an input");
+				THROWERROR(lineInfo(infile, vs) << "Attempting to assign to "<< lhs << " which is an input");
 			}
 			// otherwise we are assigning to an output and it is OK
 			if(assignment.count(lhs)  == 0) {
@@ -260,7 +272,7 @@ Comment         <- < '#' [^\n]* '\n' >
 				// vhdl << tab << lhs << " <= " << rhs << ";" << endl; 
 			}
 				else {
-					THROWERROR("Signal "<< lhs << " already assigned");
+					THROWERROR(lineInfo(infile, vs) << "Signal "<< lhs << " already assigned");
 				}
 		};
 		
@@ -382,10 +394,11 @@ Comment         <- < '#' [^\n]* '\n' >
 						if(i->type() == Signal::in)	  {	opInputCount ++;	}
 						if(i->type() == Signal::out)	{	opOutputCount ++; }
 					}
-
 					if(opInputCount != args.size()) {
-						THROWERROR("Input count mismatch: Operator " << opName << " has " << opInputCount
-											 << " inputs, but DAG node " << uniqueInstanceName << " has " << args.size() << " inputs");
+						THROWERROR(	lineInfo(infile,instanceLineInfo[uniqueInstanceName]) 
+												<<"Input count mismatch: Operator " << opName << " has " << opInputCount
+												<< " inputs, but DAG node " << uniqueInstanceName << " has " << args.size() << " inputs"
+												);
 					}
 					if(opOutputCount !=1) {
 						THROWERROR(opName << " has more than one output, this is currently not managed");
@@ -567,9 +580,9 @@ Comment         <- < '#' [^\n]* '\n' >
 
 
 	
-DAGOperator::DAGOperator(OperatorPtr parentOp, Target* target, string infile) : Operator(parentOp, target){
+	DAGOperator::DAGOperator(OperatorPtr parentOp, Target* target, string infile) : Operator(parentOp, target), infile(infile) {
 	srcFileName="DAGOperator";
-	parse(infile);
+	parse();
 	typeInference();
 	build();
 	check();
