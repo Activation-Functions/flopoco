@@ -14,7 +14,6 @@
 
 /* TODOS
 	 - constants
-	 - static check: bit sizes
 	 - manage operators with more than one output (eg normalizer) but I have no clue how
 */
 
@@ -418,7 +417,18 @@ Comment         <- < '#' [^\n]* '\n' >
 						formal+=c;
 						string actual = args[i];
 						sigSize = op->getSignalByName(formal)->width();
-						dagSignalBitwidth[actual] = sigSize;
+						// TODO check that the bitwidth does not already exist here
+						if(dagSignalBitwidth.count(actual)>0) {
+							if(dagSignalBitwidth[actual] != sigSize && dagSignalBitwidth[actual] != -1 /* meaning: yet untyped input*/) {
+								THROWERROR(	lineInfo(infile,instanceLineInfo[uniqueInstanceName]) 
+														<<"I/O size mismatch for input " << formal << " to " << instanceComponent[uniqueInstanceName] <<" (a " <<  opName << "): it has size " << sigSize 
+														<< " but we already inferred size " << dagSignalBitwidth[actual] << " for signal " << actual << " that is mapped to it"
+														);
+							}
+						}
+						else {
+							dagSignalBitwidth[actual] = sigSize;
+						}
 					}
 				}
 			}
@@ -548,7 +558,8 @@ Comment         <- < '#' [^\n]* '\n' >
 									 "actually building instance: "<< uniqueInstanceName
 									 << " ("  << componentName << "): " << opName << "  " << parameterString
 									 << "  " << inPortMap << " --- " << outPortMap);
-						newInstance(opName, uniqueInstanceName, parameterString, inPortMap, outPortMap);
+						OperatorPtr op = newInstance(opName, uniqueInstanceName, parameterString, inPortMap, outPortMap);
+						instanceOperator[uniqueInstanceName] = op;
 					}
 				}
 			} // end loop on dagNode
@@ -576,6 +587,7 @@ Comment         <- < '#' [^\n]* '\n' >
 	
 
 	void DAGOperator::check(){
+		// well, all the checks have been done during build()
 	}
 
 

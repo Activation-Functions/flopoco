@@ -46,19 +46,27 @@ namespace flopoco {
 		map<string, string> parameters; // parameter name, value 
 
 		// The following few maps capture the AST built by the parser
-		/** Signals */
-		map<string,string> dagSignalList; // the second string is "Input", "Output", "Wire"
-		map<string,int> dagSignalBitwidth; // 
+		/** A dictionnary of DAG signal names (including implicit ones).
+				Also maps each DAG signal name to its type,	which may be  "Input", "Output", or "Wire".	*/
+		map<string,string> dagSignalList;
 
-		/* flopoco commands, built at parse time, invoked later */
-		/** which flopoco Operator for each declared component */
+		/** maps each DAG signal name (including implicit ones) to its inferred bit width */
+		map<string,int> dagSignalBitwidth; 
+
+		/** maps each declared component to its flopoco Operator name */
 		map<string, string> componentOperator;
 
-		/** which Operator parameters for each declared component */
-		map<string, vector<string>> componentParameters; // componentName, reconstructed parameter list 
-		/** which Component for each instance in the DAG */
-		map<string, string> instanceComponent; // uniqueInstanceName, componentName
-		map<string, pair <size_t, size_t>> instanceLineInfo; // uniqueInstanceName, (line, column)
+		/** maps a componentName to its reconstructed parameter list*/
+		map<string, vector<string>> componentParameters;
+
+		/** maps the uniqueInstanceName of a DAG node to its componentName */
+		map<string, string> instanceComponent; 
+
+		/** maps the uniqueInstanceName of a DAG node to its (line, column) in the source file for each DAG instance */
+		map<string, pair <size_t, size_t>> instanceLineInfo;
+
+		/** maps the uniqueInstanceName of a DAG node to its  FloPoCo Operator */
+		map<string, OperatorPtr> instanceOperator; 
 
 		// The AST node is all string-based.
 		map<string, vector<string>> dagNode; /**< ultra simple AST. 
