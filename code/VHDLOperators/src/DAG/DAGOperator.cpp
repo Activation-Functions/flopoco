@@ -74,6 +74,9 @@ namespace flopoco {
 
 	
 	void DAGOperator::parse() {
+
+		REPORT(LogLevel::DETAIL, "Parsing " << infile);
+									 
 		//Grammar definition
 		// If you edit any of it it is highly recommended to first validate it in the online peglib playground:
 		auto grammar = R"(
@@ -305,6 +308,9 @@ Comment         <- < '#' [^\n]* '\n' >
 
 	
 	void DAGOperator::typeInference(){
+
+		REPORT(LogLevel::DETAIL, "Infering signal types");
+
 		// Now we have all it takes to fill the vhdl,
 		// but first we need to do a bit of type inference
 		// so we create a dummy operator with untyped signals first
@@ -458,6 +464,7 @@ Comment         <- < '#' [^\n]* '\n' >
 
 	
 	void DAGOperator::build(){
+		REPORT(LogLevel::DETAIL, "Building the DAG");
 
 		// First the IOs, now that we know their size
 		for (auto i: dagSignalList) {	
