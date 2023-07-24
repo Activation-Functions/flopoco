@@ -485,14 +485,6 @@ Comment         <- < '#' [^\n]* '\n' >
 			availableArg[name] = (iotype=="Input");
 		}
 		
-#if 0 // probably useless
-		map<string,bool> builtInstance; //initialized to all false
-		for (auto i: instanceComponent) {	
-			string name=i.first;
-			builtInstance[name] = false;
-		}
-#endif
-
 		// a map to ensure VHDL is output only once 
 		map<string,bool> declaredSignal;
 		for (auto i: dagSignalList) {	
@@ -522,16 +514,6 @@ Comment         <- < '#' [^\n]* '\n' >
 
 						// now built it for good
 						// VHDL won't accept that an instance name is also a signal name, so we extend istance names
-#if 0
-						string actualRHS = (dagNode.count(args[0])==0 ? "":"R_") + args[0];
-						string inPortMap = "X=>" + actualRHS;
-						for(char i=1; i<args.size(); i++) {
-							char c='X'+i;
-							actualRHS = (dagNode.count(args[i])==0 ? "":"R_") + args[i];
-							string pm = (string)(",") + c + "=>" + actualRHS;
-							inPortMap+=pm;
-						}
-#else
 						string inPortMap;
 						auto inputList = instanceInputs[uniqueInstanceName]; 
 						for(int i=0; i<args.size(); i++) {
@@ -539,12 +521,12 @@ Comment         <- < '#' [^\n]* '\n' >
 							string actual = (dagNode.count(args[i])==0 ? "":"R_") + args[i];
 							inPortMap += formal + "=>" + actual   + (i+1<args.size()? ", ":"");
 						}
-#endif
 						
 						string returnSignalName="R_"+ uniqueInstanceName;
-						string outPortMap = "R=>" + returnSignalName; // signalname==instance name, we'll see if it works
-						string componentName=instanceComponent[uniqueInstanceName];
-						string opName=componentOperator[componentName];
+						auto outputList = instanceOutputs[uniqueInstanceName];
+						string outPortMap = outputList[0].first + "=>" + returnSignalName; 
+						string componentName = instanceComponent[uniqueInstanceName];
+						string opName = componentOperator[componentName];
 						auto parameters = componentParameters[componentName];
 						string parameterString;
 						for(auto i : parameters) {
