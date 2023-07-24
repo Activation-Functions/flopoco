@@ -65,8 +65,14 @@ namespace flopoco {
 		/** maps the uniqueInstanceName of a DAG node to its (line, column) in the source file for each DAG instance */
 		map<string, pair <size_t, size_t>> instanceLineInfo;
 
-		/** maps the uniqueInstanceName of a DAG node to its  FloPoCo Operator */
+		/** maps the uniqueInstanceName of a DAG node to its FloPoCo Operator */
 		map<string, OperatorPtr> instanceOperator; 
+
+		/** maps the uniqueInstanceName of a DAG node to the input data of its FloPoCo Operator: pairs of (name, bitwidth) */
+		map<string, vector<pair<string,int>>> instanceInputs; 
+
+		/** maps the uniqueInstanceName of a DAG node to the output data of its FloPoCo Operator: pairs of (name, bitwidth) */
+		map<string, vector<pair<string,int>>> instanceOutputs; 
 
 		// The AST node is all string-based.
 		map<string, vector<string>> dagNode; /**< ultra simple AST. 

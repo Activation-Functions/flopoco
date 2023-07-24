@@ -309,25 +309,6 @@ Comment         <- < '#' [^\n]* '\n' >
 		// but first we need to do a bit of type inference
 		// so we create a dummy operator with untyped signals first
 		UserInterface::getUserInterface().pushAndClearGlobalOpList();
-		Operator dummy(NULL, getTarget());
-
-		for (auto i: dagSignalList) {
-			string name=i.first;
-			string type=i.second;
-			if(type=="Input") {
-				dummy.addInput(name);
-			}
-			if(type=="Output") {
-				dummy.addOutput(name);
-			}
-			if(type=="Wire") {
-				dummy.declare(name);
-			}
-			// maybe wires should be declared later
-		}
-		// We may only instantiate operators when their inputs are known. 
-		// we could start from the output wires and do a recursive depth first build,
-		// or wa can just build every node of the DAG as soon as its inputs are known.
 
 		int builtComponentCount=0;
 		for (auto i: dagSignalList) {	
@@ -356,50 +337,53 @@ Comment         <- < '#' [^\n]* '\n' >
 					allInputsKnown &= (dagSignalBitwidth.count(args[i])>0); // boolean and
 				}	
 				if(allInputsKnown && !builtInstance[uniqueInstanceName]) { // build the operator, the scheduler will not complain
-					// Here comes a big restriction: this only works for Operators
-					// whose inputs are X,Y,Z... and output is R
-					string inPortMap = "X=>" + args[0];
-					for(char i=1; i<args.size(); i++) {
-						char c='X'+i;
-						string pm = (string)(",") + c + "=>" + args[i];
-						inPortMap+=pm;
-					}
-					string returnSignalName="R_"+ uniqueInstanceName;
-					string outPortMap = "R=>" + uniqueInstanceName; // signalname==instance name, we'll see
 					string componentName=instanceComponent[uniqueInstanceName];
 					string opName=componentOperator[componentName];
 					auto parameters = componentParameters[componentName];
-					string parameterString;
+					// need to prepend the Operator name to the parameter list to matche the parseArgument format
+					parameters.insert(parameters.begin(), opName);
+					string parameterString="";
 					for(auto i : parameters) {
 						parameterString += i + " ";
 					}
-					REPORT(LogLevel::DEBUG,
-								 "First pass with dummy instance " << builtComponentCount
-								 <<": "<< uniqueInstanceName << " ("  << componentName << "): " << opName
-								 << "  " << parameterString << "  " << inPortMap << " --- " << outPortMap );
 					auto f=FactoryRegistry::getFactoryRegistry().getFactoryByName(opName);
 					if(f==NULL) {
 						THROWERROR(opName << "  doesn't seem to be a FloPoCo operator");
 					}
 
-					OperatorPtr op= dummy.newInstance(opName, uniqueInstanceName, parameterString, inPortMap, outPortMap);
+					REPORT(LogLevel::DEBUG,
+								 "Creating dummy instance #" << builtComponentCount
+								 <<": "<< uniqueInstanceName << " ("  << componentName << "): " 
+								 << "  " << parameterString  );
+					OperatorPtr op = f->parseArguments(nullptr, getTarget(), parameters, UserInterface::getUserInterface());					
 
-					// now check that the Operator input count matches the one in the DAG.
+					// now build the IO list and perform various mismatch checks
 					// This is a pure act of gentlemanship: any mismatch results in later errors anyway
 					// but these errors are far from being explicit
-					int opInputCount=0;
-					int opOutputCount=0;
+					vector<pair<string,int>> inputList;
+					vector<pair<string,int>> outputList;
 					for(auto i: *(op->getIOList())) 	{
-						if(i->type() == Signal::in)	  {	opInputCount ++;	}
-						if(i->type() == Signal::out)	{	opOutputCount ++; }
+						if(i->type() == Signal::in)	  {
+							REPORT(LogLevel::DEBUG, "  input " << i->getName() << " of size " << i->width());
+							pair<string,int> in = make_pair(i->getName(), i->width());
+							inputList.push_back(in);
+						}
+						if(i->type() == Signal::out)	{
+							REPORT(LogLevel::DEBUG, "  output " << i->getName() << " of size " << i->width());
+							pair<string,int> out = make_pair(i->getName(), i->width());
+							outputList.push_back(out);
+						}
 					}
-					if(opInputCount != args.size()) {
+					instanceInputs[uniqueInstanceName] = inputList;
+					instanceOutputs[uniqueInstanceName] = outputList;
+					
+					if(inputList.size() != args.size()) {
 						THROWERROR(	lineInfo(infile,instanceLineInfo[uniqueInstanceName]) 
-												<<"Input count mismatch: Operator " << opName << " has " << opInputCount
+												<<"Input count mismatch: Operator " << opName << " has " << inputList.size()
 												<< " inputs, but DAG node " << uniqueInstanceName << " has " << args.size() << " inputs"
 												);
 					}
-					if(opOutputCount !=1) {
+					if(outputList.size() !=1) {
 						THROWERROR(opName << " has more than one output, this is currently not managed");
 					}
 					// Mark progress
@@ -409,24 +393,25 @@ Comment         <- < '#' [^\n]* '\n' >
 
 
 					// Now we may type the IO signals 
-					int sigSize=op->getSignalByName("R")->width();
-					dagSignalBitwidth[uniqueInstanceName] = sigSize;
-					for(char i=0; i<args.size(); i++) {
-						char c='X'+i;
-						string formal = "";
-						formal+=c;
+					int sigSize = outputList[0].second;
+					dagSignalBitwidth[uniqueInstanceName] = sigSize; // here using the instance name as signal name. We will prepend a "R_" later
+					for(int i=0; i<args.size(); i++) {
+						string formal = inputList[i].first;
 						string actual = args[i];
 						sigSize = op->getSignalByName(formal)->width();
 						// TODO check that the bitwidth does not already exist here
 						if(dagSignalBitwidth.count(actual)>0) {
-							if(dagSignalBitwidth[actual] != sigSize && dagSignalBitwidth[actual] != -1 /* meaning: yet untyped input*/) {
+							if(dagSignalBitwidth[actual] == -1) { /* meaning: yet untyped input*/
+								dagSignalBitwidth[actual] = sigSize;
+							}	
+							else if(dagSignalBitwidth[actual] != sigSize ) {
 								THROWERROR(	lineInfo(infile,instanceLineInfo[uniqueInstanceName]) 
 														<<"I/O size mismatch for input " << formal << " to " << instanceComponent[uniqueInstanceName] <<" (a " <<  opName << "): it has size " << sigSize 
 														<< " but we already inferred size " << dagSignalBitwidth[actual] << " for signal " << actual << " that is mapped to it"
 														);
 							}
 						}
-						else {
+						else { // untyped so far
 							dagSignalBitwidth[actual] = sigSize;
 						}
 					}
@@ -537,6 +522,7 @@ Comment         <- < '#' [^\n]* '\n' >
 
 						// now built it for good
 						// VHDL won't accept that an instance name is also a signal name, so we extend istance names
+#if 0
 						string actualRHS = (dagNode.count(args[0])==0 ? "":"R_") + args[0];
 						string inPortMap = "X=>" + actualRHS;
 						for(char i=1; i<args.size(); i++) {
@@ -545,6 +531,16 @@ Comment         <- < '#' [^\n]* '\n' >
 							string pm = (string)(",") + c + "=>" + actualRHS;
 							inPortMap+=pm;
 						}
+#else
+						string inPortMap;
+						auto inputList = instanceInputs[uniqueInstanceName]; 
+						for(int i=0; i<args.size(); i++) {
+							string formal = inputList[i].first;
+							string actual = (dagNode.count(args[i])==0 ? "":"R_") + args[i];
+							inPortMap += formal + "=>" + actual   + (i+1<args.size()? ", ":"");
+						}
+#endif
+						
 						string returnSignalName="R_"+ uniqueInstanceName;
 						string outPortMap = "R=>" + returnSignalName; // signalname==instance name, we'll see if it works
 						string componentName=instanceComponent[uniqueInstanceName];
