@@ -41,7 +41,7 @@ namespace flopoco{
 
 		name<<"OutputIEEE_"<<wEI<<"_"<<wFI<<"_to_"<<wEO<<"_"<<wFO;
 
-		uniqueName_ = name.str();
+		setNameWithFreqAndUID(name.str());
 
 		// -------- Parameter set up -----------------
 
