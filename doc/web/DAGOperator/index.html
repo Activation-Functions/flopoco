@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<link rel="stylesheet" href="../flopoco.css">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<meta charset="utf-8"> 
+		<title>FloPoCo's DAGOperator pipeline builder</title>
+	</head>
+	
+	<body>
+		<h1>FloPoCo's DAGOperator <br>				<img style="width:80%"  src="Average3.svg" alt="Average3.svg, the dependency graph corresponding to Average3.dag" />
+	</h1>
+		
+
+ 		<h2>What it is</h2>
+		<p>DAGOperator is a meta-operator that assembles other FloPoCo operators.
+		</p>
+		<p>	It inputs a text file describing a Directed Acyclic Graph (DAG) of FloPoCo components, and produces a single VHDL file linking all these components in a single pipeline.</p>
+
+		<p>	The syntax of DAGOperator's input file is designed to ease the exploration of
+		<ul>
+			<li>different parameter values. For instance it is easy to change the values of the exponent and mantissa fraction sizes for each operator of the pipeline.</li>
+			<li>different operator variants. For instance you may easily replace a generic multiplier with a constant one, or a multipartite approximation with a piecewise polynomial evaluator.</li>
+			<li>different expression parenthesing, so as to find the one optimizing the pipeline depth. </li>
+			<li>etc. </li>
+		</ul>
+		Such changes may be explored by minor modifications to the input file.
+		Then FloPoCo's DAGOperator will take care of defining intermediate signals, assembling the operators, and building a correct-by-construction pipeline (inserting all the required synchronization registers).
+		</p>	
+		<p> Another potential application of DAGOperator is to act as an intermediate step for HLS compilers.
+		</p>
+		
+ 		<h2>Usage and syntax of the infile</h2>
+		
+		
+		<p>First have a look at these two heavily commented example files:</p>
+		<ul>
+			<li> <a href="Average3.dag">Average3.dag</a> is a simple example that computes a floating-point average of three values. </li>	
+			<li> <a href="QuadraticSol.dag">QuadraticSol.dag</a> is a more complex example that describes the textbook solution to a quadratic equation. It shows how an intermediate signal, here Delta, may be used in several subsequent computations.</li>
+			</ul>
+		
+		<p>Basic usage:		<code>./flopoco DAGOperator infile=QuadraticSol.dag</code>
+		</p>
+
+		<p>Normal usage:
+		<code>./flopoco dependencygraph=full verbose=2 frequency=400 DAGOperator infile=QuadraticSol.dag</code>
+		</p>
+
+    </p>A DAG file is composed of 
+		<ul>
+			<li>input and output signal declarations</li>
+			<li>generic parameter declarations (wE and wF in our example files)</li>
+			<li>node name declarations: a DAG node name is essentiallu defined as a FloPoCo command.</li>
+			<li>an arbitrary number of equations defining the DAG by using the node names in infix form.</li>
+		</ul><p>
+    </p>Input, output and intermediate signals need not be typed: DAGOperator will use the types of the I/Os of the nodes to infer the types of the other signals (or complain in case of mismatch)<p>
+    </p>The formal syntax of DAG files can be found in the source file DAGOperator.cpp. <p>
+		</p>	
+		<p>These examples are all floating-point. It is in principle possible to assemble integer or fixed-point operators as well, but some conversion Operators may be missing. Contact Florent de Dinechin in such cases.</p>	
+
+		<p>In the flopoco command above, the <code>dependencygraph=full</code> produces an SVG file of the DAG graph.
+			It  may be useful to understand what is happening in the pipeline (click on the image the full-scale version):</p>
+		<p style="text-align: center">
+			<a href="QuadraticSol.svg">
+				<img style="height:540px"  src="QuadraticSol.svg"/>
+			</a>
+		</p>
+<img >
+		
+
+
+</body>
+</html>
+
