@@ -11,4 +11,5 @@ add_flopocolib_src(
 	Multipartite.cpp
 	UniformPiecewisePolyApprox.cpp
 	VaryingPiecewisePolyApprox.cpp
-)
+	SNAFU.cpp
+	)
