@@ -3,6 +3,7 @@
 #include "flopoco/IntMult/BaseMultiplierLUT.hpp"
 #include "flopoco/IntMult/BaseMultiplierXilinx2xk.hpp"
 #include "flopoco/IntMult/BaseMultiplierXilinxGeneralizedLUT.hpp"
+#include "flopoco/IntMult/BaseMultiplierBoothArrayXilinx.hpp"
 #include "flopoco/IntMult/BaseMultiplierIrregularLUTXilinx.hpp"
 #include "flopoco/IntMult/BaseMultiplierDSPSuperTilesXilinx.hpp"
 #include "flopoco/IntMult/BaseMultiplierDSPKaratsuba.hpp"
@@ -11,10 +12,19 @@
 using namespace std;
 namespace flopoco {
 
-    MultiplierTileCollection::MultiplierTileCollection(Target *target, BaseMultiplierCollection *bmc, int mult_wX, int mult_wY, bool superTile, bool use2xk, bool useirregular, bool useLUT, bool useDSP, bool useKaratsuba, bool useGenLUT, bool squarer, bool varSizeDSP):squarer{squarer} {
+	MultiplierTileCollection::MultiplierTileCollection(Target *target, BaseMultiplierCollection *bmc, int mult_wX, int mult_wY, bool superTile, bool use2xk, bool useirregular, bool useLUT, bool useDSP, bool useKaratsuba, bool useGenLUT, bool useBooth, bool squarer, bool varSizeDSP):squarer{squarer} {
         //cout << bmc->size() << endl;
         int tilingWeights[4] = {1, -1, 2, -2};
         for(int w = 0; w < ((squarer)?4:1); w++){
+
+        	if(useBooth){
+        		variableTileOffset = 4;
+        		for(int x = variableTileOffset; x <= 8; x++) {
+        			for(int y = variableTileOffset; y <= 8; y++) {
+        				addBaseTile(target, new BaseMultiplierBoothArrayXilinx(x, y), tilingWeights[w]);
+				}
+			}
+        	}
 
             if(useGenLUT){      //Generalized Xilinx LUT multiplier
                 std::vector<vector<pair<int,int>>> shapes;

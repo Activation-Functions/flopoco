@@ -42,7 +42,7 @@ using namespace std;
 namespace flopoco {
 
 
-    IntMultiplier::IntMultiplier (Operator *parentOp, Target* target_, int wX_, int wY_, int wOut_, bool signedIO_, float dspOccupationThreshold, int maxDSP, bool superTiles, bool use2xk, bool useirregular, bool useLUT, bool useDSP, bool useKaratsuba, bool useGenLUT, int beamRange, bool optiTrunc, bool minStages, bool squarer):
+	IntMultiplier::IntMultiplier (Operator *parentOp, Target* target_, int wX_, int wY_, int wOut_, bool signedIO_, float dspOccupationThreshold, int maxDSP, bool superTiles, bool use2xk, bool useirregular, bool useLUT, bool useDSP, bool useKaratsuba, bool useGenLUT, bool useBooth, int beamRange, bool optiTrunc, bool minStages, bool squarer):
 		Operator ( parentOp, target_ ),wX(wX_), wY(wY_), wOut(wOut_),signedIO(signedIO_), dspOccupationThreshold(dspOccupationThreshold), squarer(squarer) {
         srcFileName = "IntMultiplier";
         setCopyrightString("Martin Kumm, Florent de Dinechin, Kinga Illyes, Bogdan Popa, Bogdan Pasca, 2012");
@@ -100,7 +100,7 @@ namespace flopoco {
 		BaseMultiplierCollection baseMultiplierCollection(getTarget());
 //		baseMultiplierCollection.print();
 
-		MultiplierTileCollection multiplierTileCollection(getTarget(), &baseMultiplierCollection, wX, wY, superTiles, use2xk, useirregular, useLUT, useDSP, useKaratsuba, useGenLUT, squarer);
+MultiplierTileCollection multiplierTileCollection(getTarget(), &baseMultiplierCollection, wX, wY, superTiles, use2xk, useirregular, useLUT, useDSP, useKaratsuba, useGenLUT, useBooth, squarer);
 
 		string tilingMethod = getTarget()->getTilingMethod();
 
@@ -890,7 +890,7 @@ namespace flopoco {
 
 	OperatorPtr IntMultiplier::parseArguments(OperatorPtr parentOp, Target *target, std::vector<std::string> &args, UserInterface& ui) {
 		int wX,wY, wOut, maxDSP;
-		bool signedIO,superTile, use2xk, useirregular, useLUT, useDSP, useKaratsuba, optiTrunc, minStages, squarer, useGenLUT;
+		bool signedIO,superTile, use2xk, useirregular, useLUT, useDSP, useKaratsuba, optiTrunc, minStages, squarer, useGenLUT, useBooth;
 		double dspOccupationThreshold=0.0;
 		int beamRange = 0;
 
@@ -905,6 +905,7 @@ namespace flopoco {
 		ui.parseBoolean(args, "useDSP", &useDSP);
 		ui.parseBoolean(args, "useKaratsuba", &useKaratsuba);
 		ui.parseBoolean(args, "useGenLUT", &useGenLUT);
+		ui.parseBoolean(args, "useBooth", &useBooth);
 		ui.parseFloat(args, "dspThreshold", &dspOccupationThreshold);
 		ui.parseInt(args, "maxDSP", &maxDSP);
         ui.parseBoolean(args, "optiTrunc", &optiTrunc);
@@ -912,7 +913,7 @@ namespace flopoco {
 		ui.parsePositiveInt(args, "beamRange", &beamRange);
 		ui.parseBoolean(args, "squarer", &squarer);
 
-		return new IntMultiplier(parentOp, target, wX, wY, wOut, signedIO, dspOccupationThreshold, maxDSP, superTile, use2xk, useirregular, useLUT, useDSP, useKaratsuba, useGenLUT, beamRange, optiTrunc, minStages, squarer);
+		return new IntMultiplier(parentOp, target, wX, wY, wOut, signedIO, dspOccupationThreshold, maxDSP, superTile, use2xk, useirregular, useLUT, useDSP, useKaratsuba, useGenLUT, useBooth, beamRange, optiTrunc, minStages, squarer);
 	}
 
 	template <>
@@ -929,7 +930,8 @@ namespace flopoco {
 		 use2xk(bool)=false: if true, attempts to use the 2xk-LUT-Multiplier with relatively high efficiency;\
 		 useirregular(bool)=false: if true, attempts to use the irregular-LUT-Multipliers with higher area/lut efficiency than the rectangular versions;\
 		 useLUT(bool)=true: if true, attempts to use the LUT-Multipliers for tiling;\
-		useGenLUT(bool)=false: if true, attempts to use the generalized LUT Multipliers, as defined by multiplier_shapes.tiledef;\
+		 useGenLUT(bool)=false: if true, attempts to use the generalized LUT Multipliers, as defined by multiplier_shapes.tiledef;\
+		 useBooth(bool)=false: if true, attempts to use LUT-based Booth Arrays;\
 		 useDSP(bool)=true: if true, attempts to use the DSP-Multipliers for tiling;\
 		 useKaratsuba(bool)=false: if true, attempts to use rectangular Karatsuba for tiling;\
 		 superTile(bool)=false: if true, attempts to use the DSP adders to chain sub-multipliers. This may entail lower logic consumption, but higher latency.;\
