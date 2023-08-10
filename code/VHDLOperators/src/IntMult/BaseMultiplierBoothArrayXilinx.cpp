@@ -23,37 +23,34 @@ Operator* BaseMultiplierBoothArrayXilinx::generateOperator(
 		);
 }
 
-//may or may not be working as intended; check if copied from 2xk
-//copied from 2xk
 double BaseMultiplierBoothArrayXilinx::getLUTCost(int x_anchor, int y_anchor, int wMultX, int wMultY, bool signedIO){
-    int luts = ((wX() < wY())?wY():wX()) + 1;
+	int luts = ownLUTCost(x_anchor, y_anchor, wMultX, wMultY, signedIO);
 
-    int x_min = ((x_anchor < 0)?0: x_anchor);
-    int y_min = ((y_anchor < 0)?0: y_anchor);
-    int lsb = x_min + y_min;
+	int x_min = ((x_anchor < 0)?0: x_anchor);
+    	int y_min = ((y_anchor < 0)?0: y_anchor);
+    	int lsb = x_min + y_min;
 
-    int x_max = ((wMultX < x_anchor + (int)wX())?wMultX: x_anchor + wX());
-    int y_max = ((wMultY < y_anchor + (int)wY())?wMultY: y_anchor + wY());
-    int msb = (x_max==1)?y_max:((y_max==1)?x_max:x_max+y_max);
+    	int x_max = ((wMultX < x_anchor + (int)wX())?wMultX: x_anchor + wX());
+    	int y_max = ((wMultY < y_anchor + (int)wY())?wMultY: y_anchor + wY());
+    	int msb = (x_max==1)?y_max:((y_max==1)?x_max:x_max+y_max);
 
-    if(signedIO && ((wMultX-x_anchor-(int)wX())== 0 || (wMultY-y_anchor-(int)wY())== 0)){
-        luts++;    //The 2xk-multiplier needs one additional LUT in the signed case
-    }
-
-    return luts + (msb - lsb)*getBitHeapCompressionCostperBit();
+    	return luts + (msb - lsb)*getBitHeapCompressionCostperBit();
 }
 
-//may or may not be working as intended; check if copied from 2xk
-//copied from 2xk
+//cost function reconstructed from synthesis experiments
 int BaseMultiplierBoothArrayXilinx::ownLUTCost(int x_anchor, int y_anchor, int wMultX, int wMultY, bool signedIO) {
-    int luts = ((wX() < wY())?wY():wX()) + 1;
-    if(signedIO && ((wMultX-x_anchor-(int)wX())== 0 || (wMultY-y_anchor-(int)wY())== 0)){
-        luts++;    //The 2xk-multiplier needs one additional LUT in the signed case
-    }
-    return luts;
+	int luts = 0;
+	if(signedIO && ((wMultX-x_anchor-(int)wX())== 0)){	// the y-input is singed
+		luts =((wY()+1)/2)*(1+wX());
+	} else {						// the y-input is unsinged
+		luts = ((wY()+2)/2)*(1+wX())-(wY()+1)%2;
+		if((wY() == 1) && !signedIO){			//In the unsigned case with wY=1 one LUT less is required
+			luts--;
+		}
+	}
+	return luts;
 }
 
-//copied from 2xk
 OperatorPtr BaseMultiplierBoothArrayXilinx::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui)
 {
     int wX, wY, wAcc;
@@ -74,15 +71,15 @@ template <>
 const OperatorDescription<BaseMultiplierBoothArrayXilinx>
     op_descriptor<BaseMultiplierBoothArrayXilinx>{
 	"BaseMultiplierBoothArrayXilinx", // name
-	"Implements a 2xY-LUT-Multiplier that can be realized efficiently on "
+	"Implements a XxY-LUT-Multiplier that can be realized efficiently on "
 	"some Xilinx-FPGAs",
 	"BasicInteger", // categories
 	"",
 	"wX(int): size of input X;\
-                        wY(int): size of input Y;\
-                        wAcc(int)=0: size of the accumulate input;\
-						xIsSigned(bool)=0: input X is signed;\
-						yIsSigned(bool)=0: input Y is signed;",
+        	wY(int): size of input Y;\
+                wAcc(int)=0: size of the accumulate input;\
+		xIsSigned(bool)=0: input X is signed;\
+		yIsSigned(bool)=0: input Y is signed;",
 	""};
 
 //copied from 2xk
