@@ -167,7 +167,7 @@ namespace flopoco{
 		bool correctlyRounded=false; // default is faithful
 
 		if(!adhocCompression) {
-			if(method=="plaintable" && ) {
+			if(method=="plaintable") {
 				op = new FixFunctionByTable(parentOp, target, sollyaFunction, signedIn, lsbIn, lsbOut);
 				correctlyRounded=true;
 			}
