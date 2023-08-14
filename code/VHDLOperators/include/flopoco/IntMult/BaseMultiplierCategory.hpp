@@ -89,7 +89,7 @@ namespace flopoco {
                     void setTilingWeight(int);
                     int getTilingWeight(void);
                     void setOutputWeights(vector<int> weights) {output_weights = weights;};
-                    void setOutputSizes(vector<int> sizes) {cout << "osize=" << sizes.size() << endl; output_sizes = sizes;};
+                    void setOutputSizes(vector<int> sizes) {REPORT(LogLevel::VERBOSE, "The tile has " << sizes.size() << " outputs."); output_sizes = sizes;};
                     vector<int> getOutputSizes(void) {return output_sizes;};
 
                     const BaseMultiplierCategory *getBMC() const { return this->bmCat_;}

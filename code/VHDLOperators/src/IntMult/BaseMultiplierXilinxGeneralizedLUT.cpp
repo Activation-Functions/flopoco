@@ -20,7 +20,7 @@ namespace flopoco
     is_rectangular(coverage)
   ), coverage(coverage), wX(coverage.size()), wY(coverage[0].size())
   {
-    draw_tile(coverage);
+    if(LogLevel::VERBOSE <= flopoco::get_log_lvl()) draw_tile(coverage);
     calc_area(coverage);
     calc_tile_properties(x_signed, y_signed);
 
@@ -137,9 +137,9 @@ namespace flopoco
       }
       //cout << ((used_bits & (1<<n))?1:0) << ",";
     }
-    cout << endl;
-    cout << "r={" << pp_min << ".." << pp_max << "}" << endl;
-    cout << "lsb=" << lsb << " msb=" << msb << " pp_out=" << wR << endl;
+    REPORT(LogLevel::VERBOSE, endl);
+    REPORT(LogLevel::VERBOSE, "r={" << pp_min << ".." << pp_max << "}" );
+    REPORT(LogLevel::VERBOSE, "lsb=" << lsb << " msb=" << msb << " pp_out=" << wR );
 
     vector<vector<int>> minterms(wR);
     int input_size = xy_dep_list.first.size() + xy_dep_list.second.size();
@@ -167,9 +167,11 @@ namespace flopoco
       //cout << "r" << i << "=";
       quine_mccluskey(minterms[i], input_size, simplified[i]);
       n_dependencys[i] = count_eq_dependencies(xy_dep_list.first.size(), xy_dep_list.second.size(), simplified[i], xy_dep_list);
-      cout << "r" << i << "(" << n_dependencys[i] << ")=";
-      print_eq(xy_dep_list.first.size(), xy_dep_list.second.size(), simplified[i], xy_dep_list);
-      cout << endl;
+      if(LogLevel::VERBOSE <= flopoco::get_log_lvl()) {
+	      cout << "r" << i << "(" << n_dependencys[i] << ")=";
+	      print_eq(xy_dep_list.first.size(), xy_dep_list.second.size(), simplified[i], xy_dep_list);
+	      cout << endl;
+      }
     }
     count_required_LUT(simplified, n_dependencys);
     xy_dependency_list = xy_dep_list;
@@ -516,7 +518,7 @@ namespace flopoco
         if (eq == ref_eq) continue;
         vector<int> common_inputs{get_used_vars(eqs[eq], eqs[ref_eq])};
         if (5 < common_inputs.size()) continue;
-        cout << "eq" << eq << " and eq" << ref_eq << " combined use " << common_inputs.size() << " individual input variables" << endl;
+        REPORT(LogLevel::VERBOSE, "eq" << eq << " and eq" << ref_eq << " combined use " << common_inputs.size() << " individual input variables");
         possible_combis.push_back(make_pair(eq, ref_eq));
       }
     }
@@ -545,14 +547,17 @@ namespace flopoco
         best_combi = test_combis;
       }
     }
-    cout << "could combine " << best_combi.size() << " pairs of eqs " << endl;
-    for (int placed_combi = 0; placed_combi < best_combi.size(); placed_combi++) cout << best_combi[placed_combi].first << " and " << best_combi[placed_combi].second << ", ";
+    if(LogLevel::VERBOSE <= flopoco::get_log_lvl()) {
+	    cout << "could combine " << best_combi.size() << " pairs of eqs " << endl;
+	    for (int placed_combi = 0; placed_combi < best_combi.size(); placed_combi++)
+		    cout << best_combi[placed_combi].first << " and " << best_combi[placed_combi].second << ", ";
+    }
     int additional_lut = 0; //consider when equation does not fit in a 6LUT
     for (int eq = 0; eq < n_dependencys.size(); eq++) additional_lut += ((5 < n_dependencys[eq]) ? (1 << (n_dependencys[eq] - 6)) : 1);
     luts = additional_lut - best_combi.size();
-    cost = luts + wR * getBitHeapCompressionCostperBit();
+    cost = luts + wR * 0.65; //getBitHeapCompressionCostperBit(); //Target not yet defined
     efficiency = area / cost;
-    cout << endl << "#6LUTs=" << luts << " cost=" << cost << " eff=" << efficiency << endl << endl;
+    if(LogLevel::VERBOSE <= flopoco::get_log_lvl()) cout << endl << "#6LUTs=" << luts << " cost=" << cost << " eff=" << efficiency << endl << endl;
     combined_eqs = best_combi;
   }
 
@@ -589,7 +594,7 @@ namespace flopoco
     Target *target,
     Parametrization const &parameters) const
   {
-    cout << "tile is " << parameters.getBMC()->getCoverage().size() << endl;
+    REPORT(LogLevel::VERBOSE, "tile is " << parameters.getBMC()->getCoverage().size());
 
     return new BaseMultiplierXilinxGeneralizedLUTOp(
       parentOp,
@@ -653,7 +658,7 @@ namespace flopoco
     unsigned long realized_eqs = 0;
     while (realized_eqs != ((1 << equations.size()) - 1))
     {
-      cout << "procession eq=" << eq << endl;
+      REPORT(LogLevel::VERBOSE, "procession eq=" << eq);
       if ((realized_eqs & (1 << eq)) == 0)
       {
         for (int comb_eq = 0; comb_eq < combined_eqs.size(); comb_eq++)
@@ -662,14 +667,14 @@ namespace flopoco
           {
             vector<int> lutInpMaps(xy_dependency_list.first.size() + xy_dependency_list.second.size());
             vector<int> common_vars = BaseMultiplierXilinxGeneralizedLUT::get_used_vars(equations[combined_eqs[comb_eq].first], equations[combined_eqs[comb_eq].second]);
-            for (int cvars = 0; cvars < common_vars.size(); cvars++) cout << to_string(common_vars[cvars]) << ", " << endl;
+            for (int cvars = 0; cvars < common_vars.size(); cvars++) REPORT(LogLevel::VERBOSE, to_string(common_vars[cvars]) << ", ");
             for (int cvars = 0; cvars < common_vars.size(); cvars++)
             {
               lutInpMaps[common_vars[cvars] - 1] = cvars;
             }
 
             lut_op lutop_o5, lutop_o6;
-            cout << "processing first eq " << combined_eqs[comb_eq].first << endl;
+            REPORT(LogLevel::VERBOSE, "processing first eq " << combined_eqs[comb_eq].first);
             for (int t = 0; t < equations[combined_eqs[comb_eq].first].size(); t++)
             {
               lut_op term;
@@ -681,12 +686,12 @@ namespace flopoco
                   if (v == 0)
                   {
                     term = ~lut_in(lutInpMaps[idx]);
-                    cout << ((t != 0) ? "||" : "") << "!i" << lutInpMaps[idx];
+                    if(LogLevel::VERBOSE <= flopoco::get_log_lvl()) cout << ((t != 0) ? "||" : "") << "!i" << lutInpMaps[idx];
                   }
                   else
                   {
                     term = term & ~lut_in(lutInpMaps[idx]);
-                    cout << "&&!i" << lutInpMaps[idx];
+                    if(LogLevel::VERBOSE <= flopoco::get_log_lvl()) cout << "&&!i" << lutInpMaps[idx];
                   }
                 }
                 else
@@ -694,12 +699,12 @@ namespace flopoco
                   if (v == 0)
                   {
                     term = lut_in(lutInpMaps[idx]);
-                    cout << ((t != 0) ? "||" : "") << "i" << lutInpMaps[idx];
+                    if(LogLevel::VERBOSE <= flopoco::get_log_lvl()) cout << ((t != 0) ? "||" : "") << "i" << lutInpMaps[idx];
                   }
                   else
                   {
                     term = term & lut_in(lutInpMaps[idx]);
-                    cout << "&&i" << lutInpMaps[idx];
+                    if(LogLevel::VERBOSE <= flopoco::get_log_lvl()) cout << "&&i" << lutInpMaps[idx];
                   }
                 }
               }
@@ -712,8 +717,8 @@ namespace flopoco
                 lutop_o5 = lutop_o5 | term;
               }
             }
-            cout << endl;
-            cout << "processing second eq " << combined_eqs[comb_eq].second << endl;
+            if(LogLevel::VERBOSE <= flopoco::get_log_lvl()) cout << endl;
+            if(LogLevel::VERBOSE <= flopoco::get_log_lvl()) cout << "processing second eq " << combined_eqs[comb_eq].second << endl;
             for (int t = 0; t < equations[combined_eqs[comb_eq].second].size(); t++)
             {
               lut_op term;
@@ -725,12 +730,12 @@ namespace flopoco
                   if (v == 0)
                   {
                     term = ~lut_in(lutInpMaps[idx]);
-                    cout << ((t != 0) ? "||" : "") << "!i" << lutInpMaps[idx];
+                    if(LogLevel::VERBOSE <= flopoco::get_log_lvl()) cout << ((t != 0) ? "||" : "") << "!i" << lutInpMaps[idx];
                   }
                   else
                   {
                     term = term & ~lut_in(lutInpMaps[idx]);
-                    cout << "&&!i" << lutInpMaps[idx];
+                    if(LogLevel::VERBOSE <= flopoco::get_log_lvl()) cout << "&&!i" << lutInpMaps[idx];
                   }
                 }
                 else
@@ -738,12 +743,12 @@ namespace flopoco
                   if (v == 0)
                   {
                     term = lut_in(lutInpMaps[idx]);
-                    cout << ((t != 0) ? "||" : "") << "i" << lutInpMaps[idx];
+                    if(LogLevel::VERBOSE <= flopoco::get_log_lvl()) cout << ((t != 0) ? "||" : "") << "i" << lutInpMaps[idx];
                   }
                   else
                   {
                     term = term & lut_in(lutInpMaps[idx]);
-                    cout << "&&i" << lutInpMaps[idx];
+                    if(LogLevel::VERBOSE <= flopoco::get_log_lvl()) cout << "&&i" << lutInpMaps[idx];
                   }
                 }
               }
@@ -756,7 +761,7 @@ namespace flopoco
                 lutop_o6 = lutop_o6 | term;
               }
             }
-            cout << endl;
+            if(LogLevel::VERBOSE <= flopoco::get_log_lvl()) cout << endl;
 
 
             lut_init lutop(lutop_o5, lutop_o6);
@@ -764,18 +769,18 @@ namespace flopoco
             Xilinx_LUT6_2 *cur_lut = new Xilinx_LUT6_2(this, target);
             cur_lut->setGeneric("init", lutop.get_hex(), 64);
 
-            for (int d = 0; d < xy_dependency_list.first.size(); d++)
-            {
-              cout << xy_dependency_list.first[d] << ", ";
-            }
-            cout << endl;
-            for (int d = 0; d < xy_dependency_list.second.size(); d++)
-            {
-              cout << xy_dependency_list.second[d] << ", ";
-            }
-            cout << endl;
+            if(LogLevel::VERBOSE <= flopoco::get_log_lvl()) {
+		    for (int d = 0; d < xy_dependency_list.first.size(); d++) {
+			    cout << xy_dependency_list.first[d] << ", ";
+		    }
+		    cout << endl;
+		    for (int d = 0; d < xy_dependency_list.second.size(); d++) {
+			    cout << xy_dependency_list.second[d] << ", ";
+		    }
+		    cout << endl;
+	    }
 
-            int cvars = 0;
+	    int cvars = 0;
             for (; cvars < common_vars.size(); cvars++)
             {
               inPortMap(join("i", cvars), ((common_vars[cvars] - 1 < xy_dependency_list.first.size()) ? join("X", of(xy_dependency_list.first[common_vars[cvars] - 1])) : join("Y", of(
@@ -807,7 +812,7 @@ namespace flopoco
             lutInpMaps[common_vars[cvars] - 1] = cvars;
           }
 
-          cout << "processing single eq " << eq << endl;
+          REPORT(LogLevel::VERBOSE, "processing single eq " << eq);
           for (int t = 0; t < equations[eq].size(); t++)
           {
             lut_op term;
@@ -819,12 +824,12 @@ namespace flopoco
                 if (v == 0)
                 {
                   term = ~lut_in(lutInpMaps[idx]);
-                  cout << ((t != 0) ? "||" : "") << "!i" << lutInpMaps[idx];
+                  if(LogLevel::VERBOSE <= flopoco::get_log_lvl()) cout << ((t != 0) ? "||" : "") << "!i" << lutInpMaps[idx];
                 }
                 else
                 {
                   term = term & ~lut_in(lutInpMaps[idx]);
-                  cout << "&&!i" << lutInpMaps[idx];
+                  if(LogLevel::VERBOSE <= flopoco::get_log_lvl()) cout << "&&!i" << lutInpMaps[idx];
                 }
               }
               else
@@ -832,12 +837,12 @@ namespace flopoco
                 if (v == 0)
                 {
                   term = lut_in(lutInpMaps[idx]);
-                  cout << ((t != 0) ? "||" : "") << "i" << lutInpMaps[idx];
+                  if(LogLevel::VERBOSE <= flopoco::get_log_lvl()) cout << ((t != 0) ? "||" : "") << "i" << lutInpMaps[idx];
                 }
                 else
                 {
                   term = term & lut_in(lutInpMaps[idx]);
-                  cout << "&&i" << lutInpMaps[idx];
+                  if(LogLevel::VERBOSE <= flopoco::get_log_lvl()) cout << "&&i" << lutInpMaps[idx];
                 }
               }
             }
@@ -850,7 +855,7 @@ namespace flopoco
               lutop_o6 = lutop_o6 | term;
             }
           }
-          cout << endl;
+          if(LogLevel::VERBOSE <= flopoco::get_log_lvl()) cout << endl;
 
           lut_init lutop(lutop_o6);
           Xilinx_LUT6 *cur_lut = new Xilinx_LUT6(this, target);
