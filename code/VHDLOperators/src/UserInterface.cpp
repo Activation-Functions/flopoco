@@ -732,6 +732,10 @@ namespace flopoco
 			throw (args[0] +": expecting strictly positive value for " + key + ", got " + val );
 	}
 
+	void UserInterface::setOutputFileName(std::string name)	{
+		outputFileName = name;
+	}
+
 #if 0
 	const int outputToHTML=1;
 	const int outputToConsole=2;

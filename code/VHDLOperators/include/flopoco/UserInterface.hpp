@@ -133,6 +133,8 @@ namespace flopoco
 		std::vector<std::vector<OperatorPtr>>  globalOpListStack;  /**< a stack on which to save globalOpList when you don't want to mess with it */
 		int pipelineActive_;
 		bool allRegistersWithAsyncReset; // too lazy to write setters/getters
+		void setOutputFileName(std::string name);
+
 	private:
 		std::string outputFileName;
 		std::string entityName;
