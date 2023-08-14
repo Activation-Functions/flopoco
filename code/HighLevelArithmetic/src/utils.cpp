@@ -713,6 +713,30 @@ namespace flopoco{
 		return stream.str();
 	}
 
+	string join( std::string id, int n, std::string id2, std::string id3, std::string id4, int n2)
+	{
+		ostringstream stream;
+
+		stream << id << n << id2 << id3 << id4 << n2;
+		return stream.str();
+	}
+
+	string join( std::string id, int n, std::string id2, int n2, std::string id3, int n3, std::string id4)
+	{
+		ostringstream stream;
+
+		stream << id << n << id2 << n2 << id3 << n3 << id4;
+		return stream.str();
+	}
+
+	string join( std::string id, int n, std::string id2, int n2, std::string id3, int n3, std::string id4, int n4, std::string id5)
+	{
+		ostringstream stream;
+
+		stream << id << n << id2 << n2 << id3 << n3 << id4 << n4 << id5;
+		return stream.str();
+	}
+
 	string join( std::string id, std::string id2, int n2, std::string id3)
 	{
 		ostringstream stream;
@@ -730,7 +754,6 @@ namespace flopoco{
 	{
 		return id+id2+id3;
 	}
-
 
 	string range( int left, int right)
 	{

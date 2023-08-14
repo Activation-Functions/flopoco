@@ -355,9 +355,12 @@ namespace flopoco{
 	std::string join( std::string id, std::string sep, int n);
 	std::string join( std::string id1, int n, std::string id2);
 	std::string join( std::string id, int n, std::string id2 , int n2);
+	std::string join( std::string id, std::string id2 , int n2, std::string id3);
 	std::string join( std::string id, int n, std::string id2 , int n2, std::string id3);
 	std::string join( std::string id, int n, std::string id2 , int n2, std::string id3, int n3);
-	std::string join( std::string id, std::string id2 , int n2, std::string id3);
+	std::string join( std::string id, int n, std::string id2, std::string id3, std::string id4, int n2);
+	std::string join( std::string id, int n, std::string id2, int n2, std::string id3, int n3, std::string id4);
+	std::string join( std::string id, int n, std::string id2, int n2, std::string id3, int n3, std::string id4, int n4, std::string id5);
 
 	/** Same for concatenating two ids. Maybe + would do? */
 	std::string join( std::string id, std::string n);
