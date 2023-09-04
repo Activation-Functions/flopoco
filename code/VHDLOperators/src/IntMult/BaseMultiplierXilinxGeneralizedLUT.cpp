@@ -894,22 +894,51 @@ namespace flopoco
 
   OperatorPtr BaseMultiplierXilinxGeneralizedLUT::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface &ui)
   {
-    int wS;
     bool isSignedX, isSignedY;
-    ui.parseStrictlyPositiveInt(args, "wS", &wS);
+    std::string line;
+    ui.parseString(args, "wS", &line);
     ui.parseBoolean(args, "xSigned", &isSignedX);
     ui.parseBoolean(args, "ySigned", &isSignedY);
 
-    return new BaseMultiplierXilinxGeneralizedLUTOp(parentOp, target, isSignedX, isSignedY, {}, {}, {}, {}, 0);
+    std::vector<vector<pair<int,int>>> shapes;
+    std::vector <pair<int,int>> coords;
+    int next;
+    while(0 <= (next = line.find(":"))){
+    	std::string coordinate = line.substr(0, next);
+    	line = line.substr(next+1, line.length());
+    	int x = stoi(coordinate.substr(0, coordinate.find(",")));
+    	int y = stoi(coordinate.substr(coordinate.find(",")+1, coordinate.length()));
+    	coords.push_back(make_pair(x,y));
+    }
+    if(0 < coords.size()) shapes.push_back(coords);
+
+    vector<vector<vector<int>>> shape_coverage;
+    for(int i=0; i < shapes.size(); i++){
+    	std::vector<vector<int>> coverage(shapes[i][0].first,vector<int>(shapes[i][0].second));
+    	for(int j=1; j<shapes[i].size(); j++){
+    		coverage[shapes[i][j].first][shapes[i][j].second] = 1;
+    	}
+    	shape_coverage.push_back(coverage);
+    }
+    BaseMultiplierXilinxGeneralizedLUT *tile =  new BaseMultiplierXilinxGeneralizedLUT(shape_coverage.back());
+    Parametrization parameters = tile->getParametrisation();
+
+    return new BaseMultiplierXilinxGeneralizedLUTOp(parentOp, target, parameters.isSignedMultX(),
+						    parameters.isSignedMultY(),
+						    parameters.getBMC()->getCoverage(),
+						    parameters.getBMC()->getDepList(),
+						    parameters.getBMC()->getEqs(),
+						    parameters.getBMC()->getCombiEqs(),
+						    parameters.getBMC()->getUsedOutputBits());
   }
 
   template<>
   const OperatorDescription<BaseMultiplierXilinxGeneralizedLUT> op_descriptor<BaseMultiplierXilinxGeneralizedLUT> {
     "BaseMultiplierXilinxGeneralizedLUT", // name
-    "Implements a non rectangular LUT multiplier from a set that yields a relatively high efficiency compared to recangular LUT multipliers \n",
+    "Implements a non rectangular LUT multiplier from a set that yields a relatively high efficiency compared to rectangular LUT multipliers \n",
     "BasicInteger", // categories
     "",
-    "wS(int): shape ID;\
+    "wS(string): colon seperated list of x,y coordinates that define the tile, the actual coordinates are preceded by the x,y dimensions of the tile;\
         xSigned(bool)=false: input X can be signed or unsigned;\
         ySigned(bool)=false: input Y can be signed or unsigned;",
     ""};
