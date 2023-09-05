@@ -32,17 +32,22 @@ using namespace std;
 namespace flopoco{
 
 
-	vector<mpz_class>  IntConstDiv::euclideanDivTable(int d, int alpha, int rSize) { 		// machine integer arithmetic should be safe here
+	// Divides X_i by D and packs the result in one mpz
+	// with the remainder in the lower part 
+	vector<mpz_class>  IntConstDiv::euclideanDivTable(int d, int alpha, int rSize) { 		// machine integer arithmetic should be safe for the inputs
 		vector<mpz_class>  result;
 		for (int x=0; x<(d<<alpha); x++){
-			int q = x/d;
-			int r = x%d;
+			mpz_class xsi = x;
+			mpz_class q = xsi/d;
+			mpz_class r = xsi%d;
 			//cerr << mpz_class( (q<<rSize) + r) << ", " ;
-			result.push_back(mpz_class( (q<<rSize) + r) );
+			result.push_back((q<<rSize) + r );
 		}
 		return result;
 	}
-		
+
+
+
 	vector<mpz_class>  IntConstDiv::firstLevelCBLKTable( int d, int alpha, int rSize ) {
 		vector<mpz_class>  result;
 		for (int x=0; x<(1<<alpha); x++) {
@@ -603,7 +608,71 @@ namespace flopoco{
 			}
 		}
 
+		else if (architecture==INTCONSTDIV_TABLE_ADD_ARCHITECTURE){
+			/* /////////////////////// Table and add architecture inspired by Arith 2023////////////////////////////:
+			The core is a decomposition of X in its digits X_i in radix 2^k:
+			X=\sum 2^{ik} X_i
+			Then each 2^{ik} X_i  is divided by d:
+			\forall i   2^{ik} X_i = d.Q_i + R_i
+			This is a tabulation that benefits from the look-up tables of the FPGA: 
+			for an FPGA with 6-input LUTs, for k=6 the Q_i and R_i are read from a table 
+			that efficiently exploits the LUTs.
+			Then X can be rewritten   X = d.(\sum Q_i) + (\sum R_i)
+			so we still have to divide by d the smaller value \sum R_i:
+			\sum R_i = d.Q'_i + R : this Euclidean division can be tabulated, too
+			and finally X = dQ+R  with  Q = (\sum Q_i) + Q'_i 
+			The radix-2^k decomposition starts at bit intlog2(d): 
+			for the lower chunk of intlog2(d)-1 bits, the quotient is zero and the remainder is Xi
+			*/
 			
+			alpha=getTarget()->lutInputs(); // do not use the value of linarch!
+			string ri, xi, ini, outi, qi;
+      vector<int> QiSize;
+			int i=0;
+			int x0Size=intlog2(d)-1;
+			xi = join("x", i);
+			vhdl << tab << declare(xi, x0Size, true) << " <= " <<  "X" << range(x0Size-1, 0) << ";" << endl;
+			// no need to tabulate for this lower chunk
+			int chunkLSB=x0Size;
+			while (chunkLSB<wIn) {
+				i++;
+				xi = join("x", i);
+				outi = join("out", i);
+				qi = join("q", i);
+				ri = join("r", i);
+				int chunkMSB = min(chunkLSB+alpha,wIn)-1;
+				cerr << "_____________" << i << " chunkLSB=" << chunkLSB  <<  "  chunkMSB=" <<chunkMSB  << endl;
+				int chunkSize = chunkMSB-chunkLSB+1;
+				vhdl << tab << declare(xi, chunkSize, true) << " <= " <<  "X" << range(chunkMSB, chunkLSB) << ";" << endl;
+
+				// building the table content
+				vector<mpz_class>  result;
+				cerr << endl;
+				for (int x=0; x<(1<<chunkSize); x++){
+					mpz_class xsi = x;
+					xsi = xsi << chunkLSB;
+					mpz_class q = xsi/d;
+					mpz_class r = xsi%d;
+					// cerr << "(" << q << "," << r << ")="  << mpz_class( (q<<rSize) + r) << ", " ;
+					result.push_back((q<<rSize) + r );
+				}
+				int tableOutSize=intlog2(result[(1<<chunkSize)-1]);
+				TableOperator::newUniqueInstance(this, xi, outi, result, join("DivTable",i), chunkSize, tableOutSize);
+				vhdl << tab << declare(qi, tableOutSize-rSize, true) << " <= " <<  "outi" << range(tableOutSize-1, rSize) << ";" << endl;
+				vhdl << tab << declare(ri, rSize, true) << " <= " <<  "outi" << range(rSize-1, 0) << ";" << endl;
+
+				// Now compute \sum R_i + X_0 in a first bit heap, and in parallel \sum Q_i in a second bit heap
+				// then divide the first sum by D and update the second sum 
+
+				// prepare for next iteration
+				chunkLSB=chunkMSB+1;
+			}
+
+			
+		}			
+
+
+
 		else{
 			THROWERROR("arch=" << architecture << " not supported");
 		}
@@ -649,7 +718,7 @@ namespace flopoco{
 					{ // test various input widths
 						for(int d=3; d<=17; d+=2) 
 							{ // test various divisors
-								for(int arch=0; arch <2; arch++)
+								for(int arch=0; arch <3; arch++)
 #else // (for debugging)
 				for(int wIn=8; wIn<9; wIn+=1) 
 					{ // test various input widths
@@ -705,14 +774,14 @@ namespace flopoco{
 	    "", // seeAlso
 	    "wIn(int): input size in bits; \
 											 d(intlist): integer to divide by. Either a small integer, or a colon-separated list of small integers, in which case a composite divider by the product is built;  \
-											 arch(int)=0: architecture used -- 0 for linear-time, 1 for log-time, 2 for multiply-and-add by the reciprocal; \
+											 arch(int)=0: architecture used -- 0 for linear-time, 1 for log-time, 2 for multiply-and-add by the reciprocal, 3 for table-and-addition; \
 											 computeQuotient(bool)=true: if true, the architecture outputs the quotient; \
 											 computeRemainder(bool)=true: if true, the architecture outputs the remainder; \
 											 alpha(int)=-1: Algorithm uses radix 2^alpha. -1 choses a sensible default.",
 	    "This operator is described, for arch=0, in <a "
 	    "href=\"bib/flopoco.html#dedinechin:2012:ensl-00642145:1\">this "
-	    "article</a>, and for arch=1, in <a "
-	    "href=\"bib/flopoco.html#UgurdagEtAl2016\">this article</a>."
+	    "article</a>, for arch=1, in <a "
+	    "href=\"bib/flopoco.html#UgurdagEtAl2016\">this article</a>, for arch=2 in TODO article, and for arch=3 in the TODO-Arith-2023 article."
 
 	};
 }
