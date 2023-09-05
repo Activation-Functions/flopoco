@@ -25,6 +25,7 @@
 #define INTCONSTDIV_LINEAR_ARCHITECTURE 0      // from the ARC 2012 paper by Dinechin Didier
 #define INTCONSTDIV_LOGARITHMIC_ARCHITECTURE 1 // from the 2015 Arith paper by Udurgag et al
 #define INTCONSTDIV_RECIPROCAL_ARCHITECTURE 2 // From the 2102 TCAS paper by Drane et al
+#define INTCONSTDIV_TABLE_ADD_ARCHITECTURE 3 // From the 2102 TCAS paper by Drane et al
 namespace flopoco{
 
 
