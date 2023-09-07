@@ -703,7 +703,8 @@ namespace flopoco{
 
 			vhdl << tab << declare("FinalR", rSize+1, true) << " <= " <<  "('0' & LastR) + ('0' & RtildeL);" << endl;
 			vhdl << tab << declare("SubR", rSize+1, true) << " <= FinalR-\"" << unsignedBinary(d,rSize+1) << "\";" << endl;
-			vhdl << tab << declare("Rupdate") << " <= '1' when  FinalR >= \"" << unsignedBinary(d,rSize+1) << "\" else '0';" << endl;
+			//vhdl << tab << declare("Rupdate") << " <= '1' when  FinalR >= \"" << unsignedBinary(d,rSize+1) << "\" else '0';" << endl;
+			vhdl << tab << declare("Rupdate") << " <= not SubR" << of(rSize) << ";" << endl;
 			vhdl << tab << declare("FinalFinalR", rSize, true) << "<= FinalR" << range(rSize-1,0) << " when Rupdate='0' else SubR" << range(rSize-1,0) << ";" << endl;
 
 
@@ -711,7 +712,7 @@ namespace flopoco{
 			
 			// Finally the last bit heap for quotients
 			BitHeap *qBH = new BitHeap(this, qSize );
-			for(i=1; i<numberOfChunks; i++) {
+			for(i=1; i<=numberOfChunks; i++) {
 				qBH->addSignal(join("q",i));
 			}
 			qBH->addSignal("LastQ");			
