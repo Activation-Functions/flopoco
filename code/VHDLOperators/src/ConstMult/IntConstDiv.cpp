@@ -658,16 +658,71 @@ namespace flopoco{
 				}
 				int tableOutSize=intlog2(result[(1<<chunkSize)-1]);
 				TableOperator::newUniqueInstance(this, xi, outi, result, join("DivTable",i), chunkSize, tableOutSize);
-				vhdl << tab << declare(qi, tableOutSize-rSize, true) << " <= " <<  "outi" << range(tableOutSize-1, rSize) << ";" << endl;
-				vhdl << tab << declare(ri, rSize, true) << " <= " <<  "outi" << range(rSize-1, 0) << ";" << endl;
-
-				// Now compute \sum R_i + X_0 in a first bit heap, and in parallel \sum Q_i in a second bit heap
-				// then divide the first sum by D and update the second sum 
-
+				vhdl << tab << declare(qi, tableOutSize-rSize, true) << " <= " <<  outi << range(tableOutSize-1, rSize) << ";" << endl;
+				vhdl << tab << declare(ri, rSize, true) << " <= " <<  outi << range(rSize-1, 0) << ";" << endl;
 				// prepare for next iteration
 				chunkLSB=chunkMSB+1;
 			}
+			int numberOfChunks = i;
 
+				
+
+			// Now compute \sum R_i + X_0 in a first bit heap, and in parallel \sum Q_i in a second bit heap
+			// then divide the first sum by D and update the second sum 
+
+			int rTildeSize = intlog2(numberOfChunks*(d-1));
+			BitHeap *rBH = new BitHeap(this, rTildeSize);
+			rBH->addSignal("x0"); // x0 is the remainder of the leading bits
+			for(i=1; i<=numberOfChunks; i++) {
+				rBH->addSignal(join("r",i));
+			}
+			rBH->startCompression();
+			vhdl << tab << declare("Rtilde", rTildeSize, true) << " <= " <<  rBH->getSumName() << ";" << endl;
+
+			// Still need to compute the Euclidean division of Rtilde
+			// Again the last bits are already part of the remainder, so for large D it is cheaper to
+			// decompose Rtilde into two
+			vhdl << tab << declare("RtildeH", rTildeSize-x0Size, true) << " <= " <<  "Rtilde" << range(rTildeSize-1, x0Size) << ";" << endl;
+			vhdl << tab << declare("RtildeL", x0Size, true) << " <= " <<  "Rtilde" << range(x0Size-1, 0) << ";" << endl;
+
+			// building the table content
+			vector<mpz_class>  result;
+			int tableInSize = rTildeSize-x0Size;
+			for (int x=0; x<(1<<tableInSize); x++){
+					mpz_class xsi = x;
+					xsi = xsi << x0Size;
+					mpz_class q = xsi/d;
+					mpz_class r = xsi%d;
+					// cerr << "(" << q << "," << r << ")="  << mpz_class( (q<<rSize) + r) << ", " ;
+					result.push_back((q<<rSize) + r );
+				}
+			int tableOutSize=intlog2(result[(1<<tableInSize)-1]);
+			TableOperator::newUniqueInstance(this, "RtildeH", "LastQR", result, "LastDivTable", tableInSize, tableOutSize);
+			vhdl << tab << declare("LastQ", tableOutSize-rSize, true) << " <= " <<  "LastQR" << range(tableOutSize-1, rSize) << ";" << endl;
+			vhdl << tab << declare("LastR", rSize, true) << " <= " <<  "LastQR" << range(rSize-1, 0) << ";" << endl;
+
+			vhdl << tab << declare("FinalR", rSize+1, true) << " <= " <<  "('0' & LastR) + ('0' & RtildeL);" << endl;
+			vhdl << tab << declare("SubR", rSize+1, true) << " <= FinalR-\"" << unsignedBinary(d,rSize+1) << "\";" << endl;
+			vhdl << tab << declare("Rupdate") << " <= '1' when  FinalR >= \"" << unsignedBinary(d,rSize+1) << "\" else '0';" << endl;
+			vhdl << tab << declare("FinalFinalR", rSize, true) << "<= FinalR" << range(rSize-1,0) << " when Rupdate='0' else SubR" << range(rSize-1,0) << ";" << endl;
+
+
+
+			
+			// Finally the last bit heap for quotients
+			BitHeap *qBH = new BitHeap(this, qSize );
+			for(i=1; i<numberOfChunks; i++) {
+				qBH->addSignal(join("q",i));
+			}
+			qBH->addSignal("LastQ");			
+			qBH->addBit("Rupdate",0);			
+			
+			qBH->startCompression(); 
+
+			// finally, output R
+			vhdl << tab << "R <= FinalFinalR;" << endl;
+			// finally, output Q
+			vhdl << tab << "Q <= "<< qBH->getSumName() << ";" << endl;
 			
 		}			
 
