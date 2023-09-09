@@ -670,7 +670,8 @@ namespace flopoco{
 			// Now compute \sum R_i + X_0 in a first bit heap, and in parallel \sum Q_i in a second bit heap
 			// then divide the first sum by D and update the second sum 
 
-			int rTildeSize = intlog2(numberOfChunks*(d-1));
+			//REPORT(LogLevel::MESSAGE, "numberOfChunks=" << numberOfChunks);
+			int rTildeSize = intlog2((numberOfChunks+1)*(d-1));
 			BitHeap *rBH = new BitHeap(this, rTildeSize);
 			rBH->addSignal("x0"); // x0 is the remainder of the leading bits
 			for(i=1; i<=numberOfChunks; i++) {
@@ -693,10 +694,10 @@ namespace flopoco{
 					xsi = xsi << x0Size;
 					mpz_class q = xsi/d;
 					mpz_class r = xsi%d;
-					// cerr << "(" << q << "," << r << ")="  << mpz_class( (q<<rSize) + r) << ", " ;
+					cerr << "d=" << d << "  x=" << x << "  xsi= " << xsi << "  (q,r) = (" << q << "," << r << ")="  << mpz_class( (q<<rSize) + r) << ", " ;
 					result.push_back((q<<rSize) + r );
 				}
-			int tableOutSize=intlog2(result[(1<<tableInSize)-1]);
+			int tableOutSize=max(rSize,intlog2(result[(1<<tableInSize)-1]));
 			TableOperator::newUniqueInstance(this, "RtildeH", "LastQR", result, "LastDivTable", tableInSize, tableOutSize);
 			vhdl << tab << declare("LastQ", tableOutSize-rSize, true) << " <= " <<  "LastQR" << range(tableOutSize-1, rSize) << ";" << endl;
 			vhdl << tab << declare("LastR", rSize, true) << " <= " <<  "LastQR" << range(rSize-1, 0) << ";" << endl;
