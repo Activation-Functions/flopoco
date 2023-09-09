@@ -252,10 +252,6 @@ namespace flopoco{
 
 		//		if((architecture==INTCONSTDIV_LINEAR_ARCHITECTURE) || (architecture==INTCONSTDIV_LOGARITHMIC_ARCHITECTURE)) {
 		rSize = intlog2(d-1);
-
-		if(rSize>4) {
-			REPORT(LogLevel::MESSAGE, "WARNING: This operator is efficient for small constants. " << d << " is quite large. Attempting anyway.");
-		}
 		
 			
 		if(alpha==-1){
@@ -347,7 +343,11 @@ namespace flopoco{
 		if(architecture==INTCONSTDIV_LINEAR_ARCHITECTURE) {
 			//////////////////////////////////////// Linear architecture //////////////////////////////////:
 
-			vector<mpz_class> tableContent = euclideanDivTable(d, alpha, rSize);
+		if(rSize>4) {
+			REPORT(LogLevel::MESSAGE, "WARNING: This operator is efficient for small constants. " << d << " is quite large. Attempting anyway.");
+		}
+
+		vector<mpz_class> tableContent = euclideanDivTable(d, alpha, rSize);
 			auto* table = new TableOperator(this, target, tableContent, "", alpha+rSize, alpha+rSize , true);
 			table->setNameWithFreqAndUID("EuclideanDivTable_d" + to_string(d) + "_alpha"+ to_string(alpha));
 			table->setShared();
@@ -625,7 +625,7 @@ namespace flopoco{
 			for the lower chunk of intlog2(d)-1 bits, the quotient is zero and the remainder is Xi
 			*/
 			
-			alpha=getTarget()->lutInputs(); // do not use the value of linarch!
+			alpha = getTarget()->lutInputs(); // do not use the value of linarch!
 			string ri, xi, ini, outi, qi;
       vector<int> QiSize;
 			int i=0;
@@ -641,13 +641,12 @@ namespace flopoco{
 				qi = join("q", i);
 				ri = join("r", i);
 				int chunkMSB = min(chunkLSB+alpha,wIn)-1;
-				cerr << "_____________" << i << " chunkLSB=" << chunkLSB  <<  "  chunkMSB=" <<chunkMSB  << endl;
+				//cerr << "_____________" << i << " chunkLSB=" << chunkLSB  <<  "  chunkMSB=" <<chunkMSB  << endl;
 				int chunkSize = chunkMSB-chunkLSB+1;
 				vhdl << tab << declare(xi, chunkSize, true) << " <= " <<  "X" << range(chunkMSB, chunkLSB) << ";" << endl;
 
 				// building the table content
 				vector<mpz_class>  result;
-				cerr << endl;
 				for (int x=0; x<(1<<chunkSize); x++){
 					mpz_class xsi = x;
 					xsi = xsi << chunkLSB;
@@ -694,7 +693,7 @@ namespace flopoco{
 					xsi = xsi << x0Size;
 					mpz_class q = xsi/d;
 					mpz_class r = xsi%d;
-					cerr << "d=" << d << "  x=" << x << "  xsi= " << xsi << "  (q,r) = (" << q << "," << r << ")="  << mpz_class( (q<<rSize) + r) << ", " ;
+					// cerr << "d=" << d << "  x=" << x << "  xsi= " << xsi << "  (q,r) = (" << q << "," << r << ")="  << mpz_class( (q<<rSize) + r) << ", " ;
 					result.push_back((q<<rSize) + r );
 				}
 			int tableOutSize=max(rSize,intlog2(result[(1<<tableInSize)-1]));
