@@ -631,6 +631,7 @@ namespace flopoco{
       vector<int> QiSize;
 			int i=0;
 			int x0Size=intlog2(d)-1;
+			REPORT(LogLevel::DETAIL, "chunk " <<0 << " of size " << x0Size);
 			xi = join("x", i);
 			vhdl << tab << declare(xi, x0Size, true) << " <= " <<  "X" << range(x0Size-1, 0) << ";" << endl;
 			// no need to tabulate for this lower chunk
@@ -644,6 +645,8 @@ namespace flopoco{
 				int chunkMSB = min(chunkLSB+alpha,wIn)-1;
 				//cerr << "_____________" << i << " chunkLSB=" << chunkLSB  <<  "  chunkMSB=" <<chunkMSB  << endl;
 				int chunkSize = chunkMSB-chunkLSB+1;
+				REPORT(LogLevel::DETAIL, "chunk " <<i << " of size " << chunkSize);
+				
 				vhdl << tab << declare(xi, chunkSize, true) << " <= " <<  "X" << range(chunkMSB, chunkLSB) << ";" << endl;
 
 				// building the table content
@@ -680,37 +683,50 @@ namespace flopoco{
 			rBH->startCompression();
 			vhdl << tab << declare("Rtilde", rTildeSize, true) << " <= " <<  rBH->getSumName() << ";" << endl;
 
+			int tableInSize, tableInShift;
 			// Still need to compute the Euclidean division of Rtilde
-			// Again the last bits are already part of the remainder, so for large D it is cheaper to
-			// decompose Rtilde into two
-			vhdl << tab << declare("RtildeH", rTildeSize-x0Size, true) << " <= " <<  "Rtilde" << range(rTildeSize-1, x0Size) << ";" << endl;
-			vhdl << tab << declare("RtildeL", x0Size, true) << " <= " <<  "Rtilde" << range(x0Size-1, 0) << ";" << endl;
-
-			// building the table content
+			if(rTildeSize <= alpha+1) { // a single table will suffice
+				tableInSize = rTildeSize;
+				tableInShift=0;
+				vhdl << tab << declare("RtildeH", tableInSize, true) << " <= " <<  "Rtilde;" << endl;
+		}
+			else {//split it again into low and high part
+				tableInSize = rTildeSize-x0Size;
+				tableInShift=x0Size;
+				// Again the last bits are already part of the remainder, so for large D it is cheaper to
+				// decompose Rtilde into two
+				vhdl << tab << declare("RtildeH", tableInSize, true) << " <= " <<  "Rtilde" << range(rTildeSize-1, x0Size) << ";" << endl;
+				vhdl << tab << declare("RtildeL", x0Size, true) << " <= " <<  "Rtilde" << range(x0Size-1, 0) << ";" << endl;
+			}
+				// building the table content
 			vector<mpz_class>  result;
-			int tableInSize = rTildeSize-x0Size;
 			for (int x=0; x<(1<<tableInSize); x++){
-					mpz_class xsi = x;
-					xsi = xsi << x0Size;
-					mpz_class q = xsi/d;
-					mpz_class r = xsi%d;
-					// cerr << "d=" << d << "  x=" << x << "  xsi= " << xsi << "  (q,r) = (" << q << "," << r << ")="  << mpz_class( (q<<rSize) + r) << ", " ;
-					result.push_back((q<<rSize) + r );
-				}
+				mpz_class xsi = x;
+				xsi = xsi << tableInShift;
+				mpz_class q = xsi/d;
+				mpz_class r = xsi%d;
+				// cerr << "d=" << d << "  x=" << x << "  xsi= " << xsi << "  (q,r) = (" << q << "," << r << ")="  << mpz_class( (q<<rSize) + r) << ", " ;
+				result.push_back((q<<rSize) + r );
+			}
 			int tableOutSize=max(rSize,intlog2(result[(1<<tableInSize)-1]));
 			TableOperator::newUniqueInstance(this, "RtildeH", "LastQR", result, "LastDivTable", tableInSize, tableOutSize);
 			vhdl << tab << declare("LastQ", tableOutSize-rSize, true) << " <= " <<  "LastQR" << range(tableOutSize-1, rSize) << ";" << endl;
 			vhdl << tab << declare("LastR", rSize, true) << " <= " <<  "LastQR" << range(rSize-1, 0) << ";" << endl;
 
-			vhdl << tab << declare("FinalR", rSize+1, true) << " <= " <<  "('0' & LastR) + ('0' & RtildeL);" << endl;
-			vhdl << tab << declare("SubR", rSize+1, true) << " <= FinalR-\"" << unsignedBinary(d,rSize+1) << "\";" << endl;
-			//vhdl << tab << declare("Rupdate") << " <= '1' when  FinalR >= \"" << unsignedBinary(d,rSize+1) << "\" else '0';" << endl;
-			vhdl << tab << declare("Rupdate") << " <= not SubR" << of(rSize) << ";" << endl;
-
-			if(computeRemainder) { // Little to save here if we want to compute only the quotient 
-				vhdl << tab << declare("FinalFinalR", rSize, true) << "<= FinalR" << range(rSize-1,0) << " when Rupdate='0' else SubR" << range(rSize-1,0) << ";" << endl;
-			// finally, output R
-			vhdl << tab << "R <= FinalFinalR;" << endl;
+			if(rTildeSize <= alpha+1) { // we do have the final remainder
+				vhdl << tab << declare("FinalFinalR", rSize, true) << "<= LastR;" << endl;			}
+			else {
+				vhdl << tab << declare("FinalR", rSize+1, true) << " <= " <<  "('0' & LastR) + ('0' & RtildeL);" << endl;
+				vhdl << tab << declare("SubR", rSize+1, true) << " <= FinalR-\"" << unsignedBinary(d,rSize+1) << "\";" << endl;
+				vhdl << tab << declare("Rupdate") << " <= not SubR" << of(rSize) << ";" << endl;
+				
+				if(computeRemainder) { // Little to save here if we want to compute only the quotient 
+					vhdl << tab << declare("FinalFinalR", rSize, true) << "<= FinalR" << range(rSize-1,0) << " when Rupdate='0' else SubR" << range(rSize-1,0) << ";" << endl;
+				}
+			}
+				// finally, output R
+			if(computeRemainder) {
+				vhdl << tab << "R <= FinalFinalR;" << endl;
 			}
 
 
@@ -721,7 +737,9 @@ namespace flopoco{
 					qBH->addSignal(join("q",i));
 				}
 				qBH->addSignal("LastQ");			
-				qBH->addBit("Rupdate",0);			
+				if(tableInShift>0) {
+					qBH->addBit("Rupdate",0);
+				}
 				
 				qBH->startCompression(); 
 
