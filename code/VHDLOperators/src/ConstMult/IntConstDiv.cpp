@@ -264,7 +264,7 @@ namespace flopoco{
 					}
 			}
 			else {
-#if 0 // DEBUG IN HEXA
+#if 0 // FOR DEBUG IN HEXA
 				alpha=4;
 #else
 				alpha = getTarget()->lutInputs();
@@ -272,7 +272,6 @@ namespace flopoco{
 			}
 		}
 			
-
 		qSize = intlog2(  ((mpz_class(1)<<wIn)-1)/d  );
  
 		
@@ -343,10 +342,10 @@ namespace flopoco{
 		if(architecture==INTCONSTDIV_LINEAR_ARCHITECTURE) {
 			//////////////////////////////////////// Linear architecture //////////////////////////////////:
 
-		if(rSize>4) {
-			REPORT(LogLevel::MESSAGE, "WARNING: This operator is efficient for small constants. " << d << " is quite large. Attempting anyway.");
-		}
-
+			if(rSize>4) {
+				REPORT(LogLevel::MESSAGE, "WARNING: This operator is efficient for small constants. " << d << " is quite large. Attempting anyway.");
+			}
+			
 		vector<mpz_class> tableContent = euclideanDivTable(d, alpha, rSize);
 			auto* table = new TableOperator(this, target, tableContent, "", alpha+rSize, alpha+rSize , true);
 			table->setNameWithFreqAndUID("EuclideanDivTable_d" + to_string(d) + "_alpha"+ to_string(alpha));
@@ -608,6 +607,9 @@ namespace flopoco{
 			}
 		}
 
+
+
+
 		else if (architecture==INTCONSTDIV_TABLE_ADD_ARCHITECTURE){
 			/* /////////////////////// Table and add architecture inspired by Arith 2023////////////////////////////:
 			The core is a decomposition of X in its digits X_i in radix 2^k:
@@ -625,7 +627,6 @@ namespace flopoco{
 			for the lower chunk of intlog2(d)-1 bits, the quotient is zero and the remainder is Xi
 			*/
 			
-			alpha = getTarget()->lutInputs(); // do not use the value of linarch!
 			string ri, xi, ini, outi, qi;
       vector<int> QiSize;
 			int i=0;
@@ -662,7 +663,7 @@ namespace flopoco{
 				// prepare for next iteration
 				chunkLSB=chunkMSB+1;
 			}
-			int numberOfChunks = i;
+			int numberOfChunks = i+1; 
 
 				
 
@@ -670,10 +671,10 @@ namespace flopoco{
 			// then divide the first sum by D and update the second sum 
 
 			//REPORT(LogLevel::MESSAGE, "numberOfChunks=" << numberOfChunks);
-			int rTildeSize = intlog2((numberOfChunks+1)*(d-1));
+			int rTildeSize = intlog2(numberOfChunks*(d-1));
 			BitHeap *rBH = new BitHeap(this, rTildeSize);
 			rBH->addSignal("x0"); // x0 is the remainder of the leading bits
-			for(i=1; i<=numberOfChunks; i++) {
+			for(i=1; i<numberOfChunks; i++) {
 				rBH->addSignal(join("r",i));
 			}
 			rBH->startCompression();
@@ -705,26 +706,28 @@ namespace flopoco{
 			vhdl << tab << declare("SubR", rSize+1, true) << " <= FinalR-\"" << unsignedBinary(d,rSize+1) << "\";" << endl;
 			//vhdl << tab << declare("Rupdate") << " <= '1' when  FinalR >= \"" << unsignedBinary(d,rSize+1) << "\" else '0';" << endl;
 			vhdl << tab << declare("Rupdate") << " <= not SubR" << of(rSize) << ";" << endl;
-			vhdl << tab << declare("FinalFinalR", rSize, true) << "<= FinalR" << range(rSize-1,0) << " when Rupdate='0' else SubR" << range(rSize-1,0) << ";" << endl;
 
-
-
-			
-			// Finally the last bit heap for quotients
-			BitHeap *qBH = new BitHeap(this, qSize );
-			for(i=1; i<=numberOfChunks; i++) {
-				qBH->addSignal(join("q",i));
-			}
-			qBH->addSignal("LastQ");			
-			qBH->addBit("Rupdate",0);			
-			
-			qBH->startCompression(); 
-
+			if(computeRemainder) { // Little to save here if we want to compute only the quotient 
+				vhdl << tab << declare("FinalFinalR", rSize, true) << "<= FinalR" << range(rSize-1,0) << " when Rupdate='0' else SubR" << range(rSize-1,0) << ";" << endl;
 			// finally, output R
 			vhdl << tab << "R <= FinalFinalR;" << endl;
-			// finally, output Q
-			vhdl << tab << "Q <= "<< qBH->getSumName() << ";" << endl;
-			
+			}
+
+
+			if(computeQuotient){
+				// Finally the last bit heap for quotients
+				BitHeap *qBH = new BitHeap(this, qSize );
+				for(i=1; i<numberOfChunks; i++) {
+					qBH->addSignal(join("q",i));
+				}
+				qBH->addSignal("LastQ");			
+				qBH->addBit("Rupdate",0);			
+				
+				qBH->startCompression(); 
+
+				// and output Q
+				vhdl << tab << "Q <= "<< qBH->getSumName() << ";" << endl;
+			}
 		}			
 
 
@@ -765,8 +768,23 @@ namespace flopoco{
 		// the static list of mandatory tests
 		TestList testStateList;
 		vector<pair<string,string>> paramList;
-		
-    if(testLevel >= TestLevel::SUBSTANTIAL)
+    if(testLevel == TestLevel::QUICK) {
+			vector<int> constantsToTest={3,241};
+			int wIn=24;
+			for(auto d: constantsToTest){
+				for(int arch=0; arch <4; arch++){
+					if(d==241 && arch==1) { // first it doesn't scale, second the VHDL is wrong
+						break;
+					}
+					paramList.push_back(make_pair("wIn", to_string(wIn) ));	
+					paramList.push_back(make_pair("d", to_string(d) ));	
+					paramList.push_back(make_pair("arch", to_string(arch) ));
+					paramList.push_back(make_pair("frequency", to_string(0) )); // because the testbench currently doesn't support unsynchronized outputs 
+					testStateList.push_back(paramList);
+				}
+			}
+		}		
+    else if(testLevel >= TestLevel::SUBSTANTIAL)
     { // The substantial unit tests
 
 #if 1
@@ -774,7 +792,7 @@ namespace flopoco{
 					{ // test various input widths
 						for(int d=3; d<=17; d+=2) 
 							{ // test various divisors
-								for(int arch=0; arch <3; arch++)
+								for(int arch=0; arch <4; arch++)
 #else // (for debugging)
 				for(int wIn=8; wIn<9; wIn+=1) 
 					{ // test various input widths
@@ -786,7 +804,7 @@ namespace flopoco{
 										paramList.push_back(make_pair("wIn", to_string(wIn) ));	
 										paramList.push_back(make_pair("d", to_string(d) ));	
 										paramList.push_back(make_pair("arch", to_string(arch) ));
-										paramList.push_back(make_pair("frequency", to_string(100) )); // because the testbench currently doesn't support unsynchronized inputs 
+										paramList.push_back(make_pair("frequency", to_string(100) )); // because the testbench currently doesn't support unsynchronized outputs 
 										testStateList.push_back(paramList);
 										paramList.clear();
 									}
