@@ -325,7 +325,9 @@ namespace flopoco {
     int wAddOut = computeWordSize(node->output_factor, wIn);
     vector<int> wAddIn(node->inputs.size());
     for(int i=0; i < node->inputs.size(); i++)
+    {
       wAddIn[i] = computeWordSize(node->inputs[i]->output_factor, wIn);
+    }
 
     string signalNameOut = generateSignalName(node->output_factor,node->stage);
     declare(signalNameOut,wAddOut); //output signal of the adder equals signalName
@@ -489,7 +491,15 @@ namespace flopoco {
     }
     REPORT(DETAIL,"Max. MSB position found at " << wMaxInclShift << ", sign extending signals");
 
-    int wAdd = computeWordSize(node->output_factor, wIn) - forwardedLSBs;
+
+    int wAddInMax=0;
+    for(int i=0; i < node->inputs.size(); i++)
+    {
+      wAddInMax = wAddIn[i] > wAddInMax ? wAddIn[i] : wAddInMax; //store max input word size for later
+    }
+
+    int wAdd = wAddOut - forwardedLSBs;
+    if(wAddInMax > wAdd) wAdd = wAddInMax; //a seldom case but may happen that input word size is larger than output word size
 
     int rightShift=0;
     for(int i=0; i < node->inputs.size(); i++)
@@ -531,9 +541,9 @@ namespace flopoco {
     }
 
     //Step 4: Perform addition
-    if(getTarget()->plainVHDL())
+//    if(getTarget()->plainVHDL())
     {
-      vhdl << tab << declare(signalNameOut + "_MSBs",wAdd) << " <= std_logic_vector(";
+      vhdl << tab << declare(signalNameOut + "_MSBs",wAddOut - forwardedLSBs) << " <= std_logic_vector(resize(";
       for(int i=0; i < node->inputs.size(); i++)
       {
         string conversionFunction;
@@ -544,12 +554,16 @@ namespace flopoco {
 
         vhdl << (node->input_is_negative[i] ? "-" : (i == 0 ? "" : "+")) << conversionFunction << "(" << signalNameIn[i] + "_shifted" << ")";
       }
-      vhdl << ");" << endl;
+      vhdl << "," << wAddOut - forwardedLSBs << "));" << endl;
     }
+/*
+ *  (otherwise autotest will not work ...)
+ *
     else
     {
-      THROWERROR("Target specific optimization not complete yes, use plainVHDL=1 instead");
+      THROWERROR("Target specific optimization not complete yet, use plainVHDL=1 instead");
     }
+*/
     //Step 5: Merge results, perform right shift if necessary
     vhdl << tab << signalNameOut << " <= ";
     vhdl << signalNameOut << "_MSBs";
@@ -957,7 +971,7 @@ namespace flopoco {
 		graphsUnsigned.push_back("{{'O',[6],3,[3],2,1},{'O',[10],3,[5],1,1},{'A',[3],2,[1],0,-1,[5],1,-1},{'A',[5],1,[1],0,2,[1],0,0}}"); //
 
 		//SCM by 1025 which can be implemented without addition when wIn<10 bits:
-		graphsUnsigned.push_back("{{'A',[1025],1,[1],0,0,[1],0,10},{'O',[2025],1,[1025],1,0}}");
+		graphsUnsigned.push_back("{{'A',[1025],1,[1],0,0,[1],0,10},{'O',[1025],1,[1025],1,0}}");
 
 		//SCM by 3073 using one ternary adder where one argument can be forwarded to the output when wIn<10 bits:
 		graphsUnsigned.push_back("{{'A',[3073],1,[1],0,0,[1],0,10,[1],0,11},{'O',[3073],1,[3073],1,0}}");
@@ -984,7 +998,7 @@ namespace flopoco {
      * ./pag_split "{{'A',[5],1,[1],0,0,[1],0,2},{'A',[9],1,[1],0,0,[1],0,3},{'O',[5],1,[5],1,0},{'O',[9],1,[9],1,0}}" "5;9" --pag_fusion_input
      * ./pag_fusion --if pag_fusion_input.txt
      */
-    graphsUnsigned.push_back("{{'R',[1;1],1,[1;1],0},{'M',[1;2],1,[1;1],0,[0;1]},{'A',[5;9],2,[1;1],1,0,[1;2],1,2}}");
+    graphsUnsigned.push_back("{{'R',[1;1],1,[1;1],0},{'M',[1;2],1,[1;1],0,[0;1]},{'A',[5;9],2,[1;1],1,0,[1;2],1,2},{'O',[5;9],2,[5;9],2}}");
 
 #ifdef RMCM_SUPPORT
 
