@@ -318,10 +318,25 @@ namespace flopoco {
     vhdl << tab << declare(name, result_word_size) << " <= " << generateSignalName(node->input->output_factor, node->stage - 1) << ";" << endl;
   }
 
+  void IntConstMultShiftAddNew::generateConfAdderSubtractorNode(PAGSuite::conf_adder_subtractor_node_t* node)
+  {
+    generateAdderSubtractorNode(node);
+    //THROWERROR("error, not implemented yet, sorry");
+  }
+
   void IntConstMultShiftAddNew::generateAdderSubtractorNode(PAGSuite::adder_subtractor_node_t* node)
   {
     //The following steps are performed
-    //0: Determine constants: input word sizes of arguments X, Y and Z, output word size
+    //0: Determine constants: configurability, input word sizes of arguments X, Y and Z, output word size
+
+    bool isConfigurableAddSub=false;
+    conf_adder_subtractor_node_t* cnode = nullptr; //just for easier access
+    if(is_a<conf_adder_subtractor_node_t>(*node))
+    {
+      isConfigurableAddSub=true;
+      cnode = ((conf_adder_subtractor_node_t*) node);
+    }
+
     int wAddOut = computeWordSize(node->output_factor, wIn);
     vector<int> wAddIn(node->inputs.size());
     for(int i=0; i < node->inputs.size(); i++)
@@ -335,31 +350,86 @@ namespace flopoco {
     for(int i=0; i < node->inputs.size(); i++)
     {
       signalNameIn[i] = signalNameOut + "_in" + to_string(i);
-      vhdl << tab << declare(signalNameIn[i],wAddIn[i]) << " <= " << generateSignalName(node->inputs[i]->output_factor,node->inputs[i]->stage) << ";" << endl;
+
+      vhdl << tab << declare(signalNameIn[i], wAddIn[i]) << " <= ";
+      if(!isConfigurableAddSub)
+      {
+        //the simple add/sub with static signs
+        vhdl << generateSignalName(node->inputs[i]->output_factor, node->inputs[i]->stage) << ";" << endl;
+      }
+      else
+      {
+        //for configurable add/sub, negate the input (or not) already here depending on the configuration
+        for(int c=0; c < cnode->input_is_negative.size(); c++)
+        {
+          vhdl << "std_logic_vector(" << (cnode->input_is_negative[c][i] ? "-" : "" ) << "signed(" << generateSignalName(node->inputs[i]->output_factor, node->inputs[i]->stage) << "))";
+          if(c != cnode->input_is_negative.size()-1)
+          {
+            vhdl << " when " << generateSelectName() << "=\"" << dec2binstr(c) << "\"" << " else ";
+          }
+          else
+          {
+            vhdl << ";" << endl;
+          }
+        }
+        //X_int <= std_logic_vector(-signed(X)) when negX='1' else X;
+
+      }
     }
 
     //some detailed output about what is computed:
     if(is_log_lvl_enabled(DETAIL))
     {
-      cerr << "processing adder computing " << signalNameOut << " =";
-      for(int i=0; i < node->inputs.size(); i++)
+      cerr << std::filesystem::path{__FILE__}.filename() << ": ";
+
+      if(!isConfigurableAddSub)
       {
-        if(node->input_is_negative[i])
+        //the simple add/sub with static signs
+        cerr << "processing adder/subtractor computing [" << node->output_factor << "] (stage " << node->stage << ") = ";
+        for(int i=0; i < node->inputs.size(); i++)
         {
-          cerr << " - ";
-        }
-        else
-        {
-          if(i > 0)
-            cerr << " + ";
-        }
-        cerr << generateSignalName(node->inputs[i]->output_factor,node->inputs[i]->stage);
-        if(node->input_shifts[i] > 0)
-        {
-          cerr << " << " << node->input_shifts[i];
+          if(node->input_is_negative[i])
+          {
+            cerr << " - ";
+          }
+          else
+          {
+            if(i > 0) cerr << " + ";
+          }
+          cerr << "[" << node->inputs[i]->output_factor << "] (stage " << node->inputs[i]->stage << ")";
+          if(node->input_shifts[i] > 0)
+          {
+            cerr << " << " << node->input_shifts[i] << " ";
+          }
         }
       }
-      cerr << " using " << wAddOut << " output bits and ";
+      else
+      {
+        //for configurable add/sub, the sign depends on configuration
+        cerr << "processing configurable adder/subtractor computing" << endl;
+        for(int c=0; c < cnode->input_is_negative.size(); c++)
+        {
+          cerr << "[" << node->output_factor << "] (stage " << node->stage << ") = ";
+          for (int i = 0; i < cnode->inputs.size(); i++) {
+            if (cnode->input_is_negative[c][i])
+            {
+              cerr << " - ";
+            }
+            else
+            {
+              if (i > 0) cerr << " + ";
+            }
+            cerr << "[" << cnode->inputs[i]->output_factor << "] (stage " << cnode->inputs[i]->stage << ")";
+            if (cnode->input_shifts[i] > 0)
+            {
+              cerr << " << " << cnode->input_shifts[i];
+            }
+          }
+          cerr << " in configuration " << c << endl;
+        }
+      }
+
+      cerr << "using " << wAddOut << " output bits and ";
       for(int i=0; i < node->inputs.size(); i++)
       {
         cerr << wAddIn[i];
@@ -406,9 +476,24 @@ namespace flopoco {
     //determine the difference between smallest shift (incl. truncation) of a non-negative input and second smallest shift (incl. truncation)
     int minShift=INT_MAX;
     int inputMinShift=-1;
+
+    //check for negative inputs and ignore as they can't be forwarded to the output
     for(int i=0; i < node->input_shifts.size(); i++)
     {
-      if(node->input_is_negative[i] == false) //ignore negative inputs as they can't be forwarded to the output
+      bool inputNegativeinAnyConf=false;
+      if(!isConfigurableAddSub)
+      {
+        inputNegativeinAnyConf = node->input_is_negative[i]; //this is the simple case
+      }
+      else
+      {
+        //for configurable add/sub, check all configurations and ignore negative inputs
+        for(int c=0; c < cnode->input_is_negative.size(); c++)
+        {
+          if(cnode->input_is_negative[c][i]) inputNegativeinAnyConf = true;
+        }
+      }
+      if(!inputNegativeinAnyConf) //only consider non-negative inputs
       {
         if(node->input_shifts[i] < minShift)
         {
@@ -489,7 +574,7 @@ namespace flopoco {
         wMaxInclShift = node->input_shifts[i] + wAddIn[i];
       }
     }
-    REPORT(DETAIL,"Max. MSB position found at " << wMaxInclShift << ", sign extending signals");
+    REPORT(DEBUG,"Max. MSB position found at " << wMaxInclShift << ", sign extending signals");
 
 
     int wAddInMax=0;
@@ -552,7 +637,17 @@ namespace flopoco {
         else
           conversionFunction = "unsigned";
 
-        vhdl << (node->input_is_negative[i] ? "-" : (i == 0 ? "" : "+")) << conversionFunction << "(" << signalNameIn[i] + "_shifted" << ")";
+        if(!isConfigurableAddSub)
+        {
+          //for the simple add/sub, perform the negation in the operation (usually more efficient for the tools)
+          vhdl << (node->input_is_negative[i] ? "-" : (i == 0 ? "" : "+"));
+        }
+        else
+        {
+          //for the configurable add/sub, the negation was already performed on the input signal
+          vhdl << (i == 0 ? "" : "+");
+        }
+        vhdl << conversionFunction << "(" << signalNameIn[i] + "_shifted" << ")";
       }
       vhdl << "," << wAddOut - forwardedLSBs << "));" << endl;
     }
@@ -655,12 +750,23 @@ namespace flopoco {
 
   }
 
+
   void IntConstMultShiftAddNew::generateMuxNode(PAGSuite::mux_node_t* node)
   {
-    cerr << "processing MUX computing " << node->output_factor << " in stage " << node->stage << endl;
+    //some detailed output about what is computed:
+    if(is_log_lvl_enabled(DETAIL)) {
+      cerr << std::filesystem::path{__FILE__}.filename() << ": ";
+      cerr << "processing MUX computing:" << endl;
+      int i=0;
+      for (adder_graph_base_node_t *input_node: ((mux_node_t *) node)->inputs)
+      {
+        cerr << std::filesystem::path{__FILE__}.filename() << ": ";
+        cerr << "[" << node->output_factor << "] (stage " << node->stage << ")" << " = [" << input_node->output_factor << "] (stage " << input_node->stage << ")" << " << " << ((mux_node_t *) node)->input_shifts[i] << " for configuration " << i++ << endl;
+      }
+    }
 
     int wMUX=computeWordSize(node->output_factor, wIn);
-		vhdl << tab << "with (" << generateSelectName() << ") select " << endl;
+    vhdl << tab << "with (" << generateSelectName() << ") select " << endl;
     vhdl << tab << declare(generateSignalName(node->output_factor, node->stage),wMUX) << " <= " << endl << tab << tab << tab;;
     string signed_str = isSigned ? "signed" : "unsigned";
     int i=0;
@@ -673,23 +779,6 @@ namespace flopoco {
         vhdl << "others;" << endl;
       i++;
     }
-
-    i=0;
-    for (adder_graph_base_node_t *input_node: ((mux_node_t *) node)->inputs)
-    {
-      cerr << "   input " << i << ": " << input_node->output_factor << " shifted " << ((mux_node_t *) node)->input_shifts[i] << endl;
-      i++;
-    }
-
-
-//    THROWERROR("error, not implemented yet, sorry");
-  }
-
-  void IntConstMultShiftAddNew::generateConfAdderSubtractorNode(PAGSuite::conf_adder_subtractor_node_t* node)
-  {
-    cerr << "processing configurable adder/subtractor computing " << node->output_factor << " in stage " << node->stage << endl;
-
-    THROWERROR("error, not implemented yet, sorry");
   }
 
 
@@ -992,7 +1081,7 @@ namespace flopoco {
 		//CMM of 123*x1+321*x2 345*x1-543*x2 using ternary adders, obtained from rpag --ternary_adders --cmm 123,321 345,-543:
 		graphsSigned.push_back("{{'A',[1,-4],1,[1,0],0,0,[0,-1],0,2},{'A',[2,5],1,[0,1],0,0,[0,1],0,2,[1,0],0,1},{'A',[5,-1],1,[1,0],0,2,[0,-1],0,0,[1,0],0,0},{'A',[7,-1],1,[1,0],0,3,[0,-1],0,0,[-1,0],0,0},{'A',[123,321],2,[2,5],1,6,[-5,1],1,0},{'A',[345,-543],2,[1,-4],1,7,[7,-1],1,5,[-7,1],1,0},{'O',[123,321],2,[123,321],2,0},{'O',[345,-543],2,[345,-543],2,0}}"); //
 
-    /*RSCM of 5;9 using one adder
+    /*RSCM of 5;9 using one adder and a MUX
      * obtained from:
      * ./rpag 5 9
      * ./pag_split "{{'A',[5],1,[1],0,0,[1],0,2},{'A',[9],1,[1],0,0,[1],0,3},{'O',[5],1,[5],1,0},{'O',[9],1,[9],1,0}}" "5;9" --pag_fusion_input
@@ -1001,6 +1090,22 @@ namespace flopoco {
     graphsUnsigned.push_back("{{'R',[1;1],1,[1;1],0},{'M',[1;2],1,[1;1],0,[0;1]},{'A',[5;9],2,[1;1],1,0,[1;2],1,2},{'O',[5;9],2,[5;9],2}}");
 
 #ifdef RMCM_SUPPORT
+    /*RSCM of 7;9 using one adder/subtractor
+     * obtained from:
+     * ./rpag 7 9
+     * ./pag_split "{{'A',[7],1,[1],0,3,[-1],0,0},{'A',[9],1,[1],0,0,[1],0,3},{'O',[7],1,[7],1,0},{'O',[9],1,[9],1,0}}" "7;9" --pag_fusion_input
+     * ./pag_fusion --if pag_fusion_input.txt
+     */
+    graphsUnsigned.push_back("{{'A',[7;9],1,[1;1],0,3,[-1;1],0,0},{'O',[7;9],1,[7;9],1}}");
+
+
+    /*RSCM of 5;7 using one adder
+     * obtained from:
+     * ./rpag 5 7
+     * ./pag_split "{{'A',[5],1,[1],0,0,[1],0,2},{'A',[7],1,[1],0,3,[-1],0,0},{'O',[5],1,[5],1,0},{'O',[7],1,[7],1,0}}" "5;7" --pag_fusion_input
+     * ./pag_fusion --if pag_fusion_input.txt
+     */
+    graphsUnsigned.push_back("{{'R',[1;1],1,[1;1],0},{'M',[1;2],1,[1;1],0,[0;1]},{'A',[5;7],2,[1;-1],1,0,[1;2],1,2},{'O',[5;7],2,[5;7],2}}");
 
 
     /*RSCM of 1;2;3;4;5
@@ -1092,12 +1197,15 @@ namespace flopoco {
 		return signalName.str();
 	}
 
-  string IntConstMultShiftAddNew::dec2binstr(int x)
+  string IntConstMultShiftAddNew::dec2binstr(int x, int wordsize)
   {
     string s;
 
-    int w = log2(x+1);
-    for(int i=w; i >= 0; i--)
+    if(wordsize == -1)
+    {
+      wordsize = (x < 2) ? 1 : ceil(log2(x+1));
+    }
+    for(int i=wordsize-1; i >= 0; i--)
     {
       if((1 << i) & x)
         s += "1";
