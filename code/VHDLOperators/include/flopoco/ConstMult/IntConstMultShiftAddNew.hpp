@@ -77,7 +77,7 @@ namespace flopoco
     string generateSignalName(std::vector<std::vector<int64_t> > factor, int stage);
     string generateSelectName() { return "SEL"; };
     string factorToString(std::vector<std::vector<int64_t> > factor);
-    string dec2binstr(int x);
+    static string dec2binstr(int x, int wordsize=-1); //wordsize=-1 means chose minimum word size
     //    int computeWordSize(std::vector<std::vector<int64_t> > factor);
 
     vector<vector<int64_t> > output_coefficients;
