@@ -342,6 +342,7 @@ namespace flopoco {
     for(int i=0; i < node->inputs.size(); i++)
     {
       wAddIn[i] = computeWordSize(node->inputs[i]->output_factor, wIn);
+//      wAddIn[i]++; //<--- make this dependent on a possible negation!!!!
     }
 
     string signalNameOut = generateSignalName(node->output_factor,node->stage);
@@ -352,17 +353,30 @@ namespace flopoco {
       signalNameIn[i] = signalNameOut + "_in" + to_string(i);
 
       vhdl << tab << declare(signalNameIn[i], wAddIn[i]) << " <= ";
+      vhdl << generateSignalName(node->inputs[i]->output_factor, node->inputs[i]->stage) << ";" << endl;
+#if PRE_NEGATION_FOR_CONF
       if(!isConfigurableAddSub)
       {
         //the simple add/sub with static signs
-        vhdl << generateSignalName(node->inputs[i]->output_factor, node->inputs[i]->stage) << ";" << endl;
+//        vhdl << generateSignalName(node->inputs[i]->output_factor, node->inputs[i]->stage) << ";" << endl;
+        string conversionFunction;
+        if(isSigned)
+        {
+          conversionFunction = "signed";
+        }
+        else
+        {
+          conversionFunction = "unsigned";
+        }
+
+        vhdl << "std_logic_vector(resize(" << conversionFunction << "(" << generateSignalName(node->inputs[i]->output_factor, node->inputs[i]->stage) << ")," << wAddIn[i] << "));" << endl;
       }
       else
       {
         //for configurable add/sub, negate the input (or not) already here depending on the configuration
         for(int c=0; c < cnode->input_is_negative.size(); c++)
         {
-          vhdl << "std_logic_vector(" << (cnode->input_is_negative[c][i] ? "-" : "" ) << "signed(" << generateSignalName(node->inputs[i]->output_factor, node->inputs[i]->stage) << "))";
+          vhdl << "std_logic_vector(" << (cnode->input_is_negative[c][i] ? "-" : "" ) << "resize(signed(" << generateSignalName(node->inputs[i]->output_factor, node->inputs[i]->stage) << ")," << wAddIn[i] << "))";
           if(c != cnode->input_is_negative.size()-1)
           {
             vhdl << " when " << generateSelectName() << "=\"" << dec2binstr(c) << "\"" << " else ";
@@ -372,9 +386,8 @@ namespace flopoco {
             vhdl << ";" << endl;
           }
         }
-        //X_int <= std_logic_vector(-signed(X)) when negX='1' else X;
-
       }
+#endif
     }
 
     //some detailed output about what is computed:
@@ -628,28 +641,71 @@ namespace flopoco {
     //Step 4: Perform addition
 //    if(getTarget()->plainVHDL())
     {
-      vhdl << tab << declare(signalNameOut + "_MSBs",wAddOut - forwardedLSBs) << " <= std_logic_vector(resize(";
-      for(int i=0; i < node->inputs.size(); i++)
-      {
-        string conversionFunction;
-        if(isSigned)
-          conversionFunction = "signed";
-        else
-          conversionFunction = "unsigned";
+      vhdl << tab << declare(signalNameOut + "_MSBs",wAddOut - forwardedLSBs) << " <= ";
+      string conversionFunction;
+      if(isSigned)
+        conversionFunction = "signed";
+      else
+        conversionFunction = "unsigned";
 
-        if(!isConfigurableAddSub)
+      if(!isConfigurableAddSub)
+      {
+        //for the simple add/sub, perform the negation in the operation (usually more efficient for the tools)
+        vhdl << "std_logic_vector(resize(";
+        for(int i=0; i < node->inputs.size(); i++)
         {
-          //for the simple add/sub, perform the negation in the operation (usually more efficient for the tools)
-          vhdl << (node->input_is_negative[i] ? "-" : (i == 0 ? "" : "+"));
+          vhdl << (node->input_is_negative[i] ? "-" : (i == 0 ? "" : "+")) << conversionFunction << "(" << signalNameIn[i] + "_shifted" << ")";
         }
-        else
-        {
-          //for the configurable add/sub, the negation was already performed on the input signal
-          vhdl << (i == 0 ? "" : "+");
-        }
-        vhdl << conversionFunction << "(" << signalNameIn[i] + "_shifted" << ")";
+        vhdl << "," << wAddOut - forwardedLSBs << "));" << endl;
       }
-      vhdl << "," << wAddOut - forwardedLSBs << "));" << endl;
+      else
+      {
+        //for the configurable add/sub, the negation was already performed on the input signal
+//        vhdl << (i == 0 ? "" : "+");
+//        vhdl << conversionFunction << "(" << signalNameIn[i] + "_shifted" << ")";
+
+        for(int c = 0; c < cnode->input_is_negative.size(); c++)
+        {
+          vhdl << "std_logic_vector(";
+          for(int i=0; i < node->inputs.size(); i++)
+          {
+            vhdl << (cnode->input_is_negative[c][i] ? "-" : (i == 0 ? "" : "+")) << "resize(" << conversionFunction << "(" << signalNameIn[i] + "_shifted" << ")" << "," << wAddOut - forwardedLSBs << ")";
+          }
+          vhdl << ")";
+          if(c != cnode->input_is_negative.size()-1)
+          {
+            vhdl << " when " << generateSelectName() << "=\"" << dec2binstr(c) << "\"";
+            vhdl << " else ";
+          }
+          else
+          {
+            vhdl << ";" << endl;
+          }
+        }
+
+/*
+    RES <= A + B when OPER='0'
+      else A - B;
+
+ */
+
+/*
+          //for configurable add/sub, negate the input (or not) already here depending on the configuration
+          for(int c=0; c < cnode->input_is_negative.size(); c++)
+          {
+            vhdl << "std_logic_vector(" << (cnode->input_is_negative[c][i] ? "-" : "" ) << "resize(signed(" << generateSignalName(node->inputs[i]->output_factor, node->inputs[i]->stage) << ")," << wAddIn[i] << "))";
+            if(c != cnode->input_is_negative.size()-1)
+            {
+              vhdl << " when " << generateSelectName() << "=\"" << dec2binstr(c) << "\"" << " else ";
+            }
+            else
+            {
+              vhdl << ";" << endl;
+            }
+          }
+*/
+
+      }
     }
 /*
  *  (otherwise autotest will not work ...)
@@ -1089,7 +1145,6 @@ namespace flopoco {
      */
     graphsUnsigned.push_back("{{'R',[1;1],1,[1;1],0},{'M',[1;2],1,[1;1],0,[0;1]},{'A',[5;9],2,[1;1],1,0,[1;2],1,2},{'O',[5;9],2,[5;9],2}}");
 
-#ifdef RMCM_SUPPORT
     /*RSCM of 7;9 using one adder/subtractor
      * obtained from:
      * ./rpag 7 9
@@ -1097,6 +1152,8 @@ namespace flopoco {
      * ./pag_fusion --if pag_fusion_input.txt
      */
     graphsUnsigned.push_back("{{'A',[7;9],1,[1;1],0,3,[-1;1],0,0},{'O',[7;9],1,[7;9],1}}");
+
+#ifdef RMCM_SUPPORT
 
 
     /*RSCM of 5;7 using one adder
