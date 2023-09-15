@@ -342,7 +342,6 @@ namespace flopoco {
     for(int i=0; i < node->inputs.size(); i++)
     {
       wAddIn[i] = computeWordSize(node->inputs[i]->output_factor, wIn);
-//      wAddIn[i]++; //<--- make this dependent on a possible negation!!!!
     }
 
     string signalNameOut = generateSignalName(node->output_factor,node->stage);
@@ -354,40 +353,6 @@ namespace flopoco {
 
       vhdl << tab << declare(signalNameIn[i], wAddIn[i]) << " <= ";
       vhdl << generateSignalName(node->inputs[i]->output_factor, node->inputs[i]->stage) << ";" << endl;
-#if PRE_NEGATION_FOR_CONF
-      if(!isConfigurableAddSub)
-      {
-        //the simple add/sub with static signs
-//        vhdl << generateSignalName(node->inputs[i]->output_factor, node->inputs[i]->stage) << ";" << endl;
-        string conversionFunction;
-        if(isSigned)
-        {
-          conversionFunction = "signed";
-        }
-        else
-        {
-          conversionFunction = "unsigned";
-        }
-
-        vhdl << "std_logic_vector(resize(" << conversionFunction << "(" << generateSignalName(node->inputs[i]->output_factor, node->inputs[i]->stage) << ")," << wAddIn[i] << "));" << endl;
-      }
-      else
-      {
-        //for configurable add/sub, negate the input (or not) already here depending on the configuration
-        for(int c=0; c < cnode->input_is_negative.size(); c++)
-        {
-          vhdl << "std_logic_vector(" << (cnode->input_is_negative[c][i] ? "-" : "" ) << "resize(signed(" << generateSignalName(node->inputs[i]->output_factor, node->inputs[i]->stage) << ")," << wAddIn[i] << "))";
-          if(c != cnode->input_is_negative.size()-1)
-          {
-            vhdl << " when " << generateSelectName() << "=\"" << dec2binstr(c) << "\"" << " else ";
-          }
-          else
-          {
-            vhdl << ";" << endl;
-          }
-        }
-      }
-#endif
     }
 
     //some detailed output about what is computed:
@@ -661,9 +626,6 @@ namespace flopoco {
       else
       {
         //for the configurable add/sub, the negation was already performed on the input signal
-//        vhdl << (i == 0 ? "" : "+");
-//        vhdl << conversionFunction << "(" << signalNameIn[i] + "_shifted" << ")";
-
         for(int c = 0; c < cnode->input_is_negative.size(); c++)
         {
           vhdl << "std_logic_vector(";
@@ -682,29 +644,6 @@ namespace flopoco {
             vhdl << ";" << endl;
           }
         }
-
-/*
-    RES <= A + B when OPER='0'
-      else A - B;
-
- */
-
-/*
-          //for configurable add/sub, negate the input (or not) already here depending on the configuration
-          for(int c=0; c < cnode->input_is_negative.size(); c++)
-          {
-            vhdl << "std_logic_vector(" << (cnode->input_is_negative[c][i] ? "-" : "" ) << "resize(signed(" << generateSignalName(node->inputs[i]->output_factor, node->inputs[i]->stage) << ")," << wAddIn[i] << "))";
-            if(c != cnode->input_is_negative.size()-1)
-            {
-              vhdl << " when " << generateSelectName() << "=\"" << dec2binstr(c) << "\"" << " else ";
-            }
-            else
-            {
-              vhdl << ";" << endl;
-            }
-          }
-*/
-
       }
     }
 /*
