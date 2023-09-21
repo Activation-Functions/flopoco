@@ -88,6 +88,7 @@ namespace flopoco
 		v.push_back(make_pair("TestBenches", "Test Benches"));
 		v.push_back(make_pair("AutoTest", "AutoTest"));
 		v.push_back(make_pair("Primitives", "Highly target optimized primitive operators"));
+		v.push_back(make_pair("Sorters", "Different sorting operators"));
 		v.push_back(make_pair("Miscellaneous", "Miscellaneous"));
 		return v;
 	}();
