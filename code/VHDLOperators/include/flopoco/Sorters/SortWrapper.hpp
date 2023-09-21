@@ -30,6 +30,8 @@ namespace flopoco {
 		bool direction;
 		bool indexPayload;
 		int method;
+		typedef std::vector<std::pair<int, int>> sortStage;
+                sortStage sort_used;
 
 	public:
 		// definition of some function for the operator    
