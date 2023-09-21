@@ -57,7 +57,7 @@ namespace flopoco{
 	{
 		Signal* s = op_->getSignalByName(name);
 		if (v >= (mpz_class(1) << s->width()))
-			throw string("ERROR in TestCase::addInput, signal value out of range");
+			throw string("ERROR in TestCase::addInput, signal value out of range (" + v.get_str() + " is larger or equal than 2^" + to_string(s->width()) + ")");
 		if (v<0) {
 			if (v < - (mpz_class(1) << s->width()))
 				throw string("ERROR in TestCase::addInput, negative signal value out of range");

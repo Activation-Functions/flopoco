@@ -221,7 +221,7 @@ namespace flopoco {
         if(noOfConfigurations > 1)
         {
           //more than one configuration found, declare select input:
-          int wSel = log2(noOfConfigurations+1);
+          int wSel = ceil(log2(noOfConfigurations+1));
           addInput(generateSelectName(),wSel);
         }
       }
@@ -752,11 +752,15 @@ namespace flopoco {
     if(is_log_lvl_enabled(DETAIL)) {
       cerr << std::filesystem::path{__FILE__}.filename() << ": ";
       cerr << "processing MUX computing:" << endl;
-      int i=0;
-      for (adder_graph_base_node_t *input_node: ((mux_node_t *) node)->inputs)
+
+      for(int i=0; i < node->inputs.size(); i++)
       {
-        cerr << std::filesystem::path{__FILE__}.filename() << ": ";
-        cerr << "[" << node->output_factor << "] (stage " << node->stage << ")" << " = [" << input_node->output_factor << "] (stage " << input_node->stage << ")" << " << " << ((mux_node_t *) node)->input_shifts[i] << " for configuration " << i++ << endl;
+        adder_graph_base_node_t *input_node = node->inputs[i];
+        if(input_node != nullptr) //don't care inputs are defined to be NULL
+        {
+          cerr << std::filesystem::path{__FILE__}.filename() << ": ";
+          cerr << "[" << node->output_factor << "] (stage " << node->stage << ")" << " = [" << input_node->output_factor << "] (stage " << input_node->stage << ")" << " << " << ((mux_node_t *) node)->input_shifts[i] << " for configuration " << i << endl;
+        }
       }
     }
 
@@ -764,15 +768,17 @@ namespace flopoco {
     vhdl << tab << "with (" << generateSelectName() << ") select " << endl;
     vhdl << tab << declare(generateSignalName(node->output_factor, node->stage),wMUX) << " <= " << endl << tab << tab << tab;;
     string signed_str = isSigned ? "signed" : "unsigned";
-    int i=0;
-    for (adder_graph_base_node_t *input_node: ((mux_node_t *) node)->inputs)
+    for(int i=0; i < node->inputs.size(); i++)
     {
-      vhdl << "std_logic_vector(" << signed_str << "(shift_left(resize(" << signed_str << "(" << generateSignalName(input_node->output_factor, input_node->stage) << ")," << wMUX << ")," << ((mux_node_t *) node)->input_shifts[i] << "))) when ";
-      if(i < ((mux_node_t *) node)->inputs.size() - 1)
-        vhdl << "\"" << dec2binstr(i) << "\"," << endl << tab << tab << tab;
-      else
-        vhdl << "others;" << endl;
-      i++;
+      adder_graph_base_node_t *input_node = node->inputs[i];
+      if(input_node != nullptr) //don't care inputs are defined to be NULL
+      {
+        vhdl << "std_logic_vector(" << signed_str << "(shift_left(resize(" << signed_str << "(" << generateSignalName(input_node->output_factor, input_node->stage) << ")," << wMUX << ")," << ((mux_node_t *) node)->input_shifts[i] << "))) when ";
+        if(i < ((mux_node_t *) node)->inputs.size() - 1)
+          vhdl << "\"" << dec2binstr(i) << "\"," << endl << tab << tab << tab;
+        else
+          vhdl << "others;" << endl;
+      }
     }
   }
 
@@ -797,11 +803,13 @@ namespace flopoco {
 
     }
 
-/*
+#define DEBUG_OUT
+#ifdef DEBUG_OUT
     cerr << "Input vector(s): ";
 		for(int i=0 ; i < noOfInputs ; i++)
       cerr << inputVector[i] << " ";
-*/
+#endif// DEBUG_OUT
+
     mpz_class conf_mpz;
     if(noOfConfigurations > 1)
     {
@@ -813,7 +821,16 @@ namespace flopoco {
     }
     int conf = conf_mpz.get_ui();
 
-//    cerr << " | output value(s): ";
+    //check the case that the configuration does not exist
+    if(conf > noOfConfigurations-1)
+    {
+      conf_mpz = conf % noOfConfigurations; //set it to a valid configuration
+      tc->setInputValue(generateSelectName(), conf_mpz);
+    }
+
+#ifdef DEBUG_OUT
+    cerr << " | output value(s): ";
+#endif// DEBUG_OUT
     for(adder_graph_base_node_t* node : adder_graph.nodes_list)
     {
       if(is_a<output_node_t>(*node))
@@ -827,12 +844,16 @@ namespace flopoco {
         mpz_class outputValue_mpz = outputValue;
         tc->addExpectedOutput(outputName, outputValue_mpz);
 
-  //      cerr << outputValue << " ";
+#ifdef DEBUG_OUT
+        cerr << outputValue << " ";
+#endif// DEBUG_OUT
 
         // ... to be continued ...
       }
     }
-//    cerr << endl;
+#ifdef DEBUG_OUT
+    cerr << endl;
+#endif// DEBUG_OUT
 
 
 /*
@@ -930,7 +951,6 @@ namespace flopoco {
 	void IntConstMultShiftAddNew::buildStandardTestCases(TestCaseList * tcl)
 	{
 		TestCase* tc;
-
     if(isSigned)
     {
       for(int c=0; c < noOfConfigurations; c++)
@@ -1092,10 +1112,8 @@ namespace flopoco {
      */
     graphsUnsigned.push_back("{{'A',[7;9],1,[1;1],0,3,[-1;1],0,0},{'O',[7;9],1,[7;9],1}}");
 
-#ifdef RMCM_SUPPORT
 
-
-    /*RSCM of 5;7 using one adder
+    /*RSCM of 5;7 using one adder/subtractor and a MUX
      * obtained from:
      * ./rpag 5 7
      * ./pag_split "{{'A',[5],1,[1],0,0,[1],0,2},{'A',[7],1,[1],0,3,[-1],0,0},{'O',[5],1,[5],1,0},{'O',[7],1,[7],1,0}}" "5;7" --pag_fusion_input
@@ -1103,14 +1121,17 @@ namespace flopoco {
      */
     graphsUnsigned.push_back("{{'R',[1;1],1,[1;1],0},{'M',[1;2],1,[1;1],0,[0;1]},{'A',[5;7],2,[1;-1],1,0,[1;2],1,2},{'O',[5;7],2,[5;7],2}}");
 
-
     /*RSCM of 1;2;3;4;5
      * obtained from:
      * ./rpag 1 2 3 4 5
      * ./pag_split "{{'R',[1],1,[1],0},{'A',[3],1,[1],0,0,[1],0,1},{'A',[5],1,[1],0,0,[1],0,2},{'O',[1],1,[1],1,0},{'O',[2],1,[1],1,1},{'O',[3],1,[3],1,0},{'O',[4],1,[1],1,2},{'O',[5],1,[5],1,0}}" "1;2;3;4;5" --pag_fusion_input
      * ./pag_fusion --if pag_fusion_input.txt
      */
-    graphs.push_back("{{'M',[1;2;2;4;4],1,[1;1;1;1;1],0,[0;1;1;2;2]},{'M',[0;0;1;0;1],1,[1;1;1;1;1],0,[NaN;NaN;0;NaN;0]},{'A',[1;2;3;4;5],2,[1;2;2;4;4],1,0,[0;0;1;0;1],1,0}}");
+    graphsUnsigned.push_back("{{'M',[1;2;2;4;4],1,[1;1;1;1;1],0,[0;1;1;2;2]},{'M',[0;0;1;0;1],1,[1;1;1;1;1],0,[NaN;NaN;0;NaN;0]},{'A',[1;2;3;4;5],2,[1;2;2;4;4],1,0,[0;0;1;0;1],1,0},{'O',[1;2;3;4;5],2,[1;2;3;4;5],2}}");
+
+
+#ifdef RMCM_SUPPORT
+
 
     /*RMCM of 123;543;412 345;321;654
      * obtained from:
