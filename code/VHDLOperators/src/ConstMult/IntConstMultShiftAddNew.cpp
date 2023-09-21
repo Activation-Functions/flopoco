@@ -15,7 +15,7 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <fcntl.h>
-#include<filesystem>
+#include <filesystem>
 /*
 #include <map>
 #include <vector>
@@ -765,20 +765,30 @@ namespace flopoco {
     }
 
     int wMUX=computeWordSize(node->output_factor, wIn);
-    vhdl << tab << "with (" << generateSelectName() << ") select " << endl;
+    int wSel = ceil(log2(noOfConfigurations+1));
+
+    vhdl << tab << "with " << generateSelectName() << " select" << endl;
     vhdl << tab << declare(generateSignalName(node->output_factor, node->stage),wMUX) << " <= " << endl << tab << tab << tab;;
     string signed_str = isSigned ? "signed" : "unsigned";
     for(int i=0; i < node->inputs.size(); i++)
     {
       adder_graph_base_node_t *input_node = node->inputs[i];
+
       if(input_node != nullptr) //don't care inputs are defined to be NULL
       {
-        vhdl << "std_logic_vector(" << signed_str << "(shift_left(resize(" << signed_str << "(" << generateSignalName(input_node->output_factor, input_node->stage) << ")," << wMUX << ")," << ((mux_node_t *) node)->input_shifts[i] << "))) when ";
-        if(i < ((mux_node_t *) node)->inputs.size() - 1)
-          vhdl << "\"" << dec2binstr(i) << "\"," << endl << tab << tab << tab;
-        else
-          vhdl << "others;" << endl;
+        vhdl << "std_logic_vector(" << signed_str << "(shift_left(resize(" << signed_str << "(" << generateSignalName(input_node->output_factor, input_node->stage) << ")," << wMUX << ")," << ((mux_node_t *) node)->input_shifts[i] << ")))";
       }
+      else
+      {
+        vhdl << zg(wMUX); //output zero for don't care
+      }
+      vhdl << " when ";
+      if(i < ((mux_node_t *) node)->inputs.size() - 1)
+        vhdl << "\"" << dec2binstr(i, wSel) << "\"," << endl << tab << tab << tab;
+      else
+        vhdl << "others;" << endl;
+
+
     }
   }
 
@@ -825,6 +835,7 @@ namespace flopoco {
     if(conf > noOfConfigurations-1)
     {
       conf_mpz = conf % noOfConfigurations; //set it to a valid configuration
+      conf = conf_mpz.get_ui();
       tc->setInputValue(generateSelectName(), conf_mpz);
     }
 
