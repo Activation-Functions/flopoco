@@ -7,6 +7,7 @@ add_hileco_src(
 
 add_subdirectory(FixFunctions)
 add_subdirectory(IntMult)
+add_subdirectory(SortingNetworks)
 add_subdirectory(Tables)
 add_subdirectory(Targets)
 add_subdirectory(Tools)
