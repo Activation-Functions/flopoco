@@ -96,7 +96,9 @@ namespace flopoco {
 				}
 				cout << param.str() <<endl;
 
-				newInstance("SortingNetwork", "sort_network", param.str(), inmap.str(), outmap.str());
+				OperatorPtr op = newInstance("SortingNetwork", "sort_network", param.str(), inmap.str(), outmap.str());
+				SortingNetwork* op_sort = dynamic_cast<SortingNetwork*>(op);
+				sort_used = op_sort->flat_sort;
 			
 				// mux payload
 				for (int i =0; i < N; i++) {
@@ -126,7 +128,10 @@ namespace flopoco {
 				}
 				cout << param.str() <<endl;
 
-				newInstance("SortingNetwork", "sort_network", param.str(), inmap.str(), outmap.str());
+				OperatorPtr op = newInstance("SortingNetwork", "sort_network", param.str(), inmap.str(), outmap.str());
+				SortingNetwork* op_sort = dynamic_cast<SortingNetwork*>(op);
+				sort_used = op_sort->flat_sort;
+			
 			}	
 		} else { // Tao Sort
 			inmap << "key0=>key0_i";
@@ -172,8 +177,8 @@ namespace flopoco {
 	void SortWrapper::emulate(TestCase * tc) {
 		// If it was a sorting network, check like sorting network (TODO this is duplicate code from SortingNetworks, maybe this can be done better)
 		if (method == 0) {
-			THROWERROR("Testbench is not implemented for SortWrapper when using sorting networks. If you used indexPayload=false, please try using the SortingNetwork operator directly. Otherwise, we're sorry.");
-			/*
+			//THROWERROR("Testbench is not implemented for SortWrapper when using sorting networks. If you used indexPayload=false, please try using the SortingNetwork operator directly. Otherwise, we're sorry.");
+			
 			// the bitonic sort is not stable, so have to use the bitonic sort method to get the right result
 			// and then verify that the order is correct, the VHDL will be checked against this.
 			pair<mpz_class, mpz_class> list_to_sort[N];
@@ -189,7 +194,7 @@ namespace flopoco {
 			}
 
 			// Reuse the sort from BitonicSort
-			for (auto swap : SortingNetwork->flat_sort) { // swap is a pair, if first > second then swap
+			for (auto swap : sort_used) { // swap is a pair, if first > second then swap
 				if (list_to_sort[swap.first].first > list_to_sort[swap.second].first) {
 					val = list_to_sort[swap.first];
 					list_to_sort[swap.first] = list_to_sort[swap.second];
@@ -226,7 +231,7 @@ namespace flopoco {
 					}
 				}
 			}
-			*/
+			
 		} else {
 			// In this case use Tao's sort. This only outputs the indices, we need to add the keys and payload in order
 
