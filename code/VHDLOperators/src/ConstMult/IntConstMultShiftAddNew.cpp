@@ -77,6 +77,8 @@ namespace flopoco {
 		bool validParse = adder_graph.parse_to_graph(adder_graph_str);
 
 		adder_graph.check_and_correct();
+//    adder_graph.normalize_graph(); //normalize corrects order of signs such that an adder's first input is always positive (if possible)
+//    adder_graph.check_and_correct();
 
 		if(validParse) {
 			adder_graph.drawdot("pag_input_graph.dot");
@@ -198,7 +200,7 @@ namespace flopoco {
     noOfOutputs=0;
     for(adder_graph_base_node_t* node : adder_graph->nodes_list)
     {
-      if(!isSigned) //in unsigned case, check all factors to be positive
+      if(!isSigned) //sanity check: in unsigned case, check all factors to be positive
       {
         for(int c=0; c < node->output_factor.size(); c++)
         {
@@ -208,6 +210,22 @@ namespace flopoco {
             {
               THROWERROR("Found negative factor " << node->output_factor << " in an unsigned operator, select isSigned=true to build this operator");
             }
+
+/*
+            if(is_a<conf_adder_subtractor_node_t>(*node))
+            {
+              conf_adder_subtractor_node_t cnode = ((conf_adder_subtractor_node_t*) node);
+              for(int c=0; c < cnode->input_is_negative.size(); c++)
+              {
+                for(int i = 0; i < cnode->inputs.size(); i++)
+                {
+                  if(cnode->input_is_negative[c][i]) {
+                    THROWERROR("Found negative factor " << node->output_factor << " in an unsigned operator, select isSigned=true to build this operator");
+                  }
+                }
+              }
+            }
+*/
           }
         }
       }
@@ -321,14 +339,17 @@ namespace flopoco {
   void IntConstMultShiftAddNew::generateConfAdderSubtractorNode(PAGSuite::conf_adder_subtractor_node_t* node)
   {
     generateAdderSubtractorNode(node);
-    //THROWERROR("error, not implemented yet, sorry");
   }
 
   void IntConstMultShiftAddNew::generateAdderSubtractorNode(PAGSuite::adder_subtractor_node_t* node)
   {
+    REPORT(DEBUG,"normalizing node " << node->output_factor << " in stage " << node->stage);
+    bool nodeIsNormalized = adder_graph.normalize_node(node); //is true when normalization was successful, i.e., first input of adder is positive
+
+    if(!nodeIsNormalized) cerr << endl << endl <<  "!!!!!!! node was not normalized !!!!!" << endl << endl;
+
     //The following steps are performed
     //0: Determine constants: configurability, input word sizes of arguments X, Y and Z, output word size
-
     bool isConfigurableAddSub=false;
     conf_adder_subtractor_node_t* cnode = nullptr; //just for easier access
     if(is_a<conf_adder_subtractor_node_t>(*node))
@@ -606,9 +627,10 @@ namespace flopoco {
     //Step 4: Perform addition
 //    if(getTarget()->plainVHDL())
     {
-      vhdl << tab << declare(signalNameOut + "_MSBs",wAddOut - forwardedLSBs) << " <= ";
+      vhdl << tab << declare(signalNameOut + "_MSBs",wAddOut - forwardedLSBs) << " <= " << endl << tab << tab;
       string conversionFunction;
-      if(isSigned)
+
+      if(isSigned || !nodeIsNormalized) //signed is necessary for nodes that could not be normalized
         conversionFunction = "signed";
       else
         conversionFunction = "unsigned";
@@ -638,7 +660,7 @@ namespace flopoco {
           if(c != cnode->input_is_negative.size()-1)
           {
             vhdl << " when " << generateSelectName() << "=\"" << dec2binstr(c, wSel) << "\"";
-            vhdl << " else ";
+            vhdl << " else " << endl << tab << tab;
           }
           else
           {
@@ -814,7 +836,7 @@ namespace flopoco {
 
     }
 
-#define DEBUG_OUT
+//#define DEBUG_OUT
 #ifdef DEBUG_OUT
     cerr << "Input vector(s): ";
 		for(int i=0 ; i < noOfInputs ; i++)
@@ -1058,6 +1080,18 @@ namespace flopoco {
 		//simplest adder graph possible, multiply by 1:
 		graphsUnsigned.push_back("{{'O',[1],1,[1],0,0}}");
 
+    //Simple SCM by 7, obtained from rpag 7:
+    graphsUnsigned.push_back("{{'A',[7],1,[1],0,3,[-1],0,0},{'O',[7],1,[7],1,0}}");
+
+    //SCM by 7, but swapped inputs such that the first input is negative (check for problems with unsigned input):
+    graphsUnsigned.push_back("{{'A',[7],1,[-1],0,0,[1],0,3},{'O',[7],1,[7],1,0}}");
+
+    //Simple SCM with negative result -7:
+    graphsSigned.push_back("{{'A',[-7],1,[1],0,0,[-1],0,3},{'O',[-7],1,[-7],1,0}}");
+
+    //Simple SCM with negative result -9 and both inputs negative:
+    graphsSigned.push_back("{{'A',[-9],1,[-1],0,0,[-1],0,3},{'O',[-9],1,[-9],1,0}}");
+
 		//SCM by 123, obtained from rpag 123:
 		graphsUnsigned.push_back("{{'R',[1],1,[1],0},{'A',[5],1,[1],0,0,[1],0,2},{'A',[123],2,[1],1,7,[-5],1,0},{'O',[123],2,[123],2,0}}");
 
@@ -1133,6 +1167,18 @@ namespace flopoco {
      */
     graphsUnsigned.push_back("{{'R',[1;1],1,[1;1],0},{'M',[1;2],1,[1;1],0,[0;1]},{'A',[5;7],2,[1;-1],1,0,[1;2],1,2},{'O',[5;7],2,[5;7],2}}");
 
+    /*RSCM of 71;97
+     * obtained from:
+     * ./rpag --cost_model=hl_min_ad 127 7 97 71 (and removing some output/register nodes)
+     * ./pag_split "{{'R',[1],1,[1],0},{'A',[7],1,[1],0,3,[-1],0,0},{'A',[127],1,[1],0,7,[-1],0,0},{'A',[71],2,[1],1,6,[7],1,0},{'A',[97],2,[7],1,5,[-127],1,0},{'O',[71],2,[71],2,0},{'O',[97],2,[97],2,0}}" "71;97" --pag_fusion_input
+     * ./pag_fusion --if pag_fusion_input.txt
+     */
+    graphsUnsigned.push_back("{{'M',[1;8],1,[1;1],0,[0;3]},{'M',[0;1],1,[1;1],0,[NaN;0]},{'A',[1;7],2,[1;8],1,0,[0;-1],1,0},{'M',[1;16],1,[1;1],0,[0;4]},{'R',[1;1],1,[1;1],0},{'A',[7;127],2,[1;16],1,3,[-1;-1],1,0},{'M',[2;7],3,[1;7],2,[1;0]},{'R',[7;127],3,[7;127],2},{'A',[71;97],4,[2;7],3,5,[7;-127],3,0},{'O',[71;97],4,[71;97],4}}");
+
+    /*RSCM of -57;97 having negative and positive outputs and intermediate values with larger wordsize than the output (hand crafted from the 71;97 RSCM)
+     */
+    graphsSigned.push_back("{{'M',[1;8],1,[1;1],0,[0;3]},{'M',[0;1],1,[1;1],0,[NaN;0]},{'A',[1;7],2,[1;8],1,0,[0;-1],1,0},{'M',[1;16],1,[1;1],0,[0;4]},{'R',[1;1],1,[1;1],0},{'A',[7;127],2,[1;16],1,3,[-1;-1],1,0},{'M',[2;7],3,[1;7],2,[1;0]},{'R',[7;127],3,[7;127],2},{'A',[-57;97],4,[-2;7],3,5,[7;-127],3,0},{'O',[-57;97],4,[-57;97],4}}");
+
     /*RSCM of 1;2;3;4;5
      * obtained from:
      * ./rpag 1 2 3 4 5
@@ -1141,16 +1187,14 @@ namespace flopoco {
      */
     graphsUnsigned.push_back("{{'M',[1;2;2;4;4],1,[1;1;1;1;1],0,[0;1;1;2;2]},{'M',[0;0;1;0;1],1,[1;1;1;1;1],0,[NaN;NaN;0;NaN;0]},{'A',[1;2;3;4;5],2,[1;2;2;4;4],1,0,[0;0;1;0;1],1,0},{'O',[1;2;3;4;5],2,[1;2;3;4;5],2}}");
 
+
     /*RMCM of 123;543;412 345;321;654
      * obtained from:
      * ./rpag 123 345 543 654 321 412
      * ./pag_split "{{'R',[1],1,[1],0},{'A',[17],1,[1],0,0,[1],0,4},{'R',[1],2,[1],1},{'A',[15],2,[1],1,4,[-1],1,0},{'A',[69],2,[1],1,0,[17],1,2},{'A',[153],2,[17],1,0,[17],1,3},{'A',[103],3,[1],2,8,[-153],2,0},{'A',[123],3,[69],2,1,[-15],2,0},{'A',[321],3,[15],2,0,[153],2,1},{'A',[327],3,[15],2,5,[-153],2,0},{'A',[345],3,[69],2,0,[69],2,2},{'A',[543],3,[153],2,2,[-69],2,0},{'O',[123],3,[123],3,0},{'O',[321],3,[321],3,0},{'O',[345],3,[345],3,0},{'O',[412],3,[103],3,2},{'O',[543],3,[543],3,0},{'O',[654],3,[327],3,1}}" "123;543;412 345;321;654" --pag_fusion_input
      * ./pag_fusion --if pag_fusion_input.txt
      */
-//    graphsUnsigned.push_back("{{'A',[17;17;17],1,[1;1;1],0,0,[1;1;1],0,4},{'R',[1;1;1],1,[1;1;1],0},{'R',[1;1;1],2,[1;1;1],1},{'A',[15;15;15],3,[1;1;1],2,4,[-1;-1;-1],2,0},{'M',[17;17;0],2,[17;17;17],1,[0;0;NaN]},{'A',[69;69;1],3,[1;1;1],2,0,[17;17;0],2,2},{'R',[NaN;17;17],2,[17;17;17],1},{'A',[NaN;153;153],3,[NaN;17;17],2,0,[NaN;17;17],2,3},{'M',[69;306;306],4,[69;69;1],3,[0;NaN;NaN],[NaN;153;153],3,[NaN;1;1]},{'M',[15;69;1024],4,[15;15;15],3,[0;NaN;NaN],[69;69;1],3,[NaN;0;10]},{'A',[123;543;412],5,[69;306;-306],4,1,[-15;-69;1024],4,0},{'M',[69;15;960],4,[69;69;1],3,[0;NaN;NaN],[15;15;15],3,[NaN;0;6]},{'M',[138;153;153],4,[69;69;1],3,[1;NaN;NaN],[NaN;153;153],3,[NaN;0;0]},{'A',[345;321;654],5,[69;15;960],4,0,[138;153;-153],4,1},{'O',[123;543;412],5,[123;543;412],5},{'O',[345;321;654],5,[345;321;654],5}}");
-
-#ifdef RMCM_SUPPORT
-
+    graphsUnsigned.push_back("{{'A',[17;17;17],1,[1;1;1],0,0,[1;1;1],0,4},{'R',[1;1;1],1,[1;1;1],0},{'R',[1;1;1],2,[1;1;1],1},{'A',[15;15;15],3,[1;1;1],2,4,[-1;-1;-1],2,0},{'M',[17;17;0],2,[17;17;17],1,[0;0;NaN]},{'A',[69;69;1],3,[1;1;1],2,0,[17;17;0],2,2},{'R',[NaN;17;17],2,[17;17;17],1},{'A',[NaN;153;153],3,[NaN;17;17],2,0,[NaN;17;17],2,3},{'M',[69;306;306],4,[69;69;1],3,[0;NaN;NaN],[NaN;153;153],3,[NaN;1;1]},{'M',[15;69;1024],4,[15;15;15],3,[0;NaN;NaN],[69;69;1],3,[NaN;0;10]},{'A',[123;543;412],5,[69;306;-306],4,1,[-15;-69;1024],4,0},{'M',[69;15;960],4,[69;69;1],3,[0;NaN;NaN],[15;15;15],3,[NaN;0;6]},{'M',[138;153;153],4,[69;69;1],3,[1;NaN;NaN],[NaN;153;153],3,[NaN;0;0]},{'A',[345;321;654],5,[69;15;960],4,0,[138;153;-153],4,1},{'O',[123;543;412],5,[123;543;412],5},{'O',[345;321;654],5,[345;321;654],5}}");
 
     /*RCMM with two inputs and two configurations
      * obtained from:
@@ -1158,7 +1202,11 @@ namespace flopoco {
      * ./pag_split "{{'A',[1,-64],1,[1,0],0,0,[0,-1],0,6},{'A',[1,-1],1,[1,0],0,0,[0,-1],0,0},{'A',[3,0],1,[1,0],0,0,[1,0],0,1},{'R',[1,-1],2,[1,-1],1},{'A',[47,64],2,[3,0],1,4,[-1,64],1,0},{'A',[33,-33],3,[1,-1],2,0,[1,-1],2,5},{'A',[189,255],3,[1,-1],2,0,[47,64],2,2},{'A',[123,321],4,[189,255],3,0,[-33,33],3,1},{'A',[345,543],4,[189,255],3,1,[-33,33],3,0},{'A',[567,765],4,[189,255],3,0,[189,255],3,1},{'A',[789,987],4,[33,-33],3,0,[189,255],3,2},{'O',[123,321],4,[123,321],4,0},{'O',[345,543],4,[345,543],4,0},{'O',[567,765],4,[567,765],4,0},{'O',[789,987],4,[789,987],4,0}}" "123,321;345,543 567,765;789,987" --pag_fusion_input
      * ./pag_fusion --if pag_fusion_input.txt
     */
-    graphs.push_back("{{'A',[1,-64;1,-64],1,[1,0;1,0],0,0,[0,-1;0,-1],0,6},{'A',[1,-1;1,-1],1,[1,0;1,0],0,0,[0,-1;0,-1],0,0},{'A',[3,0;3,0],1,[1,0;1,0],0,0,[1,0;1,0],0,1},{'A',[47,64;47,64],2,[3,0;3,0],1,4,[-1,64;-1,64],1,0},{'R',[1,-1;1,-1],2,[1,-1;1,-1],1},{'R',[1,-1;1,-1],3,[1,-1;1,-1],2},{'M',[8,-8;47,64],3,[1,-1;1,-1],2,[3;NaN],[47,64;47,64],2,[NaN;0]},{'A',[33,-33;189,255],4,[1,-1;1,-1],3,0,[8,-8;47,64],3,2},{'M',[47,64;8,-8],3,[47,64;47,64],2,[0;NaN],[1,-1;1,-1],2,[NaN;3]},{'A',[189,255;33,-33],4,[1,-1;1,-1],3,0,[47,64;8,-8],3,2},{'R',[189,255;33,-33],5,[189,255;33,-33],4},{'R',[33,-33;189,255],5,[33,-33;189,255],4},{'A',[123,321;345,543],6,[189,255;-33,33],5,0,[-33,33;189,255],5,1},{'M',[189,255;378,510],5,[189,255;33,-33],4,[0;NaN],[33,-33;189,255],4,[NaN;1]},{'A',[567,765;789,987],6,[189,255;33,-33],5,0,[189,255;378,510],5,1}}");
+    graphsUnsigned.push_back("{{'A',[1,-64;1,-64],1,[1,0;1,0],0,0,[0,-1;0,-1],0,6},{'A',[1,-1;1,-1],1,[1,0;1,0],0,0,[0,-1;0,-1],0,0},{'A',[3,0;3,0],1,[1,0;1,0],0,0,[1,0;1,0],0,1},{'R',[1,-1;1,-1],2,[1,-1;1,-1],1},{'A',[47,64;47,64],2,[3,0;3,0],1,4,[-1,64;-1,64],1,0},{'R',[1,-1;1,-1],3,[1,-1;1,-1],2},{'M',[8,-8;47,64],3,[1,-1;1,-1],2,[3;NaN],[47,64;47,64],2,[NaN;0]},{'A',[33,-33;189,255],4,[1,-1;1,-1],3,0,[8,-8;47,64],3,2},{'M',[47,64;8,-8],3,[47,64;47,64],2,[0;NaN],[1,-1;1,-1],2,[NaN;3]},{'A',[189,255;33,-33],4,[1,-1;1,-1],3,0,[47,64;8,-8],3,2},{'R',[189,255;33,-33],5,[189,255;33,-33],4},{'R',[33,-33;189,255],5,[33,-33;189,255],4},{'A',[123,321;345,543],6,[189,255;-33,33],5,0,[-33,33;189,255],5,1},{'M',[189,255;378,510],5,[189,255;33,-33],4,[0;NaN],[33,-33;189,255],4,[NaN;1]},{'A',[567,765;789,987],6,[189,255;33,-33],5,0,[189,255;378,510],5,1},{'O',[123,321;345,543],6,[123,321;345,543],6},{'O',[567,765;789,987],6,[567,765;789,987],6}}");
+
+#ifdef RMCM_SUPPORT
+
+
 #endif // RMCM_SUPPORT
 
 //  graphs.push_back(""); //
