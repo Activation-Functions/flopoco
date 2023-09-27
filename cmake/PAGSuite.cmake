@@ -86,7 +86,7 @@ include(FetchContent)
     FetchContent_Declare(
       PAGSuite
       GIT_REPOSITORY https://gitlab.com/kumm/pagsuite.git
-      GIT_TAG 3a35198b3cd8ffedf35c31156b72366ca0f98400
+      # GIT_TAG 3a35198b3cd8ffedf35c31156b72366ca0f98400
       UPDATE_DISCONNECTED False
       SOURCE_SUBDIR NonExistentRepo
       )
