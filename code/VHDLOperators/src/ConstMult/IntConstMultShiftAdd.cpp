@@ -9,27 +9,31 @@
 #include <string>
 
 #include <cstdlib>
+#include <cassert>
 #include <unistd.h>
 #include <sys/wait.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <fcntl.h>
-
+#include <filesystem>
+/*
 #include <map>
 #include <vector>
 #include <set>
 
 #include "flopoco/ConstMult/adder_cost.hpp"
+*/
 
 /* header of libraries to manipulate multiprecision numbers
    There will be used in the emulate function to manipulate arbitraly large
    entries */
 #include "gmp.h"
 #include "mpfr.h"
-
+#include "pagsuite/log2_64.h"
 // include the header of the Operator
 #include "flopoco/PrimitiveComponents/Primitive.hpp"
 //#include "rpag/rpag.h"
+#include "flopoco/IntAddSubCmp/IntAddSub.hpp"
 
 #include "flopoco/ConstMult/WordLengthCalculator.hpp"
 
@@ -44,328 +48,865 @@ namespace flopoco {
 	    Operator* parentOp,
 	    Target* target,
 	    int wIn_,
-	    string pipelined_realization_str,
-	    bool pipelined_,
-	    bool syncInOut_,
-	    int syncEveryN_,
-	    bool syncMux_,
+	    string adder_graph_str,
+      bool isSigned,
 	    int epsilon_,
 	    string truncations
 	)
 	    : Operator(parentOp, target),
 	      wIn(wIn_),
-	      syncInOut(syncInOut_),
-	      pipelined(pipelined_),
-	      syncEveryN(syncEveryN_),
+        isSigned(isSigned),
 	      epsilon(epsilon_)
 	{
-		syncMux=syncMux_;
-
 		ostringstream name;
-		name << "IntConstMultShiftAdd_" << wIn;
+		name << "IntConstMultShiftAddNew_" << wIn;
 		setNameWithFreqAndUID(name.str());
 
-		if(pipelined_realization_str.empty()) return; //in case the realization string is not defined, don't further process it.
+    if(adder_graph_str.empty()) return; //in case the realization string is not defined, don't further process it.
 
-		ProcessIntConstMultShiftAdd(target, pipelined_realization_str, truncations, epsilon);
-	};
+    ProcessIntConstMultShiftAdd(target,adder_graph_str,truncations,epsilon_);
+  };
 
-	void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(
-	    Target* target,
-	    string pipelined_realization_str,
-	    string truncations,
-	    int epsilon
-	)
-	{
-		REPORT(LogLevel::VERBOSE, "IntConstMultShiftAdd started with syncoptions:")
-		REPORT(LogLevel::VERBOSE, "\tsyncInOut: " << (syncInOut?"enabled":"disabled"))
-		REPORT(LogLevel::VERBOSE, "\tsyncMux: " << (syncMux?"enabled":"disabled"))
-		REPORT(LogLevel::VERBOSE, "\tsync every " << syncEveryN << " stages" << std::endl )
+  void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(Target* target, string adder_graph_str, string truncations, int epsilon)
+  {
+    if(adder_graph_str.empty()) return; //in case the realization string is not defined, don't further process it.
 
-		needs_unisim = false;
-		emu_conf = 0;
+    useNumericStd();
 
-		bool validParse;
-		srcFileName="IntConstMultShiftAdd";
+    REPORT(DEBUG,"reading adder_graph_str=" << adder_graph_str);
 
-		useNumericStd();
+    if(is_log_lvl_enabled(LogLevel::DEBUG))
+      adder_graph.quiet = false; //enable debug output
+    else
+      adder_graph.quiet = true; //disable debug output, except errors
 
-//    setCopyrightString(UniKs::getAuthorsString(UniKs::AUTHOR_MKLEINLEIN|UniKs::AUTHOR_MKUMM|UniKs::AUTHOR_KMOELLER));
+    REPORT(LogLevel::VERBOSE, "parse graph...")
+    bool validParse = adder_graph.parse_to_graph(adder_graph_str);
 
-		if(is_log_lvl_enabled(LogLevel::DEBUG))
-			pipelined_adder_graph.quiet = false; //enable debug output
-		else
-			pipelined_adder_graph.quiet = true; //disable debug output, except errors
+    adder_graph.check_and_correct();
+//    adder_graph.normalize_graph(); //normalize corrects order of signs such that an adder's first input is always positive (if possible)
+//    adder_graph.check_and_correct();
 
-		REPORT(LogLevel::VERBOSE, "parse graph...")
-		validParse = pipelined_adder_graph.parse_to_graph(pipelined_realization_str);
+    if(validParse) {
+      adder_graph.drawdot("pag_input_graph.dot");
 
-		if(validParse)
-		{
-			pipelined_adder_graph.drawdot("pag_input_graph.dot");
+      stringstream outstream;
+      adder_graph.writesyn(outstream);
+      REPORT(DEBUG,"Parsed graph is " << outstream.str());
+//      REPORT(DEBUG,"Parsed graph is " << adder_graph.get_adder_graph_as_string());
 
-			if(is_log_lvl_enabled(LogLevel::VERBOSE))
-				pipelined_adder_graph.print_graph();
+      if(is_log_lvl_enabled(LogLevel::DEBUG))
+        adder_graph.print_graph();
 
-			REPORT(LogLevel::VERBOSE,  "check graph...")
-			pipelined_adder_graph.check_and_correct(pipelined_realization_str);
+      isTruncated=false;
+      if(!truncations.empty() || (epsilon > 0))
+      {
+        isTruncated=true;
+        if(!truncations.empty())
+        {
+          REPORT(LogLevel::DETAIL,  "Parsing truncations...");
 
-			IntConstMultShiftAdd_TYPES::TruncationRegister truncationReg(truncations);
-
-			if(truncations.empty() && (epsilon > 0))
-			{
-				REPORT(LogLevel::DETAIL,  "Found non-zero epsilon=" << epsilon << ", computing word sizes of truncated MCM");
-
-				map<pair<mpz_class, int>, vector<int> > wordSizeMap;
+          parseTruncation(truncations);
+        }
+        if(epsilon > 0)
+        {
+          REPORT(LogLevel::DETAIL,  "Found non-zero epsilon=" << epsilon << ", computing word sizes of truncated MCM");
 
 #if defined(HAVE_PAGLIB) && defined(HAVE_SCALP)
-				WordLengthCalculator wlc = WordLengthCalculator(pipelined_adder_graph, wIn, epsilon, target);
-				wordSizeMap = wlc.optimizeTruncation();
+          WordLengthCalculator wlc = WordLengthCalculator(adder_graph, wIn, epsilon, target);
+          wordSizeMap = wlc.optimizeTruncation();
 
-				REPORT(LogLevel::DETAIL, "Finished computing word sizes of truncated MCM");
-				if(is_log_lvl_enabled(LogLevel::DETAIL))
-				{
-					for(auto & it : wordSizeMap) {
-						std::cout << "(" << it.first.first << ", " << it.first.second << "): ";
-						for(auto & itV : it.second)
-							std::cout << itV << " ";
-						std::cout << std::endl;
-					}
-				}
+          REPORT(LogLevel::DETAIL, "Finished computing word sizes of truncated MCM");
 
-				truncationReg = IntConstMultShiftAdd_TYPES::TruncationRegister(wordSizeMap);
 #else
-				THROWERROR("The word length's in IntConstMultShiftAdd can not be obtained without ScaLP library, please build with ScaLP library.");
+          THROWERROR("The word length's in IntConstMultShiftAdd can not be obtained without ScaLP library, please build with ScaLP library.");
 #endif
-			}
+        }
 
-			REPORT(LogLevel::VERBOSE, "truncationReg is " << truncationReg.convertToString());
+        REPORT(LogLevel::DETAIL, "Using the following truncations (format: \"const, stage: trunc_input_0, trunc_input_1, ...)\":");
+        if(is_log_lvl_enabled(LogLevel::DETAIL))
+        {
+          for(auto & it : wordSizeMap) {
+            std::cout << it.first.first << ", " << it.first.second << ": ";
+            for(auto & itV : it.second)
+              std::cout << itV << " ";
+            std::cout << std::endl;
+          }
+        }
 
-			int noOfFullAdders = IntConstMultShiftAdd_TYPES::getGraphAdderCost(pipelined_adder_graph,wIn,false);
-			REPORT(LogLevel::DETAIL, "adder graph without truncation requires " << noOfFullAdders << " full adders");
+      }
 
-			noOfFullAdders = IntConstMultShiftAdd_TYPES::getGraphAdderCost(pipelined_adder_graph,wIn,false,truncationReg);
-			REPORT(LogLevel::DETAIL, "truncated adder graph requires " << noOfFullAdders << " full adders");
+      generateAdderGraph(&adder_graph);
+    }
+  }
 
+  void IntConstMultShiftAdd::parseTruncation(string truncationList)
+  {
+    static const string fieldDelimiter{" "};
+    auto getNextField = [](string& val)->string{
+      long unsigned int offset = val.find(fieldDelimiter);
+      string ret = val.substr(0, offset);
+      if (offset != string::npos) {
+        offset += 1;
+      }
+      val.erase(0, offset);
+      return ret;
+    };
+    while(truncationList.length() > 0)
+      parseTruncationRecord(getNextField(truncationList));
+  }
 
-			noOfConfigurations = (*pipelined_adder_graph.nodes_list.begin())->output_factor.size();
-			noOfInputs = (*pipelined_adder_graph.nodes_list.begin())->output_factor[0].size();
-			noOfPipelineStages = 0;
-			int configurationSignalWordsize = ceil(log2(noOfConfigurations));
-			for(auto nodePtr : pipelined_adder_graph.nodes_list) {
-				if (nodePtr->stage > noOfPipelineStages) {
-					noOfPipelineStages=nodePtr->stage;
-				}
-			}
+  void IntConstMultShiftAdd::parseTruncationRecord(string record)
+  {
+    static const string identDelimiter{':'};
+    static const string fieldDelimiter{','};
 
-			REPORT(LogLevel::VERBOSE, "noOfInputs: " << noOfInputs)
-			REPORT(LogLevel::VERBOSE, "noOfConfigurations: " << noOfConfigurations)
-			REPORT(LogLevel::VERBOSE, "noOfPipelineStages: " << noOfPipelineStages)
+    auto getNextField = [](string& val)->mpz_class{
+      long unsigned int offset = val.find(fieldDelimiter);
+      string ret = val.substr(0, offset);
+      if (offset != string::npos) {
+        offset += 1;
+      }
+      val.erase(0, offset);
+      return mpz_class(ret);
+    };
 
-			if(noOfConfigurations > 1) {
-				addInput("config_no", configurationSignalWordsize);
-			}
+    long unsigned int  offset = record.find(identDelimiter);
+    if (offset == string::npos) {
+      throw string{"IntConstMultShiftAdd::TruncationRegister::parseRecord : "
+      "wrong format "} + record;
+    }
+    string recordIdStr = record.substr(0, offset);
+    record.erase(0, offset + 1);
+    string& valuesStr = record;
 
-			IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE::target_ID = target->getID();
-			IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE::noOfConfigurations = noOfConfigurations;
-			IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE::noOfInputs = noOfInputs;
-			IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE::configurationSignalWordsize = configurationSignalWordsize;
+    mpz_class factor = getNextField(recordIdStr);
+    int stage = getNextField(recordIdStr).get_si();
 
-			//IDENTIFY NODE
-			REPORT(LogLevel::VERBOSE,"identifying nodes...")
+    vector<int> truncats;
 
-			map<adder_graph_base_node_t*,IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE*> additionalNodeInfoMap;
-			map<int,list<adder_graph_base_node_t*> > stageNodesMap;
-			for (auto nodePtr : pipelined_adder_graph.nodes_list)
-			{
+    while(valuesStr.length() > 0) {
+      truncats.push_back(getNextField(valuesStr).get_si());
+    }
 
-				stageNodesMap[nodePtr->stage].push_back(nodePtr);
+    wordSizeMap.insert({make_pair(factor, stage), truncats});
 
-				IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE* t = identifyNodeType(nodePtr);
-				t->outputSignalName = generateSignalName(nodePtr);
-				t->target = target;
+    if(is_log_lvl_enabled(DEBUG))
+    {
+      cerr << "(" << factor << "," << stage << "):";
+      for(int t : truncats)
+        cerr << t << " ";
+      cerr << endl;
+    }
+  }
 
-				if      (  t->nodeType == IntConstMultShiftAdd_TYPES::NODETYPE_ADDSUB2_CONF
-					   || t->nodeType == IntConstMultShiftAdd_TYPES::NODETYPE_ADDSUB3_2STATE
-					   || t->nodeType == IntConstMultShiftAdd_TYPES::NODETYPE_ADDSUB3_CONF
-				    ){
-					REPORT(LogLevel::DEBUG,"has decoder")
+  void IntConstMultShiftAdd::generateAdderGraph(PAGSuite::adder_graph_t* adder_graph)
+  {
+    REPORT(DETAIL,"Generating adder graph using " << (getTarget()->plainVHDL() ? "plain" : "structured") << "VHDL");
+    noOfInputs=0;
+    noOfOutputs=0;
+    for(adder_graph_base_node_t* node : adder_graph->nodes_list)
+    {
+      if(!isSigned) //sanity check: in unsigned case, check all factors to be positive
+      {
+        for(int c=0; c < node->output_factor.size(); c++)
+        {
+          for(int i=0; i < node->output_factor[c].size(); i++)
+          {
+            if(node->output_factor[c][i] < 0)
+            {
+              THROWERROR("Found negative factor " << node->output_factor << " in an unsigned operator, select isSigned=true to build this operator");
+            }
 
-					conf_adder_subtractor_node_t* cc = new conf_adder_subtractor_node_t();
-					cc->stage = nodePtr->stage-1;
-					stageNodesMap[nodePtr->stage-1].push_back( cc );
-					((IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE_CONF*)t)->decoder->outputSignalName = t->outputSignalName + "_decode";
-					additionalNodeInfoMap.insert(
-					    make_pair<adder_graph_base_node_t*,IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE*>(cc,((IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE_CONF*)t)->decoder)
-					);
-				}else if(t->nodeType == IntConstMultShiftAdd_TYPES::NODETYPE_MUX){
-					REPORT(LogLevel::DEBUG,"has decoder")
+/*
+            if(is_a<conf_adder_subtractor_node_t>(*node))
+            {
+              conf_adder_subtractor_node_t cnode = ((conf_adder_subtractor_node_t*) node);
+              for(int c=0; c < cnode->input_is_negative.size(); c++)
+              {
+                for(int i = 0; i < cnode->inputs.size(); i++)
+                {
+                  if(cnode->input_is_negative[c][i]) {
+                    THROWERROR("Found negative factor " << node->output_factor << " in an unsigned operator, select isSigned=true to build this operator");
+                  }
+                }
+              }
+            }
+*/
+          }
+        }
+      }
 
-					mux_node_t* cc = new mux_node_t();
-					cc->stage = nodePtr->stage-1;
-					stageNodesMap[nodePtr->stage-1].push_back( cc );
-					((IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_MUX*)t)->decoder->outputSignalName = t->outputSignalName + "_decode";
-					additionalNodeInfoMap.insert(
-					    make_pair<adder_graph_base_node_t*,IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE*>(cc,((IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_MUX*)t)->decoder)
-					);
-				} else if(
-				    t->nodeType == IntConstMultShiftAdd_TYPES::NODETYPE_ADD2 ||
-				    t->nodeType == IntConstMultShiftAdd_TYPES::NODETYPE_SUB2_1N ||
-				    t->nodeType == IntConstMultShiftAdd_TYPES::NODETYPE_ADD3 ||
-				    t->nodeType == IntConstMultShiftAdd_TYPES::NODETYPE_SUB3_1N ||
-				    t->nodeType == IntConstMultShiftAdd_TYPES::NODETYPE_SUB3_2N
-				    ) {
-					//Store the truncation if it exists
-					int computedConstant = nodePtr->output_factor[0][0];
-					t->truncations = truncationReg.getTruncationFor(
-					    computedConstant,
-					    nodePtr->stage
-					);
-				}
-				t->wordsize  = computeWordSize( nodePtr,wIn );
-				t->base_node = nodePtr;
-				//additionalNodeInfoMap.insert( std::make_pair<adder_graph_base_node_t*,IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE*>(nodePtr,t) );
-				additionalNodeInfoMap.insert( {nodePtr,t} );
-			}
-			//IDENTIFY CONNECTIONS
-			REPORT(LogLevel::VERBOSE,"identifiing node connections..")
-			for (auto nodePtr : pipelined_adder_graph.nodes_list)
-			{
-				identifyOutputConnections(nodePtr ,additionalNodeInfoMap);
-			}
-			printAdditionalNodeInfo(additionalNodeInfoMap);
+      //check no of configurations:
+      if(noOfConfigurations == -1)
+      {
+        noOfConfigurations = node->output_factor.size();
+        REPORT(DETAIL,"Found " << noOfConfigurations << " different configuration(s).");
 
-			//START BUILDING NODES
-			REPORT(LogLevel::VERBOSE,"building nodes..")
-			int unpiped_stage_count=0;
-			bool isMuxStage = false;
-			for (
-			    unsigned int currentStage=0 ;
-			    currentStage <= (unsigned int) noOfPipelineStages ;
-			    currentStage++
-			    ) {
-				isMuxStage = false;
-				for (auto operationNode : stageNodesMap[currentStage])
-				{
-					IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE* op_node = additionalNodeInfoMap[operationNode];
-					REPORT(LogLevel::VERBOSE, op_node->outputSignalName << " as " << op_node->get_name())
-
-					if(op_node->nodeType == IntConstMultShiftAdd_TYPES::NODETYPE_INPUT)
-					{
-						input_node_t* t = (input_node_t*)op_node->base_node;
-
-						stringstream inputSignalName;
-						int id=0;
-						while( t->output_factor[0][id]==0 && id < noOfInputs )
-						{
-							id++;
-						}
-
-						inputSignalName << "X" << id;
-						addInput(inputSignalName.str(), wIn);
-						vhdl << "\t" << declare(op_node->outputSignalName,wIn) << " <= " << inputSignalName.str() << ";" << endl;
-						input_signals.push_back(inputSignalName.str());
-					}
-					else
-						vhdl << op_node->get_realisation(additionalNodeInfoMap);
-
-					if(op_node->nodeType == IntConstMultShiftAdd_TYPES::NODETYPE_MUX ||
-					   op_node->nodeType == IntConstMultShiftAdd_TYPES::NODETYPE_AND)
-						isMuxStage = true;
-
-					for(list<pair<string,int> >::iterator declare_it=op_node->declare_list.begin();declare_it!=op_node->declare_list.end();++declare_it  )
-						declare( (*declare_it).first,(*declare_it).second );
-
-					for(list<Operator* >::iterator declare_it=op_node->opList.begin();declare_it!=op_node->opList.end();++declare_it  )
-						addSubComponent(*declare_it);
-				}
+        if(noOfConfigurations > 1)
+        {
+          //more than one configuration found, declare select input:
+          int wSel = ceil(log2(noOfConfigurations+1));
+          addInput(generateSelectName(),wSel);
+        }
+      }
+      else
+      {
+        //check for consistency
+        if(noOfConfigurations != node->output_factor.size())
+        {
+          THROWERROR("Missmatch of no of configurations in node computing " << node->output_factor << "(" << node->output_factor.size() << ") and other nodes (" << noOfConfigurations << ")");
+        }
+      }
 
 
-				if( !(syncEveryN>1 && !syncMux && isMuxStage) )
-					unpiped_stage_count++;
+      if(is_a<input_node_t>(*node))
+      {
+        generateInputNode((input_node_t*) node);
+  //      input_signals.push_back(generateSignalName(node->output_factor, node->stage));
+        noOfInputs++;
+      }
+      else if(is_a<output_node_t>(*node))
+      {
+        generateOutputNode((output_node_t*) node);
 
-				bool doPipe=false;
-				if( pipelined && (!isMuxStage || (isMuxStage && syncMux) ) )
-				{
-					if( (currentStage == 0 || (int)currentStage == noOfPipelineStages) )
-					{
-						//IN OUT STAGE
-						if( syncInOut )
-						{
-							doPipe = true;
-						}
-					}
-					else if( (unpiped_stage_count%syncEveryN)==0 )
-					{
-						doPipe = true;
-					}
-				}
-				else if( !pipelined )
-				{
-					if( syncInOut && (currentStage == 0 || (int)currentStage == noOfPipelineStages) )
-					{
-						doPipe = true;
-					}
-					else if( (unpiped_stage_count%syncEveryN)==0 )
-					{
-						doPipe = true;
-					}
-				}
+        noOfOutputs++;
+      }
+      else if(is_a<adder_subtractor_node_t>(*node))
+      {
+        generateAdderSubtractorNode((adder_subtractor_node_t*) node);
+      }
+      else if(is_a<register_node_t>(*node))
+      {
+        generateRegisterNode((register_node_t*) node);
+      }
+      else if(is_a<mux_node_t>(*node))
+      {
+        generateMuxNode((mux_node_t*) node);
+      }
+      else if(is_a<conf_adder_subtractor_node_t>(*node))
+      {
+        generateConfAdderSubtractorNode((conf_adder_subtractor_node_t*) node);
+      }
+      else
+      {
+        cerr << "Error: Unknown node " << node << endl;
+      }
 
-				if(doPipe)
-				{
-					REPORT(LogLevel::VERBOSE, "----pipeline----")
-//                        nextCycle(); //!!!
-					unpiped_stage_count = 0;
-				}
+    }
 
-			}
+    if(noOfOutputs==0)
+    {
+      THROWERROR("Adder graph does not contain any output node");
+    }
+  }
 
-			output_signal_info sig_info;
-			for (auto operationNode : stageNodesMap[noOfPipelineStages])
-			{
-				if (is_a<output_node_t>(*operationNode)){
-					IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE* op_node = additionalNodeInfoMap[operationNode];
-					stringstream outputSignalName;
-					outputSignalName << "R" ;
-					for(int j=0; j < noOfConfigurations; j++) {
-						outputSignalName << "_c";
-						for(int i=0; i < noOfInputs; i++)
-						{
-							if(i>0) outputSignalName << "v" ;
-							outputSignalName << ((operationNode->output_factor[j][i] < 0) ? "m" : "");
-							outputSignalName << abs(operationNode->output_factor[j][i]);
-						}
-					}
-					addOutput(outputSignalName.str(), op_node->wordsize);
+  void IntConstMultShiftAdd::generateInputNode(PAGSuite::input_node_t* node)
+  {
+    assert(node->output_factor.size() > 0);
+    int inputNo=0;
+    for(int i=0; i < node->output_factor[0].size(); i++)
+    {
+      if(node->output_factor[0][i] == 1)
+        break;
+      inputNo++;
+    }
 
-					sig_info.output_factors = operationNode->output_factor;
-					sig_info.signal_name = outputSignalName.str();
-					sig_info.wordsize = op_node->wordsize;
-					output_signals.push_back( sig_info );
-					vhdl << "\t" << outputSignalName.str() << " <= " << op_node->outputSignalName << ";" << endl;
-				}
-			}
-		}
+    string inputname = "X" + to_string(inputNo);
+    REPORT(DEBUG,"processing input " << node->output_factor << ", adding input " << inputname);
+    addInput(inputname, wIn);
 
-		//cout << endl;
+    vhdl << tab << declare(generateSignalName(node->output_factor,node->stage),wIn) << " <= " << inputname << ";" << endl;
 
-		pipelined_adder_graph.clear();
-	}
+  }
 
-	list<IntConstMultShiftAdd::output_signal_info> &IntConstMultShiftAdd::GetOutputList()
+  void IntConstMultShiftAdd::generateOutputNode(PAGSuite::output_node_t* node)
+  {
+    string name = "R_" + factorToString(node->output_factor);
+//    output_factors.push_back(node->output_factor);
+
+    int wOut = computeWordSize(node->output_factor, wIn);
+    REPORT(DEBUG,"generating output " << name << " storing " << node->output_factor << " in stage " << node->stage << " using " << wOut << " bits");
+    addOutput(name, wOut);
+
+    string signed_str = isSigned ? "signed" : "unsigned";
+    vhdl << tab << name << " <= std_logic_vector(" << signed_str << "(shift_left(resize(" << signed_str << "(" << generateSignalName(node->input->output_factor,node->input->stage) << ")," << wOut << ")," << node->input_shift << ")));" << endl;
+  }
+
+  void IntConstMultShiftAdd::generateRegisterNode(PAGSuite::register_node_t* node)
+  {
+    string name = generateSignalName(node->output_factor,node->stage);
+
+    int result_word_size = computeWordSize(node->output_factor, wIn);
+    REPORT(DEBUG,"generating register " << name << " storing " << node->output_factor << " in stage " << node->stage << " using " << result_word_size << " bits");
+
+    vhdl << tab << declare(name, result_word_size) << " <= " << generateSignalName(node->input->output_factor, node->stage - 1) << ";" << endl;
+  }
+
+  void IntConstMultShiftAdd::generateConfAdderSubtractorNode(PAGSuite::conf_adder_subtractor_node_t* node)
+  {
+    generateAdderSubtractorNode(node);
+  }
+
+  void IntConstMultShiftAdd::generateAdderSubtractorNode(PAGSuite::adder_subtractor_node_t* node)
+  {
+    REPORT(DEBUG,"normalizing node " << node->output_factor << " in stage " << node->stage);
+    bool nodeIsNormalized = adder_graph.normalize_node(node); //is true when normalization was successful, i.e., first input of adder is positive
+
+    if(!nodeIsNormalized) cerr << endl << endl <<  "!!!!!!! node was not normalized !!!!!" << endl << endl;
+
+    //The following steps are performed
+    //0: Determine constants: configurability, input word sizes of arguments X, Y and Z, output word size
+    bool isConfigurableAddSub=false;
+    conf_adder_subtractor_node_t* cnode = nullptr; //just for easier access
+    if(is_a<conf_adder_subtractor_node_t>(*node))
+    {
+      isConfigurableAddSub=true;
+      cnode = ((conf_adder_subtractor_node_t*) node);
+    }
+
+    int wAddOut = computeWordSize(node->output_factor, wIn);
+    vector<int> wAddIn(node->inputs.size());
+    for(int i=0; i < node->inputs.size(); i++)
+    {
+      wAddIn[i] = computeWordSize(node->inputs[i]->output_factor, wIn);
+    }
+
+    string signalNameOut = generateSignalName(node->output_factor,node->stage);
+    declare(signalNameOut,wAddOut); //output signal of the adder equals signalName
+    string signalNameIn[node->inputs.size()];
+    for(int i=0; i < node->inputs.size(); i++)
+    {
+      signalNameIn[i] = signalNameOut + "_in" + to_string(i);
+
+      vhdl << tab << declare(signalNameIn[i], wAddIn[i]) << " <= ";
+      vhdl << generateSignalName(node->inputs[i]->output_factor, node->inputs[i]->stage) << ";" << endl;
+    }
+
+    //some detailed output about what is computed:
+    if(is_log_lvl_enabled(DETAIL))
+    {
+      cerr << std::filesystem::path{__FILE__}.filename() << ": ";
+
+      if(!isConfigurableAddSub)
+      {
+        //the simple add/sub with static signs
+        cerr << "processing adder/subtractor computing [" << node->output_factor << "] (stage " << node->stage << ") = ";
+        for(int i=0; i < node->inputs.size(); i++)
+        {
+          if(node->input_is_negative[i])
+          {
+            cerr << " - ";
+          }
+          else
+          {
+            if(i > 0) cerr << " + ";
+          }
+          cerr << "[" << node->inputs[i]->output_factor << "] (stage " << node->inputs[i]->stage << ")";
+          if(node->input_shifts[i] > 0)
+          {
+            cerr << " << " << node->input_shifts[i] << " ";
+          }
+        }
+      }
+      else
+      {
+        //for configurable add/sub, the sign depends on configuration
+        cerr << "processing configurable adder/subtractor computing" << endl;
+        for(int c=0; c < cnode->input_is_negative.size(); c++)
+        {
+          cerr << "[" << node->output_factor << "] (stage " << node->stage << ") = ";
+          for (int i = 0; i < cnode->inputs.size(); i++) {
+            if (cnode->input_is_negative[c][i])
+            {
+              cerr << " - ";
+            }
+            else
+            {
+              if (i > 0) cerr << " + ";
+            }
+            cerr << "[" << cnode->inputs[i]->output_factor << "] (stage " << cnode->inputs[i]->stage << ")";
+            if (cnode->input_shifts[i] > 0)
+            {
+              cerr << " << " << cnode->input_shifts[i];
+            }
+          }
+          cerr << " in configuration " << c << endl;
+        }
+      }
+
+      cerr << "using " << wAddOut << " output bits and ";
+      for(int i=0; i < node->inputs.size(); i++)
+      {
+        cerr << wAddIn[i];
+        if(i < node->inputs.size()-1) cerr << ", ";
+      }
+      cerr << " input bits, respectively" <<  endl;
+    }
+
+    //Step 1: create truncated versions of the input signals (if any), adjust input word sizes
+    vector<int> truncations(node->inputs.size(),0);
+    if(isTruncated)
+    {
+      mpz_class of((signed long int) node->output_factor[0][0]);
+      truncations = wordSizeMap.at(make_pair(of,node->stage));
+      for(int i=0; i < node->inputs.size(); i++)
+      {
+        wAddIn[i] -= truncations[i];  //set input word size to the truncated size
+        node->input_shifts[i] += truncations[i]; //adjust shifts with respect to the truncated signal
+        vhdl << tab << declare(signalNameIn[i] + "_trunc", wAddIn[i]) << " <= " << signalNameIn[i] << range(wAddIn[i] + truncations[i] - 1, truncations[i]) << ";" << endl;
+      }
+    }
+
+    //determine zero LSB positions (typically come from truncations)
+    int zeroLSBs=INT_MAX;
+    for(int i=0; i < node->input_shifts.size(); i++)
+    {
+      if(node->input_shifts[i] < zeroLSBs)
+      {
+        zeroLSBs = node->input_shifts[i];
+      }
+    }
+    if(zeroLSBs > 0)
+    {
+      REPORT(DETAIL,"There are " << zeroLSBs << " LSB positions in the result that are zero");
+      for(int i=0; i < node->input_shifts.size(); i++)
+      {
+        //adjust shifts with respect to the minimum shift due to truncation
+        node->input_shifts[i] -= zeroLSBs;
+      }
+    }
+
+    //Step 2: split output parts that belong to one of the inputs and assign it to the outputs
+
+    //determine the difference between smallest shift (incl. truncation) of a non-negative input and second smallest shift (incl. truncation)
+    int minShift=INT_MAX;
+    int inputMinShift=-1;
+
+    //check for negative inputs and ignore as they can't be forwarded to the output
+    for(int i=0; i < node->input_shifts.size(); i++)
+    {
+      bool inputNegativeinAnyConf=false;
+      if(!isConfigurableAddSub)
+      {
+        inputNegativeinAnyConf = node->input_is_negative[i]; //this is the simple case
+      }
+      else
+      {
+        //for configurable add/sub, check all configurations and ignore negative inputs
+        for(int c=0; c < cnode->input_is_negative.size(); c++)
+        {
+          if(cnode->input_is_negative[c][i]) inputNegativeinAnyConf = true;
+        }
+      }
+      if(!inputNegativeinAnyConf) //only consider non-negative inputs
+      {
+        if(node->input_shifts[i] < minShift)
+        {
+          minShift = node->input_shifts[i];
+          inputMinShift = i;
+        }
+      }
+    }
+    int minShiftSecond=INT_MAX;;
+    for(int i=0; i < node->input_shifts.size(); i++)
+    {
+      if((node->input_shifts[i] < minShiftSecond) && (i != inputMinShift))
+        minShiftSecond = node->input_shifts[i];
+    }
+    int forwardedLSBs;
+    if((minShift != INT_MAX) && (minShiftSecond != INT_MAX))
+    {
+      forwardedLSBs = minShiftSecond - minShift;
+      forwardedLSBs = forwardedLSBs < 0 ? 0 : forwardedLSBs;
+    }
+    else
+    {
+      forwardedLSBs = 0;
+    }
+
+    if(forwardedLSBs > wIn)
+      forwardedLSBs = wIn; //we can't foward more than we have
+
+    if(forwardedLSBs > 0)
+    {
+      assert(inputMinShift != -1);
+      REPORT(DETAIL,"Second smallest shift of non-negative input is " << minShiftSecond << ", hence " << forwardedLSBs << " LSBs can be copied to the result.");
+      vhdl << tab << declare(signalNameOut + "_LSBs",forwardedLSBs) << " <= " << signalNameIn[inputMinShift] << (isTruncated ? "_trunc" : "") << range(forwardedLSBs - 1, 0) << ";" << endl;
+
+      if(wAddIn[inputMinShift] > forwardedLSBs) //if this condition is true, there is nothing left to add (because of the shift)
+      {
+        vhdl << tab << declare(signalNameIn[inputMinShift] + "_MSBs", wAddIn[inputMinShift] - forwardedLSBs) << " <= " << signalNameIn[inputMinShift] << (isTruncated ? "_trunc" : "") << range(wAddIn[inputMinShift] - 1, forwardedLSBs) << ";" << endl;
+      }
+      else
+      {
+        REPORT(DETAIL,"Input " << inputMinShift << " does not contribute to the addition.");
+
+        //the simple solution here is to add a 0 (unsigned) or the sign bit (signed case) (0 in unsigned case is later optimized by synthesis, potential of improvement for version using primitives!)
+        string source;
+        if(isSigned)
+        {
+          source = signalNameIn[inputMinShift] + range(wIn-1,wIn-1);
+        }
+        else
+        {
+          source = "\"0\""; //assign MSB to 0
+        }
+
+        vhdl << tab << declare(signalNameIn[inputMinShift] + "_MSBs", 1) << " <= " << source << ";" << endl;
+
+      }
+
+      for(int i=0; i < node->input_shifts.size(); i++)
+      {
+        //adjust shifts with respect to the forwarded LSBs
+        if(i != inputMinShift)
+          node->input_shifts[i] -= forwardedLSBs;
+
+        //adjust word sizes
+        if(i == inputMinShift)
+          wAddIn[i]-= forwardedLSBs;
+      }
+
+    }
+
+    //Step 3: shift input signals, and sign-extend inputs in signed case
+    int wMaxInclShift=-1;
+    //search for the maximum MSB position:
+    for(int i=0; i < node->input_shifts.size(); i++)
+    {
+      if(node->input_shifts[i]+wAddIn[i] > wMaxInclShift)
+      {
+        wMaxInclShift = node->input_shifts[i] + wAddIn[i];
+      }
+    }
+    REPORT(DEBUG,"Max. MSB position found at " << wMaxInclShift << ", sign extending signals");
+
+
+    int wAddInMax=0;
+    for(int i=0; i < node->inputs.size(); i++)
+    {
+      wAddInMax = wAddIn[i] > wAddInMax ? wAddIn[i] : wAddInMax; //store max input word size for later
+    }
+
+    int wAdd = wAddOut - forwardedLSBs;
+    if(wAddInMax > wAdd) wAdd = wAddInMax; //a seldom case but may happen that input word size is larger than output word size
+
+    int rightShift=0;
+    for(int i=0; i < node->inputs.size(); i++)
+    {
+//      wAddIn[i]+= node->input_shifts[i];
+
+      string conversionFunction;
+      if(isSigned)
+      {
+        conversionFunction = "signed";
+      }
+      else
+      {
+        conversionFunction = "unsigned";
+      }
+
+      int leftShift=node->input_shifts[i];
+      if(leftShift < 0)
+      {
+        //we have a right shift
+        if(rightShift != 0)
+        {
+          if(rightShift != -leftShift)
+          {
+            THROWERROR("adder with different negative input shifts (right shifts) detected. This is not possible.");
+          }
+        }
+        else
+        {
+          rightShift=-leftShift; //store right shift for later (after addition)
+          wAdd += rightShift;    //increase adder word size by the right shift
+          wAddOut += rightShift; //increase adder result by the right shift
+        }
+        leftShift=0; //reset shift to 0
+      }
+
+//      if(!((i == inputMinShift) && (wAddIn[inputMinShift] > forwardedLSBs))) //filter signal that does not contribute to the addition
+      vhdl << tab << declare(signalNameIn[i] + "_shifted", wAdd) << " <= std_logic_vector(shift_left(resize(" << conversionFunction << "(" << signalNameIn[i] << ((forwardedLSBs > 0) && (i == inputMinShift) ? "_MSBs" : (isTruncated ? "_trunc" : "")) << ")," << wAdd << ")," << leftShift << "));" << endl;
+    }
+
+    //Step 4: Perform addition
+//    if(getTarget()->plainVHDL())
+    {
+      vhdl << tab << declare(signalNameOut + "_MSBs",wAddOut - forwardedLSBs) << " <= " << endl << tab << tab;
+      string conversionFunction;
+
+      if(isSigned || !nodeIsNormalized) //signed is necessary for nodes that could not be normalized
+        conversionFunction = "signed";
+      else
+        conversionFunction = "unsigned";
+
+      if(!isConfigurableAddSub)
+      {
+        //for the simple add/sub, perform the negation in the operation (usually more efficient for the tools)
+        vhdl << "std_logic_vector(resize(";
+        for(int i=0; i < node->inputs.size(); i++)
+        {
+          vhdl << (node->input_is_negative[i] ? "-" : (i == 0 ? "" : "+")) << conversionFunction << "(" << signalNameIn[i] + "_shifted" << ")";
+        }
+        vhdl << "," << wAddOut - forwardedLSBs << "));" << endl;
+      }
+      else
+      {
+        int wSel = ceil(log2(noOfConfigurations+1));
+        //for the configurable add/sub, the negation was already performed on the input signal
+        for(int c = 0; c < cnode->input_is_negative.size(); c++)
+        {
+          vhdl << "std_logic_vector(";
+          for(int i=0; i < node->inputs.size(); i++)
+          {
+            vhdl << (cnode->input_is_negative[c][i] ? "-" : (i == 0 ? "" : "+")) << "resize(" << conversionFunction << "(" << signalNameIn[i] + "_shifted" << ")" << "," << wAddOut - forwardedLSBs << ")";
+          }
+          vhdl << ")";
+          if(c != cnode->input_is_negative.size()-1)
+          {
+            vhdl << " when " << generateSelectName() << "=\"" << dec2binstr(c, wSel) << "\"";
+            vhdl << " else " << endl << tab << tab;
+          }
+          else
+          {
+            vhdl << ";" << endl;
+          }
+        }
+      }
+    }
+/*
+ *  (otherwise autotest will not work ...)
+ *
+    else
+    {
+      THROWERROR("Target specific optimization not complete yet, use plainVHDL=1 instead");
+    }
+*/
+    //Step 5: Merge results, perform right shift if necessary
+    vhdl << tab << signalNameOut << " <= ";
+    vhdl << signalNameOut << "_MSBs";
+    if(rightShift > 0)
+    {
+      vhdl << range(wAddOut-1,rightShift);
+    }
+    if(forwardedLSBs > 0)
+    {
+       vhdl << " & " << signalNameOut << "_LSBs";
+    }
+    if(zeroLSBs > 0)
+    {
+      vhdl << " & \"";
+      for(int i=0; i < zeroLSBs; i++)
+      {
+        vhdl << "0";
+      }
+      vhdl << "\"";
+    }
+    vhdl << ";" << endl;
+
+
+
+
+    //determine flags for the mode of the Adder / Sub:
+/*
+    int nb_inputs = node->inputs.size();
+    int flag = (nb_inputs == 3) ? IntAddSub::TERNARY : 0;
+    if (node->input_is_negative[0]) {
+      flag |= IntAddSub::SUB_LEFT;
+    }
+    if (node->input_is_negative[1]) {
+      flag |= (nb_inputs == 3) ? IntAddSub::SUB_MID : IntAddSub::SUB_RIGHT;
+    }
+
+    if (nb_inputs > 2 && node->input_is_negative[2]) {
+      flag |= IntAddSub::SUB_RIGHT;
+    }
+*/
+
+
+/*
+ TODO: integrate this!
+
+    bool isSigned=false;
+    bool isTernary=false;
+    bool xNegative=false;
+    bool yNegative=false;
+    bool zNegative=false;
+    bool xConfigurable=false;
+    bool yConfigurable=false;
+    bool zConfigurable=false;
+
+
+
+    IntAddSub* add = new IntAddSub(
+      this,
+      getTarget(),
+      wAdd,isSigned, isTernary, xNegative, yNegative, zNegative, xConfigurable, yConfigurable, zConfigurable
+    );
+
+    addSubComponent(add);
+*/
+
+  /*
+
+    vector<string> operandNames(nb_inputs);
+    for (size_t i = 0 ; i < nb_inputs ; ++i)
+    {
+      string operandName = generateSignalName(node->inputs[i]->output_factor) + "_";
+      operandNames.push_back();
+      declare(0., signal_name, adder_word_size);
+    }
+
+    for (size_t i = 0 ; i < nb_inputs ; ++i)
+    {
+      inPortMap(add->getInputName(i), operandNames[i]);
+    }
+    base_op->outPortMap(add->getOutputName(), msb_signame);
+
+    base_op->vhdl << base_op->instance(add,"generic_add_sub_"+outputSignalName);
+
+    string leftshiftedoutput = outputSignalName + "_tmp";
+
+//  base_op->vhdl << "\t" << declare(leftshiftedoutput, wordsize + finalRightShifts) << " <= " << msb_signame;
+    base_op->vhdl << "\t" << declare(leftshiftedoutput, wordsize) << " <= " << msb_signame;
+*/
+
+  }
+
+
+  void IntConstMultShiftAdd::generateMuxNode(PAGSuite::mux_node_t* node)
+  {
+    //some detailed output about what is computed:
+    if(is_log_lvl_enabled(DETAIL)) {
+      cerr << std::filesystem::path{__FILE__}.filename() << ": ";
+      cerr << "processing MUX computing:" << endl;
+
+      for(int i=0; i < node->inputs.size(); i++)
+      {
+        adder_graph_base_node_t *input_node = node->inputs[i];
+        if(input_node != nullptr) //don't care inputs are defined to be NULL
+        {
+          cerr << std::filesystem::path{__FILE__}.filename() << ": ";
+          cerr << "[" << node->output_factor << "] (stage " << node->stage << ")" << " = [" << input_node->output_factor << "] (stage " << input_node->stage << ")" << " << " << ((mux_node_t *) node)->input_shifts[i] << " for configuration " << i << endl;
+        }
+      }
+    }
+
+    int wMUX=computeWordSize(node->output_factor, wIn);
+    int wSel = ceil(log2(noOfConfigurations+1));
+
+    vhdl << tab << "with " << generateSelectName() << " select" << endl;
+    vhdl << tab << declare(generateSignalName(node->output_factor, node->stage),wMUX) << " <= " << endl << tab << tab << tab;;
+    string signed_str = isSigned ? "signed" : "unsigned";
+    for(int i=0; i < node->inputs.size(); i++)
+    {
+      adder_graph_base_node_t *input_node = node->inputs[i];
+
+      if(input_node != nullptr) //don't care inputs are defined to be NULL
+      {
+        vhdl << "std_logic_vector(" << signed_str << "(shift_left(resize(" << signed_str << "(" << generateSignalName(input_node->output_factor, input_node->stage) << ")," << wMUX << ")," << ((mux_node_t *) node)->input_shifts[i] << ")))";
+      }
+      else
+      {
+        vhdl << zg(wMUX); //output zero for don't care
+      }
+      vhdl << " when ";
+      if(i < ((mux_node_t *) node)->inputs.size() - 1)
+        vhdl << "\"" << dec2binstr(i, wSel) << "\"," << endl << tab << tab << tab;
+      else
+        vhdl << "others;" << endl;
+
+
+    }
+  }
+
+
+
+  void IntConstMultShiftAdd::emulate(TestCase * tc)
 	{
-		return output_signals;
-	}
+		vector<mpz_class> inputVector(noOfInputs);
 
-	void IntConstMultShiftAdd::emulate(TestCase * tc)
-	{
+    mpz_class msbp1 = (mpz_class(1) << (wIn));
+    mpz_class msb = (mpz_class(1) << (wIn - 1));
+
+		for(int i=0 ; i < noOfInputs ; i++)
+		{
+			inputVector[i] = tc->getInputValue("X" + to_string(i));
+
+      if(isSigned)
+      {
+        if (inputVector[i] >= msb)
+          inputVector[i] = inputVector[i] - msbp1;
+      }
+
+    }
+
+//#define DEBUG_OUT
+#ifdef DEBUG_OUT
+    cerr << "Input vector(s): ";
+		for(int i=0 ; i < noOfInputs ; i++)
+      cerr << inputVector[i] << " ";
+#endif// DEBUG_OUT
+
+    mpz_class conf_mpz;
+    if(noOfConfigurations > 1)
+    {
+      conf_mpz = tc->getInputValue(generateSelectName());
+    }
+    else
+    {
+      conf_mpz = 0;
+    }
+    int conf = conf_mpz.get_ui();
+
+    //check the case that the configuration does not exist
+    if(conf > noOfConfigurations-1)
+    {
+      conf_mpz = conf % noOfConfigurations; //set it to a valid configuration
+      conf = conf_mpz.get_ui();
+      tc->setInputValue(generateSelectName(), conf_mpz);
+    }
+
+#ifdef DEBUG_OUT
+    cerr << " | output value(s): ";
+#endif// DEBUG_OUT
+    for(adder_graph_base_node_t* node : adder_graph.nodes_list)
+    {
+      if(is_a<output_node_t>(*node))
+      {
+        signed long int outputValue=0;
+    		for(int i=0 ; i < noOfInputs ; i++)
+        {
+          outputValue += inputVector[i].get_si() * node->output_factor[conf][i];
+        }
+        string outputName = "R_" + factorToString(node->output_factor);
+        mpz_class outputValue_mpz = outputValue;
+        tc->addExpectedOutput(outputName, outputValue_mpz);
+
+#ifdef DEBUG_OUT
+        cerr << outputValue << " ";
+#endif// DEBUG_OUT
+
+        // ... to be continued ...
+      }
+    }
+#ifdef DEBUG_OUT
+    cerr << endl;
+#endif// DEBUG_OUT
+
+
+/*
 		vector<mpz_class> input_vec;
 
 		unsigned int confVal=emu_conf;
 
 		if( noOfConfigurations > 1 )
 			tc->addInput("config_no",emu_conf);
+
+    mpz_class msbp1 = (mpz_class(1) << (wIn));
+    mpz_class big1P = (mpz_class(1) << (wIn-1));
 
 		for(int i=0;i<noOfInputs;i++ )
 		{
@@ -374,13 +915,12 @@ namespace flopoco {
 
 			mpz_class inputVal = tc->getInputValue(inputName.str());
 
-			mpz_class big1 = (mpz_class(1) << (wIn));
-			mpz_class big1P = (mpz_class(1) << (wIn-1));
-
 			if ( inputVal >= big1P)
-				inputVal = inputVal - big1;
+				inputVal = inputVal - msbp1;
 
 			input_vec.push_back(inputVal);
+
+			cerr << "inputVal=" << inputVal << " ";
 		}
 
 		mpz_class expectedResult;
@@ -433,6 +973,7 @@ namespace flopoco {
 			{
 				tc->addComment(comment.str());
 				tc->addExpectedOutput((*out_it).signal_name,expectedResult);
+				cerr << "expectedResult=" << expectedResult << endl;
 			}
 			catch(string errorstr)
 			{
@@ -444,85 +985,93 @@ namespace flopoco {
 			emu_conf++;
 		else
 			emu_conf=0;
+
+*/
 	}
 
 	void IntConstMultShiftAdd::buildStandardTestCases(TestCaseList * tcl)
 	{
 		TestCase* tc;
+    if(isSigned)
+    {
+      for(int c=0; c < noOfConfigurations; c++)
+      {
+        tc = new TestCase (this);
+        tc->addComment("Test ZERO");
+        if( noOfConfigurations > 1 )
+        {
+          tc->addInput(generateSelectName(), c);
+        }
+        for(int i=0; i < noOfInputs; i++)
+        {
+          tc->addInput("X" + to_string(i),0 );
+        }
+        emulate(tc);
+        tcl->add(tc);
+      }
+    }
 
-		int min_val = -1 * (1 << (wIn-1));
-		int max_val = (1 << (wIn-1)) -1;
-
-		stringstream max_str;
-		max_str << "Test MAX: " << max_val;
-
-		stringstream min_str;
-		min_str << "Test MIN: " << min_val;
-
-		for(int i=0;i<noOfConfigurations;i++)
-		{
-			tc = new TestCase (this);
-			tc->addComment("Test ZERO");
-			if( noOfConfigurations > 1 )
-			{
-				tc->addInput("config_no",i);
-			}
-			for(list<string>::iterator inp_it = input_signals.begin();inp_it!=input_signals.end();++inp_it )
-			{
-				tc->addInput(*inp_it,0 );
-			}
-			emulate(tc);
-			tcl->add(tc);
-		}
-
-		for(int i=0;i<noOfConfigurations;i++)
+		for(int c=0; c < noOfConfigurations; c++)
 		{
 			tc = new TestCase (this);
 			tc->addComment("Test ONE");
 			if( noOfConfigurations > 1 )
 			{
-				tc->addInput("config_no",i);
+				tc->addInput(generateSelectName(), c);
 			}
-			for(list<string>::iterator inp_it = input_signals.begin();inp_it!=input_signals.end();++inp_it )
-			{
-				tc->addInput(*inp_it,1 );
-			}
-			emulate(tc);
-			tcl->add(tc);
-		}
-
-		for(int i=0;i<noOfConfigurations;i++)
-		{
-			tc = new TestCase (this);
-			tc->addComment(min_str.str());
-			if( noOfConfigurations > 1 )
-			{
-				tc->addInput("config_no",i);
-			}
-			for(list<string>::iterator inp_it = input_signals.begin();inp_it!=input_signals.end();++inp_it )
-			{
-				tc->addInput(*inp_it,min_val );
+      for(int i=0; i < noOfInputs; i++)
+      {
+        tc->addInput("X" + to_string(i),1 );
 			}
 			emulate(tc);
 			tcl->add(tc);
 		}
 
-		for(int i=0;i<noOfConfigurations;i++)
+    long int min_val, max_val;
+    if(isSigned)
+    {
+      min_val = -1 * (1 << (wIn-1));
+      max_val = (1 << (wIn-1)) -1;
+    }
+    else
+    {
+      min_val = 0;
+      max_val = (1 << wIn) -1;
+    }
+
+		for(int c=0; c < noOfConfigurations; c++)
 		{
 			tc = new TestCase (this);
-			tc->addComment(max_str.str());
+			tc->addComment("Test min value");
 			if( noOfConfigurations > 1 )
 			{
-				tc->addInput("config_no",i);
+				tc->addInput(generateSelectName(), c);
 			}
-			for(list<string>::iterator inp_it = input_signals.begin();inp_it!=input_signals.end();++inp_it )
+      for(int i=0; i < noOfInputs; i++)
+      {
+        tc->addInput("X" + to_string(i),min_val );
+			}
+			emulate(tc);
+			tcl->add(tc);
+		}
+
+		for(int c=0; c < noOfConfigurations; c++)
+		{
+			tc = new TestCase (this);
+			tc->addComment("Test max value");
+			if( noOfConfigurations > 1 )
 			{
-				tc->addInput(*inp_it,max_val );
+				tc->addInput(generateSelectName(), c);
+			}
+      for(int i=0; i < noOfInputs; i++)
+      {
+        tc->addInput("X" + to_string(i),max_val );
 			}
 			emulate(tc);
 			tcl->add(tc);
 		}
 	}
+
 
 	TestList IntConstMultShiftAdd::unitTest(int testLevel)
 	{
@@ -530,425 +1079,287 @@ namespace flopoco {
 		TestList testStateList;
 		vector<pair<string,string>> paramList;
 
-    if(testLevel >= TestLevel::SUBSTANTIAL)
-    { // The substantial unit tests
+		list<string> graphsUnsigned;
+		list<string> graphsSigned;
 
-      list<string> graphs;
+    //adder graphs having only unsigned outputs (can be evaluated on both signed & unsigned):
 
-      //simplest adder graph possible, multiply by 1:
-      graphs.push_back("\"{{'O',[1],1,[1],0,0}}\"");
+		//simplest adder graph possible, multiply by 1:
+		graphsUnsigned.push_back("{{'O',[1],1,[1],0,0}}");
 
-      //SCM by 123, obtained from rpag 123:
-      graphs.push_back("\"{{'R',[1],1,[1],0},{'A',[5],1,[1],0,0,[1],0,2},{'A',[123],2,[1],1,7,[-5],1,0},{'O',[123],2,[123],2,0}}\"");
+    //Simple SCM by 7, obtained from rpag 7:
+    graphsUnsigned.push_back("{{'A',[7],1,[1],0,3,[-1],0,0},{'O',[7],1,[7],1,0}}");
 
-      //MCM by 123, 321, obtained from rpag 123 321:
-      graphs.push_back("\"{{'R',[1],1,[1],0},{'A',[5],1,[1],0,0,[1],0,2},{'A',[123],2,[1],1,7,[-5],1,0},{'A',[321],2,[1],1,0,[5],1,6},{'O',[123],2,[123],2,0},{'O',[321],2,[321],2,0}}\"");
+    //SCM by 7, but swapped inputs such that the first input is negative (check for problems with unsigned input):
+    graphsUnsigned.push_back("{{'A',[7],1,[-1],0,0,[1],0,3},{'O',[7],1,[7],1,0}}");
 
-      //SCM by 100000000 using ternary adders, obtained from rpag --ternary_adders 100000000:
-      graphs.push_back("\"{{'A',[191],1,[1],0,6,[1],0,7,[-1],0,0},{'A',[543],1,[1],0,5,[1],0,9,[-1],0,0},{'A',[390625],2,[191],1,11,[-543],1,0},{'O',[100000000],2,[390625],2,8}}\"");
+    //Simple SCM with negative result -7:
+    graphsSigned.push_back("{{'A',[-7],1,[1],0,0,[-1],0,3},{'O',[-7],1,[-7],1,0}}");
 
-      //MCM by 123, 321 using ternary adders, obtained from rpag --ternary_adders 123 321:
-      graphs.push_back("\"{{'A',[123],1,[1],0,7,[-1],0,2,[-1],0,0},{'A',[321],1,[1],0,6,[1],0,8,[1],0,0},{'O',[123],1,[123],1,0},{'O',[321],1,[321],1,0}}\"");
+    //Simple SCM with negative result -9 and both inputs negative:
+    graphsSigned.push_back("{{'A',[-9],1,[-1],0,0,[-1],0,3},{'O',[-9],1,[-9],1,0}}");
 
-      //MCM by 11280171, 13342037 using ternary adders, obtained from rpag --ternary_adders 11280171 13342037:
-      graphs.push_back("\"{{'A',[21],1,[1],0,2,[1],0,4,[1],0,0},{'A',[8065],1,[1],0,13,[-1],0,7,[1],0,0},{'A',[10941],2,[21],1,3,[21],1,9,[21],1,0},{'A',[104833],2,[21],1,9,[21],1,12,[8065],1,0},{'A',[11280171],3,[10941],2,3,[10941],2,10,[-10941],2,0},{'A',[13342037],3,[10941],2,0,[-10941],2,3,[104833],2,7},{'O',[11280171],3,[11280171],3,0},{'O',[13342037],3,[13342037],3,0}}\""); //
+		//SCM by 123, obtained from rpag 123:
+		graphsUnsigned.push_back("{{'R',[1],1,[1],0},{'A',[5],1,[1],0,0,[1],0,2},{'A',[123],2,[1],1,7,[-5],1,0},{'O',[123],2,[123],2,0}}");
 
-      //CMM of 123*x1+321*x2 345*x1-543*x2, obtained from rpag --cmm 123,321 345,-543:
-      graphs.push_back("\"{{'A',[0,5],1,[0,1],0,0,[0,1],0,2},{'A',[0,17],1,[0,1],0,0,[0,1],0,4},{'A',[5,0],1,[1,0],0,0,[1,0],0,2},{'A',[128,1],1,[0,1],0,0,[1,0],0,7},{'A',[257,0],1,[1,0],0,0,[1,0],0,8},{'R',[0,5],2,[0,5],1},{'A',[5,68],2,[0,17],1,2,[5,0],1,0},{'A',[123,1],2,[128,1],1,0,[-5,0],1,0},{'A',[385,1],2,[128,1],1,0,[257,0],1,0},{'A',[123,321],3,[0,5],2,6,[123,1],2,0},{'A',[345,-543],3,[385,1],2,0,[-5,-68],2,3},{'O',[123,321],3,[123,321],3,0},{'O',[345,-543],3,[345,-543],3,0}}\"");
+		//MCM by 123, 321, obtained from rpag 123 321:
+		graphsUnsigned.push_back("{{'R',[1],1,[1],0},{'A',[5],1,[1],0,0,[1],0,2},{'A',[123],2,[1],1,7,[-5],1,0},{'A',[321],2,[1],1,0,[5],1,6},{'O',[123],2,[123],2,0},{'O',[321],2,[321],2,0}}");
 
-      //CMM of 123*x1+321*x2 345*x1-543*x2 using ternary adders, obtained from rpag --ternary_adders --cmm 123,321 345,-543:
-      graphs.push_back("\"{{'A',[1,-4],1,[1,0],0,0,[0,-1],0,2},{'A',[2,5],1,[0,1],0,0,[0,1],0,2,[1,0],0,1},{'A',[5,-1],1,[1,0],0,2,[0,-1],0,0,[1,0],0,0},{'A',[7,-1],1,[1,0],0,3,[0,-1],0,0,[-1,0],0,0},{'A',[123,321],2,[2,5],1,6,[-5,1],1,0},{'A',[345,-543],2,[1,-4],1,7,[7,-1],1,5,[-7,1],1,0},{'O',[123,321],2,[123,321],2,0},{'O',[345,-543],2,[345,-543],2,0}}\""); //
+		//SCM by 100000000 using ternary adders, obtained from rpag --ternary_adders 100000000:
+		graphsUnsigned.push_back("{{'A',[191],1,[1],0,6,[1],0,7,[-1],0,0},{'A',[543],1,[1],0,5,[1],0,9,[-1],0,0},{'A',[390625],2,[191],1,11,[-543],1,0},{'O',[100000000],2,[390625],2,8}}");
 
-      //MCM's including right shifts:
-      graphs.push_back("\"{{'R',[1],1,[1],0},{'A',[31],1,[1],0,5,[-1],0,0},{'A',[511],1,[1],0,9,[-1],0,0},{'A',[2049],1,[1],0,0,[1],0,11},{'A',[123],2,[31],1,2,[-1],1,0},{'A',[6127],2,[511],1,4,[-2049],1,0},{'A',[1049119],2,[31],1,0,[2049],1,9},{'A',[5079583],3,[123],2,15,[1049119],2,0},{'A',[6274171],3,[123],2,0,[6127],2,10},{'A',[5676877],4,[5079583],3,-1,[6274171],3,-1},{'A',[25397915],4,[5079583],3,0,[5079583],3,2},{'O',[50795830],4,[25397915],4,1},{'O',[90830032],4,[5676877],4,4}}\"");
-      graphs.push_back("\"{{'O',[6],3,[3],2,1},{'O',[10],3,[5],1,1},{'A',[3],2,[1],0,-1,[5],1,-1},{'A',[5],1,[1],0,2,[1],0,0}}\""); //
+		//simple SCM by 11 using ternary adders for which one bit can be forwarded
+		graphsUnsigned.push_back("{{'A',[11],1,[1],0,0,[1],0,1,[1],0,3},{'O',[11],1,[11],1,0}}");
+
+		//MCM by 123, 321 using ternary adders, obtained from rpag --ternary_adders 123 321:
+		graphsUnsigned.push_back("{{'A',[123],1,[1],0,7,[-1],0,2,[-1],0,0},{'A',[321],1,[1],0,6,[1],0,8,[1],0,0},{'O',[123],1,[123],1,0},{'O',[321],1,[321],1,0}}");
+
+		//MCM by 11280171, 13342037 using ternary adders, obtained from rpag --ternary_adders 11280171 13342037:
+		graphsUnsigned.push_back("{{'A',[21],1,[1],0,2,[1],0,4,[1],0,0},{'A',[8065],1,[1],0,13,[-1],0,7,[1],0,0},{'A',[10941],2,[21],1,3,[21],1,9,[21],1,0},{'A',[104833],2,[21],1,9,[21],1,12,[8065],1,0},{'A',[11280171],3,[10941],2,3,[10941],2,10,[-10941],2,0},{'A',[13342037],3,[10941],2,0,[-10941],2,3,[104833],2,7},{'O',[11280171],3,[11280171],3,0},{'O',[13342037],3,[13342037],3,0}}"); //
+
+		//simple CMM having only positive values, obtained from rpag --cmm 3,7 5,9:
+		graphsUnsigned.push_back("{{'A',[1,1],1,[0,1],0,0,[1,0],0,0},{'A',[1,2],1,[0,1],0,1,[1,0],0,0},{'A',[3,7],2,[1,2],1,2,[-1,-1],1,0},{'A',[5,9],2,[1,1],1,0,[1,2],1,2},{'O',[3,7],2,[3,7],2,0},{'O',[5,9],2,[5,9],2,0}}");
+
+		//simple SCM including right shifts:
+		graphsUnsigned.push_back("{{'A',[3],1,[1],0,1,[1],0,0},{'A',[7],1,[1],0,3,[-1],0,0},{'A',[5],2,[3],1,-1,[7],1,-1},{'O',[5],2,[5],2,0}}");
+
+		//More comples MCM's including right shifts:
+		graphsUnsigned.push_back("{{'R',[1],1,[1],0},{'A',[31],1,[1],0,5,[-1],0,0},{'A',[511],1,[1],0,9,[-1],0,0},{'A',[2049],1,[1],0,0,[1],0,11},{'A',[123],2,[31],1,2,[-1],1,0},{'A',[6127],2,[511],1,4,[-2049],1,0},{'A',[1049119],2,[31],1,0,[2049],1,9},{'A',[5079583],3,[123],2,15,[1049119],2,0},{'A',[6274171],3,[123],2,0,[6127],2,10},{'A',[5676877],4,[5079583],3,-1,[6274171],3,-1},{'A',[25397915],4,[5079583],3,0,[5079583],3,2},{'O',[50795830],4,[25397915],4,1},{'O',[90830032],4,[5676877],4,4}}");
+		graphsUnsigned.push_back("{{'O',[6],3,[3],2,1},{'O',[10],3,[5],1,1},{'A',[3],2,[1],0,-1,[5],1,-1},{'A',[5],1,[1],0,2,[1],0,0}}"); //
+
+		//SCM by 1025 which can be implemented without addition when wIn<10 bits:
+		graphsUnsigned.push_back("{{'A',[1025],1,[1],0,0,[1],0,10},{'O',[1025],1,[1025],1,0}}");
+
+		//SCM by 3073 using one ternary adder where one argument can be forwarded to the output when wIn<10 bits:
+		graphsUnsigned.push_back("{{'A',[3073],1,[1],0,0,[1],0,10,[1],0,11},{'O',[3073],1,[3073],1,0}}");
+
+    //artificial SCM using arbitrary stages
+		graphsUnsigned.push_back("{{'R',[1],1,[1],0},{'A',[3],3,[1],0,0,[1],1,1},{'O',[6],5,[3],3,1}}");
 
 
+    //adder graph having negative outputs (can be only evaluated for signed):
+		graphsSigned.push_back("{{'A',[-7],1,[-1],0,3,[1],0,0},{'O',[-7],1,[-7],1,0}}");
 
-  //  graphs.push_back("\"\""); //
-  //  graphs.push_back("\"\""); //
+    //adder graph having a non-common order of nodes (output first):
+		graphsSigned.push_back("{{'O',[-7],1,[-7],1,0},{'A',[-7],1,[-1],0,3,[1],0,0}}");
 
+		//CMM of 123*x1+321*x2 345*x1-543*x2, obtained from rpag --cmm 123,321 345,-543:
+		graphsSigned.push_back("{{'A',[0,5],1,[0,1],0,0,[0,1],0,2},{'A',[0,17],1,[0,1],0,0,[0,1],0,4},{'A',[5,0],1,[1,0],0,0,[1,0],0,2},{'A',[128,1],1,[0,1],0,0,[1,0],0,7},{'A',[257,0],1,[1,0],0,0,[1,0],0,8},{'R',[0,5],2,[0,5],1},{'A',[5,68],2,[0,17],1,2,[5,0],1,0},{'A',[123,1],2,[128,1],1,0,[-5,0],1,0},{'A',[385,1],2,[128,1],1,0,[257,0],1,0},{'A',[123,321],3,[0,5],2,6,[123,1],2,0},{'A',[345,-543],3,[385,1],2,0,[-5,-68],2,3},{'O',[123,321],3,[123,321],3,0},{'O',[345,-543],3,[345,-543],3,0}}");
+
+		//CMM of 123*x1+321*x2 345*x1-543*x2 using ternary adders, obtained from rpag --ternary_adders --cmm 123,321 345,-543:
+		graphsSigned.push_back("{{'A',[1,-4],1,[1,0],0,0,[0,-1],0,2},{'A',[2,5],1,[0,1],0,0,[0,1],0,2,[1,0],0,1},{'A',[5,-1],1,[1,0],0,2,[0,-1],0,0,[1,0],0,0},{'A',[7,-1],1,[1,0],0,3,[0,-1],0,0,[-1,0],0,0},{'A',[123,321],2,[2,5],1,6,[-5,1],1,0},{'A',[345,-543],2,[1,-4],1,7,[7,-1],1,5,[-7,1],1,0},{'O',[123,321],2,[123,321],2,0},{'O',[345,-543],2,[345,-543],2,0}}"); //
+
+    /*RSCM of 5;9 using one adder and a MUX
+     * obtained from:
+     * ./rpag 5 9
+     * ./pag_split "{{'A',[5],1,[1],0,0,[1],0,2},{'A',[9],1,[1],0,0,[1],0,3},{'O',[5],1,[5],1,0},{'O',[9],1,[9],1,0}}" "5;9" --pag_fusion_input
+     * ./pag_fusion --if pag_fusion_input.txt
+     */
+    graphsUnsigned.push_back("{{'R',[1;1],1,[1;1],0},{'M',[1;2],1,[1;1],0,[0;1]},{'A',[5;9],2,[1;1],1,0,[1;2],1,2},{'O',[5;9],2,[5;9],2}}");
+
+    /*RSCM of 7;9 using one adder/subtractor
+     * obtained from:
+     * ./rpag 7 9
+     * ./pag_split "{{'A',[7],1,[1],0,3,[-1],0,0},{'A',[9],1,[1],0,0,[1],0,3},{'O',[7],1,[7],1,0},{'O',[9],1,[9],1,0}}" "7;9" --pag_fusion_input
+     * ./pag_fusion --if pag_fusion_input.txt
+     */
+    graphsUnsigned.push_back("{{'A',[7;9],1,[1;1],0,3,[-1;1],0,0},{'O',[7;9],1,[7;9],1}}");
+
+
+    /*RSCM of 5;7 using one adder/subtractor and a MUX
+     * obtained from:
+     * ./rpag 5 7
+     * ./pag_split "{{'A',[5],1,[1],0,0,[1],0,2},{'A',[7],1,[1],0,3,[-1],0,0},{'O',[5],1,[5],1,0},{'O',[7],1,[7],1,0}}" "5;7" --pag_fusion_input
+     * ./pag_fusion --if pag_fusion_input.txt
+     */
+    graphsUnsigned.push_back("{{'R',[1;1],1,[1;1],0},{'M',[1;2],1,[1;1],0,[0;1]},{'A',[5;7],2,[1;-1],1,0,[1;2],1,2},{'O',[5;7],2,[5;7],2}}");
+
+    /*RSCM of 71;97
+     * obtained from:
+     * ./rpag --cost_model=hl_min_ad 127 7 97 71 (and removing some output/register nodes)
+     * ./pag_split "{{'R',[1],1,[1],0},{'A',[7],1,[1],0,3,[-1],0,0},{'A',[127],1,[1],0,7,[-1],0,0},{'A',[71],2,[1],1,6,[7],1,0},{'A',[97],2,[7],1,5,[-127],1,0},{'O',[71],2,[71],2,0},{'O',[97],2,[97],2,0}}" "71;97" --pag_fusion_input
+     * ./pag_fusion --if pag_fusion_input.txt
+     */
+    graphsUnsigned.push_back("{{'M',[1;8],1,[1;1],0,[0;3]},{'M',[0;1],1,[1;1],0,[NaN;0]},{'A',[1;7],2,[1;8],1,0,[0;-1],1,0},{'M',[1;16],1,[1;1],0,[0;4]},{'R',[1;1],1,[1;1],0},{'A',[7;127],2,[1;16],1,3,[-1;-1],1,0},{'M',[2;7],3,[1;7],2,[1;0]},{'R',[7;127],3,[7;127],2},{'A',[71;97],4,[2;7],3,5,[7;-127],3,0},{'O',[71;97],4,[71;97],4}}");
+
+    /*RSCM of -57;97 having negative and positive outputs and intermediate values with larger wordsize than the output (hand crafted from the 71;97 RSCM)
+     */
+    graphsSigned.push_back("{{'M',[1;8],1,[1;1],0,[0;3]},{'M',[0;1],1,[1;1],0,[NaN;0]},{'A',[1;7],2,[1;8],1,0,[0;-1],1,0},{'M',[1;16],1,[1;1],0,[0;4]},{'R',[1;1],1,[1;1],0},{'A',[7;127],2,[1;16],1,3,[-1;-1],1,0},{'M',[2;7],3,[1;7],2,[1;0]},{'R',[7;127],3,[7;127],2},{'A',[-57;97],4,[-2;7],3,5,[7;-127],3,0},{'O',[-57;97],4,[-57;97],4}}");
+
+    /*RSCM of 1;2;3;4;5
+     * obtained from:
+     * ./rpag 1 2 3 4 5
+     * ./pag_split "{{'R',[1],1,[1],0},{'A',[3],1,[1],0,0,[1],0,1},{'A',[5],1,[1],0,0,[1],0,2},{'O',[1],1,[1],1,0},{'O',[2],1,[1],1,1},{'O',[3],1,[3],1,0},{'O',[4],1,[1],1,2},{'O',[5],1,[5],1,0}}" "1;2;3;4;5" --pag_fusion_input
+     * ./pag_fusion --if pag_fusion_input.txt
+     */
+    graphsUnsigned.push_back("{{'M',[1;2;2;4;4],1,[1;1;1;1;1],0,[0;1;1;2;2]},{'M',[0;0;1;0;1],1,[1;1;1;1;1],0,[NaN;NaN;0;NaN;0]},{'A',[1;2;3;4;5],2,[1;2;2;4;4],1,0,[0;0;1;0;1],1,0},{'O',[1;2;3;4;5],2,[1;2;3;4;5],2}}");
+
+
+    /*RMCM of 123;543;412 345;321;654
+     * obtained from:
+     * ./rpag 123 345 543 654 321 412
+     * ./pag_split "{{'R',[1],1,[1],0},{'A',[17],1,[1],0,0,[1],0,4},{'R',[1],2,[1],1},{'A',[15],2,[1],1,4,[-1],1,0},{'A',[69],2,[1],1,0,[17],1,2},{'A',[153],2,[17],1,0,[17],1,3},{'A',[103],3,[1],2,8,[-153],2,0},{'A',[123],3,[69],2,1,[-15],2,0},{'A',[321],3,[15],2,0,[153],2,1},{'A',[327],3,[15],2,5,[-153],2,0},{'A',[345],3,[69],2,0,[69],2,2},{'A',[543],3,[153],2,2,[-69],2,0},{'O',[123],3,[123],3,0},{'O',[321],3,[321],3,0},{'O',[345],3,[345],3,0},{'O',[412],3,[103],3,2},{'O',[543],3,[543],3,0},{'O',[654],3,[327],3,1}}" "123;543;412 345;321;654" --pag_fusion_input
+     * ./pag_fusion --if pag_fusion_input.txt
+     */
+    graphsUnsigned.push_back("{{'A',[17;17;17],1,[1;1;1],0,0,[1;1;1],0,4},{'R',[1;1;1],1,[1;1;1],0},{'R',[1;1;1],2,[1;1;1],1},{'A',[15;15;15],3,[1;1;1],2,4,[-1;-1;-1],2,0},{'M',[17;17;0],2,[17;17;17],1,[0;0;NaN]},{'A',[69;69;1],3,[1;1;1],2,0,[17;17;0],2,2},{'R',[NaN;17;17],2,[17;17;17],1},{'A',[NaN;153;153],3,[NaN;17;17],2,0,[NaN;17;17],2,3},{'M',[69;306;306],4,[69;69;1],3,[0;NaN;NaN],[NaN;153;153],3,[NaN;1;1]},{'M',[15;69;1024],4,[15;15;15],3,[0;NaN;NaN],[69;69;1],3,[NaN;0;10]},{'A',[123;543;412],5,[69;306;-306],4,1,[-15;-69;1024],4,0},{'M',[69;15;960],4,[69;69;1],3,[0;NaN;NaN],[15;15;15],3,[NaN;0;6]},{'M',[138;153;153],4,[69;69;1],3,[1;NaN;NaN],[NaN;153;153],3,[NaN;0;0]},{'A',[345;321;654],5,[69;15;960],4,0,[138;153;-153],4,1},{'O',[123;543;412],5,[123;543;412],5},{'O',[345;321;654],5,[345;321;654],5}}");
+
+    /*RCMM with two inputs and two configurations
+     * obtained from:
+     * ./rpag --cmm 123+321 345+543 567+765 789+987 --file_output
+     * ./pag_split "{{'A',[1,-64],1,[1,0],0,0,[0,-1],0,6},{'A',[1,-1],1,[1,0],0,0,[0,-1],0,0},{'A',[3,0],1,[1,0],0,0,[1,0],0,1},{'R',[1,-1],2,[1,-1],1},{'A',[47,64],2,[3,0],1,4,[-1,64],1,0},{'A',[33,-33],3,[1,-1],2,0,[1,-1],2,5},{'A',[189,255],3,[1,-1],2,0,[47,64],2,2},{'A',[123,321],4,[189,255],3,0,[-33,33],3,1},{'A',[345,543],4,[189,255],3,1,[-33,33],3,0},{'A',[567,765],4,[189,255],3,0,[189,255],3,1},{'A',[789,987],4,[33,-33],3,0,[189,255],3,2},{'O',[123,321],4,[123,321],4,0},{'O',[345,543],4,[345,543],4,0},{'O',[567,765],4,[567,765],4,0},{'O',[789,987],4,[789,987],4,0}}" "123,321;345,543 567,765;789,987" --pag_fusion_input
+     * ./pag_fusion --if pag_fusion_input.txt
+    */
+    graphsUnsigned.push_back("{{'A',[1,-64;1,-64],1,[1,0;1,0],0,0,[0,-1;0,-1],0,6},{'A',[1,-1;1,-1],1,[1,0;1,0],0,0,[0,-1;0,-1],0,0},{'A',[3,0;3,0],1,[1,0;1,0],0,0,[1,0;1,0],0,1},{'R',[1,-1;1,-1],2,[1,-1;1,-1],1},{'A',[47,64;47,64],2,[3,0;3,0],1,4,[-1,64;-1,64],1,0},{'R',[1,-1;1,-1],3,[1,-1;1,-1],2},{'M',[8,-8;47,64],3,[1,-1;1,-1],2,[3;NaN],[47,64;47,64],2,[NaN;0]},{'A',[33,-33;189,255],4,[1,-1;1,-1],3,0,[8,-8;47,64],3,2},{'M',[47,64;8,-8],3,[47,64;47,64],2,[0;NaN],[1,-1;1,-1],2,[NaN;3]},{'A',[189,255;33,-33],4,[1,-1;1,-1],3,0,[47,64;8,-8],3,2},{'R',[189,255;33,-33],5,[189,255;33,-33],4},{'R',[33,-33;189,255],5,[33,-33;189,255],4},{'A',[123,321;345,543],6,[189,255;-33,33],5,0,[-33,33;189,255],5,1},{'M',[189,255;378,510],5,[189,255;33,-33],4,[0;NaN],[33,-33;189,255],4,[NaN;1]},{'A',[567,765;789,987],6,[189,255;33,-33],5,0,[189,255;378,510],5,1},{'O',[123,321;345,543],6,[123,321;345,543],6},{'O',[567,765;789,987],6,[567,765;789,987],6}}");
+
+#ifdef RMCM_SUPPORT
+
+
+#endif // RMCM_SUPPORT
+
+//  graphs.push_back(""); //
+//  graphs.push_back(""); //
+
+    if(testLevel == TestLevel::QUICK)
+    {
+      for(auto g : graphsUnsigned)
+      {
+        paramList.push_back(make_pair("wIn", "10"));
+        paramList.push_back(make_pair("graph", g));
+        paramList.push_back(make_pair("signed", "false"));
+        testStateList.push_back(paramList);
+        paramList.clear();
+      }
+      for(auto g : graphsSigned)
+      {
+        paramList.push_back(make_pair("wIn", "10"));
+        paramList.push_back(make_pair("graph", g));
+        paramList.push_back(make_pair("signed", "true"));
+        testStateList.push_back(paramList);
+        paramList.clear();
+      }
+    }
+    else
+    {
       for(int wIn=10; wIn<=32; wIn+=22) // test various input widths
       {
-        for(auto g : graphs)
+        for(auto g : graphsUnsigned)
         {
           paramList.push_back(make_pair("wIn", to_string(wIn)));
+          paramList.push_back(make_pair("signed", "false"));
           paramList.push_back(make_pair("graph", g));
+          testStateList.push_back(paramList);
+          paramList.clear();
+        }
+        for(auto g : graphsUnsigned)
+        {
+          paramList.push_back(make_pair("wIn", to_string(wIn)));
+          paramList.push_back(make_pair("signed", "true"));
+          paramList.push_back(make_pair("graph", g));
+          testStateList.push_back(paramList);
+          paramList.clear();
+        }
+        for(auto g : graphsSigned)
+        {
+          paramList.push_back(make_pair("wIn", "10"));
+          paramList.push_back(make_pair("graph", g));
+          paramList.push_back(make_pair("signed", "true"));
           testStateList.push_back(paramList);
           paramList.clear();
         }
       }
     }
+
 		return testStateList;
 	}
 
-	string IntConstMultShiftAdd::generateSignalName(adder_graph_base_node_t *node)
+	string IntConstMultShiftAdd::generateSignalName(std::vector<std::vector<int64_t> > factor, int stage)
 	{
 		stringstream signalName;
-		signalName << "x";
-		for( int i=0;i<noOfConfigurations;i++ )
-		{
-			signalName << "_c";
-			for( int j=0;j<noOfInputs;j++)
-			{
-				if(j>0) signalName << "v";
-				if( node->output_factor[i][j] != DONT_CARE )
-				{
-					if( node->output_factor[i][j] < 0 )
-					{
-						signalName << "m";
-					}
-					signalName << abs( node->output_factor[i][j] );
-				}
-				else
-					signalName << "d";
-			}
-		}
-		signalName << "_s" << node->stage;
-		if (is_a<output_node_t>(*node))
-			signalName << "_o";
+    signalName << "x_" << factorToString(factor) << "_s" << stage;
+
 		return signalName.str();
 	}
 
-	IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE* IntConstMultShiftAdd::identifyNodeType(adder_graph_base_node_t *node)
-	{
-		if(is_a<adder_subtractor_node_t>(*node))
-		{
-			adder_subtractor_node_t* t = (adder_subtractor_node_t*)node;
-			if( t->inputs.size() == 2)
-			{
-				if(t->input_is_negative[0] || t->input_is_negative[1])
-				{
-					IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_SUB2_1N* new_node = new IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_SUB2_1N(this);
-					return new_node;
-				}
-				else
-				{
-					IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_ADD2* new_node = new IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_ADD2(this);
-					return new_node;
-				}
-			}
-			else if( t->inputs.size() == 3)
-			{
-				needs_unisim = true;
-				int negative_count=0;
-				if(t->input_is_negative[0]) negative_count++;
-				if(t->input_is_negative[1]) negative_count++;
-				if(t->input_is_negative[2]) negative_count++;
+  string IntConstMultShiftAdd::dec2binstr(int x, int wordsize)
+  {
+    string s;
 
-				if(negative_count == 0)
-				{
-					IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_ADD3* new_node = new IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_ADD3(this);
-					return new_node;
-				}
-				else if(negative_count == 1)
-				{
-					IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_SUB3_1N* new_node = new IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_SUB3_1N(this);
-					return new_node;
-				}
-				else if(negative_count == 2)
-				{
-					IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_SUB3_2N* new_node = new IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_SUB3_2N(this);
-					return new_node;
-				}
-			}
-		}
-		else if(is_a<conf_adder_subtractor_node_t>(*node))
-		{
-			conf_adder_subtractor_node_t* t = (conf_adder_subtractor_node_t*)node;
-			int highCountState;
-			map<short,vector<int> > adder_states;
+    if(wordsize == -1)
+    {
+      wordsize = (x < 2) ? 1 : ceil(log2(x+1));
+    }
+    for(int i=wordsize-1; i >= 0; i--)
+    {
+      if((1 << i) & x)
+        s += "1";
+      else
+        s += "0";
+    }
 
-			highCountState = -1;
-			int highCount=0;
-			for( unsigned int i = 0;i<t->input_is_negative.size();i++)
-			{
-				short cur_state=0;
-				for( unsigned int j = 0;j<t->input_is_negative[i].size();j++)
-				{
-					if(t->input_is_negative[i][j])
-						cur_state |= (1<<j);
-				}
-				map<short,vector<int> >::iterator found = adder_states.find(cur_state);
-				if( found == adder_states.end())
-				{
-					vector<int> newvec;
-					newvec.push_back(i);
-					adder_states.insert( {cur_state,newvec}  );
-				}
-				else
-				{
-					(*found).second.push_back(i);
-					if((int)(*found).second.size()>highCount)
-					{
-						highCount = (*found).second.size();
-						highCountState = cur_state;
-					}
-				}
-			}
-			if(highCountState==-1)
-			{
-				highCountState = (*adder_states.rbegin()).first;
-			}
+    return s;
+  }
 
-			if(t->inputs.size() == 2)
-			{
-				IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_ADDSUB2_CONF* new_node = new IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_ADDSUB2_CONF(this);
-				IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_DECODER* new_dec = new IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_DECODER(this);
-				new_dec->decoder_size = 2;
-				new_node->decoder = new_dec;
-				new_dec->node = new_node;
-				new_node->adder_states = adder_states;
-				new_node->highCountState = highCountState;
-				return new_node;
-			}
-			else if(t->inputs.size() == 3)
-			{
-				needs_unisim = true;
-				if(adder_states.size() == 2 && this->getTarget()->getVendor() == "Xilinx" )
-				{
-					IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_ADDSUB3_2STATE* new_node = new IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_ADDSUB3_2STATE(this);
-					IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_DECODER* new_dec = new IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_DECODER(this);
-					new_dec->decoder_size = 1;
-					new_node->decoder = new_dec;
-					new_dec->node = new_node;
-					new_node->adder_states = adder_states;
-					new_node->highCountState = highCountState;
-					return new_node;
-				}
-				else
-				{
-					IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_ADDSUB3_CONF* new_node = new IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_ADDSUB3_CONF(this);
-					IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_DECODER* new_dec = new IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_DECODER(this);
-					new_dec->decoder_size = 3;
-					new_node->decoder = new_dec;
-					new_dec->node = new_node;
-					new_node->adder_states = adder_states;
-					new_node->highCountState = highCountState;
-					return new_node;
-				}
-			}
-		}
-		else if(is_a<register_node_t>(*node) || is_a<output_node_t>(*node) )
-		{
-			IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_REG* new_node = new IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_REG(this);
-			return new_node;
-		}
-		else if(is_a<mux_node_t>(*node))
-		{
-			mux_node_t* t = (mux_node_t*)node;
-			vector<int> dontCareConfig;
-			IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_muxInput zeroInput;
-			zeroInput.node = NULL;
-			zeroInput.shift = 0;
-			IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_muxInput dontCareInput;
-			dontCareInput.node = NULL;
-			dontCareInput.shift = -1;
-			vector<IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_muxInput> muxInfoMap;
-			for(unsigned int i=0;i<t->inputs.size();i++)
-			{
-				bool found=false;
-				if(t->output_factor[i][0] == DONT_CARE)
-				{
-					dontCareInput.configurations.push_back(i);
-					continue;
-				}
+  string IntConstMultShiftAdd::factorToString(std::vector<std::vector<int64_t> > factor)
+  {
+    stringstream signalName;
+    for(int c=0; c < factor.size(); c++ ) //loop over configurations
+    {
+      signalName << "c";
+      for(int i=0; i < factor[c].size(); i++) // loop over inputs
+      {
+        if(i > 0) signalName << "_c";
+        if(factor[c][i] != DONT_CARE )
+        {
+          if(factor[c][i] < 0 )
+          {
+            signalName << "m";
+          }
+          signalName << abs( factor[c][i] );
+        }
+        else
+          signalName << "d";
+      }
+    }
+    return signalName.str();
+  }
 
-				if( t->output_factor[i] == vector<int64_t>(t->output_factor[i].size(),0) )
-				{
-					zeroInput.configurations.push_back(i);
-					continue;
-				}
-
-				for( vector<IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_muxInput>::iterator iter = muxInfoMap.begin();
-				     iter!=muxInfoMap.end();
-				     ++iter)
-				{
-					if( (*iter).node == t->inputs[i] && (*iter).shift == t->input_shifts[i] )
-					{
-						found = true;
-						(*iter).configurations.push_back(i);
-					}
-				}
-
-				if( !found )
-				{
-					IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_muxInput newInfo;
-					newInfo.node = t->inputs[i];
-					newInfo.shift = t->input_shifts[i];
-					newInfo.configurations.push_back(i);
-					muxInfoMap.push_back(newInfo);
-				}
-			}
-			if(zeroInput.configurations.size() > 0)
-				muxInfoMap.push_back(zeroInput);
-
-			if(dontCareInput.configurations.size() > 0)
-			{
-				muxInfoMap.push_back(dontCareInput);
-			}
-
-			for (unsigned int n=muxInfoMap.size(); n>1; n=n-1){
-				for (unsigned int i=0; i<n-1; i=i+1){
-					if (muxInfoMap.at(i).configurations.size() > muxInfoMap.at(i+1).configurations.size()){
-						IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_muxInput tmpInfo = muxInfoMap[i];
-						muxInfoMap[i] = muxInfoMap[i+1];
-						muxInfoMap[i+1] = tmpInfo;
-					}
-				}
-			}
-
-			short nonZeroOutputCount=0;
-			for( int i=0;i<noOfConfigurations;i++ )
-			{
-				if( t->output_factor[i] != vector<int64_t>(t->output_factor[i].size(),0) && t->output_factor[i][0] != DONT_CARE )
-				{
-					nonZeroOutputCount++;
-				}
-			}
-
-			if( nonZeroOutputCount == 1 )
-			{
-				IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_AND* new_node = new IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_AND(this);
-				new_node->inputs = muxInfoMap;
-				return new_node;
-			}
-			else
-			{
-				IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_MUX* new_node = new IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_MUX(this);
-				IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_DECODER* new_dec = new IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_DECODER(this);
-				new_node->decoder = new_dec;
-				new_dec->node = new_node;
-				new_node->inputs = muxInfoMap;
-				return new_node;
-			}
-		}
-		else if(is_a<input_node_t>(*node))
-		{
-			IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_INPUT* new_node = new IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_INPUT(this);
-			return new_node;
-		}
-		else
-		{
-			return NULL;
-		}
-		return NULL;
-	}
-
-	void IntConstMultShiftAdd::identifyOutputConnections(adder_graph_base_node_t *node, map<adder_graph_base_node_t *, IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE*> &infoMap)
-	{
-		if(is_a<adder_subtractor_node_t>(*node))
-		{
-			adder_subtractor_node_t* t = (adder_subtractor_node_t*)node;
-			for(int i=0;i<(int)t->inputs.size();i++)
-			{
-				if( t->inputs[i] != NULL )
-				{
-					infoMap[t->inputs[i]]->outputConnectedTo.push_back(node);
-				}
-			}
-		}
-		else if(is_a<conf_adder_subtractor_node_t>(*node))
-		{
-			conf_adder_subtractor_node_t* t = (conf_adder_subtractor_node_t*)node;
-			for(int i=0;i<(int)t->inputs.size();i++)
-			{
-				if( t->inputs[i] != NULL )
-				{
-					infoMap[t->inputs[i]]->outputConnectedTo.push_back(node);
-				}
-			}
-		}
-		else if(is_a<register_node_t>(*node) || is_a<output_node_t>(*node))
-		{
-			register_node_t* t = (register_node_t*)node;
-			infoMap[t->input]->outputConnectedTo.push_back(node);
-		}
-		else if(is_a<mux_node_t>(*node))
-		{
-			mux_node_t* t = (mux_node_t*)node;
-			for(int i=0;i<(int)t->inputs.size();i++)
-			{
-				if( t->inputs[i] != NULL )
-				{
-					infoMap[t->inputs[i]]->outputConnectedTo.push_back(node);
-				}
-			}
-		}
-	}
-
-	void IntConstMultShiftAdd::printAdditionalNodeInfo(map<adder_graph_base_node_t *, IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE*> &infoMap)
-	{
-		stringstream nodeInfoString;
-		for( map<adder_graph_base_node_t *, IntConstMultShiftAdd_TYPES::IntConstMultShiftAdd_BASE*>::iterator nodeInfo = infoMap.begin();
-		     nodeInfo != infoMap.end();
-		     ++nodeInfo)
-		{
-			nodeInfoString << "Node (" << (*nodeInfo).first << ") identified as <"<< (*nodeInfo).second->nodeType << ":" << (*nodeInfo).second->get_name() <<"> in stage "<< (*nodeInfo).first->stage <<endl;
-			nodeInfoString << "\tOutputsignal: "<<(*nodeInfo).second->outputSignalName<< endl;
-			nodeInfoString << "\tOutputvalues: ";
-			for(int i=0;i<(int)(*nodeInfo).first->output_factor.size();i++)
-			{
-
-				if(i>0) nodeInfoString << ";";
-				for(int j=0;j<(int)(*nodeInfo).first->output_factor[i].size();j++)
-				{
-
-					if(j>0)
-						nodeInfoString << ",";
-					if( (*nodeInfo).first->output_factor[i][j]!=DONT_CARE )
-						nodeInfoString<<(*nodeInfo).first->output_factor[i][j];
-					else
-						nodeInfoString << "-";
-				}
-			}
-
-			nodeInfoString << " (ws:" << (*nodeInfo).second->wordsize << ")" << endl;
-
-			if( (*nodeInfo).second->outputConnectedTo.size() > 0 )
-			{
-				list<adder_graph_base_node_t*>::iterator iter = (*nodeInfo).second->outputConnectedTo.begin();
-				nodeInfoString << "\tOutputConnectedTo: " << endl << "\t\t" << *iter  << "("<< infoMap[*iter ]->outputSignalName << ")";
-				for( ++iter;
-				     iter!= (*nodeInfo).second->outputConnectedTo.end();
-				     ++iter)
-				{
-					nodeInfoString << endl << "\t\t" << *iter  << "("<< infoMap[*iter ]->outputSignalName << ")";
-				}
-
-				nodeInfoString << endl;
-			}
-		}
-
-		nodeInfoString << endl;
-
-		REPORT(LogLevel::VERBOSE, nodeInfoString.str())
-	}
-
+  /*
+  int flopoco::IntConstMultShiftAdd::computeWordSize(std::vector<std::vector<int64_t> > factor)
+  {
+    int no_of_extra_bits=-1;
+    for(int c=0; c < factor.size(); c++ ) //loop over configurations
+    {
+      int64_t sum=0;
+      for (int i = 0; i < factor[c].size(); i++) // loop over inputs
+      {
+        sum += factor[c][i];
+      }
+      no_of_extra_bits = max(no_of_extra_bits,log2c_64(sum));
+    }
+    return no_of_extra_bits;
+  }
+*/
 	OperatorPtr flopoco::IntConstMultShiftAdd::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui)
 	{
 		if (target->getVendor() != "Xilinx")
 			throw std::runtime_error("Can't build xilinx primitive on non xilinx target");
 
 		int wIn, sync_every = 0;
-		std::string graph, truncations;
-		bool sync_inout, sync_muxes, pipeline;
+		std::string adder_graph, truncations;
+    bool isSigned;
 		int epsilon;
 
 		ui.parseInt(args, "wIn", &wIn);
-		ui.parseString(args, "graph", &graph);
+		ui.parseString(args, "graph", &adder_graph);
+    ui.parseBoolean(args, "signed", &isSigned);
 		ui.parseString( args, "truncations", &truncations);
-		ui.parseBoolean(args, "pipeline", &pipeline);
 		ui.parseInt(args, "epsilon", &epsilon);
-		ui.parseBoolean(args, "sync_inout", &sync_inout);
-		ui.parseBoolean(args, "sync_muxes", &sync_muxes);
-		ui.parseInt(args, "sync_every", &sync_every);
 
 		if (truncations == "\"\"") {
 			truncations = "";
 		}
 
-		return new IntConstMultShiftAdd(parentOp, target, wIn, graph, pipeline, sync_inout, sync_every, sync_muxes, epsilon, truncations);
+		return new IntConstMultShiftAdd(parentOp, target, wIn, adder_graph, isSigned, epsilon, truncations);
 	}
 
 
@@ -961,20 +1372,14 @@ namespace flopoco {
 	    "IntConstMultShiftAdd", // name
 	    "A component for building constant multipliers based on "
 	    "pipelined adder graphs (PAGs).", // description, string
-	    "ConstMultDiv", // category, from the list defined in
-	    // UserInterface.cpp
+	    "ConstMultDiv", // category, from the list defined in UserInterface.cpp
 	    "",
 	    "wIn(int): Wordsize of pag inputs; \
-                          graph(string): Realization string of the pag; \
-                          epsilon(int)=0: Allowable error for truncated constant multipliers; \
-                          pipeline(bool)=true: Enable pipelining of the pag; \
-                          sync_inout(bool)=true: Enable pipeline registers for input and output stage; \
-                          sync_muxes(bool)=true: Enable counting mux-only stages as full stage; \
-                          sync_every(int)=1: Count of stages after which will be pipelined;"
-	    "truncations(string)=\"\": provides the truncations for "
-	    "subvalues", // format:
-	    // const1,stage:trunc_input_0,trunc_input_1,...;const2,stage:trunc_input_0,trunc_input_1,...;...",
-	    ""};
+       graph(string): Realization string of the adder graph; \
+       signed(bool)=true: signedness of input and output; \
+       epsilon(int)=0: Allowable error for truncated constant multipliers; \
+       truncations(string)=\"\": provides the truncations for intermediate values (format const1,stage:trunc_input_0,trunc_input_1,... const2,stage:trunc_input_0,trunc_input_1,...)",""};
+       // (format const1,stage:trunc_input_0,trunc_input_1,...;const2,stage:trunc_input_0,trunc_input_1,...;...)
 }//namespace
 
 #endif // HAVE_PAGLIB

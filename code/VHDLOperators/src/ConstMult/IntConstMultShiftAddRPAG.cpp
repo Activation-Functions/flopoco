@@ -38,7 +38,7 @@ using namespace PAGSuite;
 
 namespace flopoco{
 
-    IntConstMultShiftAddRPAG::IntConstMultShiftAddRPAG(Operator* parentOp, Target* target, int wIn, list<mpz_class> &coeffList, bool syncInOut, int epsilon)  : IntConstMultShiftAdd(parentOp, target, wIn, "", false, syncInOut, 1000, false, epsilon)
+    IntConstMultShiftAddRPAG::IntConstMultShiftAddRPAG(Operator* parentOp, Target* target, int wIn, list<mpz_class> &coeffList, bool isSigned, int epsilon)  : IntConstMultShiftAdd(parentOp, target, wIn, "", isSigned, epsilon)
     {
 		srcFileName="IntConstMultShiftAddRPAG";
 
@@ -103,23 +103,34 @@ namespace flopoco{
 		TestList testStateList;
 		vector<pair<string,string>> paramList;
 
-    if(testLevel >= TestLevel::SUBSTANTIAL)
+    vector<string> constantList; // The list of constants we want to test
+//			constantList.push_back("0"); //should work in future but exceptions have to be implemented!
+    constantList.push_back("1");
+    constantList.push_back("16");
+    constantList.push_back("123");
+    constantList.push_back("3"); //1 adder
+    constantList.push_back("7"); //1 subtractor
+    constantList.push_back("11"); //smallest coefficient requiring 2 adders
+    constantList.push_back("43"); //smallest coefficient requiring 3 adders
+    constantList.push_back("683"); //smallest coefficient requiring 4 adders
+    constantList.push_back("14709"); //smallest coefficient requiring 5 adders
+    constantList.push_back("123456789"); //test a relatively large constant
+
+    if(testLevel == TestLevel::QUICK)
+    { // The quick unit tests
+      int wIn=10;
+      for(auto c:constantList) // test various constants
+      {
+        paramList.push_back(make_pair("wIn",  to_string(wIn)));
+        paramList.push_back(make_pair("constant", c));
+        testStateList.push_back(paramList);
+        paramList.clear();
+      }
+    }
+    else if(testLevel >= TestLevel::SUBSTANTIAL)
     { // The substantial unit tests
 
-			vector<string> constantList; // The list of constants we want to test
-//			constantList.push_back("0"); //should work in future but exceptions have to be implemented!
-			constantList.push_back("1");
-			constantList.push_back("16");
-			constantList.push_back("123");
-			constantList.push_back("3"); //1 adder
-			constantList.push_back("7"); //1 subtractor
-			constantList.push_back("11"); //smallest coefficient requiring 2 adders
-			constantList.push_back("43"); //smallest coefficient requiring 3 adders
-			constantList.push_back("683"); //smallest coefficient requiring 4 adders
-			constantList.push_back("14709"); //smallest coefficient requiring 5 adders
-			constantList.push_back("123456789"); //test a relatively large constant
-
-			for(int wIn=3; wIn<16; wIn+=4) // test various input widths
+      for(int wIn=3; wIn<16; wIn+=4) // test various input widths
 			{
 				for(auto c:constantList) // test various constants
 				{
@@ -138,46 +149,51 @@ namespace flopoco{
 		return testStateList;
 	}
 
-    OperatorPtr flopoco::IntConstMultShiftAddRPAG::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
-        int wIn, epsilon;
+    OperatorPtr flopoco::IntConstMultShiftAddRPAG::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui)
+    {
+      int wIn, epsilon;
 
-        ui.parseStrictlyPositiveInt( args, "wIn", &wIn );
-		ui.parsePositiveInt( args, "epsilon", &epsilon );
+      ui.parseStrictlyPositiveInt( args, "wIn", &wIn );
+      ui.parsePositiveInt( args, "epsilon", &epsilon );
 
-		string constListStr;
-		ui.parseString(args, "constant", &constListStr);
-		string constStr="";
-		try {
-			list<mpz_class> constList; // the list of constants
+      string constListStr;
+      ui.parseString(args, "constant", &constListStr);
+      string constStr="";
 
-			//parse list of constants:
-			int pos=0;
-			int nextPos;
-			do{
-				nextPos = constListStr.find(',', pos);
-				if(nextPos == string::npos) nextPos = constListStr.length();
+      bool isSigned;
+      ui.parseBoolean(args, "signed", &isSigned);
 
-				constStr = constListStr.substr(pos, nextPos - pos);
+      try {
+        list<mpz_class> constList; // the list of constants
 
-				mpz_class constant(constStr);
-				constList.push_back(constant);
-				pos = nextPos+1;
-			} while (nextPos != constListStr.length());
+        //parse list of constants:
+        int pos=0;
+        int nextPos;
+        do{
+          nextPos = constListStr.find(',', pos);
+          if(nextPos == string::npos) nextPos = constListStr.length();
 
-			if(constList.size() > 0)
-			{
-				return new IntConstMultShiftAddRPAG(parentOp, target, wIn, constList, false, epsilon);
-			}
-			else
-			{
-				cerr << "Error: Empty constant list" << endl; //this should never happen
-				exit(EXIT_FAILURE);
-			}
-		}
-		catch (const std::invalid_argument &e) {
-			cerr << "Error: Invalid constant " << constStr << endl;
-			exit(EXIT_FAILURE);
-		}
+          constStr = constListStr.substr(pos, nextPos - pos);
+
+          mpz_class constant(constStr);
+          constList.push_back(constant);
+          pos = nextPos+1;
+        } while (nextPos != constListStr.length());
+
+        if(constList.size() > 0)
+        {
+          return new IntConstMultShiftAddRPAG(parentOp, target, wIn, constList, isSigned, epsilon);
+        }
+        else
+        {
+          cerr << "Error: Empty constant list" << endl; //this should never happen
+          exit(EXIT_FAILURE);
+        }
+      }
+      catch (const std::invalid_argument &e) {
+        cerr << "Error: Invalid constant " << constStr << endl;
+        exit(EXIT_FAILURE);
+      }
 
     }
 
@@ -188,6 +204,7 @@ namespace flopoco{
                             "", //seeAlso
                             "wIn(int): Input word size; \
                             constant(string): list of constants; \
+                            signed(bool)=true: signedness of input and output; \
                             epsilon(int)=0: Allowable error for truncated constant multipliers;",
 	"Nope."};
 }
