@@ -40,14 +40,14 @@ using namespace PAGSuite;
 
 namespace flopoco{
 
-    IntConstMultShiftAddOptTernary::IntConstMultShiftAddOptTernary(Operator* parentOp, Target* target, int wIn, int coeff, bool syncInOut) : IntConstMultShiftAdd(parentOp, target, wIn, "", false, syncInOut, 1000, false, 0)
+    IntConstMultShiftAddOptTernary::IntConstMultShiftAddOptTernary(Operator* parentOp, Target* target, int wIn, int coeff) : IntConstMultShiftAdd(parentOp, target, wIn, "")
     {
 		int maxCoefficient = 4194303; //=2^22-1
 
         int shift;
         int coeffOdd = fundamental(coeff, &shift);
 
-		if(coeffOdd <= maxCoefficient)
+		    if(coeffOdd <= maxCoefficient)
         {
             cout << "nofs[" << coeff << "]=" << nofs[(coeff-1)>>1][0] << " " << nofs[(coeff-1)>>1][1] << endl;
 
@@ -68,11 +68,8 @@ namespace flopoco{
             stringstream adderGraphStringStream;
             adderGraphStringStream << "{" << adderGraphString;
 
-            if(coeff != coeffOdd)
-            {
-                if(adderGraphString.length() > 1) adderGraphStringStream << ",";
-				adderGraphStringStream << "{'O',[" << coeff << "],2,[" << coeffOdd << "],1," << shift << "}";
-            }
+            if(adderGraphString.length() > 1) adderGraphStringStream << ",";
+            adderGraphStringStream << "{'O',[" << coeff << "],1,[" << coeffOdd << "],1," << shift << "}";
             adderGraphStringStream << "}";
 
             cout << "adder_graph=" << adderGraphStringStream.str() << endl;
@@ -98,8 +95,13 @@ namespace flopoco{
         ui.parseInt( args, "wIn", &wIn );
         ui.parseInt( args, "constant", &constant );
 
-        return new IntConstMultShiftAddOptTernary(parentOp, target, wIn, constant, false);
+        return new IntConstMultShiftAddOptTernary(parentOp, target, wIn, constant);
     }
+}
+
+TestList IntConstMultShiftAddOptTernary::unitTest(int testLevel)
+{
+  return IntConstMultShiftAddOpt::unitTest(testLevel);
 }
 
 namespace flopoco {

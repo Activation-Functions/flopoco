@@ -23,7 +23,7 @@
 #include "flopoco/InterfacedOperator.hpp"
 #include "flopoco/Operator.hpp"
 #include "flopoco/IntAddSubCmp/IntAdder.hpp"
-#include "IntConstMultShiftAdd.hpp"
+#include "IntConstMultShiftAddOpt.hpp"
 #include "flopoco/UserInterface.hpp"
 
 namespace flopoco{
@@ -32,9 +32,9 @@ namespace flopoco{
     class IntConstMultShiftAddOptTernary : public IntConstMultShiftAdd
 	{
 	public:
-        IntConstMultShiftAddOptTernary(Operator* parentOp, Target* target, int wIn, int coeff, bool syncInOut=true);
-
-        static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
+    IntConstMultShiftAddOptTernary(Operator* parentOp, Target* target, int wIn, int coeff);
+    static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
+    static TestList unitTest(int testLevel);
 
 	private:
 		int coeff;  /**< The constant */

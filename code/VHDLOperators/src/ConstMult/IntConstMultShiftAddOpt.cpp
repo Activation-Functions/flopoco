@@ -40,7 +40,7 @@ using namespace PAGSuite;
 
 namespace flopoco{
 
-    IntConstMultShiftAddOpt::IntConstMultShiftAddOpt(Operator* parentOp, Target* target, int wIn, int coeff, bool syncInOut, int epsilon)  : IntConstMultShiftAdd(parentOp, target, wIn, "", false, syncInOut, 1000, false, epsilon)
+    IntConstMultShiftAddOpt::IntConstMultShiftAddOpt(Operator* parentOp, Target* target, int wIn, int coeff, bool isSigned, int epsilon)  : IntConstMultShiftAdd(parentOp, target, wIn, "", isSigned, epsilon)
     {
 		srcFileName="IntConstMultShiftAddOpt";
 
@@ -215,22 +215,34 @@ namespace flopoco{
 		TestList testStateList;
 		vector<pair<string,string>> paramList;
 
-    if(testLevel >= TestLevel::SUBSTANTIAL)
-		{ // The substantial unit tests
 
-			vector<string> constantList; // The list of constants we want to test
+    vector<string> constantList; // The list of constants we want to test
 //			constantList.push_back("0"); //should work in future but exceptions have to be implemented!
-			constantList.push_back("1");
-			constantList.push_back("16");
-			constantList.push_back("123");
-			constantList.push_back("3"); //1 adder
-			constantList.push_back("7"); //1 subtractor
-			constantList.push_back("11"); //smallest coefficient requiring 2 adders
-			constantList.push_back("43"); //smallest coefficient requiring 3 adders
-			constantList.push_back("683"); //smallest coefficient requiring 4 adders
-			constantList.push_back("14709"); //smallest coefficient requiring 5 adders
-			constantList.push_back("66511"); //critical coefficient as we have a node with wsOut < wsIn (factor 975)
-			constantList.push_back(to_string(MAX_SCM_CONST)); //maximum supported coefficient
+    constantList.push_back("1");
+    constantList.push_back("16");
+    constantList.push_back("123");
+    constantList.push_back("3"); //1 adder
+    constantList.push_back("7"); //1 subtractor
+    constantList.push_back("11"); //smallest coefficient requiring 2 adders
+    constantList.push_back("43"); //smallest coefficient requiring 3 adders
+    constantList.push_back("683"); //smallest coefficient requiring 4 adders
+    constantList.push_back("14709"); //smallest coefficient requiring 5 adders
+    constantList.push_back("66511"); //critical coefficient as we have a node with wsOut < wsIn (factor 975)
+    constantList.push_back(to_string(MAX_SCM_CONST)); //maximum supported coefficient
+
+    if(testLevel == TestLevel::QUICK)
+    { // The quick unit tests
+      int wIn=10;
+      for(auto c:constantList) // test various constants
+      {
+        paramList.push_back(make_pair("wIn",  to_string(wIn)));
+        paramList.push_back(make_pair("constant", c));
+        testStateList.push_back(paramList);
+        paramList.clear();
+      }
+    }
+    else if(testLevel >= TestLevel::SUBSTANTIAL)
+    { // The substantial unit tests
 
 			for(int wIn=3; wIn<16; wIn+=4) // test various input widths
 			{
@@ -252,14 +264,17 @@ namespace flopoco{
 	}
 
 
-    OperatorPtr flopoco::IntConstMultShiftAddOpt::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
+    OperatorPtr flopoco::IntConstMultShiftAddOpt::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui)
+    {
         int wIn, constant, epsilon;
+        bool isSigned;
 
         ui.parseInt( args, "wIn", &wIn );
-		ui.parseInt( args, "constant", &constant );
-		ui.parseInt( args, "epsilon", &epsilon );
+		    ui.parseInt( args, "constant", &constant );
+		    ui.parseInt( args, "epsilon", &epsilon );
+        ui.parseBoolean(args, "signed", &isSigned);
 
-        return new IntConstMultShiftAddOpt(parentOp, target, wIn, constant, false, epsilon);
+        return new IntConstMultShiftAddOpt(parentOp, target, wIn, constant, isSigned, epsilon);
     }
 
 	template<>
@@ -269,6 +284,7 @@ namespace flopoco{
                             "", //seeAlso
                             "wIn(int): Input word size; \
                             constant(int): constant; \
+                            signed(bool)=true: signedness of input and output; \
                             epsilon(int)=0: Allowable error for truncated constant multipliers;",
                             "Nope."
     };
