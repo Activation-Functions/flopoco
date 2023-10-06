@@ -25,7 +25,7 @@ namespace flopoco{
 		 *						If rescale=true, all the coefficients are rescaled by 1/sum(|coeffs|).
 		 * This way the output is also in [-1,1], output size is equal to input size, and the output signal makes full use of the output range.
 		*/
-    FixFIRTransposed(OperatorPtr parentOp, Target* target, int lsbIn, int lsbOut, vector<string> coeff, int symmetry=0, bool rescale=false);
+    FixFIRTransposed(OperatorPtr parentOp, Target* target, int wIn, vector<string> coeff);
 
 		void emulate(TestCase * tc);
 
@@ -36,9 +36,7 @@ namespace flopoco{
 	protected:
 
 		int n;								/**< number of taps */
-		int lsbIn;							/**< lsbIn of the filter */
-		int lsbOut;							/**< lsbOut of the filter */
-		int msbOut;							/**< msbOut of the filter, if different from lsbIn */
+		int wIn;							/**< lsbIn of the filter */
 
     mpz_class xHistory[10000]; 			// history of x used by emulate
     int currentIndex;

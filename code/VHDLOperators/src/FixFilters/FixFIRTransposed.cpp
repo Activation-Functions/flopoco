@@ -17,9 +17,12 @@ namespace flopoco {
 
 	const int veryLargePrec = 6400;  /*6400 bits should be enough for anybody */
 
-  FixFIRTransposed::FixFIRTransposed(OperatorPtr parentOp, Target* target, int lsbIn, int lsbOut, vector<string> coeff, int symmetry, bool rescale): Operator(parentOp, target), lsbIn(lsbIn), lsbOut(lsbOut)
+  FixFIRTransposed::FixFIRTransposed(OperatorPtr parentOp, Target* target, int wIn, vector<string> coeff): Operator(parentOp, target), wIn(wIn)
 	{
-
+    for(auto c : coeff)
+    {
+      REPORT(LogLevel::MESSAGE,"Got coefficient " << c);
+    }
 	};
 
 
@@ -42,18 +45,12 @@ namespace flopoco {
 	};
 
 	OperatorPtr FixFIRTransposed::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
-		int lsbIn;
-		ui.parseInt(args, "lsbIn", &lsbIn);
-		int lsbOut;
-		ui.parseInt(args, "lsbOut", &lsbOut);
-		int symmetry;
-		ui.parseInt(args, "symmetry", &symmetry);
-		bool rescale;
-		ui.parseBoolean(args, "rescale", &rescale);
+		int wIn;
+		ui.parseInt(args, "wIn", &wIn);
 		vector<string> coeffs;
 		ui.parseColonSeparatedStringList(args, "coeff", &coeffs);
 
-		OperatorPtr tmpOp = new FixFIRTransposed(parentOp, target, lsbIn, lsbOut, coeffs, symmetry, rescale);
+		OperatorPtr tmpOp = new FixFIRTransposed(parentOp, target, wIn, coeffs);
 
 		return tmpOp;
 	}
@@ -64,11 +61,8 @@ namespace flopoco {
 	    "A fix-point Finite Impulse Filter generator in transposed form using shif-and-add.",
 	    "FiltersEtc", // categories
 	    "",
-	    "lsbIn(int): integer size in bits;\
-											 lsbOut(int): integer size in bits;								\
-           						 symmetry(int)=0: 0 for normal filter, 1 for symmetric, -1 for antisymmetric. If not 0, only the first half of the coeff list is used.; \
-                       rescale(bool)=false: If true, divides all coefficients by 1/sum(|coeff|);\
-                       coeff(string): colon-separated list of real coefficients using Sollya syntax. Example: coeff=\"1.234567890123:sin(3*pi/8)\"",
+	    "wIn(int): input word size in bits;\
+                  coeff(string): colon-separated list of integer coefficients. Example: coeff=\"123:321:123\"",
 	    ""};
 }
 
