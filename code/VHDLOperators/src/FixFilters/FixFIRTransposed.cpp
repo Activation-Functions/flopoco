@@ -1,29 +1,81 @@
 #include <iostream>
 #include <iomanip>
 #include <sstream>
+#include <cstdlib>
 
 #include "flopoco/UserInterface.hpp"
-#include "gmp.h"
-#include "mpfr.h"
-#include "sollya.h"
-
 #include "flopoco/FixFilters/FixFIRTransposed.hpp"
 
-#include "flopoco/ShiftReg.hpp"
+#if defined(HAVE_PAGLIB) && defined(HAVE_RPAGLIB)
+#include "pagsuite/log2_64.h"
+#include "pagsuite/fundamental.h"
+#include "pagsuite/rpag.h"
+#include "pagsuite/rpag_functions.h"
+#endif
 
 using namespace std;
 
 namespace flopoco {
 
-	const int veryLargePrec = 6400;  /*6400 bits should be enough for anybody */
-
-  FixFIRTransposed::FixFIRTransposed(OperatorPtr parentOp, Target* target, int wIn, vector<string> coeff): Operator(parentOp, target), wIn(wIn)
+  FixFIRTransposed::FixFIRTransposed(OperatorPtr parentOp, Target* target, int wIn, vector<int64_t> coeffs, string adder_graph): Operator(parentOp, target), wIn(wIn)
 	{
-    for(auto c : coeff)
+    srcFileName="FixFIRTransposed";
+    setName("FixFIRTransposed");
+
+    if(adder_graph.compare("false") == 0)
     {
-      REPORT(LogLevel::MESSAGE,"Got coefficient " << c);
+      #if defined(HAVE_PAGLIB) && defined(HAVE_RPAGLIB)
+        REPORT(LogLevel::MESSAGE,"No adder graph was given, computing the adder graph by RPAG");
+
+        PAGSuite::rpag *rpag = new PAGSuite::rpag(); //default is RPAG with 2 input adders
+
+        for(int64_t c : coeffs)
+          rpag->target_set->insert(c);
+
+        PAGSuite::global_verbose = static_cast<int>(get_log_lvl())-1; //set rpag to one less than verbose of FloPoCo
+
+        PAGSuite::cost_model_t cost_model = PAGSuite::LL_FPGA;// with default value
+        rpag->input_wordsize = wIn;
+        rpag->set_cost_model(cost_model);
+        rpag->optimize();
+
+        vector<set<int64_t>> pipeline_set = rpag->get_best_pipeline_set();
+
+        list<PAGSuite::realization_row<int64_t> > pipelined_adder_graph;
+        PAGSuite::pipeline_set_to_adder_graph(pipeline_set, pipelined_adder_graph, true, rpag->get_c_max());
+        PAGSuite::append_targets_to_adder_graph(pipeline_set, pipelined_adder_graph, *(rpag->target_set));
+        adder_graph = PAGSuite::output_adder_graph(pipelined_adder_graph,true);
+
+        REPORT(LogLevel::MESSAGE,"Got adder graph " << adder_graph);
+
+      #else
+        REPORT(LogLevel::ERROR,"No adder graph was given but PAGlib is missing to use RPAG, please build FloPoCo with PAGlib");
+      #endif
+
     }
-	};
+
+    string trunactionStr=""; //TODO: fill
+
+    addInput("X",wIn);
+
+    stringstream parameters;
+    parameters << "wIn=" << wIn << " graph=" << adder_graph;
+    parameters << " truncations=" << trunactionStr;
+    string inPortMaps = "X0=>X";
+    stringstream outPortMaps;
+    for(auto c : coeffs)
+    {
+      int wC = wIn;
+      stringstream sigName;
+      sigName << "X_mult_" << (c < 0 ? "m" : "") << abs(c);
+      outPortMaps << "R_c" << (c < 0 ? "m" : "") << abs(c) << "=>" << declare(sigName.str(),wC) << " ";
+    }
+    cerr << "outPortMaps=" << outPortMaps.str() << endl;
+
+    newInstance("IntConstMultShiftAdd", "IntConstMultShiftAddComponent", parameters.str(), inPortMaps, outPortMaps.str());
+
+
+  }
 
 
 	void FixFIRTransposed::emulate(TestCase * tc){
@@ -50,7 +102,16 @@ namespace flopoco {
 		vector<string> coeffs;
 		ui.parseColonSeparatedStringList(args, "coeff", &coeffs);
 
-		OperatorPtr tmpOp = new FixFIRTransposed(parentOp, target, wIn, coeffs);
+    vector<int64_t> coeffsInt(coeffs.size());
+    for(int i=0; i < coeffs.size(); i++)
+    {
+      coeffsInt[i] = stoll(coeffs[i]);
+    }
+
+    string adder_graph;
+    ui.parseString(args, "graph", &adder_graph);
+
+		OperatorPtr tmpOp = new FixFIRTransposed(parentOp, target, wIn, coeffsInt, adder_graph);
 
 		return tmpOp;
 	}
@@ -62,7 +123,8 @@ namespace flopoco {
 	    "FiltersEtc", // categories
 	    "",
 	    "wIn(int): input word size in bits;\
-                  coeff(string): colon-separated list of integer coefficients. Example: coeff=\"123:321:123\"",
+                 coeff(string): colon-separated list of integer coefficients. Example: coeff=\"123:321:123\";\
+                 graph(string)=false: Realization string of the adder graph",
 	    ""};
 }
 

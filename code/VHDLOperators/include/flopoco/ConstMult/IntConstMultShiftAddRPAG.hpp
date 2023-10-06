@@ -24,7 +24,7 @@
 #include "IntConstMultShiftAdd.hpp"
 #include "flopoco/UserInterface.hpp"
 
-#if defined(HAVE_PAGLIB) && defined(HAVE_RPAGLIB) && defined(HAVE_SCALP)
+#if defined(HAVE_PAGLIB) && defined(HAVE_RPAGLIB)
 #include "pagsuite/rpag.h"
 
 namespace flopoco{
