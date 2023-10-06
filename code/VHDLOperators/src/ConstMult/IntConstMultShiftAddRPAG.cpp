@@ -1,18 +1,15 @@
 /*
-  Integer constant multiplication using minimum number of adders due to
+  Integer constant multiplication using the RPAG algorithm:
 
-  Gustafsson, O., Dempster, A., Johansson, K., Macleod, M., & Wanhammar, L. (2006).
-  Simplified Design of Constant Coefficient Multipliers. Circuits, Systems, and Signal Processing, 25(2), 225–251.
+  Kumm, M., Zipf, P., Faust, M. & Chang, C.-H. Pipelined Adder Graph Optimization for High Speed Multiple Constant Multiplication. in 49–52 (IEEE International Symposium on Circuits and Systems (ISCAS), 2012). doi:10.1109/iscas.2012.6272072.
 
-  All constants up to 19 bit will be realized optimal using precomputed tables provided by the SPIRAL project (http://spiral.ece.cmu.edu/mcm/).
-  
-  Author : Martin Kumm kumm@uni-kassel.de, (emulate adapted from Florent de Dinechin, Florent.de.Dinechin@ens-lyon.fr)
+  Author : Martin Kumm (martin.kumm@cs.hs-fulda.de)
 
   All rights reserved.
 
 */
 #include "flopoco/UserInterface.hpp"
-#if defined(HAVE_PAGLIB) && defined(HAVE_RPAGLIB) && defined(HAVE_SCALP)
+#if defined(HAVE_PAGLIB) && defined(HAVE_RPAGLIB)
 
 #include <iostream>
 #include <sstream>
@@ -25,8 +22,6 @@
 
 #include "flopoco/ConstMult/IntConstMultShiftAddRPAG.hpp"
 
-#include "pagsuite/pagexponents.hpp"
-#include "pagsuite/compute_successor_set.h"
 #include "pagsuite/log2_64.h"
 #include "pagsuite/fundamental.h"
 
@@ -87,15 +82,15 @@ namespace flopoco{
 
 		ProcessIntConstMultShiftAdd(target,adderGraph,"",epsilon);
 
-        ostringstream name;
-        name << "IntConstMultRPAG_";
-	for(auto t : target_set)
-	{
-		name << t << "_";
-	}
-	name << wIn;
-        setName(name.str());
+    ostringstream name;
+    name << "IntConstMultRPAG_";
+    for(auto t : target_set)
+    {
+      name << t << "_";
     }
+    name << wIn;
+    setName(name.str());
+  }
 
 	TestList IntConstMultShiftAddRPAG::unitTest(int testLevel)
 	{

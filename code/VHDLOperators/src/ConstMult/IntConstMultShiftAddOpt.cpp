@@ -6,7 +6,7 @@
 
   All constants up to 19 bit will be realized optimal using precomputed tables provided by the SPIRAL project (http://spiral.ece.cmu.edu/mcm/).
   
-  Author : Martin Kumm kumm@uni-kassel.de, (emulate adapted from Florent de Dinechin, Florent.de.Dinechin@ens-lyon.fr)
+  Author : Martin Kumm (martin.kumm@cs.hs-fulda.de), (emulate adapted from Florent de Dinechin, Florent.de.Dinechin@ens-lyon.fr)
 
   All rights reserved.
 
