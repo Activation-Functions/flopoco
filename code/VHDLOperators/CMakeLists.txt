@@ -67,6 +67,7 @@ if (ScaLP_FOUND)
 	target_link_libraries(
 		FloPoCoLib PRIVATE 
 		ScaLP::ScaLP
+		${ScaLP_BACKENDS}
 	)
 	target_compile_definitions(FloPoCoLib PUBLIC HAVE_SCALP)
 endif (ScaLP_FOUND)
