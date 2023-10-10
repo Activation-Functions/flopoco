@@ -405,7 +405,7 @@ namespace flopoco {
           cerr << "[" << node->inputs[i]->output_factor << "] (stage " << node->inputs[i]->stage << ")";
           if(node->input_shifts[i] > 0)
           {
-            cerr << " << " << node->input_shifts[i] << " ";
+            cerr << " << " << node->input_shifts[i];
           }
         }
       }
@@ -435,7 +435,7 @@ namespace flopoco {
         }
       }
 
-      cerr << "using " << wAddOut << " output bits and ";
+      cerr << " using " << wAddOut << " output bits and ";
       for(int i=0; i < node->inputs.size(); i++)
       {
         cerr << wAddIn[i];
@@ -526,7 +526,7 @@ namespace flopoco {
     }
 
     if(forwardedLSBs > wIn)
-      forwardedLSBs = wIn; //we can't foward more than we have
+      forwardedLSBs = wIn; //we can't forward more than we have
 
     if(forwardedLSBs > 0)
     {
@@ -589,7 +589,7 @@ namespace flopoco {
       wAddInMax = wAddIn[i] > wAddInMax ? wAddIn[i] : wAddInMax; //store max input word size for later
     }
 
-    int wAdd = wAddOut - forwardedLSBs;
+    int wAdd = wAddOut - forwardedLSBs - zeroLSBs;
     if(wAddInMax > wAdd) wAdd = wAddInMax; //a seldom case but may happen that input word size is larger than output word size
 
     int rightShift=0;
@@ -634,7 +634,7 @@ namespace flopoco {
     //Step 4: Perform addition
 //    if(getTarget()->plainVHDL())
     {
-      vhdl << tab << declare(signalNameOut + "_MSBs",wAddOut - forwardedLSBs) << " <= ";
+      vhdl << tab << declare(signalNameOut + "_MSBs",wAddOut - forwardedLSBs - zeroLSBs) << " <= ";
       if(noOfConfigurations > 1)
         vhdl << endl << tab << tab;
       string conversionFunction;
@@ -652,7 +652,7 @@ namespace flopoco {
         {
           vhdl << (node->input_is_negative[i] ? "-" : (i == 0 ? "" : "+")) << conversionFunction << "(" << signalNameIn[i] + "_shifted" << ")";
         }
-        vhdl << "," << wAddOut - forwardedLSBs << "));" << endl;
+        vhdl << "," << wAddOut - forwardedLSBs - zeroLSBs << "));" << endl;
       }
       else
       {
@@ -663,7 +663,7 @@ namespace flopoco {
           vhdl << "std_logic_vector(";
           for(int i=0; i < node->inputs.size(); i++)
           {
-            vhdl << (cnode->input_is_negative[c][i] ? "-" : (i == 0 ? "" : "+")) << "resize(" << conversionFunction << "(" << signalNameIn[i] + "_shifted" << ")" << "," << wAddOut - forwardedLSBs << ")";
+            vhdl << (cnode->input_is_negative[c][i] ? "-" : (i == 0 ? "" : "+")) << "resize(" << conversionFunction << "(" << signalNameIn[i] + "_shifted" << ")" << "," << wAddOut - forwardedLSBs - zeroLSBs << ")";
           }
           vhdl << ")";
           if(c != cnode->input_is_negative.size()-1)
@@ -886,6 +886,15 @@ namespace flopoco {
         string outputName = "R_" + factorToString(node->output_factor);
         mpz_class outputValue_mpz = outputValue;
         tc->addExpectedOutput(outputName, outputValue_mpz);
+        if(epsilon > 0)
+        {
+          //Probably not the most efficient way for large epsilons...
+          for(int e=1; e <= epsilon; e++)
+          {
+            tc->addExpectedOutput(outputName, outputValue+e);
+            tc->addExpectedOutput(outputName, outputValue-e);
+          }
+        }
 
 #ifdef DEBUG_OUT
         cerr << outputValue << " ";
