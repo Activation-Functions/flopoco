@@ -634,7 +634,9 @@ namespace flopoco {
     //Step 4: Perform addition
 //    if(getTarget()->plainVHDL())
     {
-      vhdl << tab << declare(signalNameOut + "_MSBs",wAddOut - forwardedLSBs) << " <= " << endl << tab << tab;
+      vhdl << tab << declare(signalNameOut + "_MSBs",wAddOut - forwardedLSBs) << " <= ";
+      if(noOfConfigurations > 1)
+        vhdl << endl << tab << tab;
       string conversionFunction;
 
       if(isSigned || !nodeIsNormalized) //signed is necessary for nodes that could not be normalized
@@ -897,96 +899,6 @@ namespace flopoco {
 #endif// DEBUG_OUT
 
 
-/*
-		vector<mpz_class> input_vec;
-
-		unsigned int confVal=emu_conf;
-
-		if( noOfConfigurations > 1 )
-			tc->addInput("config_no",emu_conf);
-
-    mpz_class msbp1 = (mpz_class(1) << (wIn));
-    mpz_class big1P = (mpz_class(1) << (wIn-1));
-
-		for(int i=0;i<noOfInputs;i++ )
-		{
-			stringstream inputName;
-			inputName << "X" << i;
-
-			mpz_class inputVal = tc->getInputValue(inputName.str());
-
-			if ( inputVal >= big1P)
-				inputVal = inputVal - msbp1;
-
-			input_vec.push_back(inputVal);
-
-			cerr << "inputVal=" << inputVal << " ";
-		}
-
-		mpz_class expectedResult;
-
-
-		for(list<output_signal_info>::iterator out_it= output_signals.begin();out_it!=output_signals.end();++out_it  )
-		{
-			expectedResult = 0;
-			stringstream comment;
-			for(int i=0; i < noOfInputs; i++)
-			{
-				mpz_class output_factor;
-				if ((int)confVal<noOfConfigurations)
-					output_factor= (long signed int) (*out_it).output_factors[confVal][i];
-				else
-					output_factor= (long signed int) (*out_it).output_factors[noOfConfigurations-1][i];
-
-				expectedResult += input_vec[i] * output_factor;
-				if(i != 0) comment << " + ";
-				else comment << "\t";
-				comment << input_vec[i] << " * " << output_factor;
-			}
-			comment << " == " << expectedResult << endl;
-
-			int output_ws = computeWordSize((*out_it).output_factors,wIn);
-			if ( expectedResult < mpz_class(0) )
-			{
-				mpz_class min_val = -1 * (mpz_class(1) << (output_ws-1));
-				if( expectedResult < min_val )
-				{
-					std::stringstream err;
-					err << "ERROR in testcase <" << comment.str() << ">" << std::endl;
-					err << "Wordsize of outputfactor ("<< output_ws << ") does not match given (" << computeWordSize((*out_it).output_factors,wIn) << ")";
-					THROWERROR( err.str() )
-				}
-			}
-			else
-			{
-				mpz_class max_val = (mpz_class(1) << (output_ws-1)) -1;
-				if( expectedResult > max_val )
-				{
-					std::stringstream err;
-					err << "ERROR in testcase <" << comment.str() << ">\n";
-					err << "Outputfactor does not fit in given wordsize" << endl;
-					THROWERROR( err.str() )
-				}
-			}
-
-			try
-			{
-				tc->addComment(comment.str());
-				tc->addExpectedOutput((*out_it).signal_name,expectedResult);
-				cerr << "expectedResult=" << expectedResult << endl;
-			}
-			catch(string errorstr)
-			{
-				cout << errorstr << endl;
-			}
-		}
-
-		if(emu_conf < noOfConfigurations-1 && noOfConfigurations!=1)
-			emu_conf++;
-		else
-			emu_conf=0;
-
-*/
 	}
 
 	void IntConstMultShiftAdd::buildStandardTestCases(TestCaseList * tcl)
@@ -1209,7 +1121,7 @@ namespace flopoco {
      * ./pag_split "{{'A',[1,-64],1,[1,0],0,0,[0,-1],0,6},{'A',[1,-1],1,[1,0],0,0,[0,-1],0,0},{'A',[3,0],1,[1,0],0,0,[1,0],0,1},{'R',[1,-1],2,[1,-1],1},{'A',[47,64],2,[3,0],1,4,[-1,64],1,0},{'A',[33,-33],3,[1,-1],2,0,[1,-1],2,5},{'A',[189,255],3,[1,-1],2,0,[47,64],2,2},{'A',[123,321],4,[189,255],3,0,[-33,33],3,1},{'A',[345,543],4,[189,255],3,1,[-33,33],3,0},{'A',[567,765],4,[189,255],3,0,[189,255],3,1},{'A',[789,987],4,[33,-33],3,0,[189,255],3,2},{'O',[123,321],4,[123,321],4,0},{'O',[345,543],4,[345,543],4,0},{'O',[567,765],4,[567,765],4,0},{'O',[789,987],4,[789,987],4,0}}" "123,321;345,543 567,765;789,987" --pag_fusion_input
      * ./pag_fusion --if pag_fusion_input.txt
     */
-    graphsUnsigned.push_back("{{'A',[1,-64;1,-64],1,[1,0;1,0],0,0,[0,-1;0,-1],0,6},{'A',[1,-1;1,-1],1,[1,0;1,0],0,0,[0,-1;0,-1],0,0},{'A',[3,0;3,0],1,[1,0;1,0],0,0,[1,0;1,0],0,1},{'R',[1,-1;1,-1],2,[1,-1;1,-1],1},{'A',[47,64;47,64],2,[3,0;3,0],1,4,[-1,64;-1,64],1,0},{'R',[1,-1;1,-1],3,[1,-1;1,-1],2},{'M',[8,-8;47,64],3,[1,-1;1,-1],2,[3;NaN],[47,64;47,64],2,[NaN;0]},{'A',[33,-33;189,255],4,[1,-1;1,-1],3,0,[8,-8;47,64],3,2},{'M',[47,64;8,-8],3,[47,64;47,64],2,[0;NaN],[1,-1;1,-1],2,[NaN;3]},{'A',[189,255;33,-33],4,[1,-1;1,-1],3,0,[47,64;8,-8],3,2},{'R',[189,255;33,-33],5,[189,255;33,-33],4},{'R',[33,-33;189,255],5,[33,-33;189,255],4},{'A',[123,321;345,543],6,[189,255;-33,33],5,0,[-33,33;189,255],5,1},{'M',[189,255;378,510],5,[189,255;33,-33],4,[0;NaN],[33,-33;189,255],4,[NaN;1]},{'A',[567,765;789,987],6,[189,255;33,-33],5,0,[189,255;378,510],5,1},{'O',[123,321;345,543],6,[123,321;345,543],6},{'O',[567,765;789,987],6,[567,765;789,987],6}}");
+    graphsSigned.push_back("{{'A',[1,-64;1,-64],1,[1,0;1,0],0,0,[0,-1;0,-1],0,6},{'A',[1,-1;1,-1],1,[1,0;1,0],0,0,[0,-1;0,-1],0,0},{'A',[3,0;3,0],1,[1,0;1,0],0,0,[1,0;1,0],0,1},{'R',[1,-1;1,-1],2,[1,-1;1,-1],1},{'A',[47,64;47,64],2,[3,0;3,0],1,4,[-1,64;-1,64],1,0},{'R',[1,-1;1,-1],3,[1,-1;1,-1],2},{'M',[8,-8;47,64],3,[1,-1;1,-1],2,[3;NaN],[47,64;47,64],2,[NaN;0]},{'A',[33,-33;189,255],4,[1,-1;1,-1],3,0,[8,-8;47,64],3,2},{'M',[47,64;8,-8],3,[47,64;47,64],2,[0;NaN],[1,-1;1,-1],2,[NaN;3]},{'A',[189,255;33,-33],4,[1,-1;1,-1],3,0,[47,64;8,-8],3,2},{'R',[189,255;33,-33],5,[189,255;33,-33],4},{'R',[33,-33;189,255],5,[33,-33;189,255],4},{'A',[123,321;345,543],6,[189,255;-33,33],5,0,[-33,33;189,255],5,1},{'M',[189,255;378,510],5,[189,255;33,-33],4,[0;NaN],[33,-33;189,255],4,[NaN;1]},{'A',[567,765;789,987],6,[189,255;33,-33],5,0,[189,255;378,510],5,1},{'O',[123,321;345,543],6,[123,321;345,543],6},{'O',[567,765;789,987],6,[567,765;789,987],6}}");
 
 #ifdef RMCM_SUPPORT
 
