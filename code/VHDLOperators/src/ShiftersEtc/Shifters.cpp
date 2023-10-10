@@ -100,7 +100,8 @@ namespace flopoco{
 			// In the mean time we have padded the input to wR, hopefully with few bits only...
 			if(wX<wR) {
 				string pad="("+to_string(wR-wX-1) + " downto 0 => " + padbit + ")";
-				vhdl << tab << declare("Xpadded", wR) << " <= "<< (direction == Left? pad+"&":"") << "X"<< (direction == Right? "&"+pad : "") <<";"  << endl;
+				string pad0="("+to_string(wR-wX-1) + " downto 0 => \'0\')";
+				vhdl << tab << declare("Xpadded", wR) << " <= "<< (direction == Left? pad+"&":"") << "X"<< (direction == Right? "&"+pad0 : "") <<";"  << endl;
 			}
 			else // with the earlier sanity checks we should have wX=wR
 			 {
