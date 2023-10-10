@@ -169,14 +169,18 @@ namespace flopoco {
     xHistory[currentIndexMod] = x;
 
 		// Not completely optimal in terms of object copies...
+#ifdef DEBUG
     cerr << "emulate inputs (currentIndexMod=" << currentIndexMod << ")=";
+#endif
 		vector<mpz_class> inputs;
 		for (int i=0; i< noOfTaps; i++)
     {
 			x = xHistory[(currentIndexMod+noOfTaps-i)%noOfTaps];
       mpz_class xSigned = bitVectorToSigned(x, wIn); 						// convert it to a signed mpz_class
 			inputs.push_back(xSigned);
+#ifdef DEBUG
       cerr << xSigned << " ";
+#endif
 		}
 
     mpz_class y=0;
@@ -185,7 +189,9 @@ namespace flopoco {
       mpz_class c(((signed long int) coeffs[noOfTaps-i-1]));
       y = y + inputs[i] * c;
     }
+#ifdef DEBUG
     cerr << ": y = " << y << endl;
+#endif
 
 
 //    if(currentIndex > noOfTaps) //ignore the first noOfTaps cycles as registers has to be filled with something useful
