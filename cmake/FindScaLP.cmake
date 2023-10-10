@@ -64,28 +64,45 @@ if(ScaLP_INCLUDE_DIR AND ScaLP_LIBRARY)
       HINTS "/usr/local/lib64/" "/usr/local/lib/" "${SCALP_PREFIX_DIR}/" "${SCALP_PREFIX_DIR}/lib/" "$ENV{SCALP_PREFIX_DIR}/lib/"  
       DOC "Directory of the SCALP library for cplex solver backend"
   )
-  LIST(APPEND ScaLP_BACKENDS ${SCALP_CPLEX_LIB})
+  if(SCALP_CPLEX_LIB)
+    LIST(APPEND ScaLP_BACKENDS ${SCALP_CPLEX_LIB})
+  endif(SCALP_CPLEX_LIB)
 
   find_library(SCALP_GUROBI_LIB
       NAMES libScaLP-Gurobi libScaLP-Gurobi.so libScaLP-Gurobi.dylib
       HINTS "/usr/local/lib64/" "/usr/local/lib/" "${SCALP_PREFIX_DIR}/" "${SCALP_PREFIX_DIR}/lib/" "$ENV{SCALP_PREFIX_DIR}/lib/"
       DOC "Directory of the SCALP library for Gurobi solver backend"
   )
-  LIST(APPEND ScaLP_BACKENDS ${SCALP_GUROBI_LIB})
+  if(SCALP_GUROBI_LIB)
+      LIST(APPEND ScaLP_BACKENDS ${SCALP_GUROBI_LIB})
+  endif(SCALP_GUROBI_LIB)
 
   find_library(SCALP_SCIP_LIB
       NAMES libScaLP-SCIP libScaLP-SCIP.so libScaLP-SCIP.dylib
       HINTS "/usr/local/lib64/" "/usr/local/lib/" "${SCALP_PREFIX_DIR}/" "${SCALP_PREFIX_DIR}/lib/" "$ENV{SCALP_PREFIX_DIR}/lib/"
       DOC "Directory of the SCALP library for SCIP solver backend"
   )
-  LIST(APPEND ScaLP_BACKENDS ${SCALP_SCIP_LIB})
+  if(SCALP_SCIP_LIB)
+      LIST(APPEND ScaLP_BACKENDS ${SCALP_SCIP_LIB})
+  endif(SCALP_SCIP_LIB)
 
   find_library(SCALP_LPSOLVE_LIB
       NAMES libScaLP-LPSOLVE libScaLP-LPSOLVE.so libScaLP-LPSolve.so libScaLP-LPSOLVE.dylib
       HINTS "/usr/local/lib64/" "/usr/local/lib/" "${SCALP_PREFIX_DIR}/" "${SCALP_PREFIX_DIR}/lib/" "$ENV{SCALP_PREFIX_DIR}/lib/"
       DOC "Directory of the SCALP library for LPSOLVE solver backend"
   )
-  LIST(APPEND ScaLP_BACKENDS ${SCALP_LPSOLVE_LIB})
+  if(SCALP_LPSOLVE_LIB)
+      find_library(LPSOLVE_LIB
+              NAMES lpsolve55
+              PATH_SUFFIXES lpsolve lp_solve)
+      message("lpsolve found: ${LPSOLVE_LIB}")
+      find_path(LPSOLVE_INCLUDE_DIR NAMES lpsolve/lp_types.h)
+      if (LPSOLVE_LIB AND LPSOLVE_INCLUDE_DIR)
+          LIST(APPEND ScaLP_BACKENDS ${LPSOLVE_LIB})
+          LIST(APPEND ScaLP_BACKENDS ${SCALP_LPSOLVE_LIB})
+      endif (LPSOLVE_LIB AND LPSOLVE_INCLUDE_DIR)
+  endif(SCALP_LPSOLVE_LIB)
+
 elseif (SCALP_BUILD_NOTFOUND)
   include(FetchContent)
   FetchContent_Declare(
