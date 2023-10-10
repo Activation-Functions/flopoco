@@ -108,7 +108,7 @@ elseif (SCALP_BUILD_NOTFOUND)
   FetchContent_Declare(
     Scalp
     GIT_REPOSITORY https://digidev.digi.e-technik.uni-kassel.de/git/scalp.git
-    GIT_TAG 185b84e4ff967f42cf2de5db4db4e6fa0cc18fb8
+    #GIT_TAG 185b84e4ff967f42cf2de5db4db4e6fa0cc18fb8
     UPDATE_DISCONNECTED False
     SOURCE_SUBDIR NonExistentRepo
   )
@@ -146,7 +146,7 @@ elseif (SCALP_BUILD_NOTFOUND)
     if(${SCALP_LOCALLY_BUILT})
       set(ScaLP_INCLUDE_DIR "${scalp_BINARY_DIR}/include")
       set(ScaLP_LIBRARY "${scalp_BINARY_DIR}/lib/libScaLP.so")
-      set(SCALP_LPSOLVE_LIB "${scalp_BINARY_DIR}/lib/libScaLP-LPSOLVE.so")
+      set(SCALP_LPSOLVE_LIB "${scalp_BINARY_DIR}/lib/libScaLP-LPSolve.so")
       set(ScaLP_BACKENDS ${SCALP_LPSOLVE_LIB})
     endif()
   endif()
