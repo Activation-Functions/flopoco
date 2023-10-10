@@ -58,6 +58,7 @@ namespace flopoco {
         isSigned(isSigned),
 	      epsilon(epsilon_)
 	{
+
 		ostringstream name;
 		name << "IntConstMultShiftAddNew_" << wIn;
 		setNameWithFreqAndUID(name.str());
@@ -142,7 +143,7 @@ namespace flopoco {
 
   void IntConstMultShiftAdd::parseTruncation(string truncationList)
   {
-    static const string fieldDelimiter{" "};
+    static const string fieldDelimiter{"|"};
     auto getNextField = [](string& val)->string{
       long unsigned int offset = val.find(fieldDelimiter);
       string ret = val.substr(0, offset);
@@ -1299,7 +1300,7 @@ namespace flopoco {
        graph(string): Realization string of the adder graph; \
        signed(bool)=true: signedness of input and output; \
        epsilon(int)=0: Allowable error for truncated constant multipliers; \
-       truncations(string)=\"\": provides the truncations for intermediate values (format const1,stage:trunc_input_0,trunc_input_1,... const2,stage:trunc_input_0,trunc_input_1,...)",""};
+       truncations(string)=\"\": provides the truncations for intermediate values (format: const1,stage:trunc_input_0,trunc_input_1,...|const2,stage:trunc_input_0,trunc_input_1,...)",""};
        // (format const1,stage:trunc_input_0,trunc_input_1,...;const2,stage:trunc_input_0,trunc_input_1,...;...)
 }//namespace
 

@@ -17,7 +17,7 @@ using namespace std;
 
 namespace flopoco {
 
-  FixFIRTransposed::FixFIRTransposed(OperatorPtr parentOp, Target* target, int wIn, vector<int64_t> coeffs, string adder_graph): Operator(parentOp, target), wIn(wIn), coeffs(coeffs)
+  FixFIRTransposed::FixFIRTransposed(OperatorPtr parentOp, Target* target, int wIn, vector<int64_t> coeffs, string adder_graph, string graph_truncations, string sa_truncations): Operator(parentOp, target), wIn(wIn), coeffs(coeffs)
 	{
     useNumericStd();
     srcFileName="FixFIRTransposed";
@@ -32,7 +32,7 @@ namespace flopoco {
       coeffAbsSet.insert(abs(coeffs[i]));
     }
 
-    if(adder_graph.compare("false") == 0)
+    if(adder_graph.compare("\"\"") == 0)
     {
       #if defined(HAVE_PAGLIB) && defined(HAVE_RPAGLIB)
         REPORT(LogLevel::MESSAGE,"No adder graph was given, computing the adder graph by RPAG");
@@ -64,13 +64,11 @@ namespace flopoco {
 
     }
 
-    string trunactionStr=""; //TODO: fill
-
     addInput("X",wIn);
 
     stringstream parameters;
     parameters << "wIn=" << wIn << " graph=" << adder_graph;
-    parameters << " truncations=" << trunactionStr;
+    parameters << " truncations=" << graph_truncations;
     string inPortMaps = "X0=>X";
     stringstream outPortMaps;
     int i=0;
@@ -216,7 +214,13 @@ namespace flopoco {
     string adder_graph;
     ui.parseString(args, "graph", &adder_graph);
 
-		OperatorPtr tmpOp = new FixFIRTransposed(parentOp, target, wIn, coeffsInt, adder_graph);
+    string graph_truncations;
+    ui.parseString(args, "graph_truncations", &graph_truncations);
+
+    string sa_truncations;
+    ui.parseString(args, "sa_truncations", &sa_truncations);
+
+    OperatorPtr tmpOp = new FixFIRTransposed(parentOp, target, wIn, coeffsInt, adder_graph, graph_truncations, sa_truncations);
 
 		return tmpOp;
 	}
@@ -229,7 +233,9 @@ namespace flopoco {
 	    "",
 	    "wIn(int): input word size in bits;\
                  coeff(string): colon-separated list of integer coefficients. Example: coeff=\"123:321:123\";\
-                 graph(string)=false: Realization string of the adder graph",
+                 graph(string)=\"\": Realization string of the adder graph;\
+                 graph_truncations(string)=\"\": provides the truncations for intermediate values of the adder graph (format: const1,stage:trunc_input_0,trunc_input_1,... const2,stage:trunc_input_0,trunc_input_1,...)\";\
+                 sa_truncations(string)=\"\": provides the truncations for the strucutal adder (format: const1,stage:trunc_input_0,trunc_input_1,...|const2,stage:trunc_input_0,trunc_input_1,...)",
 	    ""
   };
 }
