@@ -17,10 +17,20 @@ using namespace std;
 
 namespace flopoco {
 
-  FixFIRTransposed::FixFIRTransposed(OperatorPtr parentOp, Target* target, int wIn, vector<int64_t> coeffs, string adder_graph): Operator(parentOp, target), wIn(wIn)
+  FixFIRTransposed::FixFIRTransposed(OperatorPtr parentOp, Target* target, int wIn, vector<int64_t> coeffs, string adder_graph): Operator(parentOp, target), wIn(wIn), coeffs(coeffs)
 	{
+    useNumericStd();
     srcFileName="FixFIRTransposed";
     setName("FixFIRTransposed");
+
+    noOfTaps = coeffs.size();
+    assert(noOfTaps > 0);
+
+    set<int64_t> coeffAbsSet;
+    for(int i=0; i < noOfTaps; i++)
+    {
+      coeffAbsSet.insert(abs(coeffs[i]));
+    }
 
     if(adder_graph.compare("false") == 0)
     {
@@ -29,7 +39,7 @@ namespace flopoco {
 
         PAGSuite::rpag *rpag = new PAGSuite::rpag(); //default is RPAG with 2 input adders
 
-        for(int64_t c : coeffs)
+        for(int64_t c : coeffAbsSet)
           rpag->target_set->insert(c);
 
         PAGSuite::global_verbose = static_cast<int>(get_log_lvl())-1; //set rpag to one less than verbose of FloPoCo
@@ -63,36 +73,125 @@ namespace flopoco {
     parameters << " truncations=" << trunactionStr;
     string inPortMaps = "X0=>X";
     stringstream outPortMaps;
-    for(auto c : coeffs)
+    int i=0;
+    map<int64_t,int> wC;
+    for(auto c : coeffAbsSet)
     {
-      int wC = wIn;
+      wC[c] = wIn + ceil(log2(c+1));
       stringstream sigName;
-      sigName << "X_mult_" << (c < 0 ? "m" : "") << abs(c);
-      outPortMaps << "R_c" << (c < 0 ? "m" : "") << abs(c) << "=>" << declare(sigName.str(),wC) << " ";
+      sigName << "X_mult_" << c;
+      outPortMaps << "R_c" << c << "=>" << declare(sigName.str(),wC[c]);
+      if(i++ < coeffAbsSet.size() - 1)
+        outPortMaps << ",";
     }
-    cerr << "outPortMaps=" << outPortMaps.str() << endl;
 
+    //create the multiplier block:
     newInstance("IntConstMultShiftAdd", "IntConstMultShiftAddComponent", parameters.str(), inPortMaps, outPortMaps.str());
 
+    //compute the minimum word size of structural adders (without truncations)
+    vector<int> wS(noOfTaps); // !!!
+    for(int i=0; i < noOfTaps; i++)
+    {
+      int64_t sum=0;
+      for(int j=0; j <= i; j++)
+      {
+        sum += abs(coeffs[j]);
+      }
+      wS[i] = wIn + ceil(log2(sum));
+      REPORT(DETAIL, "Word size of strucural adder " << i << " is " << wS[i] << " bits (range is " << -sum << " x 2^(wIn-1) to " << sum << " x (2^(wIn-1)-1)");
+    }
+
+    //output word size is identical to the one of the last structural adder:
+    wOut=wS[noOfTaps-1];
+    addOutput("Y",wOut);
+
+    //create the structural adders:
+    if(noOfTaps == 1)
+    {
+      vhdl << tab << "Y <= X_mult_" << abs(coeffs[0]) << ";" << endl; //this is the very trivial case of a 1-tap filter
+    }
+    else
+    {
+      //the first structural adder gets a special treatment:
+      vhdl << tab << declare("s0",wS[0]) << " <= X_mult_" << abs(coeffs[0]) << ";" << endl;
+      for(int i=1; i < noOfTaps; i++)
+      {
+        addRegisteredSignalCopy(join("s", i-1) + "_delayed", join("s", i-1),Signal::asyncReset);
+        vhdl << tab << declare("s" + to_string(i),wS[i]) << " <= std_logic_vector(resize(signed(" << "s" + to_string(i-1) << "_delayed)," << wS[i] << ") "  << (coeffs[i] < 0 ? "-" : "+") << " resize(signed(X_mult_" << abs(coeffs[i]) << ")," << wS[i] << "));" << endl;
+      }
+      vhdl << tab << "Y <= s" << noOfTaps-1 << ";" << endl; //this is the very trivial case of a 1-tap filter
+    }
+
+    // initialize stuff for emulate
+    xHistory.resize(noOfTaps, 0); //resize history
+    currentIndex=0;
 
   }
 
+  void FixFIRTransposed::buildStandardTestCases(TestCaseList * tcl)
+  {
+    TestCase *tc;
+    tc = new TestCase(this);
+    tc->addComment("Test Impulse response with 1 as input");
+    tc->addInput("X", 1);
+    emulate(tc);
+    tcl->add(tc);
+    for(int i = 0; i < noOfTaps; i++)
+    {
+      tc = new TestCase(this);
+      tc->addComment("Test Impulse response with 1 as input");
+      tc->addInput("X", 0);
+      emulate(tc);
+      tcl->add(tc);
+    }
+
+    tc = new TestCase(this);
+    tc->addComment("Test Impulse response with 1 as input");
+    tc->addInput("X", (1<<(wIn-1))-1);
+    emulate(tc);
+    tcl->add(tc);
+
+    for(int i = 0; i < noOfTaps; i++)
+    {
+      tc = new TestCase(this);
+      tc->addComment("Test Impulse response with max input");
+      tc->addInput("X", 0);
+      emulate(tc);
+      tcl->add(tc);
+    }
+
+  }
 
 	void FixFIRTransposed::emulate(TestCase * tc){
-		mpz_class sx = tc->getInputValue("X"); 		// get the input bit vector as an integer
-		xHistory[currentIndex] = sx;
+		mpz_class x = tc->getInputValue("X"); 		// get the input bit vector as an integer
+
+    int currentIndexMod=currentIndex%noOfTaps; //  circular buffer to store the inputs
+    xHistory[currentIndexMod] = x;
 
 		// Not completely optimal in terms of object copies...
+    cerr << "emulate inputs (currentIndexMod=" << currentIndexMod << ")=";
 		vector<mpz_class> inputs;
-		for (int i=0; i< n; i++)	{
-			sx = xHistory[(currentIndex+n-i)%n];
-			inputs.push_back(sx);
+		for (int i=0; i< noOfTaps; i++)
+    {
+			x = xHistory[(currentIndexMod+noOfTaps-i)%noOfTaps];
+      mpz_class xSigned = bitVectorToSigned(x, wIn); 						// convert it to a signed mpz_class
+			inputs.push_back(xSigned);
+      cerr << xSigned << " ";
 		}
-//		pair<mpz_class,mpz_class> results = refFixSOPC-> computeSOPCForEmulate(inputs);
 
-//		tc->addExpectedOutput ("R", results.first);
-//		tc->addExpectedOutput ("R", results.second);
-		currentIndex=(currentIndex+1)%n; //  circular buffer to store the inputs
+    mpz_class y=0;
+    for (int i=0; i< noOfTaps; i++)
+    {
+      mpz_class c(((signed long int) coeffs[noOfTaps-i-1]));
+      y = y + inputs[i] * c;
+    }
+    cerr << ": y = " << y << endl;
+
+
+//    if(currentIndex > noOfTaps) //ignore the first noOfTaps cycles as registers has to be filled with something useful
+		  tc->addExpectedOutput ("Y", signedToBitVector(y, wOut));
+
+    currentIndex++;
 
 	};
 
@@ -125,6 +224,7 @@ namespace flopoco {
 	    "wIn(int): input word size in bits;\
                  coeff(string): colon-separated list of integer coefficients. Example: coeff=\"123:321:123\";\
                  graph(string)=false: Realization string of the adder graph",
-	    ""};
+	    ""
+  };
 }
 

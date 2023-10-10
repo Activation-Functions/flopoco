@@ -29,16 +29,18 @@ namespace flopoco{
 
 		void emulate(TestCase * tc);
 
+    void buildStandardTestCases(TestCaseList * tcl);
+
 		// User-interface stuff
 		/** Factory method */
 		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
 
-	protected:
-
-		int n;								/**< number of taps */
-		int wIn;							/**< lsbIn of the filter */
-
-    mpz_class xHistory[10000]; 			// history of x used by emulate
+  private:
+    int wIn;	/**< input word size of the filter */
+    int wOut; /**< output word size of the filter */
+    int noOfTaps;								/**< number of taps */
+    vector<int64_t> coeffs;
+    vector<mpz_class> xHistory; 			// history of x used by emulate
     int currentIndex;
 
 	};
