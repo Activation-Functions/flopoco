@@ -355,7 +355,7 @@ namespace flopoco{
   }
 
 
-	bool FixRealShiftAdd::computeAdderGraph(PAGSuite::adder_graph_t &adderGraph, string &adderGraphStr, long long int coefficient)
+	bool FixRealShiftAdd::computeAdderGraph(PAGSuite::adder_graph_t &adderGraph, string &adderGraphStr, int64_t coefficient)
 	{
 		set<PAGSuite::int_t> target_set;
 
