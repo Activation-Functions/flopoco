@@ -368,7 +368,7 @@ Comment         <- < '#' [^\n]* '\n' >
 					// but these errors are far from being explicit
 					vector<pair<string,int>> inputList;
 					vector<pair<string,int>> outputList;
-					for(auto i: *(op->getIOList())) 	{
+					for(auto i: op->getIOList()) 	{
 						if(i->type() == Signal::in)	  {
 							REPORT(LogLevel::DEBUG, "  input " << i->getName() << " of size " << i->width());
 							pair<string,int> in = make_pair(i->getName(), i->width());

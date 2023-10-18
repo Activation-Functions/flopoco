@@ -48,8 +48,7 @@ namespace flopoco{
 
 		//copy the signals of the wrapped operator
 		// this replaces addInputs and addOutputs
-		for(int i=0; i<op->getIOListSize(); i++){
-			Signal* s = op->getIOListSignal(i);
+		for(Signal* s: op->getIOList()){
 
 			if(s->type() == Signal::in){
 				//copy the input
@@ -80,9 +79,7 @@ namespace flopoco{
 		vhdl << instance(op, "test", false);
 
 		// copy the outputs
-		for(int i=0; i<op->getIOListSize(); i++){
-			Signal* s = op->getIOListSignal(i);
-
+		for(Signal* s : getIOList()){
 			if(s->type() == Signal::out) {
 				string idext = "o_" + s->getName();
 #if O

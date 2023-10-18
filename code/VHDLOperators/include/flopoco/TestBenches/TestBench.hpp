@@ -48,11 +48,11 @@ namespace flopoco{
 		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
 		
 	private:
-		Operator *op_; /**< The unit under test UUT */
-		int       n_;   /**< The parameter from the constructor */
-		TestCaseList tcl_; /**< Test case list */
+		Operator *op; /**< The unit under test UUT */
+		int       n;   /**< The parameter from the constructor */
+		TestCaseList tcl; /**< Test case list */
 		int simulationTime; /**< Total simulation time */
-		bool fromFile_; /**< Flag for external file I/O */
+		bool fromFile; /**< Flag for external file I/O */
 		bool hasFPOutputs;
 		bool hasIEEEOutputs;
 	};

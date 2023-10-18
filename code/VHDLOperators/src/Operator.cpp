@@ -534,16 +534,31 @@ namespace flopoco{
 		return parentOp_;
 	}
 
-
-	// TODO remove probably the three following methods
-	int Operator::getIOListSize() const{
-		return ioList_.size();
+	vector<Signal*> Operator::getIOList(){
+		return ioList_;
 	}
 
-	vector<Signal*>* Operator::getIOList(){
-		return &ioList_;
+	vector<Signal*> Operator::getInputList(){
+		vector<Signal*> inputList;
+		for (auto i: ioList_) {
+			if (i->type()==Signal::in) {
+				inputList.push_back(i);
+			}
+		}
+		return inputList;
 	}
 
+	vector<Signal*> Operator::getOutputList(){
+		vector<Signal*> outputList;
+		for (auto i: ioList_) {
+			if (i->type()==Signal::in) {
+				outputList.push_back(i);
+			}
+		}
+		return outputList;
+	}
+
+	
 	Signal* Operator::getIOListSignal(int i){
 		return ioList_[i];
 	}
@@ -1293,7 +1308,7 @@ namespace flopoco{
 		};
 
 		// First, I/O sanity check: check that all the signals are connected
-		for(auto i: *(op->getIOList())) 	{
+		for(auto i: op->getIOList()) 	{
 			bool isSignalMapped = false;
 			map<string, string>::iterator iterStart, iterStop;
 
@@ -1477,7 +1492,7 @@ namespace flopoco{
 		// populate the instance maps.
 		// The following code is protected by the IO sanity checks above
 		vector<string> actualIOList;
-		for(auto i: *(op->getIOList())) {
+		for(auto i: op->getIOList()) {
 			for(auto j: tmpInPortMap_)	{
 				if(j.first == i->getName()) {
 					actualIOList.push_back(j.second);
@@ -2014,6 +2029,9 @@ namespace flopoco{
 		}
 	}
 
+	int Operator::buildExhaustiveTestCaseList(TestCaseList* tcl){
+	}
+
 	TestCase* Operator::buildRandomTestCase(int i){
 		TestCase *tc = new TestCase(this);
 		// Generate test cases using random input numbers */
@@ -2366,7 +2384,7 @@ namespace flopoco{
 									Signal* subopInput = getSignalByName(rhsName);
 									//look for the first output
 									int i=0;
-									while((*subop->getIOList())[i]->type() != Signal::out)
+									while(subop->getIOList()[i]->type() != Signal::out)
 										i++;
 									vector<string> actualIO = instanceActualIO_[instanceName];
 									Signal* subopOutput = getSignalByName(actualIO[i]);
@@ -3558,7 +3576,7 @@ namespace flopoco{
 	void  Operator::cloneOperator(Operator *op){
 		subComponentList_           = op->getSubComponentList();
 		signalList_                 = op->getSignalList();
-		ioList_                     = op->getIOListV();
+		ioList_                     = op->getIOList();
 
 		parentOp_                   = op->parentOp_;
 
@@ -3769,7 +3787,7 @@ namespace flopoco{
 						}
 
 				//connect the inputs/outputs of the subcomponent
-				for(unsigned int j=0; j<currentOp->getIOList()->size(); j++)
+				for(unsigned int j=0; j<currentOp->getIOList().size(); j++)
 					{
 						Signal *currentIO = currentOp->getIOListSignal(j), *originalIO;
 

@@ -167,13 +167,15 @@ namespace flopoco{
 		// std::cout << "signal width : " << s->width() << std::endl;
 		if (v >= (mpz_class(1) << s->width())){
 			ostringstream e;
-			e << "ERROR in TestCase::addExpectedOutput, signal value " << v << " out of range 0 .. " << (mpz_class(1) << s->width())-1;
-				throw e.str();
+			e << "ERROR in TestCase::addExpectedOutput, value " << v << " of signal " << name << " out of range 0 .. " << (mpz_class(1) << s->width())-1;
+			throw e.str();
 		}
+		// TODO There should be a test if the output is a signed one instead
+		// TODO first: remove the possibily of v<0, and see which tests it breaks
 		if (v<0) {
 			if (v < - (mpz_class(1) << s->width())){
 				ostringstream e;
-				e << "ERROR in TestCase::addExpectedOutput, negative signal value " << v << " out of range " << - (mpz_class(1) << s->width()) << " .. " << (mpz_class(1) << s->width())-1;
+				e << "ERROR in TestCase::addExpectedOutput, negative value " << v << " of signal " << name << " out of range " << - (mpz_class(1) << s->width()) << " .. " << (mpz_class(1) << s->width())-1;
 				throw e.str();
 			}
 			v += (mpz_class(1) << s->width());
@@ -181,14 +183,37 @@ namespace flopoco{
 		outputs[name].push_back(v);
 	}
 
+	void TestCase::addExpectedOutputInterval(std::string name, mpz_class vinf, mpz_class vsup){
+		Signal* s = op_->getSignalByName(name);
 
-    vector<mpz_class> TestCase::getExpectedOutputValues(string s) {
-        return outputs[s]; // return all possible output values as a vector of mpz_class
-    }
+		// Currently assume unsigned interval to start with: TODO add maagement of signed and FP
+		if (vinf<0 || vinf >= (mpz_class(1) << s->width())){
+			ostringstream e;
+			e << "ERROR in TestCase::addExpectedOutputInterval, value " << vinf << " of signal " << name << " out of range 0 .. " << (mpz_class(1) << s->width())-1;
+			throw e.str();
+		}
+		if (vsup<0 || vsup >= (mpz_class(1) << s->width())){
+			ostringstream e;
+			e << "ERROR in TestCase::addExpectedOutputInterval, value " << vsup << " of signal " << name << " out of range 0 .. " << (mpz_class(1) << s->width())-1;
+			throw e.str();
+		}
+		if (outputInterval.count(name)){
+			ostringstream e;
+			e << "ERROR in TestCase::addExpectedOutputInterval, an interval was already provided for signal " << name ;
+			throw e.str();	
+		}
+		outputInterval.insert(name);
+		outputs[name].push_back(vinf);
+		outputs[name].push_back(vsup);
+	}
+
+	vector<mpz_class> TestCase::getExpectedOutputValues(string s) {
+		return outputs[s]; // return all possible output values as a vector of mpz_class
+	}
 
 
-    mpz_class TestCase::getExpectedOutputValue(string s) {
-	    return outputs[s][0]; // return only the first added expected output value, located at pos. 0 in the vector for output s
+	mpz_class TestCase::getExpectedOutputValue(string s) {
+		return outputs[s][0]; // return only the first added expected output value, located at pos. 0 in the vector for output s
 	}
 
 
@@ -216,7 +241,6 @@ namespace flopoco{
 	{
 		ostringstream o;
 
-
 		/* Iterate through output signals */
 		for (map<string, vector<mpz_class> >::iterator it = outputs.begin(); it != outputs.end(); it++)
 			{
@@ -226,26 +250,32 @@ namespace flopoco{
 				string expected;
 
 				o << prepend;
-				o << "assert false";  // XXX: Too lazy to make an exception for the first value
-
-				/* Iterate through possible output values */
-				for (vector<mpz_class>::iterator it = vs.begin(); it != vs.end(); it++)
-					{
-						mpz_class v = *it;
-						o << " or ";
-						if (s->isFP())
-							o << "fp_equal(" << s->getName() << ",fp" << s->width() << "'("<< s->valueToVHDL(v) << "))";
-						else if (s->isIEEE())
-							o << "fp_equal_ieee"<< "(" << s->getName() << ", fp" << s->width() << "'("<< s->valueToVHDL(v) << "), " << s->wE()  << ", " << s->wF() << ")";
-						else
-							o << s->getName() << "=" << s->valueToVHDL(v);
-						expected += " " + s->valueToVHDL(v,false);
+				o << "assert ";  
+				
+				if (outputInterval.count(signame))
+					{//TODO for intervals
 					}
+				else {// we just have a list of values to test : 
+					// Iterate through possible output values
+					for (vector<mpz_class>::iterator it = vs.begin(); it != vs.end(); it++)
+						{
+							mpz_class v = *it;
+							if (it!=vs.begin()) {
+								o << " or ";
+							}
+							if (s->isFP())
+								o << "fp_equal(" << s->getName() << ",fp" << s->width() << "'("<< s->valueToVHDL(v) << "))";
+							else if (s->isIEEE())
+								o << "fp_equal_ieee"<< "(" << s->getName() << ", fp" << s->width() << "'("<< s->valueToVHDL(v) << "), " << s->wE()  << ", " << s->wF() << ")";
+							else
+								o << s->getName() << "=" << s->valueToVHDL(v);
+							expected += " " + s->valueToVHDL(v,false);
+						}
+				}
 
 				o << " report \"Incorrect output value for " << s->getName() << ", expected" << expected << " | Test Number : " << getId() << "  \" severity ERROR; ";
 				o << endl;
 			}
-
 		return o.str();
 	}
 
@@ -256,7 +286,7 @@ namespace flopoco{
 
 		o << prepend;
 
-	/* Iterate through input signals */
+		/* Iterate through input signals */
 		for (map<string, mpz_class>::iterator it = inputs.begin(); it != inputs.end(); it++)
 			{
 				string signame = it->first;
@@ -283,32 +313,32 @@ namespace flopoco{
 		return o.str();
 	}
 
-        std::string TestCase::generateInputString(list<string> IOorderInput, list<string> IOorderOutput) {
-                ostringstream o;
-                /* iterate trough input signals */
-                for (list<string>::iterator it = IOorderInput.begin(); it != IOorderInput.end(); it++) {
-			  Signal* s = op_->getSignalByName(*it);
-			  mpz_class v = inputs[*it];
-			  o << s->valueToVHDL(v,false) << " ";
-                }
+	std::string TestCase::generateInputString(list<string> IOorderInput, list<string> IOorderOutput) {
+		ostringstream o;
+		/* iterate trough input signals */
+		for (list<string>::iterator it = IOorderInput.begin(); it != IOorderInput.end(); it++) {
+			Signal* s = op_->getSignalByName(*it);
+			mpz_class v = inputs[*it];
+			o << s->valueToVHDL(v,false) << " ";
+		}
 		o << "\n";
-                for (list<string>::iterator it = IOorderOutput.begin();it != IOorderOutput.end(); it++) {
+		for (list<string>::iterator it = IOorderOutput.begin();it != IOorderOutput.end(); it++) {
 			Signal* s = op_->getSignalByName(*it);
 			vector<mpz_class> vs = outputs[*it];
 
-                        o << vs.size() << " ";
+			o << vs.size() << " ";
 			/* Iterate through possible output values */
 			for (vector<mpz_class>::iterator it = vs.begin(); it != vs.end(); it++)
-			{
-				mpz_class v = *it;
-				o << s->valueToVHDL(v,false) << " ";
-			}
-                }
-                o << endl;
+				{
+					mpz_class v = *it;
+					o << s->valueToVHDL(v,false) << " ";
+				}
+		}
+		o << endl;
 		return o.str();
 
 
-        }
+	}
 
 
 
@@ -320,20 +350,20 @@ namespace flopoco{
 		return comment;
 	}
 
-        void TestCase::setId(int id) {
-                intId = id;
-        }
+	void TestCase::setId(int id) {
+		intId = id;
+	}
 
-        int TestCase::getId() {
-                return intId;
-        }
+	int TestCase::getId() {
+		return intId;
+	}
 
-      string TestCase::getDescription() {
-        ostringstream msg;
-        msg << "Test Case number : " << getId() << std::endl;
-        msg << getComment();
-        msg << std::endl;
-        return msg.str();
-      }
+	string TestCase::getDescription() {
+		ostringstream msg;
+		msg << "Test Case number : " << getId() << std::endl;
+		msg << getComment();
+		msg << std::endl;
+		return msg.str();
+	}
 }
 
