@@ -18,7 +18,7 @@ namespace flopoco{
 		 * @param op The operator which is the UUT
 		 * @param n Number of tests
 		 */
-		TestBench(Target *target, Operator *op, int n, bool fromFile = false);
+		TestBench(Target *target, Operator *op, int64_t n, bool fromFile = false);
 
 		/** Destructor */
 		~TestBench();
@@ -49,7 +49,7 @@ namespace flopoco{
 		
 	private:
 		Operator *op; /**< The unit under test UUT */
-		int       n;   /**< The parameter from the constructor */
+		int64_t       n;   /**< The parameter from the constructor */
 		TestCaseList tcl; /**< Test case list */
 		int simulationTime; /**< Total simulation time */
 		bool fromFile; /**< Flag for external file I/O */

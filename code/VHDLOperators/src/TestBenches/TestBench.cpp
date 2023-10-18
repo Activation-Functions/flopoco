@@ -33,7 +33,7 @@ using namespace std;
 namespace flopoco{
 
 
-	TestBench::TestBench(Target* target, Operator* op_, int n_, bool fromFile_):
+	TestBench::TestBench(Target* target, Operator* op_, int64_t n_, bool fromFile_):
 		Operator(nullptr, target), op(op_), n(n_), fromFile(fromFile_)
 	{
 		//We do not set the parent operator to this operator
@@ -56,8 +56,8 @@ namespace flopoco{
 
 		if(n == -2) {
 			REPORT(LogLevel::MESSAGE,"Generating the exhaustive test bench, this may take some time");
-			n=op-> buildExhaustiveTestCaseList(&tcl);
-			REPORT(LogLevel::MESSAGE, n << "test cases have been generated");
+			n = op-> buildExhaustiveTestCaseList(&tcl);
+			REPORT(LogLevel::MESSAGE, n << " test cases have been generated");
 		}
 		else
 			{
@@ -68,14 +68,37 @@ namespace flopoco{
 				op-> buildRandomTestCaseList(&tcl, n);
 			}
 
+		// flags used to know if we need to generate the fp_equal functions or not.
+		hasFPOutputs=false;
+		hasIEEEOutputs=false;
+
 		// The instance
 		//  portmap for the inputs and outputs
 		for(int i=0; i < op->getIOList().size(); i++){
 			Signal* s = op->getIOListSignal(i);
+<<<<<<< HEAD
 			// Instance does not declare the output signals anymore, need to do it here
 			declare(s->getName(), s->width(), s->isBus());
 			inPortMap (s->getName(), s->getName());
+=======
+		
+			if(s->type() == Signal::in) {
+				declare(s->getName(), s->width(), s->isBus());
+				inPortMap (s->getName(), s->getName());
+			}
+			if(s->type() == Signal::out) {
+				outPortMap (s->getName(), s->getName());
+				if (s->isFP()) {
+					hasFPOutputs=true;
+				}
+				if (s->isIEEE()) {
+					hasIEEEOutputs=true;	
+				}
+				
+			}
+>>>>>>> 86194a86 (refactoring, currently cleaning up code but adding bugs)
 		}
+
 
 		
 		// add clk and rst
@@ -132,16 +155,6 @@ namespace flopoco{
 		}
 		vhdl << ");" << endl;
 
-		vhdl << tab << "-- Ticking clock signal" <<endl;
-		vhdl << tab << "process" <<endl;
-		vhdl << tab << "begin" <<endl;
-		vhdl << tab << tab << "clk <= '0';" <<endl;
-		vhdl << tab << tab << "wait for 5 ns;" <<endl;
-		vhdl << tab << tab << "clk <= '1';" <<endl;
-		vhdl << tab << tab << "wait for 5 ns;" <<endl;
-		vhdl << tab << "end process;" <<endl;
-		vhdl << endl;
-
 		setSequential();
 
 		if (fromFile)
@@ -161,23 +174,9 @@ namespace flopoco{
 	 * increasing the VHDL compilation time
 	 */
 	void TestBench::generateTestFromFile() {
-		vector<Signal*> inputSignalVector;
-		vector<Signal*> outputSignalVector;
-
-		inputSignalVector = op->getInputList();
-		outputSignalVector = op->getOutputList();
+		vector<Signal*> inputSignalVector = op->getInputList();
+		vector<Signal*> outputSignalVector = op->getOutputList();
 			
-		// flags used to know if we need to generate the fp_equal functions or not.
-		hasFPOutputs=false;
-		hasIEEEOutputs=false;
-		for(Signal* s: outputSignalVector){
-			if (s->isFP()) {
-				hasFPOutputs=true;
-			}
-			if (s->isIEEE()) {
-			hasIEEEOutputs=true;	
-			}
-		}
 		// declaration of test time
 		int currentOutputTime = 0;
 
@@ -190,7 +189,6 @@ namespace flopoco{
 		vhdl << tab << "-- Reading the input from a file " << endl;
 		vhdl << tab << "process" <<endl;
 
-
 		/* Variable declaration */
 		vhdl << tab << tab << "variable inline : line; " << endl;                    // variable to read a line
 		vhdl << tab << tab << "variable counter : integer := 1;" << endl;
@@ -199,7 +197,6 @@ namespace flopoco{
 		vhdl << tab << tab << "variable localErrorCounter : integer := 0;" << endl;
 		vhdl << tab << tab << "variable tmpChar : character;" << endl;                        // variable to store a character (escape between inputs)
 		vhdl << tab << tab << "file inputsFile : text is \"test.input\"; " << endl; // declaration of the input file
-
 
 		/* Variable to store value for inputs and expected outputs*/
 		for(int i=0; i < op->getIOList().size(); i++){
@@ -263,7 +260,6 @@ namespace flopoco{
 		//vhdl << tab << tab << "variable tmpString : string;" << endl;
 		vhdl << tab << tab << "file inputsFile : text is \"test.input\"; " << endl; // declaration of the input file
 
-
 		/* Variable to store value for inputs and expected outputs*/
 		for(Signal* s: outputSignalVector){
 			vhdl << tab << tab << "variable V_" << s->getName();
@@ -296,6 +292,7 @@ namespace flopoco{
 		vhdl << tab << tab << tab << "readline(inputsFile,inline0);" << endl; // it consumes input line
 		vhdl << tab << tab << tab << "readline(inputsFile,inline);" << endl;
 
+		cerr << "Kikou0 " << outputSignalVector.size()<< endl;
 		// vhdl << tab << tab << tab << "wait for "<< op->getPipelineDepth()*10 <<" ns; -- wait for pipeline to flush" <<endl;
 		for(Signal* s: outputSignalVector){
 			vhdl << tab << tab << tab << "read(inline, possibilityNumber);" << endl;
@@ -356,7 +353,7 @@ namespace flopoco{
 			IOorderOutput.push_back(s->getName());
 		};
 		vhdl << tab << tab << tab << " wait for 10 ns; -- wait for pipeline to flush" << endl;
-		currentOutputTime += 10 * (tcl.getNumberOfTestCases()+n); // time for simulation
+		currentOutputTime += 10 * n +40; // time for simulation
 		vhdl << tab << tab << tab << "counter := counter + 2;" << endl; // incrementing by 2 because a testcase takes two lines (one for input, one for output)
 		vhdl << tab << tab << "end loop;" << endl;
 		vhdl << tab << tab << "report (integer'image(errorCounter) & \" error(s) encoutered.\");" << endl;
@@ -366,6 +363,7 @@ namespace flopoco{
 		/* Setting the computed simulation Time */
 		simulationTime = currentOutputTime;
 
+		
 		/* Generating a file of inputs */
 		// opening a file to write down the output (for text-file based test)
 		// if n < 0 we do not generate a file
@@ -373,100 +371,20 @@ namespace flopoco{
 			string inputFileName = "test.input";
 			ofstream fileOut(inputFileName.c_str(),ios::out);
 			// if error at opening, let's mention it !
-			if (!fileOut) cerr << "FloPoCo was not abe to open " << inputFileName << " in order to write down inputs. " << endl;
+			if (!fileOut) {
+				ostringstream e;
+				e << "FloPoCo was not able to open " << inputFileName << " in order to write inputs. " << endl;
+				throw e.str();
+			}
 			for (int i = 0; i < tcl.getNumberOfTestCases(); i++)	{
 				TestCase* tc = tcl.getTestCase(i);
-				if (fileOut) fileOut << tc->generateInputString(IOorderInput,IOorderOutput);
+				fileOut << tc->generateInputString(IOorderInput, IOorderOutput);
 			}
-
-			//let's not reinvent the wheel
-			/*
-			// generation on the fly of random test case
-			for (int i = 0; i < n; i++) {
-				TestCase* tc = op->buildRandomTestCase(i);
-				if (fileOut) fileOut << tc->generateInputString(IOorderInput,IOorderOutput);
-				delete tc;
-			};
-			*/
-			TestCaseList *tcl = new TestCaseList();
-
-			op->buildRandomTestCaseList(tcl, n);
-			for (int i = 0; i < n; i++) {
-				TestCase* tc = tcl->getTestCase(i);
-				if (fileOut) fileOut << tc->generateInputString(IOorderInput,IOorderOutput);
-				delete tc;
-			};
-			delete tcl;
 
 			// closing input file
 			fileOut.close();
 		};
 
-
-#if 0
-		// exhaustive test IO generation
-		if(n == -2) {
-			string inputFileName = "test.input";
-			ofstream fileOut(inputFileName.c_str(),ios::out);
-			// if error at opening, let's mention it !
-			if (!fileOut)
-				THROWERROR("Not able to open " << inputFileName << " in order to write inputs. ");
-
-			REPORT(LogLevel::MESSAGE,"Generating the exhaustive test bench, this may take some time");
-			// exhaustive test
-			int length = inputSignalVector.size();
-			//			REPORT(LogLevel::MESSAGE, "Found " << length << "inputs"); 
-			int* InWidth = new int[length];
-			// getting signal width
-			for (int i = 0; i < length; i++) InWidth[i] = inputSignalVector[i]->width();
-			mpz_class* bound = new mpz_class[length];
-			mpz_class* counters = new mpz_class[length];
-			int number = 1;
-			for (int i = 0; i < length; i++) {
-				bound[i] = (mpz_class(1) << InWidth[i]);// * tmp;
-				counters[i] = 0;
-				number *= intpow2(InWidth[i]);
-			}
-			// getting signal name
-			string* IOname = new string[length];
-			for (int i = 0; i < length; i++) IOname[i] = inputSignalVector[i]->getName();
-			TestCase* tc;
-
-			// simulation time computation
-			currentOutputTime = 0;
-			// init
-			currentOutputTime += 10;
-			currentOutputTime += 5 * number;
-			currentOutputTime += op->getPipelineDepth()*10;
-			currentOutputTime += 5 * number;
-			currentOutputTime += 2;
-			simulationTime=currentOutputTime;
-
-
-			while (true) {
-				for (int i = 0; i < length-1; i++) {
-            		if (counters[i] >= bound[i]) {
-						counters[i] = 0;
-						counters[i+1] += 1;
-					}
-				}
-				// if the max counter overflows, break
-				if (counters[length-1] >= bound[length-1]) break;
-				// Test Case inputs
-				tc = new TestCase(op);
-				for (int i = 0; i < length; i++) {
-					tc->addInput(IOname[i],counters[i]);
-				}
-				op->emulate(tc);
-				if (fileOut) fileOut << tc->generateInputString(IOorderInput,IOorderOutput);
-				// incrementation
-				counters[0]++;
-				delete tc;
-			}
-			fileOut.close();
-		}
-
-#endif
 	}
 
 
@@ -482,14 +400,7 @@ namespace flopoco{
 			vhdl << tcl.getTestCase(i)->getInputVHDL(tab + tab);
 			vhdl << tab << tab << "wait for 10 ns;" <<endl;
 		}
-		/* COULD NOT BE USED BECAUSE IT HAS TO BE THE SAME TESTCASE FOR INPUT AND OUTPUT GENERATION
-		// generation on the fly of random test case (VALID only for FPFMA)
-		for (int i = 0; i < n; i++) {
-		TestCase* tc = op->buildRandomTestCases(i);
-		vhdl << tc->getInputVHDL(tab + tab);
-		vhdl << tab << tab << "wait for 10ns;" << endl;
-		delete tc;
-		};*/
+
 		vhdl << tab << tab << "wait for 100000 ns; -- allow simulation to finish" << endl;
 		vhdl << tab << "end process;" <<endl;
 		vhdl <<endl;
@@ -514,24 +425,11 @@ namespace flopoco{
 			if (tc->getComment() != "")
 				vhdl << tab <<  "-- " << tc->getComment() << endl;
 			vhdl << tc->getInputVHDL(tab + tab + "-- input: ");
-			vhdl << tc->getExpectedOutputVHDL(tab + tab);
+			vhdl << tc->getExpectedOutputVHDL(tab + tab); // this method is in TestCase.cpp
 			vhdl << tab << tab << "wait for 10 ns;" <<endl;
 			currentOutputTime += 10;
 		}
-		/* SEE REMARK FOR ON THE FLY INPUT GENERATION
-                // generation on the fly of random test case (VALID only for FPFMA)
-                for (int i = 0; i < n; i++) {
-                        TestCase* tc = op->buildRandomTestCases(i);
-			if (tc->getComment() != "")
-				vhdl << tab <<  "-- " << tc->getComment() << endl;
-			vhdl << tc->getInputVHDL(tab + tab + "-- input: ");
-			vhdl << tc->getExpectedOutputVHDL(tab + tab);
-			vhdl << tab << tab << "wait for 10 ns;" <<endl;
-			currentOutputTime += 10;
-                        delete tc;
-                };*/
-
-		vhdl << tab << tab << "assert false report \"End of simulation\" severity failure;" <<endl;
+		vhdl << tab << tab << "report \"End of simulation\" severity note;" <<endl;
 		vhdl << tab << "end process;" <<endl;
 
 		simulationTime=currentOutputTime;
@@ -541,9 +439,10 @@ namespace flopoco{
 	}
 
 
+
+
 	void TestBench::outputVHDL(ostream& o, string name) {
 		licence(o,"Florent de Dinechin, Cristian Klein, Nicolas Brunie (2007-2010)");
-
 
 		Operator::stdLibs(o);
 
@@ -685,6 +584,17 @@ namespace flopoco{
 		o << endl;
 
 		o << "begin\n";
+
+		 
+		o	 << tab << "-- Ticking clock signal" <<endl;
+		o	 << tab << "process" <<endl;
+		o	 << tab << "begin" <<endl;
+		o	 << tab << tab << "clk <= '0';" <<endl;
+		o	 << tab << tab << "wait for 5 ns;" <<endl;
+		o	 << tab << tab << "clk <= '1';" <<endl;
+		o	 << tab << tab << "wait for 5 ns;" <<endl;
+		o	 << tab << "end process;" <<endl;
+		o	 << endl;
 
 		//if the outputs of the tested operator are not synchronized
 		//	then registering and delaying the outputs might be necessary
