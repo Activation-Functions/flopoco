@@ -787,7 +787,13 @@ namespace flopoco {
 		virtual TestCase* buildRandomTestCase(int i);
 
 
-
+		/**
+		 * Generate exhaustive test case list.
+		 There is a default implementation that enumerates all the possible inut combinations, 
+		 but it may happen that some of these cases do not make sense for a given Operator, 
+		 in which case it may be overloaded. 
+		 */
+		virtual int buildExhaustiveTestCaseList(TestCaseList* tcl);
 
 
 		/*****************************************************************************/
@@ -951,29 +957,22 @@ namespace flopoco {
 		 */
 		void outputVHDLComponent(std::ostream& o);
 
-
-
-		/**
-		 * Return the number of input+output signals
-		 * @return the size of the IO list. The total number of input and output signals
-		 *         of the architecture.
-		 */
-		int getIOListSize() const;
-
 		/**
 		 * Returns a pointer to the list containing the IO signals.
 		 * @return pointer to ioList
 		 */
-		vector<Signal*> * getIOList();
+		vector<Signal*> getIOList();
 
 		/**
-		 * Passes the IOList by value.
-		 * @return the ioList
+		 * Extracts the list of inputs and returns it.
+		 * @return the list
 		 */
-		vector<Signal*> getIOListV(){
-			return ioList_;
-		}
-
+		vector<Signal*> getInputList();
+		/**
+		 * Extracts the list of outputs and returns it.
+		 * @return the list
+		 */
+		vector<Signal*> getOutputList();
 
 		/**
 		 * Returns a pointer a signal from the ioList.

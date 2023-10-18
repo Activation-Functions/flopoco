@@ -165,53 +165,24 @@ namespace flopoco {
 
 	void FixAtan2::emulate(TestCase * tc)
 	{
-#if 0
-		mpfr_t x,y,a, constPi;
-		mpfr_init2(x, 10*wIn);
-		mpfr_init2(y, 10*wIn);
-		mpfr_init2(a, 10*wIn);
-		mpfr_init2(constPi, 10*wIn);
-		mpfr_const_pi( constPi, GMP_RNDN);
-
-		mpz_class az;
-
 		/* Get I/O values */
 		mpz_class svX = tc->getInputValue("X");
 		mpz_class svY = tc->getInputValue("Y");
-
-		// interpret as signed two'ss complement
+		// interpret them as signed two'ss complement
 		if (1==(svX >> (wIn-1))) // sign bit
-			svX -= (1<<wIn);
+			svX -= (mpz_class(1)<<wIn);
 		if (1==(svY >> (wIn-1))) // sign bit
-			svY -= (1<<wIn);
+			svY -= (mpz_class(1)<<wIn);
 		/* Compute correct value */
 
-		mpfr_set_z (x, svX.get_mpz_t(), GMP_RNDN); //  exact
-		mpfr_set_z (y, svY.get_mpz_t(), GMP_RNDN); //  exact
-
-		mpfr_atan2(a, y, x, GMP_RNDN); // a between -pi and pi
-		mpfr_div(a, a, constPi, GMP_RNDN); // a between -1 and 1
-
-		// Now convert a to fix point
-		// Align to fix point by adding 6 -- if we just add 4 there is a 1-bit shift in case a<0
-		mpfr_add_d(a, a, 6.0, GMP_RNDN);
-		mpfr_mul_2si (a, a, wOut-1, GMP_RNDN); // exact scaling
-
-		mpz_class mask = (mpz_class(1)<<wOut) -1;
-
-		mpfr_get_z (az.get_mpz_t(), a, GMP_RNDD); // there can be a real rounding here
-		az -= mpz_class(6)<<(wOut-1);
-		az &= mask;
-		tc->addExpectedOutput ("R", az);
-
-		mpfr_get_z (az.get_mpz_t(), a, GMP_RNDU); // there can be a real rounding here
-		az -= mpz_class(6)<<(wOut-1);
-		az &= mask;
-		tc->addExpectedOutput ("R", az);
-
-		// clean up
-		mpfr_clears (x,y,a, constPi, NULL);
-#else
+		if(svX==0 && svY==0) {
+			// This is an undefined case and we don't have NaNs in fixed point, so just accept any value
+			// It turns out that adding nothing to the testcase accepts anything.
+			// This should at least be documented...
+			// Future proor is the following line
+						tc->addExpectedOutputInterval ("A", 0, (mpz_class(1)<<wOut) -1);
+			return;
+		}
 		mpfr_t x,y,a;
 		mpfr_init2(x, 10*wIn);
 		mpfr_init2(y, 10*wIn);
@@ -219,16 +190,6 @@ namespace flopoco {
 
 		mpz_class az;
 
-		/* Get I/O values */
-		mpz_class svX = tc->getInputValue("X");
-		mpz_class svY = tc->getInputValue("Y");
-
-		// interpret as signed two'ss complement
-		if (1==(svX >> (wIn-1))) // sign bit
-			svX -= (mpz_class(1)<<wIn);
-		if (1==(svY >> (wIn-1))) // sign bit
-			svY -= (mpz_class(1)<<wIn);
-		/* Compute correct value */
 
 		mpfr_set_z (x, svX.get_mpz_t(), GMP_RNDN); //  exact
 		mpfr_set_z (y, svY.get_mpz_t(), GMP_RNDN); //  exact
@@ -255,7 +216,6 @@ namespace flopoco {
 
 		// clean up
 		mpfr_clears (x,y,a, NULL);
-#endif
 	}
 
 

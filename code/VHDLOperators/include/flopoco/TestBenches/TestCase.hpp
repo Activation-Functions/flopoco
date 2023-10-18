@@ -7,6 +7,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <set>
 
 #include "flopoco/Signal.hpp"
 #include "flopoco/TestBenches/FPNumber.hpp"
@@ -15,26 +16,26 @@
 namespace flopoco{
 
 	/**
-		A test case is a mapping between I/O signal names and boolean values
-		given as mpz.
+		 A test case is a mapping between I/O signal names and boolean values
+		 given as mpz.
 
-		The signal names must be those of Operator->iolist_. Whether several
-		possible output values are possible is stored in the
-		numberOfPossibleValues_ attribute of the corresponding Signal stored in iolist, and
-		only there.
+		 The signal names must be those of Operator->iolist_. Whether several
+		 possible output values are possible is stored in the
+		 numberOfPossibleValues_ attribute of the corresponding Signal stored in iolist, and
+		 only there.
 
-		The emulate() function of Operator takes a partial test case (mapping
-		all the inputs) and completes it by mapping the outputs.
-		* @see TestBench
-		* @see Operator
-		*/
+		 The emulate() function of Operator takes a partial test case (mapping
+		 all the inputs) and completes it by mapping the outputs.
+		 * @see TestBench
+		 * @see Operator
+		 */
 
 	class Operator;
 	class TestCaseList;
 
 	class TestCase {
 	public:
-
+		
 		/** Creates an empty TestCase for operator op */
 		TestCase(Operator* op);
 		~TestCase();
@@ -100,18 +101,26 @@ namespace flopoco{
 		 */
 		void addExpectedOutput(std::string s, mpz_class v);
 
-        /**
-         * returns all mpz associated to an output as a vector of mpz_class (added before by addExpectedOutput())
-         * @param s The name of the output
-         */
-        std::vector<mpz_class> getExpectedOutputValues(std::string s);
+		/**
+		 * Adds an expected output interval for this signal (both endpoints included)
+		 * @param s The signal for which to assign an expected output
+		 * @param vinf the smallest possible value which the signal might take
+		 * @param vsup the largest possible value which the signal might take
+		 */
+		void addExpectedOutputInterval(std::string s, mpz_class vinf, mpz_class vsup);
 
-        /**
-		 * returns the mpz associated to an output (added before by addExpectedOutput())
-         * in case that there are more than one output values associated, only the first one will be returned
+		/**
+		 * returns all mpz associated to an output as a vector of mpz_class (added before by addExpectedOutput())
 		 * @param s The name of the output
 		 */
-        mpz_class getExpectedOutputValue(std::string s);
+		std::vector<mpz_class> getExpectedOutputValues(std::string s);
+		
+		/**
+		 * returns the mpz associated to an output (added before by addExpectedOutput())
+		 * in case that there are more than one output values associated, only the first one will be returned
+		 * @param s The name of the output
+		 */
+		mpz_class getExpectedOutputValue(std::string s);
 
 
 		/**
@@ -149,30 +158,31 @@ namespace flopoco{
 		std::string getCompactHexa(std::string prepend = "");
 
 
-                /**
-                 * generate a string with each inputs, one by line, and each
-                 * expected outputs, one by line too.
-                 * and the order for outputing these IO is given by IOorder
-                 */
-                std::string generateInputString(std::list<std::string> IOorderInput, std::list<std::string> IOorderOutput);
+		/**
+		 * generate a string with each inputs, one by line, and each
+		 * expected outputs, one by line too.
+		 * and the order for outputing these IO is given by IOorder
+		 */
+		std::string generateInputString(std::list<std::string> IOorderInput, std::list<std::string> IOorderOutput);
 
-                /**
-                 *    Define the test case integer identifiant
-                 */
-                void setId(int id);
+		/**
+		 *    Define the test case integer identifiant
+		 */
+		void setId(int id);
 
-                int getId();
+		int getId();
 
-                std::string getDescription();
+		std::string getDescription();
 
 	private:
 		Operator *op_;                       /**< The operator for which this test case is being built */
 
 		std::map<std::string, mpz_class>          inputs;
 		std::map<std::string, std::vector<mpz_class> >   outputs;
+		std::set<std::string> outputInterval; /**< a set of the outputs that are specified as intervals */ 
 
 		std::string comment;
-                int intId;                      /* integer identifiant of the test case */
+		int intId;                      /* integer identifiant of the test case */
 
 	};
 
@@ -220,8 +230,8 @@ namespace flopoco{
 	private:
 		/** Stores the TestCase-es */
 		std::vector<TestCase*>  v;
-        std::map<int,TestCase*> mapCase;
-        /* id given to the last registered test case*/
+		std::map<int,TestCase*> mapCase;
+		/* id given to the last registered test case*/
 
 	};
 

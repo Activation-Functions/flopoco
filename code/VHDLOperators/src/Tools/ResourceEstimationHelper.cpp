@@ -897,8 +897,8 @@ namespace flopoco{
 		std::ostringstream output;
 		int increment = 0;
 
-		for(unsigned int i=0; i<(parentOp->getIOListV()).size(); i++) {
-			Signal *s = (parentOp->getIOListV())[i];
+		for(unsigned int i=0; i<(parentOp->getIOList()).size(); i++) {
+			Signal *s = (parentOp->getIOList())[i];
 			bool processed = false;
 
 			for(unsigned int j=0; j<estimatedPortNames.size(); i++) {
