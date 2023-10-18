@@ -164,6 +164,17 @@ namespace flopoco{
 				inputSignalVector.push_back(s);
 		};
 
+		// flags used to know if we need to generate the fp_equal functions or not.
+		hasFPOutputs=false;
+		hasIEEEOutputs=false;
+		for(Signal* s: outputSignalVector){
+			if (s->isFP()) {
+				hasFPOutputs=true;
+			}
+			if (s->isIEEE()) {
+			hasIEEEOutputs=true;	
+			}
+		}
 		// declaration of test time
 		int currentOutputTime = 0;
 
@@ -227,6 +238,7 @@ namespace flopoco{
 		vhdl << tab << tab << "end loop;" << endl;
 		vhdl << tab << tab << "wait for 10000 ns; -- wait for simulation to finish" << endl; // TODO : tune correctly with pipeline depth
 		vhdl << tab << "end process;" << endl;
+		vhdl << endl;
 
 		/**
 		 * Declaration of a waiting time between sending the input and comparing
@@ -235,8 +247,8 @@ namespace flopoco{
 		 * that means all the pipeline stages each step
 		 * TODO : entrelaced the inputs / outputs in order to avoid this wait
 		 */
-		vhdl << tab << tab << tab << " -- verifying the corresponding output" << endl;
-		vhdl << tab << tab << tab << "process" << endl;
+		vhdl << tab << " -- verifying the corresponding output" << endl;
+		vhdl << tab << "process" << endl;
 		/* Variable declaration */
 		vhdl << tab << tab << "variable inline0 : line; " << endl;                    // variable to read a line
 		vhdl << tab << tab << "variable inline : line; " << endl;                    // variable to read a line
@@ -544,23 +556,9 @@ namespace flopoco{
 		// The local signals
 		o << buildVHDLSignalDeclarations();
 
-		o << endl <<
-			tab << "-- FP compare function (found vs. real)\n" <<
-			tab << "function fp_equal(a : std_logic_vector; b : std_logic_vector) return boolean is\n" <<
-			tab << "begin\n" <<
-			tab << tab << "if b(b'high downto b'high-1) = \"01\" then\n" <<
-			tab << tab << tab << "return a = b;\n" <<
-			tab << tab << "elsif b(b'high downto b'high-1) = \"11\" then\n" <<
-			tab << tab << tab << "return (a(a'high downto a'high-1)=b(b'high downto b'high-1));\n" <<
-			tab << tab << "else\n" <<
-			tab << tab << tab << "return a(a'high downto a'high-2) = b(b'high downto b'high-2);\n" <<
-			tab << tab << "end if;\n" <<
-			tab << "end;\n";
+		o << endl;
 
-
-		o << endl << endl << endl;
 		/* Generation of Vhdl function to parse file into std_logic_vector */
-
 
 		o << " -- converts std_logic into a character" << endl;
 		o << tab << "function chr(sl: std_logic) return character is" << endl
@@ -579,7 +577,7 @@ namespace flopoco{
 		  << tab << tab << "end case;" << endl
 		  << tab << tab << "return c;" << endl
 		  << tab <<  "end chr;" << endl;
-
+		o << endl;
 
 		o << tab << "-- converts bit to std_logic (1 to 1)" << endl
 			<<	tab << "function to_stdlogic(b : bit) return std_logic is" << endl
@@ -591,7 +589,7 @@ namespace flopoco{
 			<< tab << tab << "end case;" << endl
 			<< tab << tab << "return sl;" << endl
 			<< tab << "end to_stdlogic;" << endl;
-
+		o << endl;
 
 		o << tab << "-- converts std_logic into a string (1 to 1)" << endl
 		  << tab << "function str(sl: std_logic) return string is" << endl
@@ -600,11 +598,10 @@ namespace flopoco{
 		  << tab << tab << "s(1) := chr(sl);" << endl
 		  << tab << tab << "return s;" << endl
 		  << tab << "end str;" << endl;
-
-
-
+		o << endl;
+		
 		o << tab << "-- converts std_logic_vector into a string (binary base)" << endl
-		  << tab << "-- (this also takes care of the fact that the range of" << endl
+			<< tab << "-- (this also takes care of the fact that the range of" << endl
 		  << tab << "--  a string is natural while a std_logic_vector may" << endl
 		  << tab << "--  have an integer range)" << endl
 		  << tab << "function str(slv: std_logic_vector) return string is" << endl
@@ -618,36 +615,51 @@ namespace flopoco{
 		  << tab << tab << "end loop;" << endl
 		  << tab << tab << "return result;" << endl
 		  << tab << "end str;" << endl;
+		o << endl;
 
-		o << endl << endl << endl;
+		if(hasFPOutputs){
+			o << tab << "-- FP compare function (found vs. real)\n" <<
+				tab << "function fp_equal(a : std_logic_vector; b : std_logic_vector) return boolean is\n" <<
+				tab << "begin\n" <<
+				tab << tab << "if b(b'high downto b'high-1) = \"01\" then\n" <<
+				tab << tab << tab << "return a = b;\n" <<
+				tab << tab << "elsif b(b'high downto b'high-1) = \"11\" then\n" <<
+				tab << tab << tab << "return (a(a'high downto a'high-1)=b(b'high downto b'high-1));\n" <<
+				tab << tab << "else\n" <<
+				tab << tab << tab << "return a(a'high downto a'high-2) = b(b'high downto b'high-2);\n" <<
+				tab << tab << "end if;\n" <<
+				tab << "end;\n";
+			o << endl;
+		}
 
-
-		/* If op_ is an IEEE operator (IEEE input and output, we define) the function
-		 * fp_equal for the considered precision in the ieee case
-		 */
-		o << endl <<  // Fixed by Nicolas
-			tab << "-- test isZero\n" <<
-			tab << "function iszero(a : std_logic_vector) return boolean is\n" <<
-			tab << "begin\n" <<
-			tab << tab << "return  a = (a'high downto 0 => '0');\n" <<        // test if exponent = "0000---000"
-			tab << "end;\n\n\n" <<
-
-			tab << "-- FP IEEE compare function (found vs. real)\n" <<
-			tab << "function fp_equal_ieee(a : std_logic_vector;"
-                                                        << " b : std_logic_vector;"
-                                                        << " we : integer;"
-                                                        << " wf : integer) return boolean is\n"
-		     <<	tab << "begin\n" <<
-			tab << tab << "if a(wf+we downto wf) = b(wf+we downto wf) and b(we+wf-1 downto wf) = (we downto 1 => '1') then\n" <<        // test if exponent = "1111---111"
-			tab << tab << tab << "if iszero(b(wf-1 downto 0)) then return  iszero(a(wf-1 downto 0));\n" <<               // +/- infinity cases
-                        tab << tab << tab << "else return not iszero(a(wf - 1 downto 0));\n" <<
-                        tab << tab << tab << "end if;\n" <<
-			tab << tab << "else\n" <<
-			tab << tab << tab << "return a(a'high downto 0) = b(b'high downto 0);\n" <<
-			tab << tab << "end if;\n" <<
-			tab << "end;\n";
-
-
+		
+		if(hasIEEEOutputs){
+			/* If op_ is an IEEE operator (IEEE input and output, we define) the function
+			 * fp_equal for the considered precision in the ieee case
+			 */
+			o << tab << "-- test isZero\n" <<
+				tab << "function iszero(a : std_logic_vector) return boolean is\n" <<
+				tab << "begin\n" <<
+				tab << tab << "return  a = (a'high downto 0 => '0');\n" <<        // test if exponent = "0000---000"
+				tab << "end;\n";
+			o << endl;
+			
+			o <<	tab << "-- FP IEEE compare function (found vs. real)\n" <<
+				tab << "function fp_equal_ieee(a : std_logic_vector;"
+				<< " b : std_logic_vector;"
+				<< " we : integer;"
+				<< " wf : integer) return boolean is\n"
+				<<	tab << "begin\n" <<
+				tab << tab << "if a(wf+we downto wf) = b(wf+we downto wf) and b(we+wf-1 downto wf) = (we downto 1 => '1') then\n" <<        // test if exponent = "1111---111"
+				tab << tab << tab << "if iszero(b(wf-1 downto 0)) then return  iszero(a(wf-1 downto 0));\n" <<               // +/- infinity cases
+				tab << tab << tab << "else return not iszero(a(wf - 1 downto 0));\n" <<
+				tab << tab << tab << "end if;\n" <<
+				tab << tab << "else\n" <<
+				tab << tab << tab << "return a(a'high downto 0) = b(b'high downto 0);\n" <<
+				tab << tab << "end if;\n" <<
+				tab << "end;\n";
+			o << endl;
+		}
 		/* In VHDL, literals may be incorrectly converted to „std_logic_vector(... to ...)” instead
 		 * of „downto”. So, for each FP output width, create a subtype used for casting.
 		 */
@@ -663,7 +675,7 @@ namespace flopoco{
 			}
 
 			if (widths.size() > 0)
-				o << endl << tab << "-- FP subtypes for casting\n";
+				o << tab << "-- FP subtypes for casting\n";
 			for (std::set<int>::iterator it = widths.begin(); it != widths.end(); it++)
 				{
 					int w = *it;
@@ -671,6 +683,7 @@ namespace flopoco{
 				}
 		}
 
+		o << endl;
 
 		o << "begin\n";
 
@@ -745,6 +758,6 @@ namespace flopoco{
 	    "TestBenches",
 	    "fixed-point function evaluator; fixed-point", // categories
 	    "n(int)=-2: number of random tests. If n=-2, an exhaustive test is generated (use only for small operators);\
-         file(bool)=true:Inputs and outputs are stored in file test.input (lower VHDL compilation time). If false, they are stored in the VHDL;",
+         file(bool)=true:Inputs and outputs are stored in file test.input (faster). If false, they are stored in the VHDL (easier to read);",
 	    ""};
 }
