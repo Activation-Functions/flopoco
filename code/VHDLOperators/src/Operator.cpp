@@ -551,7 +551,7 @@ namespace flopoco{
 	vector<Signal*> Operator::getOutputList(){
 		vector<Signal*> outputList;
 		for (auto i: ioList_) {
-			if (i->type()==Signal::in) {
+			if (i->type()==Signal::out) {
 				outputList.push_back(i);
 			}
 		}
@@ -2030,15 +2030,45 @@ namespace flopoco{
 	}
 
 	int Operator::buildExhaustiveTestCaseList(TestCaseList* tcl){
-	}
+		auto inputSignalVector = getInputList();			//			REPORT(LogLevel::MESSAGE, "Found " << length << "inputs"); 
+		int numberOfInputs = inputSignalVector.size();
+		string* inputName = new string[numberOfInputs];
+		int*   inputWidth = new int[numberOfInputs];
+		// getting signal width
+		for (int i = 0; i < numberOfInputs; i++) {
+			inputName[i]  = inputSignalVector[i]->getName();
+			inputWidth[i] = inputSignalVector[i]->width();
+		}
+		
+		// How many tests is an exhaustive test ? It should fit on 64 bits anyway
+		uint64_t numberOfTests = 1;
+		for (int i = 0; i < numberOfInputs; i++) {
+			numberOfTests = numberOfTests << inputWidth[i];
+		}
 
+		// The following loop thus enumerates all the possible input bit combinations
+		for(uint64_t testIndex=0; testIndex<numberOfTests; testIndex++) {
+			TestCase* tc = new TestCase(this);
+			// and inside we just break out the loop index into bit vectors corresponding to the inputs
+			uint64_t t = testIndex;
+			for (int i = 0; i < numberOfInputs; i++) {
+				uint64_t mask = (((uint64_t)1) << inputWidth[i]) -1;
+				tc->addInput(inputName[i], t & mask);
+				t = t>>inputWidth[i];
+			}
+			emulate(tc);
+			tcl->add(tc);
+			
+		}
+		return numberOfTests;
+	}
+	
 	TestCase* Operator::buildRandomTestCase(int i){
 		TestCase *tc = new TestCase(this);
 		// Generate test cases using random input numbers */
 		// TODO free all this memory when exiting TestBench
 		// Fill inputs
-		for (unsigned int j = 0; j < ioList_.size(); j++) {
-			Signal* s = ioList_[j];
+		for (Signal* s : ioList_) {
 			if(s->type() == Signal::in){
 				mpz_class a = getLargeRandom(s->width());
 				tc->addInput(s->getName(), a);

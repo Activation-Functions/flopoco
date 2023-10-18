@@ -240,9 +240,14 @@ namespace flopoco{
 	string TestCase::getExpectedOutputVHDL(string prepend)
 	{
 		ostringstream o;
+		if(outputs.size()==0) {
+			ostringstream e;
+			e << "ERROR in TestCase::getExpectedOutputVHDL: No output. Can't test.";
+			throw e.str();	
+		}
 
 		/* Iterate through output signals */
-		for (map<string, vector<mpz_class> >::iterator it = outputs.begin(); it != outputs.end(); it++)
+		for (auto it = outputs.begin(); it != outputs.end(); it++)
 			{
 				string signame = it->first;
 				Signal* s = op_->getSignalByName(signame);
@@ -254,9 +259,16 @@ namespace flopoco{
 				
 				if (outputInterval.count(signame))
 					{//TODO for intervals
+						return "assert false severity ERROR; -- intervals yet unsupported ";  
 					}
 				else {// we just have a list of values to test : 
 					// Iterate through possible output values
+					if(vs.size()==0) {
+						ostringstream e;
+						e << "ERROR in TestCase::getExpectedOutputVHDL, " << signame << " has no expected value. Can't test.";
+						throw e.str();	
+					}
+						
 					for (vector<mpz_class>::iterator it = vs.begin(); it != vs.end(); it++)
 						{
 							mpz_class v = *it;
