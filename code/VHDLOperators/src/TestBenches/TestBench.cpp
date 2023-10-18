@@ -68,6 +68,13 @@ namespace flopoco{
 				op-> buildRandomTestCaseList(&tcl, n);
 			}
 
+		simulationTime = 10*(
+												 1 // reset time
+												 + op->getPipelineDepth()
+												 +  tcl.getNumberOfTestCases() // number of simulation steps 
+												 )+ 2  ; // we read 2ns after clock rising edge
+ 
+		
 		// flags used to know if we need to generate the fp_equal functions or not.
 		hasFPOutputs=false;
 		hasIEEEOutputs=false;
@@ -177,9 +184,6 @@ namespace flopoco{
 		vector<Signal*> inputSignalVector = op->getInputList();
 		vector<Signal*> outputSignalVector = op->getOutputList();
 			
-		// declaration of test time
-		int currentOutputTime = 0;
-
 		// In order to generate the file containing inputs and expected output in a correct order
 		// we will store the use order for file decompression
 		list<string> IOorderInput;
@@ -272,14 +276,9 @@ namespace flopoco{
 		/* Process Beginning */
 		vhdl << tab << "begin" << endl;
 
-		vhdl << tab << tab << " wait for 10 ns;" << endl; // wait for reset signal to finish
-		currentOutputTime += 10;		
+		vhdl << tab << tab << " wait for 12 ns;" << endl; // wait for reset signal to finish
 		if (op->getPipelineDepth() > 0){
 			vhdl << tab << tab << "wait for "<< op->getPipelineDepth()*10 <<" ns; -- wait for pipeline to flush" <<endl;
-			currentOutputTime += op->getPipelineDepth()*10;
-		} else {
-			vhdl << tab << tab << "wait for "<< 2 <<" ns; -- no pipeline here" <<endl;
-			currentOutputTime += 2;
 		};
 
 
@@ -292,7 +291,6 @@ namespace flopoco{
 		vhdl << tab << tab << tab << "readline(inputsFile,inline0);" << endl; // it consumes input line
 		vhdl << tab << tab << tab << "readline(inputsFile,inline);" << endl;
 
-		cerr << "Kikou0 " << outputSignalVector.size()<< endl;
 		// vhdl << tab << tab << tab << "wait for "<< op->getPipelineDepth()*10 <<" ns; -- wait for pipeline to flush" <<endl;
 		for(Signal* s: outputSignalVector){
 			vhdl << tab << tab << tab << "read(inline, possibilityNumber);" << endl;
@@ -353,15 +351,12 @@ namespace flopoco{
 			IOorderOutput.push_back(s->getName());
 		};
 		vhdl << tab << tab << tab << " wait for 10 ns; -- wait for pipeline to flush" << endl;
-		currentOutputTime += 10 * n +40; // time for simulation
 		vhdl << tab << tab << tab << "counter := counter + 2;" << endl; // incrementing by 2 because a testcase takes two lines (one for input, one for output)
 		vhdl << tab << tab << "end loop;" << endl;
 		vhdl << tab << tab << "report (integer'image(errorCounter) & \" error(s) encoutered.\");" << endl;
 		vhdl << tab << tab << "report \"End of simulation\" severity note;" <<endl;
 		vhdl << tab << "end process;" <<endl;
 
-		/* Setting the computed simulation Time */
-		simulationTime = currentOutputTime;
 
 		
 		/* Generating a file of inputs */
@@ -400,7 +395,6 @@ namespace flopoco{
 			vhdl << tcl.getTestCase(i)->getInputVHDL(tab + tab);
 			vhdl << tab << tab << "wait for 10 ns;" <<endl;
 		}
-
 		vhdl << tab << tab << "wait for 100000 ns; -- allow simulation to finish" << endl;
 		vhdl << tab << "end process;" <<endl;
 		vhdl <<endl;
@@ -409,16 +403,14 @@ namespace flopoco{
 		vhdl << tab << "-- Checking the outputs" <<endl;
 		vhdl << tab << "process" <<endl;
 		vhdl << tab << "begin" <<endl;
-		vhdl << tab << tab << "wait for 10 ns; -- wait for reset to complete" <<endl;
-		currentOutputTime += 10;
+		vhdl << tab << tab << "wait for 12 ns; -- wait for reset to complete" <<endl;
+		currentOutputTime += 12;
 		if (op->getPipelineDepth() > 0){
 			vhdl << tab << tab << "wait for "<< op->getPipelineDepth()*10 <<" ns; -- wait for pipeline to flush" <<endl;
 			currentOutputTime += op->getPipelineDepth()*10;
 		}
-		else{
-			vhdl << tab << tab << "wait for "<< 2 <<" ns; -- no pipeline here" <<endl;
-			currentOutputTime += 2;
-		}
+
+
 		for (int i = 0; i < tcl.getNumberOfTestCases(); i++) {
 			vhdl << tab << tab << "-- current time: " << currentOutputTime <<endl;
 			TestCase* tc = tcl.getTestCase(i);
@@ -429,10 +421,11 @@ namespace flopoco{
 			vhdl << tab << tab << "wait for 10 ns;" <<endl;
 			currentOutputTime += 10;
 		}
+
+
 		vhdl << tab << tab << "report \"End of simulation\" severity note;" <<endl;
 		vhdl << tab << "end process;" <<endl;
 
-		simulationTime=currentOutputTime;
 	}
 
 	TestBench::~TestBench() {
