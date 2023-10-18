@@ -23,7 +23,7 @@ namespace flopoco{
 		/** Destructor */
 		~TestBench();
 
-		/** Method belonging to the Operator class overloaded by the Wrapper class
+		/** Method belonging to the Operator class overloaded by the TestBench class
 		 * @param[in,out] o     the stream where the current architecture will be outputed to
 		 * @param[in]     name  the name of the entity corresponding to the architecture generated in this method
 		 **/
@@ -53,6 +53,8 @@ namespace flopoco{
 		TestCaseList tcl_; /**< Test case list */
 		int simulationTime; /**< Total simulation time */
 		bool fromFile_; /**< Flag for external file I/O */
+		bool hasFPOutputs;
+		bool hasIEEEOutputs;
 	};
 
 }
