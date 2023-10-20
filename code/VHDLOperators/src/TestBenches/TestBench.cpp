@@ -172,8 +172,45 @@ namespace flopoco{
 
 
 
+	// produce one VHDL statement that goes in a process and sets the "testSuccess_varName" variable
+	string TestBench::oneTestVHDL(Signal* s, string prepend) {
+		ostringstream o;
+		string varName=s->getName();
+		o << prepend << "testSuccess_" << varName << " := false;" << endl;
+		o << prepend << "if possibilityNumber=-1 then -- interval "  << endl;
+		o << prepend <<  tab << "-- TODO "  << endl;
+		o << prepend << "end if;"  << endl;
+		o << prepend << "if  possibilityNumber>0 then -- list of possible values "  << endl;
+		o << prepend << tab << "for i in 1 to possibilityNumber loop  "  << endl;
+		o << prepend << tab << tab << "if "<<varName<<" = to_stdlogicvector(expected_"<<varName << "(i)) then testSuccess_" << varName << " := true ; end if;"  << endl;
+		o << prepend << tab << "end loop;" << endl;
+		o << prepend << "end if;" << endl;
 
+		o << tab << tab << tab << " if not testSuccess_"  << s->getName() << " then " << endl;
+		o << tab << tab << tab << tab << tab << "report(\"Test number \" & integer'image(testCounter) & \", incorrect output for "
+			<< s->getName()<< ": \" & lf & "
+			<< "\" expected values:\" & expectedString(1 to expectedStringLength)";
+		o << " & lf & \"          result: \" & str(" << s->getName() <<") ) severity error;"<< endl;
+		o << tab << tab << tab << tab << tab << "errorCounter := errorCounter + 1; -- incrementing global error counter" << endl;
+		o << tab << tab << tab << "end if;" << endl;
+		
+		o << tab << tab << tab << tab << tab << "testCounter := testCounter + 1; -- incrementing global error counter" << endl;
 
+		
+#if 0
+		o << " report \"Incorrect output value for " << varName
+				<< ".\" & lf & \" expected ";
+			for(int i=0; i<possibleValues; i++) {
+				if(i>0) { o << " or "; }
+				o << "expected_"<<varName<<"(" << i << ")";
+			}
+			o << " result: \" & str(A) & \"  at test number \" & integer'image(counter) ";
+			o<< " severity ERROR;"; 
+		}
+
+	#endif
+		return o.str();
+	}
 
 
 
@@ -190,16 +227,10 @@ namespace flopoco{
 		list<string> IOorderOutput;
 
 
-		vhdl << tab << "-- Reading the input from a file " << endl;
+		vhdl << tab << "-- Process that sets the inputs  (read from a file) " << endl;
 		vhdl << tab << "process" <<endl;
-
-		/* Variable declaration */
-		vhdl << tab << tab << "variable inline : line; " << endl;                    // variable to read a line
-		vhdl << tab << tab << "variable counter : integer := 1;" << endl;
-		vhdl << tab << tab << "variable errorCounter : integer := 0;" << endl;
-		vhdl << tab << tab << "variable possibilityNumber : integer := 0;" << endl;
-		vhdl << tab << tab << "variable localErrorCounter : integer := 0;" << endl;
-		vhdl << tab << tab << "variable tmpChar : character;" << endl;                        // variable to store a character (escape between inputs)
+		vhdl << tab << tab << "variable input, expectedOutput : line; " << endl;  // variables to read a line
+		vhdl << tab << tab << "variable tmpChar : character;" << endl; // variable to store a character (escape between inputs)
 		vhdl << tab << tab << "file inputsFile : text is \"test.input\"; " << endl; // declaration of the input file
 
 		/* Variable to store value for inputs and expected outputs*/
@@ -210,37 +241,30 @@ namespace flopoco{
 			//else vhdl << " : bit;" << endl;
 		}
 
-		/* Process Beginning */
+		/* The process that resets then sets inputs */
 		vhdl << tab << "begin" << endl;
-
-		/* Reset Sending */
 		vhdl << tab << tab << "-- Send reset" <<endl;
 		vhdl << tab << tab << "rst <= '1';" << endl;
 		vhdl << tab << tab << "wait for 10 ns;" << endl;
 		vhdl << tab << tab << "rst <= '0';" << endl;
 
-		/* File Reading */
 		vhdl << tab << tab << "while not endfile(inputsFile) loop" << endl;
-		vhdl << tab << tab << tab << " -- positionning inputs" << endl;
-
-		/* All inputs and the corresponding expected outputs will be on the same line
-		 * so we begin by reading this line, once and for all (once by test) */
-		vhdl << tab << tab << tab << "readline(inputsFile,inline);" << endl;
+		vhdl << tab << tab << tab << "readline(inputsFile, input);" << endl;
+		vhdl << tab << tab << tab << "readline(inputsFile, expectedOutput); -- unused in this process" << endl;
 
 		// input reading and forwarding to the operator
 		for(unsigned int i=0; i < inputSignalVector.size(); i++){
 			Signal* s = inputSignalVector[i];
-			vhdl << tab << tab << tab << "read(inline ,V_"<< s->getName() << ");" << endl;
-			vhdl << tab << tab << tab << "read(inline,tmpChar);" << endl; // we consume the character between each inputs
+			vhdl << tab << tab << tab << "read(input ,V_"<< s->getName() << ");" << endl;
+			vhdl << tab << tab << tab << "read(input,tmpChar);" << endl; // we consume the character between each inputs
 			if ((s->width() == 1) && (!s->isBus())) vhdl << tab << tab << tab << s->getName() << " <= to_stdlogicvector(V_" << s->getName() << ")(0);" << endl;
 			else vhdl << tab << tab << tab << s->getName() << " <= to_stdlogicvector(V_" << s->getName() << ");" << endl;
 			// adding the IO to IOorder
 			IOorderInput.push_back(s->getName());
 		}
-		vhdl << tab << tab << tab << "readline(inputsFile,inline);" << endl;  // it consume output line
-		vhdl << tab << tab << tab << "wait for 10 ns;" << endl; // let 10 ns between each input
+		vhdl << tab << tab << tab << "wait for 10 ns;" << endl; 
 		vhdl << tab << tab << "end loop;" << endl;
-		vhdl << tab << tab << "wait for 10000 ns; -- wait for simulation to finish" << endl; // TODO : tune correctly with pipeline depth
+		vhdl << tab << tab << tab << "wait for "<< op->getPipelineDepth()*10+100 <<" ns; -- wait for pipeline to flush (and some more)" << endl;
 		vhdl << tab << "end process;" << endl;
 		vhdl << endl;
 
@@ -251,17 +275,16 @@ namespace flopoco{
 		 * that means all the pipeline stages each step
 		 * TODO : entrelaced the inputs / outputs in order to avoid this wait
 		 */
-		vhdl << tab << " -- verifying the corresponding output" << endl;
+		vhdl << tab << " -- Process that verifies the corresponding output" << endl;
 		vhdl << tab << "process" << endl;
 		/* Variable declaration */
-		vhdl << tab << tab << "variable inline0 : line; " << endl;                    // variable to read a line
-		vhdl << tab << tab << "variable inline : line; " << endl;                    // variable to read a line
-		vhdl << tab << tab << "variable counter : integer := 1;" << endl;
+		vhdl << tab << tab << "variable input, expectedOutput : line; " << endl;  // variables to read a line
+		vhdl << tab << tab << "variable testCounter : integer := 1;" << endl;
 		vhdl << tab << tab << "variable errorCounter : integer := 0;" << endl;
-		vhdl << tab << tab << "variable possibilityNumber : integer := 0;" << endl;
-		vhdl << tab << tab << "variable localErrorCounter : integer := 0;" << endl;
-		vhdl << tab << tab << "variable tmpChar : character;" << endl;                        // variable to store a character (escape between inputs)
-		//vhdl << tab << tab << "variable tmpString : string;" << endl;
+		vhdl << tab << tab << "variable possibilityNumber, furtherRead : integer;" << endl;
+		vhdl << tab << tab << "variable tmpChar : character;" << endl;             // variable to store a character (escape between inputs)
+		vhdl << tab << tab << "variable expectedString : string(1 to 10000);" << endl;
+		vhdl << tab << tab << "variable expectedStringLength : integer;" << endl;
 		vhdl << tab << tab << "file inputsFile : text is \"test.input\"; " << endl; // declaration of the input file
 
 		/* Variable to store value for inputs and expected outputs*/
@@ -269,92 +292,49 @@ namespace flopoco{
 			vhdl << tab << tab << "variable V_" << s->getName();
 			if ((s->width() != 1) || (s->isBus())) vhdl << " : bit_vector("<< s->width() - 1 << " downto 0);" << endl;
 			else  vhdl << " : bit;" << endl;
-			vhdl << tab << tab << "variable expected_"  << s->getName() << ": string (1 to 1000);" << endl; // will be a copy of inline
-			vhdl << tab << tab << "variable expected_size_"  << s->getName() << " : integer;" << endl;
+			//			vhdl << tab << tab << "variable expected_"  << s->getName() << ": string (1 to 10000);" << endl; // will be a copy of inline
+			//vhdl << tab << tab << "variable expected_size_"  << s->getName() << " : integer;" << endl;
+			vhdl << tab << tab << "type valueArray_"  << s->getName() << " is array(1 to 10) of bit_vector(" << s->width()-1 << " downto 0);" << endl;
+			vhdl << tab << tab << "variable expected_"  << s->getName() << " : valueArray_"  << s->getName() << ";" << endl;
+			vhdl << tab << tab << "variable testSuccess_"  << s->getName() << " : boolean;" << endl;
 		}
-
-		/* Process Beginning */
 		vhdl << tab << "begin" << endl;
-
-		vhdl << tab << tab << " wait for 12 ns;" << endl; // wait for reset signal to finish
+		vhdl << tab << tab << "wait for 12 ns; -- wait for reset " << endl; 
 		if (op->getPipelineDepth() > 0){
 			vhdl << tab << tab << "wait for "<< op->getPipelineDepth()*10 <<" ns; -- wait for pipeline to flush" <<endl;
 		};
 
-
-		/* File Reading */
 		vhdl << tab << tab << "while not endfile(inputsFile) loop" << endl;
-		vhdl << tab << tab << tab << " -- positionning inputs" << endl;
+		vhdl << tab << tab << tab << "readline(inputsFile, input); -- unused" << endl; // read the input line
+		vhdl << tab << tab << tab << "readline(inputsFile, expectedOutput);" << endl; // read the outputs line
 
-		/* All inputs and the corresponding expected outputs will be on the same line
-		 * so we begin by reading this line, once and for all (once by test) */
-		vhdl << tab << tab << tab << "readline(inputsFile,inline0);" << endl; // it consumes input line
-		vhdl << tab << tab << tab << "readline(inputsFile,inline);" << endl;
-
-		// vhdl << tab << tab << tab << "wait for "<< op->getPipelineDepth()*10 <<" ns; -- wait for pipeline to flush" <<endl;
 		for(Signal* s: outputSignalVector){
-			vhdl << tab << tab << tab << "read(inline, possibilityNumber);" << endl;
-			vhdl << tab << tab << tab << "localErrorCounter := 0;" << endl;
-			vhdl << tab << tab << tab << "read(inline,tmpChar);" << endl; // we consume the character after output list
-			vhdl << tab << tab << tab << "expected_size_"<< s->getName() << " := inline'Length;"<< endl; // the remainder is the vector of expected outputs: remember how long it is
-			vhdl << tab << tab << tab << "expected_"<< s->getName() << " := inline.all & (expected_size_"<< s->getName() << "+1 to 1000 => ' ');"<< endl; // because we have to pad it to 1000 chars
-			string expectedString = "expected_" +  s->getName() + "(1 to expected_size_" + s->getName() + ")"; //  will be used several times below, so better have a Single Source of Bug
-			vhdl << tab << tab << tab << "if possibilityNumber = 0 then" << endl;
-			vhdl << tab << tab << tab << tab << "localErrorCounter := 0;" << endl;//read(inline,tmpChar);" << endl; // we consume the character between each outputs
-			vhdl << tab << tab << tab << "elsif possibilityNumber = 1 then " << endl;
-			vhdl << tab << tab << tab << tab << "read(inline ,V_"<< s->getName() << ");" << endl;
-			vhdl << tab << tab << tab << tab << "if ";
-			if (s->isFP()) {
-				vhdl << "not fp_equal(fp"<< s->width() << "'(" << s->getName() << ") ,to_stdlogicvector(V_" <<  s->getName() << "))";
-			} else if (s->isIEEE()) {
-			    vhdl << "not fp_equal_ieee(" << s->getName() << " ,to_stdlogicvector(V_" <<  s->getName() << "),"<<s->wE()<<" , "<<s->wF()<<")";
-			} else if ((s->width() == 1) && (!s->isBus())) {
-				vhdl << "not (" << s->getName() << "= to_stdlogic(V_" << s->getName() << "))";
-			} else {
-				vhdl << "not (" << s->getName() << "= to_stdlogicvector(V_" << s->getName() << "))";
-			}
-			vhdl << " then " << endl;
-			vhdl << tab << tab << tab << tab << tab << " errorCounter := errorCounter + 1;" << endl;
-			vhdl << tab << tab << tab << tab << tab << "assert false report(\"Line \" & integer'image(counter) & \" of input file, incorrect output for "
-					 << s->getName() << ": \" & lf & ";
-			vhdl << "\"  expected value: \" & "  << expectedString;
-			vhdl << " & lf & \"          result: \" & str(" << s->getName() <<")) ;"<< endl;
-			vhdl << tab << tab << tab << tab << "end if;" << endl;
+			vhdl << tab << tab << tab << "read(expectedOutput, possibilityNumber);" << endl;
 
-			vhdl << tab << tab << tab << "else" << endl;
-			vhdl << tab << tab << tab << tab << "for i in possibilityNumber downto 1 loop " << endl;
-			vhdl << tab << tab << tab << tab << tab << "read(inline ,V_"<< s->getName() << ");" << endl;
-			vhdl << tab << tab << tab << tab << tab << "read(inline,tmpChar);" << endl; // we consume the character between each outputs
-			if (s->isFP()) {
-				vhdl << tab << tab << tab << tab << tab << "if fp_equal(fp"<< s->width() << "'(" << s->getName() << ") ,to_stdlogicvector(V_" <<  s->getName() << ")) " << "  then localErrorCounter := 1; end if; " << endl;
-			} else if (s->isIEEE()) {
-				vhdl << tab << tab << tab << tab << tab << "if fp_equal_ieee(" << s->getName() << " ,to_stdlogicvector(V_" <<  s->getName() << "),"<<s->wE()<<" , "<<s->wF()<<")" << " then localErrorCounter := 1; end if;" << endl;
-			} else if ((s->width() == 1) && (!s->isBus())) {
-				vhdl << tab << tab << tab << tab << tab << "if (" << s->getName() << "= to_stdlogic(V_" << s->getName() << ")) " << " then localErrorCounter := 1; end if;" << endl;
-			} else {
-				vhdl << tab << tab << tab << tab << tab << "if (" << s->getName() << "= to_stdlogicvector(V_" << s->getName() << ")) " << " then localErrorCounter := 1; end if;" << endl;
-			}
-			vhdl << tab << tab << tab << tab << "end loop;" << endl;
-			vhdl << tab << tab << tab << tab << " if (localErrorCounter = 0) then " << endl;
-			vhdl << tab << tab << tab << tab << tab << "errorCounter := errorCounter + 1; -- incrementing global error counter" << endl;
-
-			// **** better aligned reporting here ****
-			vhdl << tab << tab << tab << tab << tab << "assert false report(\"Line \" & integer'image(counter) & \" of input file, incorrect output for "
-					 << s->getName() << ": \" & lf & ";
-			vhdl << "\" expected values: \" & "  << expectedString;
-			vhdl << " & lf & \"          result: \" & str(" << s->getName() <<")) ;"<< endl;
-
-			vhdl << tab << tab << tab << tab << "end if;" << endl;
+			vhdl << tab << tab << tab << "expectedStringLength := expectedOutput'Length;" << endl;
+      vhdl << tab << tab << tab << "expectedString := expectedOutput.all & (expectedStringLength+1 to 10000 => ' ');" << endl;
+vhdl << tab << tab << tab << "if possibilityNumber = -1 then -- this means an interval" << endl;
+			vhdl << tab << tab << tab << "  furtherRead := 2;" << endl;
+			vhdl << tab << tab << tab << "else " << endl;
+			vhdl << tab << tab << tab << "  furtherRead := possibilityNumber;" << endl;			
 			vhdl << tab << tab << tab << "end if;" << endl;
-			// TODO add test to increment global error counter
-			/* adding the IO to the IOorder list */
+			vhdl << tab << tab << tab << "if possibilityNumber = 0 then" << endl;
+			vhdl << tab << tab << tab << "  furtherRead := 0;" << endl;						
+			vhdl << tab << tab << tab << "  -- TODO define the semantics of lack of expected output" << endl; 
+			vhdl << tab << tab << tab << "else " << endl;			
+			vhdl << tab << tab << tab << tab << "for i in 1 to furtherRead loop " << endl;
+			vhdl << tab << tab << tab << tab << tab << "read(expectedOutput, expected_"  << s->getName() << "(i));" << endl;
+			vhdl << tab << tab << tab << tab << "end loop;" << endl;
+			vhdl << tab << tab << tab << "end if;" << endl;
+
+			vhdl << oneTestVHDL(s, tab+tab+tab);
+
 			IOorderOutput.push_back(s->getName());
 		};
-		vhdl << tab << tab << tab << " wait for 10 ns; -- wait for pipeline to flush" << endl;
-		vhdl << tab << tab << tab << "counter := counter + 2;" << endl; // incrementing by 2 because a testcase takes two lines (one for input, one for output)
+		vhdl << tab << tab << tab << "wait for 10 ns; -- wait for pipeline to flush" << endl;
 		vhdl << tab << tab << "end loop;" << endl;
-		vhdl << tab << tab << "report (integer'image(errorCounter) & \" error(s) encoutered.\");" << endl;
-		vhdl << tab << tab << "report \"End of simulation\" severity note;" <<endl;
+		vhdl << tab << tab << "report integer'image(errorCounter) & \" error(s) encoutered.\" severity note;" << endl;
+		vhdl << tab << tab << "report \"End of simulation after \" & integer'image(testCounter) & \" tests\" severity note;" <<endl;
 		vhdl << tab << "end process;" <<endl;
 
 
@@ -416,7 +396,7 @@ namespace flopoco{
 			TestCase* tc = tcl.getTestCase(i);
 			if (tc->getComment() != "")
 				vhdl << tab <<  "-- " << tc->getComment() << endl;
-			vhdl << tc->getInputVHDL(tab + tab + "-- input: ");
+			vhdl << tc->getInputVHDL(tab + tab + "-- input: "); // this method is in TestCase.cpp
 			vhdl << tc->getExpectedOutputVHDL(tab + tab); // this method is in TestCase.cpp
 			vhdl << tab << tab << "wait for 10 ns;" <<endl;
 			currentOutputTime += 10;
@@ -577,7 +557,6 @@ namespace flopoco{
 		o << endl;
 
 		o << "begin\n";
-
 		 
 		o	 << tab << "-- Ticking clock signal" <<endl;
 		o	 << tab << "process" <<endl;
@@ -588,6 +567,7 @@ namespace flopoco{
 		o	 << tab << tab << "wait for 5 ns;" <<endl;
 		o	 << tab << "end process;" <<endl;
 		o	 << endl;
+		// reset is managed when 
 
 		//if the outputs of the tested operator are not synchronized
 		//	then registering and delaying the outputs might be necessary
@@ -616,7 +596,7 @@ namespace flopoco{
 		if(opHasOutputsDesync == true)
 			o << buildVHDLRegisters() << endl;
 
-		//output the code of the
+		//output the actual code of the testbench
 		o << vhdl.str() << endl;
 
 		o << "end architecture;" << endl << endl;

@@ -40,6 +40,14 @@ namespace flopoco{
 		TestCase(Operator* op);
 		~TestCase();
 
+		typedef enum {
+			list_of_values,          /**<  */
+			signed_interval,          /**<  */
+			unsigned_interval,          /**<  */
+			IEEE_interval,          /**<  */
+			floating_point_interval          /**<  */
+		} TestType;
+
 		/**
 		 * Adds an input for this TestCase
 		 * @param s The signal which will value the given value
