@@ -782,9 +782,22 @@ namespace flopoco{
 		isSequential_=false;
 	}
 
-
 	int Operator::getPipelineDepth() {
 		return pipelineDepth_;
+	}
+
+	int Operator::getMinInputCycle() {
+		if (minInputCycle_ == -1) {
+			computeMinInputCycle();
+		}
+		return minInputCycle_;
+	}
+
+	int Operator::getMaxOutputCycle() {
+		if (maxOutputCycle_ == -1) {
+			computeMaxOutputCycle();
+		}
+		return maxOutputCycle_;
 	}
 
 
@@ -2937,26 +2950,32 @@ namespace flopoco{
 		REPORT(LogLevel::DEBUG, "Input timing:  " << in.str());
 		REPORT(LogLevel::DEBUG, "Output timing: " << out.str());
 
-		int maxInputCycle  = -1;
-		int maxOutputCycle = -1;
-
-		for(auto i: ioList_) {
-			if((i->type() == Signal::in) && (i->getCycle() > maxInputCycle))	{
-				maxInputCycle = i->getCycle();
-				continue;
-			}
-			if((i->type() == Signal::out) && (i->getCycle() > maxOutputCycle)) {
-				maxOutputCycle = i->getCycle();
-				continue;
-			}
-		}
-
 		for(auto i:ioList_)	{
-			if((i->type() == Signal::out) && (i->getCycle() != maxOutputCycle))
+			if((i->type() == Signal::out) && (i->getCycle() != getMaxOutputCycle()))
 				REPORT(LogLevel::DEBUG, "A warning from computePipelineDepths(): this operator's outputs are not synchronized!");
 		}
 
-		pipelineDepth_ = maxOutputCycle-maxInputCycle;
+		pipelineDepth_ = getMaxOutputCycle() - getMinInputCycle();
+	}
+
+	void Operator::computeMinInputCycle() {
+		int minInputCycle = -1;
+		for(auto i: ioList_) {
+			if((i->type() == Signal::in) && (i->getCycle() < minInputCycle || minInputCycle == -1) )	{
+				minInputCycle = i->getCycle();
+			}
+		}
+		minInputCycle_ = minInputCycle;
+	}
+
+	void Operator::computeMaxOutputCycle() {
+		int maxOutputCycle = -1;
+		for(auto i: ioList_) {
+			if((i->type() == Signal::out) && (i->getCycle() > maxOutputCycle)) {
+					maxOutputCycle = i->getCycle();
+				}
+		}
+		maxOutputCycle_ = maxOutputCycle;
 	}
 
 	void Operator::outputFinalReport(ostream& s, int level) {
