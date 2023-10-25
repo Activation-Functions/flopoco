@@ -172,10 +172,77 @@ namespace flopoco{
 
 
 
+	void TestBench::generateLineTestFunction(ostream & o) {
+		vector<Signal*> outputSignalVector = op->getOutputList();
+		o << tab << "function testLine(testCounter:integer; expectedOutputS: string(1 to 10000)";
+		for(Signal* s: outputSignalVector){
+			o << "; "<< s->getName() << ": std_logic_vector (" << s->width()-1 << " downto 0)";
+		}
+		o << ") return boolean is" << endl;
+		o << tab << tab << "variable expectedOutput: line;" << endl;
+		o << tab << tab << "variable possibilityNumber : integer;" << endl;
+		o << tab << tab << "variable testSuccess: boolean;" << endl;
+		o << tab << tab << "variable errorMessage: string(1 to 10000);" << endl;
+		//		o << tab << tab << "variable tmpErrorMessage: line;" << endl;
+		//    o << tab << tab << "variable errorMessage: line;" << endl;
+		for(Signal* s: outputSignalVector){
+			o << tab << tab << "variable testSuccess_" << s->getName() << ": boolean;" << endl;
+			o << tab << tab << "variable expected_" << s->getName() << ": bit_vector (" << s->width()-1 << " downto 0); -- for list of values" << endl;
+			o << tab << tab << "variable inf_" << s->getName() << ": bit_vector (" << s->width() -1 << " downto 0); -- for intervals" << endl;
+			o << tab << tab << "variable sup_" << s->getName() << ": bit_vector (" << s->width() -1 << " downto 0); -- for intervals" << endl;
+		}
+		
+		o << tab << "begin" << endl;
+		o << tab << tab << "write(expectedOutput, expectedOutputS);" << endl;
+		for(Signal* s: outputSignalVector){
+			// o << tab << tab << "errorMessage := \"\";" << endl;
+			o << tab << tab << "read(expectedOutput, possibilityNumber); -- for " << s->getName() << endl;
+			o << tab << tab << "if possibilityNumber = 0 then" << endl;
+			o << tab << tab << tab << "-- TODO define what it means to have 0 possible output. Currently it means a test fails..." << endl;
+			o << tab << tab << "end if;" << endl;
+			o << tab << tab << "if possibilityNumber > 0 then -- a list of values" << endl;
+			o << tab << tab << "testSuccess_" << s->getName() << " := false;" << endl;
+			o << tab <<tab << tab << "for i in 1 to possibilityNumber loop" << endl;
+			o << tab << tab << tab << tab << "read(expectedOutput, expected_" << s->getName() << ");" << endl;
+			//			o << tab << tab << tab << tab << "errorMessage := errorMessage & \" \" & expected_" << s->getName()<< ";" << endl;
+			o << tab << tab << tab << tab << "if " << s->getName() << " = to_stdlogicvector(expected_" << s->getName() << ") then" << endl;
+			o << tab << tab << tab << tab << tab << "testSuccess_" << s->getName() << " := true;"  << endl;
+			o << tab << tab << tab << tab << "end if;" << endl;
+			o << tab << tab << tab << tab << "end loop;" << endl;
+			o << tab << tab << "end if;" << endl;
+			o << tab << tab << "if possibilityNumber < 0  then -- an interval" << endl;
+			o << tab << tab << tab << "read(expectedOutput, inf_" << s->getName() << ");" << endl;
+			o << tab << tab << tab << "read(expectedOutput, sup_" << s->getName() << ");" << endl;
+			o << tab << tab << tab << "if possibilityNumber =-1  then -- an unsigned interval" << endl;
+			o << tab << tab << tab << tab  << "testSuccess_" << s->getName() << " := (" << s->getName() << " >= to_stdlogicvector(inf_" << s->getName() << ")) or (" << s->getName() << " <= to_stdlogicvector(sup_" << s->getName() << "));" << endl;
+			o << tab << tab << tab << "end if;" << endl;
+			o << tab << tab << "end if;" << endl;
+			o << tab << tab << "if testSuccess_" << s->getName() << " = false then" << endl;
+			o << tab << tab << tab << "report(\"Test number \" & integer'image(testCounter) & \", incorrect output for " << s->getName() << ": \" & lf & \" expected values: \" ";
+			// Here I should be able to output the list of values but VHDL sucks
+			o << " & lf & \"          result: \" & str(" << s->getName() << ") ) severity error;" << endl;
+			o << tab << tab << "end if;" << endl;
+			o << tab << tab << "" << endl;
+		}
+		o << tab << tab << "testSuccess := true";
+		for(Signal* s: outputSignalVector){
+			o << " and testSuccess_" << s->getName();
+		}
+		o << ";" << endl;
+		o << tab << tab << "return testSuccess;" << endl;
+		o << tab << "end testLine;" << endl;
+		
+	}
+
+#if 0 // TODO remove me
 	// produce one VHDL statement that goes in a process and sets the "testSuccess_varName" variable
+	// This VHDL inputs a testNumber and an array of possibleOutputs
 	string TestBench::oneTestVHDL(Signal* s, string prepend) {
 		ostringstream o;
 		string varName=s->getName();
+		tab << "function testOneOutput(possibilityNumber:integer; b : std_logic_vector) return boolean is\n" <<
+			tab << "begin\n" <<
+
 		o << prepend << "testSuccess_" << varName << " := false;" << endl;
 		o << prepend << "if possibilityNumber=-1 then -- interval "  << endl;
 		o << prepend <<  tab << "-- TODO "  << endl;
@@ -186,33 +253,10 @@ namespace flopoco{
 		o << prepend << tab << "end loop;" << endl;
 		o << prepend << "end if;" << endl;
 
-		o << tab << tab << tab << " if not testSuccess_"  << s->getName() << " then " << endl;
-		o << tab << tab << tab << tab << tab << "report(\"Test number \" & integer'image(testCounter) & \", incorrect output for "
-			<< s->getName()<< ": \" & lf & "
-			<< "\" expected values:\" & expectedString(1 to expectedStringLength)";
-		o << " & lf & \"          result: \" & str(" << s->getName() <<") ) severity error;"<< endl;
-		o << tab << tab << tab << tab << tab << "errorCounter := errorCounter + 1; -- incrementing global error counter" << endl;
-		o << tab << tab << tab << "end if;" << endl;
-		
-		o << tab << tab << tab << tab << tab << "testCounter := testCounter + 1; -- incrementing global error counter" << endl;
-
-		
-#if 0
-		o << " report \"Incorrect output value for " << varName
-				<< ".\" & lf & \" expected ";
-			for(int i=0; i<possibleValues; i++) {
-				if(i>0) { o << " or "; }
-				o << "expected_"<<varName<<"(" << i << ")";
-			}
-			o << " result: \" & str(A) & \"  at test number \" & integer'image(counter) ";
-			o<< " severity ERROR;"; 
-		}
-
-	#endif
 		return o.str();
 	}
 
-
+#endif
 
 	/* Generating the tests using a file to store the IO, allow to have a lot of IOs without
 	 * increasing the VHDL compilation time
@@ -278,15 +322,14 @@ namespace flopoco{
 		vhdl << tab << " -- Process that verifies the corresponding output" << endl;
 		vhdl << tab << "process" << endl;
 		/* Variable declaration */
+		vhdl << tab << tab << "file inputsFile : text is \"test.input\"; " << endl; // declaration of the input file
 		vhdl << tab << tab << "variable input, expectedOutput : line; " << endl;  // variables to read a line
 		vhdl << tab << tab << "variable testCounter : integer := 1;" << endl;
 		vhdl << tab << tab << "variable errorCounter : integer := 0;" << endl;
-		vhdl << tab << tab << "variable possibilityNumber, furtherRead : integer;" << endl;
-		vhdl << tab << tab << "variable tmpChar : character;" << endl;             // variable to store a character (escape between inputs)
-		vhdl << tab << tab << "variable expectedString : string(1 to 10000);" << endl;
-		vhdl << tab << tab << "variable expectedStringLength : integer;" << endl;
-		vhdl << tab << tab << "file inputsFile : text is \"test.input\"; " << endl; // declaration of the input file
+		vhdl << tab << tab << "variable expectedOutputLength : integer;" << endl;
+		vhdl << tab << tab << "variable expectedOutputString : string(1 to 10000);" << endl;
 
+#if 0
 		/* Variable to store value for inputs and expected outputs*/
 		for(Signal* s: outputSignalVector){
 			vhdl << tab << tab << "variable V_" << s->getName();
@@ -298,6 +341,8 @@ namespace flopoco{
 			vhdl << tab << tab << "variable expected_"  << s->getName() << " : valueArray_"  << s->getName() << ";" << endl;
 			vhdl << tab << tab << "variable testSuccess_"  << s->getName() << " : boolean;" << endl;
 		}
+#endif
+		vhdl << tab << tab << "variable testSuccess: boolean;" << endl;
 		vhdl << tab << "begin" << endl;
 		vhdl << tab << tab << "wait for 12 ns; -- wait for reset " << endl; 
 		if (op->getPipelineDepth() > 0){
@@ -307,12 +352,33 @@ namespace flopoco{
 		vhdl << tab << tab << "while not endfile(inputsFile) loop" << endl;
 		vhdl << tab << tab << tab << "readline(inputsFile, input); -- unused" << endl; // read the input line
 		vhdl << tab << tab << tab << "readline(inputsFile, expectedOutput);" << endl; // read the outputs line
+		vhdl << tab << tab << tab << "expectedOutputLength := expectedOutput'Length;" << endl;
+		vhdl << tab << tab << tab << "expectedOutputString := expectedOutput.all & (expectedOutputLength+1 to 10000 => ' ');" << endl;
+		vhdl << tab << tab << tab << "testSuccess := testLine(testCounter, expectedOutputString";
+		for(Signal* s: outputSignalVector){
+			vhdl << ", " << s->getName();
+			IOorderOutput.push_back(s->getName());
 
+		}
+		vhdl << 	");" << endl;
+		vhdl << tab << tab << tab << "if not testSuccess" << " then " << endl;
+		vhdl << tab << tab << tab << tab << tab << "report(\"Test number \" & integer'image(testCounter) & \", incorrect output  \" & lf & "
+				 << "\" expected values:\" & expectedOutputString(1 to expectedOutputLength)";
+#if 0
+		vhdl << " & lf & \"          result: \" & str(" << s->getName() <<") ) severity error;"<< endl;
+
+		vhdl << " & lf & \"          result: \" & str(" << s->getName() <<") ) severity error;"<< endl;
+#endif
+		vhdl << ") severity error;"<< endl;
+		vhdl << tab << tab << tab << tab << tab << "errorCounter := errorCounter + 1; -- incrementing global error counter" << endl;
+		vhdl << tab << tab << tab << "end if;" << endl;
+		vhdl << tab << tab << tab << tab << "testCounter := testCounter + 1; -- incrementing global error counter" << endl;
+			
+		/*
 		for(Signal* s: outputSignalVector){
 			vhdl << tab << tab << tab << "read(expectedOutput, possibilityNumber);" << endl;
 
-			vhdl << tab << tab << tab << "expectedStringLength := expectedOutput'Length;" << endl;
-      vhdl << tab << tab << tab << "expectedString := expectedOutput.all & (expectedStringLength+1 to 10000 => ' ');" << endl;
+
 vhdl << tab << tab << tab << "if possibilityNumber = -1 then -- this means an interval" << endl;
 			vhdl << tab << tab << tab << "  furtherRead := 2;" << endl;
 			vhdl << tab << tab << tab << "else " << endl;
@@ -327,11 +393,12 @@ vhdl << tab << tab << tab << "if possibilityNumber = -1 then -- this means an in
 			vhdl << tab << tab << tab << tab << "end loop;" << endl;
 			vhdl << tab << tab << tab << "end if;" << endl;
 
-			vhdl << oneTestVHDL(s, tab+tab+tab);
+			//vhdl << oneTestVHDL(s, tab+tab+tab);
 
 			IOorderOutput.push_back(s->getName());
 		};
-		vhdl << tab << tab << tab << "wait for 10 ns; -- wait for pipeline to flush" << endl;
+		*/
+		vhdl << tab << tab << tab << "wait for 10 ns;" << endl;
 		vhdl << tab << tab << "end loop;" << endl;
 		vhdl << tab << tab << "report integer'image(errorCounter) & \" error(s) encoutered.\" severity note;" << endl;
 		vhdl << tab << tab << "report \"End of simulation after \" & integer'image(testCounter) & \" tests\" severity note;" <<endl;
@@ -430,7 +497,6 @@ vhdl << tab << tab << tab << "if possibilityNumber = -1 then -- this means an in
 		o << endl;
 
 		/* Generation of Vhdl function to parse file into std_logic_vector */
-
 		o << " -- converts std_logic into a character" << endl;
 		o << tab << "function chr(sl: std_logic) return character is" << endl
 		  << tab << tab << "variable c: character;" << endl
@@ -553,6 +619,9 @@ vhdl << tab << tab << tab << "if possibilityNumber = -1 then -- this means an in
 					o << tab << "subtype fp" << w << " is std_logic_vector(" << w-1 << " downto 0);\n";
 				}
 		}
+
+		// thefunction that actually implements the test
+		generateLineTestFunction(o);
 
 		o << endl;
 

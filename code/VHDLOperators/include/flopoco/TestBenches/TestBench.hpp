@@ -29,8 +29,6 @@ namespace flopoco{
 		 **/
 		void outputVHDL(ostream& o, string name);
 
-		/** Produces the VHDL for one assertion, this is a common factor in generateTestFromFile and generateTestInVHDL   */
-		string oneTestVHDL(Signal* s, string prepend);
 
 		/** Generating the tests using a file to store the IO, allow to have a lot of IOs without
 		 * increasing the VHDL compilation time
@@ -42,6 +40,10 @@ namespace flopoco{
 		 * Strongly increasing the VHDL compilation time with the numbers of IO
 		 */
 		void generateTestInVhdl();
+
+		/** generates an auxiliary function that implements the essence of the test 
+				and can be used both by generateTestFromFile() and generateTestInVhdl() */
+		void generateLineTestFunction(ostream & o);
 
 		/** Return the total simulation time*/
 		int getSimulationTime();
