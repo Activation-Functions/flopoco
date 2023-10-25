@@ -501,6 +501,14 @@ namespace flopoco{
 		return o.str();
 	}
 
+	string Signal::cycleName(int cycle){
+		ostringstream o;
+
+		o << getName() << "_c" << cycle;
+
+		return o.str();
+	}
+
 
 	string Signal::toVHDLDeclaration() {
 		ostringstream o;
@@ -522,6 +530,28 @@ namespace flopoco{
 
 		return o.str();
 	}
+
+	string Signal::toVHDLCycleDeclaration() {
+		ostringstream o;
+		o << "signal ";
+		if (type_!=Signal::in)
+			o << getName() << "_c" << cycle_ << (lifeSpan_ > 0 ?  + ", " : "");
+		if (lifeSpan_ > 0)
+			o << getName() << "_c" << cycle_+1;
+		for (int i=2; i<=lifeSpan_; i++) {
+			o << ", " << getName() << "_c" << cycle_ + i;
+		}
+		o << " : ";
+
+		o << toVHDLType();
+		o << ";";
+
+		if(tableAttributes_ != "")
+			o << endl << tableAttributes_;
+
+		return o.str();
+	}
+
 
 	void Signal::setSchedule(int cycle, double criticalPathWithinCycle){
 		cycle_ = cycle;

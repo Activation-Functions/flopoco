@@ -144,6 +144,7 @@ namespace flopoco
 		double targetFrequencyMHz;
 //		bool   pipeline; //not used at all, uncomment for now, remove this later!
 		bool   clockEnable;
+		bool   nameSignalByCycle;
 		bool   useHardMult;
 		bool   plainVHDL;
 		bool   registerLargeTables;

@@ -130,6 +130,7 @@ namespace flopoco
 				values.push_back(std::to_string(0));
 				values.push_back(std::to_string(1));
 				v.push_back(option_t("clockEnable", values));
+				v.push_back(option_t("nameSignalByCycle", values));
 				v.push_back(option_t("plainVHDL", values));
 				v.push_back(option_t("generateFigures", values));
 				v.push_back(option_t("useHardMults", values));
@@ -217,6 +218,7 @@ namespace flopoco
 		parseFloat(args, "frequency", &targetFrequencyMHz, true); // sticky option
 		parseBoolean(args, "plainVHDL", &plainVHDL, true);
 		parseBoolean(args, "clockEnable", &clockEnable, true);
+		parseBoolean(args, "nameSignalByCycle", &nameSignalByCycle, true);
 		parseFloat(args, "hardMultThreshold", &unusedHardMultThreshold, true); // sticky option
 		parseBoolean(args, "useHardMult", &useHardMult, true);
 		parseBoolean(args, "registerLargeTables", &registerLargeTables, true);
@@ -447,6 +449,12 @@ namespace flopoco
 					throw("ERROR: unknown target: " + targetFPGA);
 				}
 				target->setClockEnable(clockEnable);
+				if (clockEnable) {
+					target->setNameSignalByCycle(true);
+					REPORT(LogLevel::MESSAGE,"If clock enable is active, name signals by their cycle number instead of the delay.");
+				} else {
+					target->setNameSignalByCycle(nameSignalByCycle);
+				}				
 				target->setFrequency(1e6*targetFrequencyMHz);
 				target->setUseHardMultipliers(useHardMult);
 				target->setUnusedHardMultThreshold(unusedHardMultThreshold);
@@ -781,6 +789,8 @@ namespace flopoco
 		s << "  " << COLOR_BOLD << "verbose" << COLOR_NORMAL << "=<int>:        verbosity level (0-4, default=1)" << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
 		s << "  " << COLOR_BOLD << "generateFigures" << COLOR_NORMAL << "=<0|1>:generate graphics in SVG or LaTeX for some operators (default off) " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL << endl;
 		s << "  " << COLOR_BOLD << "dependencyGraph" << COLOR_NORMAL << "=<no|compact|full>: generate data dependence drawing of the Operator (default no) " << COLOR_RED_NORMAL << COLOR_NORMAL<<endl;
+		s << "  " << COLOR_BOLD << "nameSignalByCycle" << COLOR_NORMAL << "=<0|1>:when pipelining, names the delayed signals by their cycle name instead of their delay. This helps with clock enable and declaring group path for synthesis (default off) " << endl;
+		s << "  " << COLOR_BOLD << "clockEnable" << COLOR_NORMAL << "=<0|1>:when pipelining, adds clock enable signals that enables the different pipeline stages to progress. In testbenches, these pipelining operations are not tested (default off) " << endl;
 		s << "Sticky options apply to the rest of the command line, unless changed again" <<endl;
 		s <<endl;
 		s <<  COLOR_BOLD << "List of operators with command-line interface"<< COLOR_NORMAL << " (a few more are hidden inside FloPoCo)" <<endl;

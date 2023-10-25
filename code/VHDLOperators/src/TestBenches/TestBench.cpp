@@ -64,13 +64,9 @@ namespace flopoco{
 		//  portmap for the inputs and outputs
 		for(int i=0; i < op->getIOListSize(); i++){
 			Signal* s = op->getIOListSignal(i);
-		
-			if(s->type() == Signal::in) {
-				declare(s->getName(), s->width(), s->isBus());
-				inPortMap (s->getName(), s->getName());
-			}
-			if(s->type() == Signal::out)
-				outPortMap (s->getName(), s->getName());
+			// Instance does not declare the output signals anymore, need to do it here
+			declare(s->getName(), s->width(), s->isBus());
+			inPortMap (s->getName(), s->getName());
 		}
 
 		
@@ -79,12 +75,54 @@ namespace flopoco{
 		declare("rst");
 		// declaration and assignation of the clock enable signal
 		if (op_->hasClockEnable()) {
-			vhdl << tab << declare("ce") << " <= '1';" << endl;
+			for (int stage = op->getMinInputCycle(); stage < op->getMaxOutputCycle(); stage++ ) {
+				vhdl << tab << declare("ce_" + to_string(stage+1)) << " <= '1';" << endl;
+			}
 		}
 
 		// The VHDL for the instance
-		vhdl << endl << instance(op, "test", false) << endl;
-		subComponentList_.clear(); // it is unfortunately set by instance()
+		//vhdl << endl << instance(op, "test", false) << endl;
+		//subComponentList_.clear(); // it is unfortunately set by instance()
+
+		// Doing the VHDL for the instance myself
+		// Remove all the sanity checks
+		
+		string instanceName = "test";
+		vhdl << tab << instanceName << ": " << op->getName() << endl;
+	  // INSERTED PART FOR PRIMITIVES
+		if( !op->getGenerics().empty() ) {
+			vhdl << tab << tab << "generic map ( ";
+			std::map<string, string>::iterator it = op->getGenerics().begin();
+			vhdl << it->first << " => " << it->second;
+
+			for( ++it; it != op->getGenerics().end(); ++it  ) {
+				vhdl << "," << endl << tab << tab << it->first << " => " << it->second;
+			}
+
+			vhdl << ")" << endl;
+		}
+		// INSERTED PART END
+		 vhdl << tab << tab << "port map ( ";
+
+		// build vhdl and erase portMap_
+		if(op->isSequential())	{
+			vhdl << "clk  => clk";
+			if (op->hasReset())
+			  vhdl << "," << endl << tab << tab << "           rst  => rst";
+			if(op->hasClockEnable()) {
+				for (int stage = op->getMinInputCycle(); stage < op->getMaxOutputCycle(); stage++ ) {
+					vhdl << "," << endl << tab << tab << "           ce_" << stage+1 << " => ce_" << stage+1;
+				}
+			}				
+		}
+		// code for inputs and outputs
+		for(int i=0; i < op->getIOListSize(); i++){
+			Signal* s = op->getIOListSignal(i);
+			if (i != 0 || op->isSequential())
+				vhdl << "," << endl <<  tab << tab << "           ";
+			vhdl << s->getName() << " => " << s->getName();
+		}
+		vhdl << ");" << endl;
 
 		vhdl << tab << "-- Ticking clock signal" <<endl;
 		vhdl << tab << "process" <<endl;

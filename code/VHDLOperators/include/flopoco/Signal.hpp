@@ -429,6 +429,11 @@ class Operator;
 		 * @param delay in cycles */
 		std::string delayedName(int n);
 
+	/**
+		 * Obtain the name of a signal with the current cycle
+		 * @param cycle the number of the cycle */
+		std::string cycleName(int n);
+
 
 		/**
 		 * Outputs the VHDL code for declaring a signal with all its delayed versions
@@ -436,6 +441,12 @@ class Operator;
 		 * @return the VHDL for the declarations.
 		 */
 		std::string toVHDLDeclaration();
+
+		/**
+		 * Outputs the VHDL code for declaring a signal with all its delayed versions, named as cycles
+		 * @return the VHDL for the declarations.
+		 */
+		std::string toVHDLCycleDeclaration();
 
 
 

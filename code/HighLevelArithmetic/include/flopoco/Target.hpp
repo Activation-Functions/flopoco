@@ -74,6 +74,12 @@ namespace flopoco{
 
 		void setClockEnable(bool val);
 
+		/** Returns true if the target names signals delays with the cycle number
+		 */
+		bool useNameSignalByCycle();
+
+		void setNameSignalByCycle(bool val);
+
 		/** Returns the desired frequency for this target in Hz
 		 * @return the frequency
 		 */
@@ -770,6 +776,7 @@ namespace flopoco{
 		bool   pipeline_;           /**< True if the target is pipelined/ false otherwise */
 		double frequency_;          /**< The desired frequency for the operator in Hz */
 		bool   useClockEnable_;     /**< True if we want a clock enable signal */
+		bool   nameSignalByCycle_;     /**< True if we want to rename signals by cycle number instead of delay */
 		bool   useHardMultipliers_;        /**< True if we want to use DSPs, False if we want to generate logic-only architectures */
 		float  unusedHardMultThreshold_;/**< Between 0 and 1. When we have a multiplier smaller than (or equal to) a DSP in both dimensions,
 																		let r=(sub-multiplier area)/(DSP area); r is between 0 and 1
