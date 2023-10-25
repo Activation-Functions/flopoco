@@ -76,7 +76,7 @@ namespace flopoco{
 		
 
 		// The VHDL for the instance
-		vhdl << instance(op, "test", false);
+		vhdl << instance(op, "wrappedOp", false);
 
 		// copy the outputs
 		for(Signal* s : getIOList()){
