@@ -33,6 +33,7 @@ namespace flopoco{
 
 			pipeline_          = true;
 			useClockEnable_       = false;
+			nameSignalByCycle_       = false;
 			frequency_         = 400000000.;
 			useHardMultipliers_= true;
 			unusedHardMultThreshold_=0.5;
@@ -74,8 +75,16 @@ namespace flopoco{
 		useClockEnable_=val;
 	}
 
+	void Target::setNameSignalByCycle(bool val) {
+		nameSignalByCycle_=val;
+	}
+
 	bool Target::useClockEnable(){
 		return useClockEnable_;
+	}
+
+	bool Target::useNameSignalByCycle(){
+		return nameSignalByCycle_;
 	}
 
 	int Target::lutInputs() {
