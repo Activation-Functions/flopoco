@@ -17,7 +17,7 @@ using namespace std;
 
 namespace flopoco {
 
-  FixFIRTransposed::FixFIRTransposed(OperatorPtr parentOp, Target* target, int wIn, vector<int64_t> coeffs, string adder_graph, string graph_truncations, string sa_truncations): Operator(parentOp, target), wIn(wIn), coeffs(coeffs)
+  FixFIRTransposed::FixFIRTransposed(OperatorPtr parentOp, Target* target, int wIn, vector<int64_t> coeffs, string adder_graph, const string& graph_truncations, const string& sa_truncations, const int epsilon): Operator(parentOp, target), wIn(wIn), coeffs(coeffs), epsilon(epsilon)
 	{
     useNumericStd();
     srcFileName="FixFIRTransposed";
@@ -64,6 +64,36 @@ namespace flopoco {
 
     }
 
+    vector<vector<int>> sa_truncations_vec(coeffs.size());
+    if(!sa_truncations.empty())
+    {
+      parseSAtruncations(sa_truncations, sa_truncations_vec);
+
+      //debug output:
+      if (is_log_lvl_enabled(LogLevel::MESSAGE))
+      {
+        for(int i=0; i < sa_truncations_vec.size(); i++)
+        {
+          std::stringstream ss;
+          ss << "Structural adder corresponding to coeff " << coeffs[i] << " is truncated by: ";
+          for(auto truncation : sa_truncations_vec[i])
+          {
+            ss << truncation << " ";
+          }
+          ss << " bits";
+          REPORT(LogLevel::MESSAGE,ss.str());
+        }
+      }
+    }
+    else
+    {
+      //fill with zeros
+      for(int i=0; i < sa_truncations_vec.size(); i++)
+      {
+        sa_truncations_vec[i] = {0,0};
+      }
+    }
+
     addInput("X",wIn);
 
     stringstream parameters;
@@ -75,7 +105,7 @@ namespace flopoco {
     map<int64_t,int> wC;
     for(auto c : coeffAbsSet)
     {
-      wC[c] = wIn + ceil(log2(c+1));
+      wC[c] = wIn + ceil(log2(c ));
       stringstream sigName;
       sigName << "X_mult_" << c;
       outPortMaps << "R_c" << c << "=>" << declare(sigName.str(),wC[c]);
@@ -86,7 +116,7 @@ namespace flopoco {
     //create the multiplier block:
     newInstance("IntConstMultShiftAdd", "IntConstMultShiftAddComponent", parameters.str(), inPortMaps, outPortMaps.str());
 
-    //compute the minimum word size of structural adders (without truncations)
+    //compute the minimum word size of structural adders (without sa_truncations_vec)
     vector<int> wS(noOfTaps); // !!!
     for(int i=0; i < noOfTaps; i++)
     {
@@ -95,7 +125,7 @@ namespace flopoco {
       {
         sum += abs(coeffs[j]);
       }
-      wS[i] = wIn + ceil(log2(sum));
+      wS[i] = wIn + ceil(log2(sum +1)); // the +1 is conservative making sure power-of-two coefficients work (with a strictly positive power-of-two coefficient, we could save one bit here)
       REPORT(DETAIL, "Word size of strucural adder " << i << " is " << wS[i] << " bits (range is " << -sum << " x 2^(wIn-1) to " << sum << " x (2^(wIn-1)-1)");
     }
 
@@ -111,11 +141,64 @@ namespace flopoco {
     else
     {
       //the first structural adder gets a special treatment:
-      vhdl << tab << declare("s0",wS[0]) << " <= X_mult_" << abs(coeffs[0]) << ";" << endl;
+      //Here, an adder could potentially saved when considering negative coefficients in the adder graph
+      vhdl << endl << tab << declare("s0",wS[0]) << " <= std_logic_vector(" << ((coeffs[0] < 0) ? "-" : "") << "resize(signed(X_mult_" << -coeffs[0] << ")," << wS[0] << "));" << endl;
+
       for(int i=1; i < noOfTaps; i++)
       {
         addRegisteredSignalCopy(join("s", i-1) + "_delayed", join("s", i-1),Signal::asyncReset);
-        vhdl << tab << declare("s" + to_string(i),wS[i]) << " <= std_logic_vector(resize(signed(" << "s" + to_string(i-1) << "_delayed)," << wS[i] << ") "  << (coeffs[i] < 0 ? "-" : "+") << " resize(signed(X_mult_" << abs(coeffs[i]) << ")," << wS[i] << "));" << endl;
+
+        vhdl << endl;
+
+        //pass LSB bits of one of the inputs in case of truncations
+        int wSATruncatedLeft=sa_truncations_vec[i][0];
+        int wSATruncatedRight=sa_truncations_vec[i][1];
+        int wSALSBsPassed=abs(sa_truncations_vec[i][1] - sa_truncations_vec[i][0]); //no of bits that are passed to the LSBs
+        int bitsEliminated = min(wSATruncatedLeft, wSATruncatedRight);
+        int savedFAs = bitsEliminated + wSALSBsPassed;
+        addComment("structural adder " + to_string(i) + " (input from previous adder truncated by " + to_string(sa_truncations_vec[i][0]) + " bits, input from multiplier block truncated by " + to_string(sa_truncations_vec[i][1]) + " bits, saving " + to_string(savedFAs) + " full adders):");
+        if((sa_truncations_vec[i][0] > 0) || (sa_truncations_vec[i][1] > 0))
+        {
+          if(sa_truncations_vec[i][0] < sa_truncations_vec[i][1])
+          {
+            //the previous structural adder is passed to the LSBs
+            vhdl << tab << declare("s" + to_string(i) + "_LSBs", wSALSBsPassed) << " <= " << "s" + to_string(i - 1) << "_delayed(" << wSATruncatedLeft + wSALSBsPassed - 1 << " downto " << wSATruncatedLeft << ")" << ";" << endl;
+            wSATruncatedLeft += wSALSBsPassed;
+          }
+          else if(sa_truncations_vec[i][0] > sa_truncations_vec[i][1])
+          {
+            //the multiplier block output is passed to the LSBs
+            vhdl << tab << declare("s" + to_string(i) + "_LSBs", wSALSBsPassed) << " <= " << "X_mult_" << abs(coeffs[i]) << "(" << wSATruncatedRight + wSALSBsPassed - 1 << " downto " << wSATruncatedRight << ")" << ";" << endl;
+            wSATruncatedRight += wSALSBsPassed;
+          }
+          else
+          {
+            //nothing is passed, nothing to do
+          }
+        }
+
+        bool msbLsbSplitNecessary = (wSALSBsPassed > 0) || (bitsEliminated > 0);
+        vhdl << tab << declare("s" + to_string(i) + (msbLsbSplitNecessary ? "_MSBs" : ""), wS[i] - savedFAs)
+             << " <= std_logic_vector("
+             << "resize(signed("
+             << "s" + to_string(i-1) << "_delayed"
+             << (wSATruncatedLeft > 0 ? "(" + to_string(wS[i-1]-1) + " downto " + to_string(wSATruncatedLeft) + ")" : "")
+             << ")," << wS[i] - savedFAs
+             << ") "
+             << (coeffs[i] < 0 ? "-" : "+") << " "
+             << "resize(signed("
+             << "X_mult_" << abs(coeffs[i])
+             << (wSATruncatedRight > 0 ? "(" + to_string(wC[abs(coeffs[i])]-1) + " downto " + to_string(wSATruncatedRight) + ")" : "")
+             << ")," << wS[i] - savedFAs << "));" << endl;
+
+        if(msbLsbSplitNecessary)
+        {
+          vhdl << tab << declare("s" + to_string(i),wS[i]) << " <= "
+               << "s" << i << "_MSBs"
+               << (wSALSBsPassed > 0 ? " & s" + to_string(i) + "_LSBs" : "")
+               << (bitsEliminated > 0 ? " & " + zg(savedFAs-wSALSBsPassed) : "")
+               << ";" << endl;
+        }
       }
       vhdl << tab << "Y <= s" << noOfTaps-1 << ";" << endl; //this is the very trivial case of a 1-tap filter
     }
@@ -123,6 +206,53 @@ namespace flopoco {
     // initialize stuff for emulate
     xHistory.resize(noOfTaps, 0); //resize history
     currentIndex=0;
+
+  }
+
+  void FixFIRTransposed::parseSAtruncations(const string& sa_truncations, vector<vector<int>>& truncations)
+  {
+    list<string> itemList;
+    {
+      std::stringstream ss;
+      ss.str(sa_truncations);
+      std::string item;
+      try {
+        while (std::getline(ss, item, '|')) {
+          itemList.push_back(item);
+        }
+      }
+      catch(std::exception &s){
+        THROWERROR("Problem in parseSAtruncations for "<< sa_truncations << endl << "got exception : " << s.what());
+      }
+    }
+
+    int i=0;
+    for(auto item : itemList)
+    {
+      std::stringstream ss;
+      ss.str(item);
+      std::string subitem;
+      vector<int> inputTruncations;
+      try {
+        while (std::getline(ss, subitem, ',')) {
+          int truncation = stoi(subitem);
+          inputTruncations.push_back(truncation);
+        }
+        if(inputTruncations.size() != 2)
+          THROWERROR("Currently, only 2-input adders are supported, got truncations for " << inputTruncations.size() << " input(s)!");
+
+        if(i >= truncations.size())
+          THROWERROR("Got too many structural adder truncations, should get " << truncations.size());
+
+        truncations[i++]=inputTruncations;
+      }
+      catch(std::exception &s){
+        THROWERROR("Problem in parseSAtruncations for "<< item << endl << "got exception : " << s.what());
+      }
+    }
+
+    if(i < truncations.size())
+      THROWERROR("Got too few structural adder truncations, got " << i << ", should get " << truncations.size());
 
   }
 
@@ -166,10 +296,11 @@ namespace flopoco {
     int currentIndexMod=currentIndex%noOfTaps; //  circular buffer to store the inputs
     xHistory[currentIndexMod] = x;
 
-		// Not completely optimal in terms of object copies...
+#define DEBUG
 #ifdef DEBUG
     cerr << "emulate inputs (currentIndexMod=" << currentIndexMod << ")=";
 #endif
+    // Not completely optimal in terms of object copies...
 		vector<mpz_class> inputs;
 		for (int i=0; i< noOfTaps; i++)
     {
@@ -195,6 +326,16 @@ namespace flopoco {
 //    if(currentIndex > noOfTaps) //ignore the first noOfTaps cycles as registers has to be filled with something useful
 		  tc->addExpectedOutput ("Y", signedToBitVector(y, wOut));
 
+    if(epsilon > 0)
+    {
+      //Probably not the most efficient way for large epsilons...
+      for(int e=1; e <= epsilon; e++)
+      {
+        tc->addExpectedOutput("Y", y+e);
+        tc->addExpectedOutput("Y", y-e);
+      }
+    }
+
     currentIndex++;
 
 	};
@@ -217,10 +358,21 @@ namespace flopoco {
     string graph_truncations;
     ui.parseString(args, "graph_truncations", &graph_truncations);
 
+    if (graph_truncations == "\"\"") {
+      graph_truncations = "";
+    }
+
     string sa_truncations;
     ui.parseString(args, "sa_truncations", &sa_truncations);
 
-    OperatorPtr tmpOp = new FixFIRTransposed(parentOp, target, wIn, coeffsInt, adder_graph, graph_truncations, sa_truncations);
+    if (sa_truncations == "\"\"") {
+      sa_truncations = "";
+    }
+
+    int epsilon;
+    ui.parseInt(args, "epsilon", &epsilon);
+
+    OperatorPtr tmpOp = new FixFIRTransposed(parentOp, target, wIn, coeffsInt, adder_graph, graph_truncations, sa_truncations, epsilon);
 
 		return tmpOp;
 	}
@@ -234,8 +386,9 @@ namespace flopoco {
 	    "wIn(int): input word size in bits;\
                  coeff(string): colon-separated list of integer coefficients. Example: coeff=\"123:321:123\";\
                  graph(string)=\"\": Realization string of the adder graph;\
-                 graph_truncations(string)=\"\": provides the truncations for intermediate values of the adder graph (format: const1,stage:trunc_input_0,trunc_input_1,... const2,stage:trunc_input_0,trunc_input_1,...)\";\
-                 sa_truncations(string)=\"\": provides the truncations for the strucutal adder (format: const1,stage:trunc_input_0,trunc_input_1,...|const2,stage:trunc_input_0,trunc_input_1,...)",
+                 epsilon(int)=0: Allowable error for truncated constant multipliers (currently only used to check error for given truncations in testbench); \
+                 graph_truncations(string)=\"\": provides the truncations for intermediate values of the adder graph (format: const1,stage:trunc_input_0,trunc_input_1,...|const2,stage:trunc_input_0,trunc_input_1,...)\";\
+                 sa_truncations(string)=\"\": provides the truncations for the strucutal adder (format: sa_1_trunc_input_0,sa_1_trunc_input_1|...|sa_2_trunc_input_0,sa_2_trunc_input_1,...|...)",
 	    ""
   };
 }
