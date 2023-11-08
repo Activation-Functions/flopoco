@@ -90,6 +90,7 @@ namespace flopoco{
 			setCombinatorial();
 
 		setClockEnable(target_->useClockEnable());
+		setNameSignalByCycle(target_->useNameSignalByCycle());
 
 		//------- Resource estimation ----------------------------------
 		resourceEstimate << "Starting Resource estimation report for entity: " << uniqueName_ << " --------------- " << endl;
@@ -589,8 +590,12 @@ namespace flopoco{
 							o << "clk";
 							if(hasReset())
 								o << ", rst";
-							if(hasClockEnable())
-								o << ", ce";
+							if(hasClockEnable()) {
+								//o << ", ce";
+								for (int stage = getMinInputCycle(); stage < getMaxOutputCycle(); stage++ ) {
+									o << ", ce_" << stage+1;
+								}
+							}
 							o << " : in std_logic;" <<endl;
 						}
 
@@ -629,8 +634,12 @@ namespace flopoco{
 					o << "clk";
 					if(hasReset())
 						o << ", rst";
-					if(hasClockEnable())
-						o << ", ce";
+					if(hasClockEnable()) {
+						//o << ", ce";
+						for (int stage = getMinInputCycle(); stage < getMaxOutputCycle(); stage++ ) {
+							o << ", ce_" << stage+1;
+						}
+					}
 					o << " : in std_logic;" <<endl;
 				}
 
@@ -782,9 +791,22 @@ namespace flopoco{
 		isSequential_=false;
 	}
 
-
 	int Operator::getPipelineDepth() {
 		return pipelineDepth_;
+	}
+
+	int Operator::getMinInputCycle() {
+		if (minInputCycle_ == -1) {
+			computeMinInputCycle();
+		}
+		return minInputCycle_;
+	}
+
+	int Operator::getMaxOutputCycle() {
+		if (maxOutputCycle_ == -1) {
+			computeMaxOutputCycle();
+		}
+		return maxOutputCycle_;
 	}
 
 
@@ -1345,10 +1367,10 @@ namespace flopoco{
 			o << "clk  => clk";
 			if (op->hasReset())
 			  o << "," << endl << tab << tab << "           rst  => rst";
-			if (op->hasClockEnable())
-				o << "," << endl << tab << tab << "           ce => ce";
+			if(op->hasClockEnable()) {
+				o << "," << endl << tab << tab << "           ce_fixme => ce_fixme"; //Will be replaced in doApplySchedule
+			}				
 		}
-
 		//build the code for the inputs
 		map<string, string>::iterator it;
 		string rhsString;
@@ -1597,12 +1619,18 @@ namespace flopoco{
 				 (signalList_[i]->type() == Signal::in) || (signalList_[i]->type() == Signal::out))
 				continue;
 
-			o << signalList_[i]->toVHDLDeclaration() << endl;
+			if (isSequential() && nameSignalByCycle() && !noParseNoSchedule())
+				o << signalList_[i]->toVHDLCycleDeclaration() << endl;
+			else
+				o << signalList_[i]->toVHDLDeclaration() << endl;
 		}
 		//now the signals from the I/O List which have the cycle>0
 		for(unsigned int i=0; i<ioList_.size(); i++) {
 			if(ioList_[i]->getLifeSpan()>0){
-				o << ioList_[i]->toVHDLDeclaration() << endl;
+				if (isSequential() && nameSignalByCycle() && !noParseNoSchedule())
+					o << ioList_[i]->toVHDLCycleDeclaration() << endl;
+				else
+					o << ioList_[i]->toVHDLDeclaration() << endl;
 			}
 
 		}
@@ -1786,75 +1814,168 @@ namespace flopoco{
 			siglist.insert( siglist.end(), signalList_.begin(), signalList_.end() );
 			siglist.insert( siglist.end(), ioList_.begin(), ioList_.end() );
 
-			// look up for delayed signals of various types, and build intermediate VHDL if needed
-			ostringstream regs, aregs, aregsinit, sregs, sregsinit;
-			for(auto s: siglist) {
-				if(s->getLifeSpan() > 0) { // This catches all the registered signals
-					for(int j=1; j <= s->getLifeSpan(); j++) {
-						if (s->resetType() == Signal::noReset) {
-							regs << recTab << tab << tab <<tab << tab << s->delayedName(j) << " <=  " << s->delayedName(j-1) <<";" << endl;
+			
+			if (nameSignalByCycle()) {
+				ostringstream regs, aregs, aregsinit, sregs, sregsinit;
+				
+				for (int stage=getMinInputCycle(); stage < getMaxOutputCycle(); stage++) { // Add clock enable signals in the regs stream
+					if (hasClockEnable()) {
+						regs << tab << tab << tab << tab << "if ce_" << stage+1 << " = '1' then" << endl;
+						aregs << tab << tab << tab << tab << "if ce_" << stage+1 << " = '1' then" << endl;
+						sregs << tab << tab << tab << tab << "if ce_" << stage+1 << " = '1' then" << endl;
+					}
+
+					for(auto s: siglist) {
+						if (s->getCycle() <= stage && s->getCycle() + s->getLifeSpan() > stage) {
+							string oldName, newName;
+							if (s->type() == Signal::in && s->getCycle() == stage) {
+								oldName = s->getName();
+							} else {
+								oldName = s->cycleName(stage);
+							}
+							if (s->type() == Signal::out && s->getCycle() + s->getLifeSpan()== stage+1) {
+								newName = s->getName();
+							} else {
+								newName = s->cycleName(stage+1);
+							}
+							
+							if (s->resetType() == Signal::noReset) {
+								regs << recTab << tab << tab <<tab << tab << newName << " <= " << oldName <<";" << endl;
+							}
+							if (s->resetType() == Signal::asyncReset) {
+								if ( (s->width()>1) || (s->isBus()))
+									aregsinit << recTab << tab << tab << tab << tab  << newName << " <= (others => '0');" << endl;
+								else
+									aregsinit << recTab << tab <<tab << tab << tab   << newName << " <= '0';" << endl;
+								aregs << recTab << tab << tab << tab << tab        << newName << " <= " << oldName <<";" << endl;
+							}
+							if (s->resetType() == Signal::syncReset) {
+								if ( (s->width()>1) || (s->isBus()))
+									sregsinit << recTab << tab << tab << tab << tab  << newName << " <= (others => '0');" << endl;
+								else
+									sregsinit << recTab << tab <<tab << tab << tab   << newName << " <= '0';" << endl;
+								sregs << recTab << tab << tab << tab << tab        << newName << " <= " << oldName <<";" << endl;
+							}
+							
 						}
-						if (s->resetType() == Signal::asyncReset) {
-							if ( (s->width()>1) || (s->isBus()))
-								aregsinit << recTab << tab << tab << tab << tab  << s->delayedName(j) << " <=  (others => '0');" << endl;
-							else
-								aregsinit << recTab << tab <<tab << tab << tab   << s->delayedName(j) << " <=  '0';" << endl;
-							aregs << recTab << tab << tab << tab << tab        << s->delayedName(j) << " <=  " << s->delayedName(j-1) <<";" << endl;
-						}
-						if (s->resetType() == Signal::syncReset) {
-							if ( (s->width()>1) || (s->isBus()))
-								sregsinit << recTab << tab << tab << tab << tab  << s->delayedName(j) << " <=  (others => '0');" << endl;
-							else
-								sregsinit << recTab << tab <<tab << tab << tab   << s->delayedName(j) << " <=  '0';" << endl;
-							sregs << recTab << tab << tab << tab << tab        << s->delayedName(j) << " <=  " << s->delayedName(j-1) <<";" << endl;
+					}
+					// End of clock enable
+					if (hasClockEnable()) {
+						regs << tab << tab << tab << tab << "end if;" << endl;
+						aregs << tab << tab << tab << tab << "end if;" << endl;
+						sregs << tab << tab << tab << tab << "end if;" << endl;
+					}
+				}
+			
+
+				// Now output the actual VHDL.
+				// First registers without reset
+				if (regs.str() != "") {
+					o << tab << "process(clk)" << endl;
+					o << tab << tab << "begin" << endl;
+					o << tab << tab << tab << "if clk'event and clk = '1' then" << endl;
+					o << regs.str();
+					o << tab << tab << tab << "end if;\n";
+					o << tab << tab << "end process;\n";
+				}
+
+				// then registers with asynchronous reset
+				if (aregsinit.str() !="") {
+					o << tab << "process(clk, rst)" << endl;
+					o << tab << tab << "begin" << endl;
+					o << tab << tab << tab << "if rst = '1' then" << endl;
+					o << aregsinit.str();
+					o << tab << tab << tab << "elsif clk'event and clk = '1' then" << endl;
+					o << aregs.str();
+					o << tab << tab << tab << "end if;" << endl;
+					o << tab << tab <<"end process;" << endl;
+				}
+
+				// then registers with synchronous reset
+				if (sregsinit.str() !="") {
+					o << tab << "process(clk, rst)" << endl;
+					o << tab << tab << "begin" << endl;
+					o << tab << tab << tab << "if clk'event and clk = '1' then" << endl;
+					o << tab << tab << tab << tab << "if rst = '1' then" << endl;
+					o << sregsinit.str();
+					o << tab << tab << tab << tab << "else" << endl;
+					o << sregs.str();
+					o << tab << tab << tab << tab << "end if;" << endl;
+					o << tab << tab << tab << "end if;" << endl;
+					o << tab << tab << "end process;" << endl;
+				}
+			
+			} else {
+				// look up for delayed signals of various types, and build intermediate VHDL if needed
+				ostringstream regs, aregs, aregsinit, sregs, sregsinit;
+				for(auto s: siglist) {
+					if(s->getLifeSpan() > 0) { // This catches all the registered signals
+						for(int j=1; j <= s->getLifeSpan(); j++) {
+							if (s->resetType() == Signal::noReset) {
+								regs << recTab << tab << tab <<tab << tab << s->delayedName(j) << " <=  " << s->delayedName(j-1) <<";" << endl;
+							}
+							if (s->resetType() == Signal::asyncReset) {
+								if ( (s->width()>1) || (s->isBus()))
+									aregsinit << recTab << tab << tab << tab << tab  << s->delayedName(j) << " <=  (others => '0');" << endl;
+								else
+									aregsinit << recTab << tab <<tab << tab << tab   << s->delayedName(j) << " <=  '0';" << endl;
+								aregs << recTab << tab << tab << tab << tab        << s->delayedName(j) << " <=  " << s->delayedName(j-1) <<";" << endl;
+							}
+							if (s->resetType() == Signal::syncReset) {
+								if ( (s->width()>1) || (s->isBus()))
+									sregsinit << recTab << tab << tab << tab << tab  << s->delayedName(j) << " <=  (others => '0');" << endl;
+								else
+									sregsinit << recTab << tab <<tab << tab << tab   << s->delayedName(j) << " <=  '0';" << endl;
+								sregs << recTab << tab << tab << tab << tab        << s->delayedName(j) << " <=  " << s->delayedName(j-1) <<";" << endl;
+							}
 						}
 					}
 				}
-			}
 
-			// Now output the actual VHDL.
-			// First registers without reset
-			if (regs.str() != "") {
-				o << tab << "process(clk)" << endl;
-				o << tab << tab << "begin" << endl;
-				o << tab << tab << tab << "if clk'event and clk = '1' then" << endl;
-				if (hasClockEnable())
-					o << tab << tab << tab << tab << "if ce = '1' then" << endl;
-				o << regs.str();
-				if (hasClockEnable())
+				// Now output the actual VHDL.
+				// First registers without reset
+				if (regs.str() != "") {
+					o << tab << "process(clk)" << endl;
+					o << tab << tab << "begin" << endl;
+					o << tab << tab << tab << "if clk'event and clk = '1' then" << endl;
+					if (hasClockEnable())
+						o << tab << tab << tab << tab << "if ce = '1' then" << endl;
+					o << regs.str();
+					if (hasClockEnable())
+						o << tab << tab << tab << tab << "end if;" << endl;
+					o << tab << tab << tab << "end if;\n";
+					o << tab << tab << "end process;\n";
+				}
+
+				// then registers with asynchronous reset
+				if (aregsinit.str() !="") {
+					o << tab << "process(clk, rst)" << endl;
+					o << tab << tab << "begin" << endl;
+					o << tab << tab << tab << "if rst = '1' then" << endl;
+					o << aregsinit.str();
+					o << tab << tab << tab << "elsif clk'event and clk = '1' then" << endl;
+					if (hasClockEnable()) o << tab << tab << tab << tab << "if ce = '1' then" << endl;
+					o << aregs.str();
+					if (hasClockEnable())	o << tab << tab << tab << tab << "end if;" << endl;
+					o << tab << tab << tab << "end if;" << endl;
+					o << tab << tab <<"end process;" << endl;
+				}
+
+				// then registers with synchronous reset
+				if (sregsinit.str() !="") {
+					o << tab << "process(clk, rst)" << endl;
+					o << tab << tab << "begin" << endl;
+					o << tab << tab << tab << "if clk'event and clk = '1' then" << endl;
+					o << tab << tab << tab << tab << "if rst = '1' then" << endl;
+					o << sregsinit.str();
+					o << tab << tab << tab << tab << "else" << endl;
+					if (hasClockEnable()) o << tab << tab << tab << tab << "if ce = '1' then" << endl;
+					o << sregs.str();
+					if (hasClockEnable())	o << tab << tab << tab << tab << "end if;" << endl;
 					o << tab << tab << tab << tab << "end if;" << endl;
-				o << tab << tab << tab << "end if;\n";
-				o << tab << tab << "end process;\n";
-			}
-
-			// then registers with asynchronous reset
-			if (aregsinit.str() !="") {
-				o << tab << "process(clk, rst)" << endl;
-				o << tab << tab << "begin" << endl;
-				o << tab << tab << tab << "if rst = '1' then" << endl;
-				o << aregsinit.str();
-				o << tab << tab << tab << "elsif clk'event and clk = '1' then" << endl;
-			  if (hasClockEnable()) o << tab << tab << tab << tab << "if ce = '1' then" << endl;
-				o << aregs.str();
-				if (hasClockEnable())	o << tab << tab << tab << tab << "end if;" << endl;
-				o << tab << tab << tab << "end if;" << endl;
-				o << tab << tab <<"end process;" << endl;
-			}
-
-			// then registers with synchronous reset
-			if (sregsinit.str() !="") {
-				o << tab << "process(clk, rst)" << endl;
-				o << tab << tab << "begin" << endl;
-				o << tab << tab << tab << "if clk'event and clk = '1' then" << endl;
-				o << tab << tab << tab << tab << "if rst = '1' then" << endl;
-				o << sregsinit.str();
-				o << tab << tab << tab << tab << "else" << endl;
-				if (hasClockEnable()) o << tab << tab << tab << tab << "if ce = '1' then" << endl;
-				o << sregs.str();
-				if (hasClockEnable())	o << tab << tab << tab << tab << "end if;" << endl;
-				o << tab << tab << tab << tab << "end if;" << endl;
-				o << tab << tab << tab << "end if;" << endl;
-				o << tab << tab << "end process;" << endl;
+					o << tab << tab << tab << "end if;" << endl;
+					o << tab << tab << "end process;" << endl;
+				}
 			}
 		}
 		return o.str();
@@ -1984,6 +2105,14 @@ namespace flopoco{
 
 	void Operator::setClockEnable(bool val){
 		hasClockEnable_=val;
+	}
+
+	bool Operator::nameSignalByCycle(){
+		return nameSignalByCycle_;
+	}
+
+	void Operator::setNameSignalByCycle(bool val){
+		nameSignalByCycle_=val;
 	}
 
 	string Operator::getCopyrightString(){
@@ -2152,6 +2281,18 @@ namespace flopoco{
 							lhsName = workStr.substr(tmpCurrentPos+2, tmpNextPos-tmpCurrentPos-2);
 							REPORT(LogLevel::FULL, "doApplySchedule: instance lhsName=" << lhsName);
 
+							
+
+							// Deal with clock enable
+							if (isSequential() && hasClockEnable() && lhsName == "ce_fixme") {
+								newStr << "ce_" << subop->getMinInputCycle() +1 << " => ce_" << subop->getMinInputCycle() +1 << "," << endl;
+								for (int stage = subop->getMinInputCycle() +1; stage < subop->getMaxOutputCycle(); stage++ ) {
+									newStr << tab << tab << "           ce_" << stage+1 << "=> ce_" << stage+1 << "," << endl;
+								}
+								newStr << tab << tab << "           ";
+								tmpCurrentPos = workStr.find("?", tmpNextPos+2);
+								continue;
+							}
 							//copy lhsName (the formal input/output) to the new vhdl buffer
 							newStr << lhsName;
 
@@ -2233,9 +2374,25 @@ namespace flopoco{
 									// was								subopOutput = (*subopInput->successors())[0].first; // but bug if the actual input has other successors
 									REPORT(LogLevel::DEBUG, "doApplySchedule: shared instance: " << instanceName << " has input " << subopInput->getName() << " and output " << subopOutput->getName());//workStr.substr(auxPosition, auxPosition2));
 									int deltaCycle =subopOutput->getCycle() - subopInput->getCycle();
-									if( deltaCycle> 0) {
-										newStr << "_d" << vhdlize(deltaCycle);
-										subopInput -> updateLifeSpan(deltaCycle);
+									if (nameSignalByCycle()) {
+										if (!(subopInput->type() == Signal::in && subopOutput->getCycle() == subopInput->getCycle())) {
+											newStr << "_c" << vhdlize(subopOutput->getCycle());
+											subopInput -> updateLifeSpan(deltaCycle);
+										}
+									} else {
+										if( deltaCycle> 0) {
+											newStr << "_d" << vhdlize(deltaCycle);
+											subopInput -> updateLifeSpan(deltaCycle);
+										}
+									}
+								}
+								else if (isSequential() && nameSignalByCycle() && rhsIsSignal) {
+									if (subop->getSignalByName(lhsName)->type() == Signal::in) {
+										Signal* subopInput = getSignalByName(rhsName);
+										newStr << "_c" << vhdlize(subopInput->getCycle());
+									} else if (subop->getSignalByName(lhsName)->type() == Signal::out) {
+										Signal* subopOutput = getSignalByName(rhsName);
+										newStr << "_c" << vhdlize(subopOutput->getCycle());
 									}
 								}
 							}
@@ -2323,9 +2480,14 @@ namespace flopoco{
 					newStr << rhsName;
 
 					if(isSequential() && !unknownLHSName  && !unknownRHSName) {
-						int deltaCycle = lhsSignal->getCycle()-rhsSignal->getCycle();
-						if( deltaCycle> 0)
-							newStr << "_d" << vhdlize(deltaCycle);
+						if (nameSignalByCycle()) {
+							if (!(rhsSignal->type() == Signal::in && lhsSignal->getCycle() == rhsSignal->getCycle()))
+								newStr << "_c" << vhdlize(lhsSignal->getCycle()); // if using cycle names, use the cycle of left hand side
+						} else {
+							int deltaCycle = lhsSignal->getCycle()-rhsSignal->getCycle();
+							if( deltaCycle> 0)
+								newStr << "_d" << vhdlize(deltaCycle);
+						}
 					}
 					//copy the code up until the lhs signal name
 					tmpCurrentPos = tmpNextPos+2;
@@ -2335,6 +2497,9 @@ namespace flopoco{
 
 					//copy the lhs signal name
 					newStr << lhsName;
+					if (isSequential() && nameSignalByCycle() && !(lhsSignal->type() == Signal::out)) {
+							newStr << "_c" << vhdlize(lhsSignal->getCycle()); // if using cycle names, also change name of of left hand side
+					}
 
 					//prepare to parse a new rhs name
 					tmpCurrentPos = tmpNextPos+4+lhsNameLength;
@@ -2361,6 +2526,12 @@ namespace flopoco{
 
 							continue;
 						}
+				} else {
+					if(isSequential() && !unknownLHSName) {
+						if (nameSignalByCycle() && !(lhsSignal->type() == Signal::out)) {
+							newStr << "_c" << vhdlize(lhsSignal->getCycle()); // if using cycle names, also change name of of left hand side
+						}
+					}
 				}
 				//extract the rhsNames and annotate them find the position of the rhsName, and copy
 				// the vhdl code up to the rhsName in the new vhdl code buffer
@@ -2413,14 +2584,23 @@ namespace flopoco{
 					newStr << newRhsName;
 					if(isSequential() && !unknownLHSName && !unknownRHSName) {
 						// Should we insert a pipeline register ?
-						int deltaCycle = lhsSignal->getCycle() - rhsSignal->getCycle();
-						if(deltaCycle>0)
-							newStr << "_d" << vhdlize(deltaCycle);
+						if (nameSignalByCycle()) {
+							if (!(rhsSignal->type() == Signal::in && lhsSignal->getCycle() == rhsSignal->getCycle()) && !(functionalDelay>0))
+								newStr << "_c" << vhdlize(lhsSignal->getCycle()); // if using cycle names, use the cycle of left hand side
+						} else {
+							int deltaCycle = lhsSignal->getCycle() - rhsSignal->getCycle();
+							if(deltaCycle>0)
+								newStr << "_d" << vhdlize(deltaCycle);
+						}
 
 						// Should we insert a functional register ? This case is exclusive with the previous as long as functional delays are introduced only by the functionalRegister method.
 						if(functionalDelay>0) {
 							getSignalByName(newRhsName) -> updateLifeSpan(functionalDelay); // wonder where it is done for pipeline registers???
-							newStr << "_d" << vhdlize(functionalDelay);
+							if (nameSignalByCycle()) {
+								newStr << "_c" << vhdlize(getSignalByName(newRhsName)->getCycle() + functionalDelay);
+							} else {
+								newStr << "_d" << vhdlize(functionalDelay);
+							}
 						}
 					}
 
@@ -2937,26 +3117,32 @@ namespace flopoco{
 		REPORT(LogLevel::DEBUG, "Input timing:  " << in.str());
 		REPORT(LogLevel::DEBUG, "Output timing: " << out.str());
 
-		int maxInputCycle  = -1;
-		int maxOutputCycle = -1;
-
-		for(auto i: ioList_) {
-			if((i->type() == Signal::in) && (i->getCycle() > maxInputCycle))	{
-				maxInputCycle = i->getCycle();
-				continue;
-			}
-			if((i->type() == Signal::out) && (i->getCycle() > maxOutputCycle)) {
-				maxOutputCycle = i->getCycle();
-				continue;
-			}
-		}
-
 		for(auto i:ioList_)	{
-			if((i->type() == Signal::out) && (i->getCycle() != maxOutputCycle))
+			if((i->type() == Signal::out) && (i->getCycle() != getMaxOutputCycle()))
 				REPORT(LogLevel::DEBUG, "A warning from computePipelineDepths(): this operator's outputs are not synchronized!");
 		}
 
-		pipelineDepth_ = maxOutputCycle-maxInputCycle;
+		pipelineDepth_ = getMaxOutputCycle() - getMinInputCycle();
+	}
+
+	void Operator::computeMinInputCycle() {
+		int minInputCycle = -1;
+		for(auto i: ioList_) {
+			if((i->type() == Signal::in) && (i->getCycle() < minInputCycle || minInputCycle == -1) )	{
+				minInputCycle = i->getCycle();
+			}
+		}
+		minInputCycle_ = minInputCycle;
+	}
+
+	void Operator::computeMaxOutputCycle() {
+		int maxOutputCycle = -1;
+		for(auto i: ioList_) {
+			if((i->type() == Signal::out) && (i->getCycle() > maxOutputCycle)) {
+					maxOutputCycle = i->getCycle();
+				}
+		}
+		maxOutputCycle_ = maxOutputCycle;
 	}
 
 	void Operator::outputFinalReport(ostream& s, int level) {
@@ -3401,6 +3587,7 @@ namespace flopoco{
 		headerComment_              = op->headerComment_;
 		copyrightString_            = op->getCopyrightString();
 		hasClockEnable_             = op->hasClockEnable();
+		nameSignalByCycle_          = op->nameSignalByCycle();
 		indirectOperator_           = op->getIndirectOperator();
 		hasDelay1Feedbacks_         = op->hasDelay1Feedbacks();
 

@@ -1068,12 +1068,33 @@ namespace flopoco {
 		 */
 		virtual void outputFinalReport(ostream& s, int level);
 
-
 		/**
 		 * Returns the pipeline depth of this operator
 		 * @return the pipeline depth of the operator
 		 */
 		int getPipelineDepth();
+
+		/**
+		 * Returns the earliest cycle of an input of this operator
+		 * @return the earliest cycle of an input of this operator
+		 */
+		int getMinInputCycle();
+
+		/**
+		 * Returns the latest cycle of an output of this operator
+		 * @return the latest cycle of an output of this operator
+		 */
+		int getMaxOutputCycle();
+
+		/**
+		 * Computes the earliest cycle of an input of this operator
+		 */
+		void computeMinInputCycle();
+
+		/**
+		 * Computes the latest cycle of an output of this operator
+		 */
+		void computeMaxOutputCycle();
 
 		/**
 		 * Computes pipeline depth after scheduling, for this operator and all its subcomponents
@@ -1126,6 +1147,10 @@ namespace flopoco {
 		bool hasClockEnable();
 
 		void setClockEnable(bool val);
+
+		bool nameSignalByCycle();
+
+		void setNameSignalByCycle(bool val);
 
 		string getCopyrightString();
 
@@ -1753,6 +1778,8 @@ private:
 	int                    stdLibType_;                     /**< 0 will use the Synopsys ieee.std_logic_unsigned, -1 uses std_logic_signed, 1 uses ieee numeric_std  (preferred) */
 	bool                   isSequential_;                   /**< True if the operator needs a clock signal */
 	int                    pipelineDepth_;                  /**< The pipeline depth of the operator. 0 for combinatorial circuits. A non-pipelined signal can still be sequential, e.g. a FIR. */
+	int                    minInputCycle_ = -1;             /**< The earliest cycle of the inputs of this component */
+	int                    maxOutputCycle_ = -1;             /**< The latests cycle of the outputs of this component*/
 	map<string, Signal*>   signalMap_;                      /**< A dictionary of signals, for recovering a signal based on it's name */
 	map<string, OperatorPtr> instanceOp_ ;                  /**< A map to get instance info   */
 	map<string, vector<string>> instanceActualIO_ ;         /**< A map to get instance info. This list is in the same order as the ioList of the subcomponent   */
@@ -1766,6 +1793,7 @@ private:
 	string                 copyrightString_;                /**< Authors and years.  */
 	string                 additionalHeaderString_;         /**< User-defined header information (used, e.g., for primitives that require extra libraries).  */
 	bool                   hasClockEnable_;    	            /**< True if the operator has a clock enable signal  */
+	bool                   nameSignalByCycle_;    	        /**< True if the operator uses signal name by cycle instead of delay */
 	int		                 hasDelay1Feedbacks_;             /**< True if this operator has feedbacks of one cycle, and no more than one cycle (i.e. an error if the distance is more). False gives warnings */
 	Operator*              indirectOperator_;               /**< NULL if this operator is just an interface operator to several possible implementations, otherwise points to the instance*/
 	// small TODO: rename

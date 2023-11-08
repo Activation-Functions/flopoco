@@ -36,6 +36,15 @@ namespace flopoco{
 
 		//this operator is a sequential one	even if Target is unpipelined
 		setSequential();
+		if (op->hasClockEnable()) {
+			THROWERROR("Operator RegisterSandwich cannot have clock enable activated.")
+		}
+		if (op->nameSignalByCycle()) {
+			REPORT(LogLevel::MESSAGE, "Operator RegisterSandwich does not use names by cycle but delayed name.")
+			setNameSignalByCycle(false); // false only for this operator, no clock enable on input and output of register sandwich
+		}
+
+		
 
 		//copy the signals of the wrapped operator
 		// this replaces addInputs and addOutputs
