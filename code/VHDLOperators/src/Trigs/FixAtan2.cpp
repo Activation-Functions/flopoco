@@ -175,16 +175,11 @@ namespace flopoco {
 			svY -= (mpz_class(1)<<wIn);
 		/* Compute correct value */
 
-#if 0
 		if(svX==0 && svY==0) {
 			// This is an undefined case and we don't have NaNs in fixed point, so just accept any value
-			// It turns out that adding nothing to the testcase accepts anything.
-			// This should at least be documented...
-			// Future proor is the following line
- 						tc->addExpectedOutputInterval ("A", 0, (mpz_class(1)<<wOut) -1);
+			tc->addExpectedOutputInterval ("A", 0, (mpz_class(1)<<wOut) -1, TestCase::unsigned_interval);
 			return;
 		}
-#endif
 		
 		mpfr_t x,y,a;
 		mpfr_init2(x, 10*wIn);

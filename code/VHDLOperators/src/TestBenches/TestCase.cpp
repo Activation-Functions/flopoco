@@ -161,6 +161,7 @@ namespace flopoco{
 
 	void TestCase::addExpectedOutput(string name, mpz_class v)
 	{
+		type = list_of_values;
 		Signal* s = op_->getSignalByName(name);
 
 		//TODO Check if we have already too many values for this output
@@ -183,25 +184,49 @@ namespace flopoco{
 		outputs[name].push_back(v);
 	}
 
-	void TestCase::addExpectedOutputInterval(std::string name, mpz_class vinf, mpz_class vsup){
-		Signal* s = op_->getSignalByName(name);
 
-		// Currently assume unsigned interval to start with: TODO add maagement of signed and FP
-		if (vinf<0 || vinf >= (mpz_class(1) << s->width())){
-			ostringstream e;
-			e << "ERROR in TestCase::addExpectedOutputInterval, value " << vinf << " of signal " << name << " out of range 0 .. " << (mpz_class(1) << s->width())-1;
-			throw e.str();
+	
+	void TestCase::addExpectedOutputInterval(std::string name, mpz_class vinf, mpz_class vsup, TestType type_){
+		type = type_ ;
+		
+		Signal* s = op_->getSignalByName(name);
+		if (type == unsigned_interval) {
+			if (vinf<0 || vinf >= (mpz_class(1) << s->width())){
+				ostringstream e;
+				e << "ERROR in TestCase::addExpectedOutputInterval, value " << vinf << " of signal " << name << " out of range 0 .. " << (mpz_class(1) << s->width())-1;
+				throw e.str();
+			}
+			if (vsup<0 || vsup >= (mpz_class(1) << s->width())){
+				ostringstream e;
+				e << "ERROR in TestCase::addExpectedOutputInterval, value " << vsup << " of signal " << name << " out of range 0 .. " << (mpz_class(1) << s->width())-1;
+				throw e.str();
+			}
 		}
-		if (vsup<0 || vsup >= (mpz_class(1) << s->width())){
+		else if (type == signed_interval) {
+			mpz_class bound = mpz_class(1) << (s->width()-1);
+			if ( (vinf < -bound)  || (vinf >= bound)  || (vsup < -bound)  || (vsup >= bound) ){
+				ostringstream e;
+				e << "ERROR in TestCase::addExpectedOutputInterval, interval [" << vinf << ", " << vsup <<"] of signal "
+					<< name << " out of range [" << -bound << ", " << bound-1 << "]" << (mpz_class(1) << s->width())-1;
+				throw e.str();
+			}
+		}	
+		else if (type == IEEE_interval) {
 			ostringstream e;
-			e << "ERROR in TestCase::addExpectedOutputInterval, value " << vsup << " of signal " << name << " out of range 0 .. " << (mpz_class(1) << s->width())-1;
-			throw e.str();
-		}
-		if (outputInterval.count(name)){
-			ostringstream e;
-			e << "ERROR in TestCase::addExpectedOutputInterval, an interval was already provided for signal " << name ;
+			e << "TestCase::addExpectedOutputInterval, IEEE_interval not yet supported" ;
 			throw e.str();	
 		}
+		else if (type == floating_point_interval) {
+			ostringstream e;
+			e << "TestCase::addExpectedOutputInterval, floating_point_interval not yet supported" ;
+			throw e.str();	
+		}
+		else {
+			ostringstream e;
+			e << "ERROR in TestCase::addExpectedOutputInterval: Type is not an interval type" << name ;
+			throw e.str();	
+		}
+
 		outputInterval.insert(name);
 		outputs[name].push_back(vinf);
 		outputs[name].push_back(vsup);
@@ -337,19 +362,23 @@ namespace flopoco{
 		for (list<string>::iterator it = IOorderOutput.begin();it != IOorderOutput.end(); it++) {
 			Signal* s = op_->getSignalByName(*it);
 			vector<mpz_class> vs = outputs[*it];
-
-			o << vs.size() << " ";
-			/* Iterate through possible output values */
-			for (vector<mpz_class>::iterator it = vs.begin(); it != vs.end(); it++)
-				{
-					mpz_class v = *it;
-					o << s->valueToVHDL(v,false) << " ";
-				}
+			if(type==list_of_values) {
+				o << vs.size() << " ";
+				for (auto v: vs)
+					{
+						o << s->valueToVHDL(v,false) << " ";
+					}
+			}
+			else if(type==unsigned_interval || type==signed_interval || type==IEEE_interval || type==floating_point_interval) {
+				o << type << " ";
+				for (auto v: vs)
+					{
+						o << s->valueToVHDL(v,false) << " ";
+					}
+			}
 		}
 		o << endl;
-		return o.str();
-
-
+		return o.str();	
 	}
 
 
