@@ -217,12 +217,18 @@ namespace flopoco{
 			o << tab << tab << tab << "read(expectedOutput, sup_" << s->getName() << ");" << endl;
 			o << tab << tab << tab << "if possibilityNumber =-1  then -- an unsigned interval" << endl;
 			o << tab << tab << tab << tab  << "testSuccess_" << s->getName() << " := (" << s->getName() << " >= to_stdlogicvector(inf_" << s->getName() << ")) and (" << s->getName() << " <= to_stdlogicvector(sup_" << s->getName() << "));" << endl;
-			o << tab << tab << tab << "end if;" << endl;
-			o << tab << tab << tab << "if possibilityNumber =-2  then -- a signed interval" << endl;
+			o << tab << tab << tab << "elsif possibilityNumber =-2  then -- a signed interval" << endl;
 			o << tab << tab << tab << tab  << "testSuccess_" << s->getName() << " := (signed(" << s->getName() << ") >= signed(to_stdlogicvector(inf_" << s->getName() << "))) and (signed(" << s->getName() << ") <= signed(to_stdlogicvector(sup_" << s->getName() << ")));" << endl;
+			if(s->isIEEE()){
+				o << tab << tab << tab << "elsif possibilityNumber =-3  then -- an IEEE floating-point interval" << endl;
+				o << tab << tab << tab << tab  << "testSuccess_" << s->getName() << " := fp_inf_or_equal_ieee(to_stdlogicvector(inf_" << s->getName() << "), " << s->getName() << ", " <<  s->wE() << ", " <<  s->wF() << ") and fp_inf_or_equal_ieee(" << s->getName() << ", to_stdlogicvector(sup_" << s->getName() << "), " <<  s->wE() << ", " <<  s->wF() << ");" << endl;
+			}
+			if(s->isFP()){
+				o << tab << tab << tab << "elsif possibilityNumber =-4  then -- a floating-point interval" << endl;
+				o << tab << tab << tab << tab  << "testSuccess_" << s->getName() << " := fp_inf_or_equal(to_stdlogicvector(inf_" << s->getName() << "), " << s->getName() << ") and fp_inf_or_equal(" << s->getName() << ", to_stdlogicvector(sup_" << s->getName() << "));" << endl;
+      }
 			o << tab << tab << tab << "end if;" << endl;
 			o << tab << tab << "end if;" << endl;
-
 			o << tab << tab << "if testSuccess_" << s->getName() << " = false then" << endl;
 			o << tab << tab << tab << "report(\"Test #\" & integer'image(testCounter) & \", incorrect output for " << s->getName() << ": \" & lf"
 				<< " & \" expected values: \" & expectedOutputS(1 to expectedOutputSize) & lf "; 
@@ -551,17 +557,25 @@ vhdl << tab << tab << tab << "if possibilityNumber = -1 then -- this means an in
 		o << endl;
 
 		if(hasFPOutputs){
-			o << tab << "-- FP compare function (found vs. real)\n" <<
-				tab << "function fp_equal(a : std_logic_vector; b : std_logic_vector) return boolean is\n" <<
-				tab << "begin\n" <<
-				tab << tab << "if b(b'high downto b'high-1) = \"01\" then\n" <<
-				tab << tab << tab << "return a = b;\n" <<
-				tab << tab << "elsif b(b'high downto b'high-1) = \"11\" then\n" <<
-				tab << tab << tab << "return (a(a'high downto a'high-1)=b(b'high downto b'high-1));\n" <<
-				tab << tab << "else\n" <<
-				tab << tab << tab << "return a(a'high downto a'high-2) = b(b'high downto b'high-2);\n" <<
-				tab << tab << "end if;\n" <<
-				tab << "end;\n";
+			o << tab << "-- FP compare function (found vs. real)\n" 
+  			<<	tab << "function fp_equal(a : std_logic_vector; b : std_logic_vector) return boolean is\n" 
+				<<	tab << "begin\n" 
+				<<	tab << tab << "if b(b'high downto b'high-1) = \"01\" then\n" 
+				<<	tab << tab << tab << "return a = b;\n" 
+				<<	tab << tab << "elsif b(b'high downto b'high-1) = \"11\" then\n" 
+				<<	tab << tab << tab << "return (a(a'high downto a'high-1)=b(b'high downto b'high-1));\n" 
+				<<	tab << tab << "else\n" 
+				<<	tab << tab << tab << "return a(a'high downto a'high-2) = b(b'high downto b'high-2);\n" 
+				<<	tab << tab << "end if;\n" 
+				<<	tab << "end;\n";
+			o << endl;
+			o <<	tab << "function fp_inf_or_equal(a : std_logic_vector; b : std_logic_vector) return boolean is\n" 
+				<< 	tab << "begin\n" 
+				<< 	tab << tab << "if (b(b'high downto b'high-1) = \"11\") or (a(a'high downto a'high-1) = \"11\")  then\n" 
+				<< 	tab << tab << tab << "return false; -- NaN always compare false\n" 
+				<< 	tab << tab << "else return true; -- TODO\n" 
+				<< 	tab << tab << "end if;\n" 
+				<< 	tab << "end;\n";
 			o << endl;
 		}
 
@@ -570,11 +584,11 @@ vhdl << tab << tab << tab << "if possibilityNumber = -1 then -- this means an in
 			/* If op is an IEEE operator (IEEE input and output, we define) the function
 			 * fp_equal for the considered precision in the ieee case
 			 */
-			o << tab << "-- test isZero\n" <<
-				tab << "function iszero(a : std_logic_vector) return boolean is\n" <<
-				tab << "begin\n" <<
-				tab << tab << "return  a = (a'high downto 0 => '0');\n" <<        // test if exponent = "0000---000"
-				tab << "end;\n";
+			o << tab << "-- test isZero\n" 
+				<< tab << "function iszero(a : std_logic_vector) return boolean is\n" 
+				<< tab << "begin\n" 
+				<< tab << tab << "return	a = (a'high downto 0 => '0');\n" 				 // test if exponent = "0000---000"
+				<< tab << "end;\n";
 			o << endl;
 			
 			o <<	tab << "-- FP IEEE compare function (found vs. real)\n" <<
@@ -582,17 +596,26 @@ vhdl << tab << tab << tab << "if possibilityNumber = -1 then -- this means an in
 				<< " b : std_logic_vector;"
 				<< " we : integer;"
 				<< " wf : integer) return boolean is\n"
-				<<	tab << "begin\n" <<
-				tab << tab << "if a(wf+we downto wf) = b(wf+we downto wf) and b(we+wf-1 downto wf) = (we downto 1 => '1') then\n" <<        // test if exponent = "1111---111"
-				tab << tab << tab << "if iszero(b(wf-1 downto 0)) then return  iszero(a(wf-1 downto 0));\n" <<               // +/- infinity cases
-				tab << tab << tab << "else return not iszero(a(wf - 1 downto 0));\n" <<
-				tab << tab << tab << "end if;\n" <<
-				tab << tab << "else\n" <<
-				tab << tab << tab << "return a(a'high downto 0) = b(b'high downto 0);\n" <<
-				tab << tab << "end if;\n" <<
-				tab << "end;\n";
+				<<	tab << "begin\n"
+				<<  tab << tab << "if a(wf+we downto wf) = b(wf+we downto wf) and b(we+wf-1 downto wf) = (we downto 1 => '1') then\n"         // test if exponent = "1111---111"
+				<<  tab << tab << tab << "if iszero(b(wf-1 downto 0)) then return  iszero(a(wf-1 downto 0));\n"                // +/- infinity cases
+				<<  tab << tab << tab << "else return not iszero(a(wf - 1 downto 0));\n" 
+				<<  tab << tab << tab << "end if;\n" 
+				<<  tab << tab << "else\n" 
+				<<  tab << tab << tab << "return a(a'high downto 0) = b(b'high downto 0);\n" 
+				<<  tab << tab << "end if;\n" 
+				<<  tab << "end;\n";
+			o << endl;
+			o <<	tab << "function fp_inf_or_equal_ieee(a : std_logic_vector;"
+				<< " b : std_logic_vector;"
+				<< " we : integer;"
+				<< " wf : integer) return boolean is\n"
+				<<	tab << "begin\n"
+				<< tab  << tab << "return false; -- TODO \n"
+				<< tab << "end;\n";
 			o << endl;
 		}
+
 		/* In VHDL, literals may be incorrectly converted to „std_logic_vector(... to ...)” instead
 		 * of „downto”. So, for each FP output width, create a subtype used for casting.
 		 */
