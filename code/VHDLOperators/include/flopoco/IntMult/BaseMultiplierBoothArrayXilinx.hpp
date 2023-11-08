@@ -31,6 +31,8 @@ namespace flopoco {
         bool isVariable() const override { return true; }
         double getLUTCost(int x_anchor, int y_anchor, int wMultX, int wMultY, bool signedIO) override;
         int ownLUTCost(int x_anchor, int y_anchor, int wMultX, int wMultY, bool signedIO) override;
+	bool signSupX() override {return true;}
+	bool signSupY() override {return true;}
 
 		/** Factory method */
         static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args, UserInterface& ui);
