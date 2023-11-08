@@ -214,7 +214,10 @@ namespace flopoco{
 			o << tab << tab << tab << "read(expectedOutput, inf_" << s->getName() << ");" << endl;
 			o << tab << tab << tab << "read(expectedOutput, sup_" << s->getName() << ");" << endl;
 			o << tab << tab << tab << "if possibilityNumber =-1  then -- an unsigned interval" << endl;
-			o << tab << tab << tab << tab  << "testSuccess_" << s->getName() << " := (" << s->getName() << " >= to_stdlogicvector(inf_" << s->getName() << ")) or (" << s->getName() << " <= to_stdlogicvector(sup_" << s->getName() << "));" << endl;
+			o << tab << tab << tab << tab  << "testSuccess_" << s->getName() << " := (" << s->getName() << " >= to_stdlogicvector(inf_" << s->getName() << ")) and (" << s->getName() << " <= to_stdlogicvector(sup_" << s->getName() << "));" << endl;
+			o << tab << tab << tab << "end if;" << endl;
+			o << tab << tab << tab << "if possibilityNumber =-2  then -- a signed interval" << endl;
+			o << tab << tab << tab << tab  << "testSuccess_" << s->getName() << " := (signed(" << s->getName() << ") >= signed(to_stdlogicvector(inf_" << s->getName() << "))) and (signed(" << s->getName() << ") <= signed(to_stdlogicvector(sup_" << s->getName() << ")));" << endl;
 			o << tab << tab << tab << "end if;" << endl;
 			o << tab << tab << "end if;" << endl;
 			o << tab << tab << "if testSuccess_" << s->getName() << " = false then" << endl;

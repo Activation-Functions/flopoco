@@ -41,11 +41,11 @@ namespace flopoco{
 		~TestCase();
 
 		typedef enum {
-			list_of_values,          /**<  */
-			signed_interval,          /**<  */
-			unsigned_interval,          /**<  */
-			IEEE_interval,          /**<  */
-			floating_point_interval          /**<  */
+			list_of_values=0,          /**< good old technique */
+			unsigned_interval=-1,          /**<  */
+			signed_interval=-2,          /**<  */
+			IEEE_interval=-3,          /**<  */
+			floating_point_interval=-4          /**<  */
 		} TestType;
 
 		/**
@@ -115,7 +115,7 @@ namespace flopoco{
 		 * @param vinf the smallest possible value which the signal might take
 		 * @param vsup the largest possible value which the signal might take
 		 */
-		void addExpectedOutputInterval(std::string s, mpz_class vinf, mpz_class vsup);
+		void addExpectedOutputInterval(std::string s, mpz_class vinf, mpz_class vsup, TestType type=list_of_values);
 
 		/**
 		 * returns all mpz associated to an output as a vector of mpz_class (added before by addExpectedOutput())
@@ -188,10 +188,10 @@ namespace flopoco{
 		std::map<std::string, mpz_class>          inputs;
 		std::map<std::string, std::vector<mpz_class> >   outputs;
 		std::set<std::string> outputInterval; /**< a set of the outputs that are specified as intervals */ 
-
+		
 		std::string comment;
-		int intId;                      /* integer identifiant of the test case */
-
+		int intId;                      /* integer identifiying the test case -- not sure it is used */
+		TestType type;
 	};
 
 
