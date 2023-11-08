@@ -18,12 +18,17 @@ namespace flopoco {
         for(int w = 0; w < ((squarer)?4:1); w++){
 
         	if(useBooth){
-        		variableTileOffset = 4;
-        		for(int x = variableTileOffset; x <= 8; x++) {
-        			for(int y = variableTileOffset; y <= 8; y++) {
-        				addBaseTile(target, new BaseMultiplierBoothArrayXilinx(x, y), tilingWeights[w]);
-				}
-			}
+        		variableTileOffset = 2;
+        		for(int x = variableTileOffset; x <= mult_wX; x++) {
+                                for(int y = variableTileOffset; y <= 5; y++) {
+                                        addBaseTile(target, new BaseMultiplierBoothArrayXilinx(x, y), tilingWeights[w]);
+                                }
+                        }
+                        for(int x = variableTileOffset; x <= 5; x++) {
+                                for(int y = variableTileOffset; y <= mult_wY; y++) {
+                                        addBaseTile(target, new BaseMultiplierBoothArrayXilinx(x, y), tilingWeights[w]);
+                                }
+                        }
         	}
 
             if(useGenLUT){      //Generalized Xilinx LUT multiplier
