@@ -169,7 +169,7 @@ namespace flopoco{
 
 	void TestBench::generateLineTestFunction(ostream & o) {
 		vector<Signal*> outputSignalVector = op->getOutputList();
-		o << tab << "function testLine(testCounter:integer; expectedOutputS: string(1 to 10000)";
+		o << tab << "function testLine(testCounter:integer; expectedOutputS: string(1 to 10000); expectedOutputSize: integer";
 		for(Signal* s: outputSignalVector){
 			o << "; "<< s->getName() << ": std_logic_vector (" << s->width()-1 << " downto 0)";
 		}
@@ -215,10 +215,11 @@ namespace flopoco{
 			o << tab << tab << tab << tab  << "testSuccess_" << s->getName() << " := (signed(" << s->getName() << ") >= signed(to_stdlogicvector(inf_" << s->getName() << "))) and (signed(" << s->getName() << ") <= signed(to_stdlogicvector(sup_" << s->getName() << ")));" << endl;
 			o << tab << tab << tab << "end if;" << endl;
 			o << tab << tab << "end if;" << endl;
+
 			o << tab << tab << "if testSuccess_" << s->getName() << " = false then" << endl;
-			o << tab << tab << tab << "report(\"Test number \" & integer'image(testCounter) & \", incorrect output for " << s->getName() << ": \" & lf & \" expected values: \" ";
-			// Here I should be able to output the list of values but VHDL sucks
-			o << " & lf & \"          result: \" & str(" << s->getName() << ") ) severity error;" << endl;
+			o << tab << tab << tab << "report(\"Test #\" & integer'image(testCounter) & \", incorrect output for " << s->getName() << ": \" & lf"
+				<< " & \" expected values: \" & expectedOutputS(1 to expectedOutputSize) & lf "; 
+			o << " & \"          result:   \" & str(" << s->getName() << ") ) severity error;" << endl;
 			o << tab << tab << "end if;" << endl;
 			o << tab << tab << "" << endl;
 		}
@@ -324,7 +325,6 @@ namespace flopoco{
 		vhdl << tab << tab << "variable input, expectedOutput : line; " << endl;  // variables to read a line
 		vhdl << tab << tab << "variable testCounter : integer := 1;" << endl;
 		vhdl << tab << tab << "variable errorCounter : integer := 0;" << endl;
-		vhdl << tab << tab << "variable expectedOutputLength : integer;" << endl;
 		vhdl << tab << tab << "variable expectedOutputString : string(1 to 10000);" << endl;
 
 #if 0
@@ -350,9 +350,8 @@ namespace flopoco{
 		vhdl << tab << tab << "while not endfile(inputsFile) loop" << endl;
 		vhdl << tab << tab << tab << "readline(inputsFile, input); -- unused" << endl; // read the input line
 		vhdl << tab << tab << tab << "readline(inputsFile, expectedOutput);" << endl; // read the outputs line
-		vhdl << tab << tab << tab << "expectedOutputLength := expectedOutput'Length;" << endl;
-		vhdl << tab << tab << tab << "expectedOutputString := expectedOutput.all & (expectedOutputLength+1 to 10000 => ' ');" << endl;
-		vhdl << tab << tab << tab << "testSuccess := testLine(testCounter, expectedOutputString";
+		vhdl << tab << tab << tab << "expectedOutputString := expectedOutput.all & (expectedOutput'Length+1 to 10000 => ' ');" << endl;
+		vhdl << tab << tab << tab << "testSuccess := testLine(testCounter, expectedOutputString, expectedOutput'Length";
 		for(Signal* s: outputSignalVector){
 			vhdl << ", " << s->getName();
 			IOorderOutput.push_back(s->getName());
@@ -360,14 +359,6 @@ namespace flopoco{
 		}
 		vhdl << 	");" << endl;
 		vhdl << tab << tab << tab << "if not testSuccess" << " then " << endl;
-		vhdl << tab << tab << tab << tab << tab << "report(\"Test number \" & integer'image(testCounter) & \", incorrect output  \" & lf & "
-				 << "\" expected values:\" & expectedOutputString(1 to expectedOutputLength)";
-#if 0
-		vhdl << " & lf & \"          result: \" & str(" << s->getName() <<") ) severity error;"<< endl;
-
-		vhdl << " & lf & \"          result: \" & str(" << s->getName() <<") ) severity error;"<< endl;
-#endif
-		vhdl << ") severity error;"<< endl;
 		vhdl << tab << tab << tab << tab << tab << "errorCounter := errorCounter + 1; -- incrementing global error counter" << endl;
 		vhdl << tab << tab << tab << "end if;" << endl;
 		vhdl << tab << tab << tab << tab << "testCounter := testCounter + 1; -- incrementing global error counter" << endl;
