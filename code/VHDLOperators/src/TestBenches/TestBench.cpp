@@ -200,7 +200,14 @@ namespace flopoco{
 			o << tab <<tab << tab << "for i in 1 to possibilityNumber loop" << endl;
 			o << tab << tab << tab << tab << "read(expectedOutput, expected_" << s->getName() << ");" << endl;
 			//			o << tab << tab << tab << tab << "errorMessage := errorMessage & \" \" & expected_" << s->getName()<< ";" << endl;
-			o << tab << tab << tab << tab << "if " << s->getName() << " = to_stdlogicvector(expected_" << s->getName() << ") then" << endl;
+			if(s->isFP()){
+				o << tab << tab << tab << tab << "if fp_equal(" << s->getName() << ", to_stdlogicvector(expected_" << s->getName() << ")) then" << endl;
+			}
+			else if (s->isIEEE()) {
+				o << tab << tab << tab << tab << "if fp_equal_ieee(" << s->getName() << ", to_stdlogicvector(expected_" << s->getName() << "), " <<  s->wE() << ", " <<  s->wF() << ") then" << endl;
+			} else {// Fixed point or whatever, just test equality
+				o << tab << tab << tab << tab << "if " << s->getName() << " = to_stdlogicvector(expected_" << s->getName() << ") then" << endl;
+			}
 			o << tab << tab << tab << tab << tab << "testSuccess_" << s->getName() << " := true;"  << endl;
 			o << tab << tab << tab << tab << "end if;" << endl;
 			o << tab << tab << tab << tab << "end loop;" << endl;
