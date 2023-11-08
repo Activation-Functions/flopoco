@@ -40,9 +40,9 @@ double BaseMultiplierBoothArrayXilinx::getLUTCost(int x_anchor, int y_anchor, in
 //cost function reconstructed from synthesis experiments
 int BaseMultiplierBoothArrayXilinx::ownLUTCost(int x_anchor, int y_anchor, int wMultX, int wMultY, bool signedIO) {
 	int luts = 0;
-	if(signedIO && ((wMultX-x_anchor-(int)wX())== 0)){	// the y-input is singed
+	if(signedIO && ((wMultY-y_anchor-(int)wY())== 0)){	// the x-input is singed
 		luts =((wY()+1)/2)*(1+wX());
-	} else {						// the y-input is unsinged
+	} else {						// the x-input is unsinged
 		luts = ((wY()+2)/2)*(1+wX())-(wY()+1)%2;
 		if((wY() == 1) && !signedIO){			//In the unsigned case with wY=1 one LUT less is required
 			luts--;
