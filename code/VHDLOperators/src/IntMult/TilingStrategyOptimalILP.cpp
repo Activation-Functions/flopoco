@@ -232,6 +232,7 @@ void TilingStrategyOptimalILP::constructProblem()
                         if(squarer && xs < ys) continue;                 //within squarers tiles should not be placed below the diagonal
                         if(tiles[s]->shape_contribution(x, y, xs, ys, wX, wY, signedIO, squarer)){
                             if((wOut < (int)prodWidth) && ((xs+tiles[s]->wX()+ys+tiles[s]->wY()-2) < ((int)prodWidth-wOut-guardBits))) break;
+                            if(signedIO && (wX < xs+(int)tiles[s]->wX() || wY < ys+(int)tiles[s]->wY()) ) break;                      //Avoid considering protruding cases in signed case, tiling is valid without, but it would require compensation in c.tree
                             if(signedIO && ((wX == xs+(int)tiles[s]->wX() && !tiles[s]->signSupX()) || (wY == ys+(int)tiles[s]->wY() && !tiles[s]->signSupY()) )) break; //Avoid placing tiles without signed support at the bottom and left |_ edge of the area to be tiled.
                             if(tiles[s]->shape_utilisation(xs, ys, wX, wY, signedIO) >=  occupation_threshold_ ){
                                 if(solve_Vars[s][xs+x_neg][ys+y_neg] == nullptr){
