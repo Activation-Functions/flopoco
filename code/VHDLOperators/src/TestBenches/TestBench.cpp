@@ -83,14 +83,10 @@ namespace flopoco{
 		//  portmap for the inputs and outputs
 		for(int i=0; i < op->getIOList().size(); i++){
 			Signal* s = op->getIOListSignal(i);
-<<<<<<< HEAD
 			// Instance does not declare the output signals anymore, need to do it here
 			declare(s->getName(), s->width(), s->isBus());
-			inPortMap (s->getName(), s->getName());
-=======
 		
 			if(s->type() == Signal::in) {
-				declare(s->getName(), s->width(), s->isBus());
 				inPortMap (s->getName(), s->getName());
 			}
 			if(s->type() == Signal::out) {
@@ -103,7 +99,6 @@ namespace flopoco{
 				}
 				
 			}
->>>>>>> 86194a86 (refactoring, currently cleaning up code but adding bugs)
 		}
 
 
@@ -154,7 +149,7 @@ namespace flopoco{
 			}				
 		}
 		// code for inputs and outputs
-		for(int i=0; i < op->getIOListSize(); i++){
+		for(int i=0; i < op->getIOList().size(); i++){
 			Signal* s = op->getIOListSignal(i);
 			if (i != 0 || op->isSequential())
 				vhdl << "," << endl <<  tab << tab << "           ";
