@@ -763,6 +763,28 @@ namespace flopoco
 	// TODO there is a lot of redundancy in the way global options are managed: look for all the occurences of "dependencyGraph" in this file
 	string UserInterface::getFullDoc(){
 		ostringstream s;
+
+		s <<  COLOR_BOLD << "List of operators with command-line interface"<< COLOR_NORMAL << " (a few more are hidden inside FloPoCo)" <<endl;
+
+		// The following is an inefficient double loop to avoid duplicating the data structure: nobody needs efficiency here
+		for(auto catIt: UserInterface::categories) {
+			string cat =  catIt.first;
+			string catDesc =  catIt.second;
+			s <<COLOR_BOLD_MAGENTA_NORMAL << "========"<< catDesc << "========"<< COLOR_NORMAL << endl;
+			
+			for(auto f: factRegistry.getPublicRegistry()) {
+				if(cat == f->m_category)
+					s << f->getFullDoc();
+			}
+		}
+
+		// Placing the usage of flopoco below the list of operators
+
+		s <<endl;
+		s <<  COLOR_BOLD << "The list of operators with command-line interface is above"<< COLOR_NORMAL << " (a few more are hidden inside FloPoCo)" <<endl;
+		s <<endl;
+
+
 		s << "Usage: " << COLOR_BOLD << "flopoco  [options]  OperatorName parameters  [OperatorName parameters]..." << COLOR_NORMAL << endl;
 		s << "  Both options and parameters are lists of " << COLOR_BOLD << "name=value" << COLOR_NORMAL << " pairs (with case-insensitive name)" << endl;
 		s << COLOR_BLUE_NORMAL<< "Example: " << COLOR_NORMAL << "flopoco  frequency=300 target=Virtex5   FPExp  wE=8 wF=23 name=SinglePrecisionFPExp" << endl;
@@ -792,19 +814,7 @@ namespace flopoco
 		s << "  " << COLOR_BOLD << "nameSignalByCycle" << COLOR_NORMAL << "=<0|1>:when pipelining, names the delayed signals by their cycle name instead of their delay. This helps with clock enable and declaring group path for synthesis (default off) " << endl;
 		s << "  " << COLOR_BOLD << "clockEnable" << COLOR_NORMAL << "=<0|1>:when pipelining, adds clock enable signals that enables the different pipeline stages to progress. In testbenches, these pipelining operations are not tested (default off) " << endl;
 		s << "Sticky options apply to the rest of the command line, unless changed again" <<endl;
-		s <<endl;
-		s <<  COLOR_BOLD << "List of operators with command-line interface"<< COLOR_NORMAL << " (a few more are hidden inside FloPoCo)" <<endl;
-		// The following is an inefficient double loop to avoid duplicating the data structure: nobody needs efficiency here
-		for(auto catIt: UserInterface::categories) {
-			string cat =  catIt.first;
-			string catDesc =  catIt.second;
-			s <<COLOR_BOLD_MAGENTA_NORMAL << "========"<< catDesc << "========"<< COLOR_NORMAL << endl;
-			
-			for(auto f: factRegistry.getPublicRegistry()) {
-				if(cat == f->m_category)
-					s << f->getFullDoc();
-			}
-		}
+		
 		return s.str();
 	}
 
