@@ -2332,7 +2332,7 @@ namespace flopoco{
 							
 
 							// Deal with clock enable
-							if (isSequential() && hasClockEnable() && lhsName == "ce_fixme") {
+							if (isSequential() && hasClockEnable() && lhsName == "ce_fixme" && subop->getMinInputCycle() != subop->getMaxOutputCycle() ) {
 								newStr << "ce_" << subop->getMinInputCycle() +1 << " => ce_" << subop->getMinInputCycle() +1 << "," << endl;
 								for (int stage = subop->getMinInputCycle() +1; stage < subop->getMaxOutputCycle(); stage++ ) {
 									newStr << tab << tab << "           ce_" << stage+1 << "=> ce_" << stage+1 << "," << endl;
@@ -2425,12 +2425,16 @@ namespace flopoco{
 									if (nameSignalByCycle()) {
 										if (!(subopInput->type() == Signal::in && subopOutput->getCycle() == subopInput->getCycle())) {
 											newStr << "_c" << vhdlize(subopOutput->getCycle());
-											subopInput -> updateLifeSpan(deltaCycle);
+											if (subopInput->type() != Signal::in) {
+												subopInput -> updateLifeSpan(deltaCycle);
+											}
 										}
 									} else {
 										if( deltaCycle> 0) {
 											newStr << "_d" << vhdlize(deltaCycle);
-											subopInput -> updateLifeSpan(deltaCycle);
+											if (subopOutput->type() != Signal::in) {
+												subopInput -> updateLifeSpan(deltaCycle);
+											}
 										}
 									}
 								}
