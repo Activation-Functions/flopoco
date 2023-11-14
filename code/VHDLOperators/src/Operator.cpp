@@ -2332,12 +2332,14 @@ namespace flopoco{
 							
 
 							// Deal with clock enable
-							if (isSequential() && hasClockEnable() && lhsName == "ce_fixme" && subop->getMinInputCycle() != subop->getMaxOutputCycle() ) {
-								newStr << "ce_" << subop->getMinInputCycle() +1 << " => ce_" << subop->getMinInputCycle() +1 << "," << endl;
-								for (int stage = subop->getMinInputCycle() +1; stage < subop->getMaxOutputCycle(); stage++ ) {
-									newStr << tab << tab << "           ce_" << stage+1 << "=> ce_" << stage+1 << "," << endl;
+							if (isSequential() && hasClockEnable() && lhsName == "ce_fixme") {
+								if (subop->getMinInputCycle() != subop->getMaxOutputCycle() ) {
+									newStr << "ce_" << subop->getMinInputCycle() +1 << " => ce_" << subop->getMinInputCycle() +1 << "," << endl;
+									for (int stage = subop->getMinInputCycle() +1; stage < subop->getMaxOutputCycle(); stage++ ) {
+										newStr << tab << tab << "           ce_" << stage+1 << "=> ce_" << stage+1 << "," << endl;
+									}
+									newStr << tab << tab << "           ";
 								}
-								newStr << tab << tab << "           ";
 								tmpCurrentPos = workStr.find("?", tmpNextPos+2);
 								continue;
 							}
