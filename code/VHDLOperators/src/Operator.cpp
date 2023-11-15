@@ -2050,9 +2050,9 @@ namespace flopoco{
 		for(uint64_t testIndex=0; testIndex<numberOfTests; testIndex++) {
 			TestCase* tc = new TestCase(this);
 			// and inside we just break out the loop index into bit vectors corresponding to the inputs
-			uint64_t t = testIndex;
+      mpz_class t = mpz_class((unsigned long int) testIndex);
 			for (int i = 0; i < numberOfInputs; i++) {
-				uint64_t mask = (((uint64_t)1) << inputWidth[i]) -1;
+        mpz_class mask = (mpz_class(1) << inputWidth[i]) -1;
 				tc->addInput(inputName[i], t & mask);
 				t = t>>inputWidth[i];
 			}
