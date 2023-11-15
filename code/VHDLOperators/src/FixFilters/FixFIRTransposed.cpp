@@ -324,17 +324,39 @@ namespace flopoco {
 
 
 //    if(currentIndex > noOfTaps) //ignore the first noOfTaps cycles as registers has to be filled with something useful
-		  tc->addExpectedOutput ("Y", signedToBitVector(y, wOut));
+
+//#define ENUMERATE_ALL_VALUES
+#ifdef ENUMERATE_ALL_VALUES //the old interface
+#ifdef DEBUG
+    cout << "!!! the old interface !!!" << endl;
+#endif
+    tc->addExpectedOutput ("Y", signedToBitVector(y, wOut));
 
     if(epsilon > 0)
     {
       //Probably not the most efficient way for large epsilons...
       for(int e=1; e <= epsilon; e++)
       {
-        tc->addExpectedOutput("Y", y+e);
-        tc->addExpectedOutput("Y", y-e);
+        tc->addExpectedOutput("Y", signedToBitVector(y+e, wOut));
+        tc->addExpectedOutput("Y", signedToBitVector(y-e, wOut));
       }
     }
+#else
+#ifdef DEBUG
+    cout << "!!! the new interface !!!" << endl;
+#endif
+    if(epsilon > 0)
+    {
+      tc->addExpectedOutputInterval("Y",  y - epsilon, y + epsilon, TestCase::signed_interval); // <- this is one that should work
+//      tc->addExpectedOutputInterval("Y", signedToBitVector(y - epsilon, wOut), signedToBitVector(y + epsilon, wOut), TestCase::signed_interval);
+//      tc->addExpectedOutputInterval("Y", signedToBitVector(y - epsilon, wOut), signedToBitVector(y + epsilon, wOut), TestCase::unsigned_interval);
+    }
+    else
+    {
+      tc->addExpectedOutput ("Y", signedToBitVector(y, wOut));
+    }
+#endif
+
 
     currentIndex++;
 
