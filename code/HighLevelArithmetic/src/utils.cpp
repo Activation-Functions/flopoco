@@ -53,7 +53,7 @@ namespace flopoco{
 		char bit;
 
 		if(x<0) {
-			cerr<<"Error: unsigned_binary: Positive number expected, got x=" << x.get_d() << endl;
+			cerr<<"Error: unsignedBinary: Positive number expected, got x=" << x.get_d() << endl;
 			exit(EXIT_FAILURE);
 		}
 		po2 = ((mpz_class) 1)<<size;

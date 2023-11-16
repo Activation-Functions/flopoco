@@ -343,7 +343,7 @@ namespace flopoco {
     }
 #else
 #ifdef DEBUG
-    cout << "!!! the new interface !!!" << endl;
+    cout << "!!! the new interface !!! [" << y-epsilon << " " << y+epsilon<< "]" <<endl;
 #endif
     if(epsilon > 0)
     {

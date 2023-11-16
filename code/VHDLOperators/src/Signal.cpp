@@ -657,21 +657,14 @@ namespace flopoco{
 
 	std::string Signal::valueToVHDL(mpz_class v, bool quot){
 		std::string r;
-
-		/* Get base 2 representation */
-		r = v.get_str(2);
-
-		/* Some checks */
-		if ((int) r.size() > width())	{
-			std::ostringstream o;
-			o << "Error in " <<  __FILE__ << "@" << __LINE__ << ": value (" << r << ") is larger than signal " << getName() << " (of width " << width() << ")";
-			throw o.str();
+		if(v<0) {// should really be if(isSigned_){
+			r=unsignedBinary(   signedToBitVector(v, width()),   width());
 		}
-
-		/* Do padding */
-		while ((int)r.size() < width())
-			r = "0" + r;
-
+		else {
+			r=unsignedBinary(v, width());			
+		}
+		// cerr << "valueToVHDL("<<v<<") = " << r << endl; 
+				 		
 		/* Put apostrophe / quot */
 		if (!quot) return r;
 		if ((width() > 1) || ( isBus() ))
