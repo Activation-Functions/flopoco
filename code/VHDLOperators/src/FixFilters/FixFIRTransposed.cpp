@@ -109,7 +109,7 @@ namespace flopoco {
       stringstream sigName;
       sigName << "X_mult_" << c;
       outPortMaps << "R_c" << c << "=>" << declare(sigName.str(),wC[c]);
-//      getSignalByName(sigName.str())->setIsSigned(); //set output to signed
+      getSignalByName(sigName.str())->setIsSigned(); //set output to signed
       if(i++ < coeffAbsSet.size() - 1)
         outPortMaps << ",";
     }
