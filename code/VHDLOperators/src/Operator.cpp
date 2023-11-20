@@ -2443,10 +2443,14 @@ namespace flopoco{
 								else if (isSequential() && nameSignalByCycle() && rhsIsSignal) {
 									if (subop->getSignalByName(lhsName)->type() == Signal::in) {
 										Signal* subopInput = getSignalByName(rhsName);
-										newStr << "_c" << vhdlize(subopInput->getCycle());
+										if (subopInput->type() != Signal::in) {
+											newStr << "_c" << vhdlize(subopInput->getCycle());
+										}
 									} else if (subop->getSignalByName(lhsName)->type() == Signal::out) {
 										Signal* subopOutput = getSignalByName(rhsName);
-										newStr << "_c" << vhdlize(subopOutput->getCycle());
+										if (subopOutput->type() != Signal::out) {
+											newStr << "_c" << vhdlize(subopOutput->getCycle());
+										}
 									}
 								}
 							}
