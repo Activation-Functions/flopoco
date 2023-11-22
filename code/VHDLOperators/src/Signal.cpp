@@ -659,6 +659,7 @@ namespace flopoco{
 		std::string r;
 		if(v<0) {// should really be if(isSigned_){
 			r=unsignedBinary(   signedToBitVector(v, width()),   width());
+		// There is some redundancy with utils::signedFixPointNumber
 		}
 		else {
 			r=unsignedBinary(v, width());			

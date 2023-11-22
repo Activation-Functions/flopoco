@@ -56,6 +56,7 @@ namespace flopoco{
 			cerr<<"Error: unsignedBinary: Positive number expected, got x=" << x.get_d() << endl;
 			exit(EXIT_FAILURE);
 		}
+		// What, no sanity check that x<= 2^Size? TODO add this test and see if it breaks anything. 
 		po2 = ((mpz_class) 1)<<size;
 		number=x;
 
