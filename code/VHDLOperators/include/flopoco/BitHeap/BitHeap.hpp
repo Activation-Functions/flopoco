@@ -407,6 +407,8 @@ enum BitType : unsigned;
 		int height;                                 /**< The current maximum height of any column of the bitheap */
 		string name;                                /**< The name of the bitheap */
 		unsigned final_add_height = 2;
+        int getStagesPerCycle();
+        int getNumberOfStages();
 
 	private:
 		Operator* op;
@@ -436,7 +438,8 @@ enum BitType : unsigned;
 		// For error reporting to work
 		string srcFileName;
 		string uniqueName_;
-	};
+
+    };
 
 
 }

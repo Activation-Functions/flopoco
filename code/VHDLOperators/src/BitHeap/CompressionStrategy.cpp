@@ -1513,5 +1513,12 @@ namespace flopoco{
         result_file.close();
     }
 
+    int CompressionStrategy::getStagesPerCycle() {
+        return stagesPerCycle;
+    }
+
+    int CompressionStrategy::getNumberOfStages() {
+        return solution.getNumberOfStages();
+    }
 
 }

@@ -42,7 +42,8 @@ class BitheapPlotter;
 		 * Start compressing the bitheap
 		 */
 		void startCompression();
-
+        int getStagesPerCycle();
+        int getNumberOfStages();
 
 	protected:
 
@@ -278,8 +279,10 @@ class BitheapPlotter;
 		string srcFileName;
 		string uniqueName_;
 
+
 	private:
 	    using CompressorType = BasicCompressor::CompressorType;
+
 
 	};
 }

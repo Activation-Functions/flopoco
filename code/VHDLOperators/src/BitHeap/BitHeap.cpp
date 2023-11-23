@@ -975,6 +975,13 @@ namespace flopoco {
 
 	}
 
+    int BitHeap::getStagesPerCycle() {
+        return compressionStrategy->getStagesPerCycle();
+    }
+
+    int BitHeap::getNumberOfStages() {
+        return compressionStrategy->getNumberOfStages();
+    }
 
 
 } /* namespace flopoco */
