@@ -66,10 +66,6 @@ namespace flopoco
 		/** generates the code to the default file */
 		void outputVHDL();
 
-		/** generates a report for operators in globalOpList, and all their subcomponents */
-		void finalReport(std::ostream & s);
-
-
 		public:
 		////////////////// Helper parsing functions to be used in each Operator parser ///////////////////////////////
 		void parseBoolean(std::vector<std::string> &args, std::string key, bool* variable, bool genericOption=false);
@@ -80,6 +76,9 @@ namespace flopoco
 		void parseString(std::vector<std::string> &args, std::string key, std::string* variable, bool genericOption=false);
 		void parseColonSeparatedStringList(std::vector<std::string> &args, std::string key, std::vector<std::string>* variable, bool genericOption=false);
 		void parseColonSeparatedIntList(std::vector<std::string> &args, std::string key, std::vector<int>* variable, bool genericOption=false);
+
+        /** generates a report for operators in globalOpList, and all their subcomponents */
+        void finalReport(std::ostream & s);
 
 		/** Provide a std::string with the full documentation.*/
 		std::string getFullDoc();
