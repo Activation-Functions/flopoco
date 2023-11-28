@@ -25,7 +25,7 @@ namespace flopoco{
 		 *						If rescale=true, all the coefficients are rescaled by 1/sum(|coeffs|).
 		 * This way the output is also in [-1,1], output size is equal to input size, and the output signal makes full use of the output range.
 		*/
-    FixFIRTransposed(OperatorPtr parentOp, Target* target, int wIn, vector<int64_t> coeff, string adder_graph="", const string& graph_truncations="", const string& sa_truncations="", const int epsilon=0);
+    FixFIRTransposed(OperatorPtr parentOp, Target* target, int wIn, int wOut, vector<int64_t> coeff, string adder_graph="", const string& graph_truncations="", const string& sa_truncations="", const int epsilon=0);
 
     void parseSAtruncations(const string& sa_truncations, vector<vector<int>>& truncations);
 
