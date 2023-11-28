@@ -17,7 +17,7 @@ using namespace std;
 
 namespace flopoco {
 
-  FixFIRTransposed::FixFIRTransposed(OperatorPtr parentOp, Target* target, int wIn, vector<int64_t> coeffs, string adder_graph, const string& graph_truncations, const string& sa_truncations, const int epsilon): Operator(parentOp, target), wIn(wIn), coeffs(coeffs), epsilon(epsilon)
+  FixFIRTransposed::FixFIRTransposed(OperatorPtr parentOp, Target* target, int wIn, int wOut, vector<int64_t> coeffs, string adder_graph, const string& graph_truncations, const string& sa_truncations, const int epsilon): Operator(parentOp, target), wIn(wIn), wOut(wOut), coeffs(coeffs), epsilon(epsilon)
 	{
     useNumericStd();
     srcFileName="FixFIRTransposed";
@@ -130,8 +130,13 @@ namespace flopoco {
       REPORT(DETAIL, "Word size of strucural adder " << i << " is " << wS[i] << " bits (range is " << -sum << " x 2^(wIn-1) to " << sum << " x (2^(wIn-1)-1)");
     }
 
-    //output word size is identical to the one of the last structural adder:
-    wOut=wS[noOfTaps-1];
+
+    int wOutFull=wS[noOfTaps-1]; //full precision output word size is identical to the one of the last structural adder:
+    if(wOut == -1) //set output word size if not set by the user (default is -1)
+    {
+      wOut=wOutFull;
+    }
+    REPORT(DETAIL, "Setting output word size to " << wOut);
     addOutput("Y",wOut);
 
     //create the structural adders:
@@ -201,7 +206,14 @@ namespace flopoco {
                << ";" << endl;
         }
       }
-      vhdl << tab << "Y <= s" << noOfTaps-1 << ";" << endl; //this is the very trivial case of a 1-tap filter
+      if(wOut == wOutFull)
+      {
+        vhdl << tab << "Y <= s" << noOfTaps-1 << ";" << endl; //the output of the filter
+      }
+      else
+      {
+        vhdl << tab << "Y <= std_logic_vector(signed(s" << noOfTaps-1 << "(" << wS[noOfTaps-1]-1 << " downto " << wS[noOfTaps-1]-wOut << ")) + signed(s" << noOfTaps-1 << "(" << wS[noOfTaps-1]-wOut-1 << ")))" << ";" << endl; //the output of the filter
+      }
     }
 
     // initialize stuff for emulate
@@ -364,8 +376,12 @@ namespace flopoco {
 	};
 
 	OperatorPtr FixFIRTransposed::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
-		int wIn;
-		ui.parseInt(args, "wIn", &wIn);
+    int wIn;
+    ui.parseInt(args, "wIn", &wIn);
+
+    int wOut;
+    ui.parseInt(args, "wOut", &wOut);
+
 		vector<string> coeffs;
 		ui.parseColonSeparatedStringList(args, "coeff", &coeffs);
 
@@ -395,7 +411,7 @@ namespace flopoco {
     int epsilon;
     ui.parseInt(args, "epsilon", &epsilon);
 
-    OperatorPtr tmpOp = new FixFIRTransposed(parentOp, target, wIn, coeffsInt, adder_graph, graph_truncations, sa_truncations, epsilon);
+    OperatorPtr tmpOp = new FixFIRTransposed(parentOp, target, wIn, wOut, coeffsInt, adder_graph, graph_truncations, sa_truncations, epsilon);
 
 		return tmpOp;
 	}
@@ -407,6 +423,7 @@ namespace flopoco {
 	    "FiltersEtc", // categories
 	    "",
 	    "wIn(int): input word size in bits;\
+                  wOut(int)=-1: output word size in bits, -1 means automatic determination without truncation;\
                  coeff(string): colon-separated list of integer coefficients. Example: coeff=\"123:321:123\";\
                  graph(string)=\"\": Realization string of the adder graph;\
                  epsilon(int)=0: Allowable error for truncated constant multipliers (currently only used to check error for given truncations in testbench); \
