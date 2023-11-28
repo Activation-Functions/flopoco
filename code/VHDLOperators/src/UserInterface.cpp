@@ -773,7 +773,10 @@ namespace flopoco
 			s <<COLOR_BOLD_MAGENTA_NORMAL << "========"<< catDesc << "========"<< COLOR_NORMAL << endl;
 			
 			for(auto f: factRegistry.getPublicRegistry()) {
-				if(cat == f->m_category)
+				string fcatfull=f->m_category;
+				size_t hidden = fcatfull.find("HIDDEN");
+				size_t catfound = fcatfull.find(cat);
+				if (hidden==string::npos && catfound!=string::npos) 
 					s << f->getFullDoc();
 			}
 		}
