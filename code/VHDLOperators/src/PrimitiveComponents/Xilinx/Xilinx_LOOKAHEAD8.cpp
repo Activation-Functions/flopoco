@@ -104,7 +104,7 @@ namespace flopoco {
   "XilinxLOOKAHEAD8", // name
 	"Provides the Xilinx LOOKAHEAD8 primitive introduced by Versal.", // description,
 									  // string
-	"Primitives", // category, from the list defined in UserInterface.cpp
+	"Primitives(HIDDEN)", // category, from the list defined in UserInterface.cpp
 	"",
 	"lookb(string)=FALSE: lookahead generic \"bool\" param (Values: \"TRUE\" | \"FALSE\");\
           lookd(string)=FALSE: lookahead generic \"bool\" param (Values: \"TRUE\" | \"FALSE\");\
