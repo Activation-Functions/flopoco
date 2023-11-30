@@ -131,7 +131,7 @@ namespace flopoco {
     }
 
 
-    int wOutFull=wS[noOfTaps-1]; //full precision output word size is identical to the one of the last structural adder:
+    wOutFull=wS[noOfTaps-1]; //full precision output word size is identical to the one of the last structural adder:
     if(wOut == -1) //set output word size if not set by the user (default is -1)
     {
       wOut=wOutFull;
@@ -212,7 +212,7 @@ namespace flopoco {
       }
       else
       {
-        vhdl << tab << "Y <= std_logic_vector(signed(s" << noOfTaps-1 << "(" << wS[noOfTaps-1]-1 << " downto " << wS[noOfTaps-1]-wOut << ")) + signed(s" << noOfTaps-1 << "(" << wS[noOfTaps-1]-wOut-1 << ")))" << ";" << endl; //the output of the filter
+        vhdl << tab << "Y <= std_logic_vector(signed(s" << noOfTaps-1 << "(" << wS[noOfTaps-1]-1 << " downto " << wS[noOfTaps-1]-wOut << ")) + signed(\"0\" & s" << noOfTaps-1 << "(" << wS[noOfTaps-1]-wOut-1 << " downto " << wS[noOfTaps-1]-wOut-1 << ")))" << ";" << endl; //the output of the filter
       }
     }
 
@@ -332,7 +332,7 @@ namespace flopoco {
       y = y + inputs[i] * c;
     }
 #ifdef DEBUG
-    cerr << ": y = " << y << endl;
+    cerr << ": y = " << y;
 #endif
 
 
@@ -341,7 +341,7 @@ namespace flopoco {
 //#define ENUMERATE_ALL_VALUES
 #ifdef ENUMERATE_ALL_VALUES //the old interface
 #ifdef DEBUG
-    cout << "!!! the old interface !!!" << endl;
+//    cout << "!!! the old interface !!!" << endl;
 #endif
     tc->addExpectedOutput ("Y", signedToBitVector(y, wOut));
 
@@ -356,8 +356,16 @@ namespace flopoco {
     }
 #else
 #ifdef DEBUG
-    cout << "!!! the new interface !!! [" << y-epsilon << " " << y+epsilon<< "]" <<endl;
+//    cout << "!!! the new interface !!! [" << y-epsilon << " " << y+epsilon<< "]" <<endl;
 #endif
+    if(wOut != wOutFull)
+    {
+      y = y >> (wOutFull-wOut);
+#ifdef DEBUG
+      cerr << ", y (truncated) = " << y;
+#endif
+
+    }
     if(epsilon > 0)
     {
       tc->addExpectedOutputInterval("Y",  y - epsilon, y + epsilon, TestCase::signed_interval); // <- this is one that should work
@@ -367,9 +375,17 @@ namespace flopoco {
     else
     {
       tc->addExpectedOutput ("Y", signedToBitVector(y, wOut));
+      if(wOut != wOutFull)
+      {
+        //this is the case of faithful rounding, add y+1 as well
+        tc->addExpectedOutput ("Y", signedToBitVector(y+1, wOut));
+      }
     }
 #endif
 
+#ifdef DEBUG
+    cerr << endl;
+#endif
 
     currentIndex++;
 

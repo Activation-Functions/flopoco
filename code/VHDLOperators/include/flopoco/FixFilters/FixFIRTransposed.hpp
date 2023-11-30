@@ -40,6 +40,7 @@ namespace flopoco{
   private:
     int wIn;	/**< input word size of the filter */
     int wOut; /**< output word size of the filter */
+    int wOutFull; /**< full precision output word size of the filter (if no truncation is performed) */
     int noOfTaps;								/**< number of taps */
     vector<int64_t> coeffs;
     vector<mpz_class> xHistory; 			// history of x used by emulate
