@@ -135,6 +135,7 @@ namespace flopoco {
     if(wOut == -1) //set output word size if not set by the user (default is -1)
     {
       wOut=wOutFull;
+      this->wOut=wOutFull;
     }
     REPORT(DETAIL, "Setting output word size to " << wOut);
     addOutput("Y",wOut);
@@ -309,7 +310,7 @@ namespace flopoco {
     int currentIndexMod=currentIndex%noOfTaps; //  circular buffer to store the inputs
     xHistory[currentIndexMod] = x;
 
-//#define DEBUG
+#define DEBUG
 #ifdef DEBUG
     cerr << "emulate inputs (currentIndexMod=" << currentIndexMod << ")=";
 #endif
