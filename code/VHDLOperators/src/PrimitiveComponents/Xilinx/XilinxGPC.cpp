@@ -469,7 +469,7 @@ const OperatorDescription<XilinxGPC> op_descriptor<XilinxGPC> {
                        Available GPC sizes are: \
                        (6,0,6;5), (6,0,7;5), (6,1,5;5), (6,2,3;5) \
                        (1,3,2,5;5), (1,4,1,5;5), (1,4,0,6;5), (1,4,0,7;5), (2,1,1,7;5)",
-    "Primitives", // categories
+    "Primitives(HIDDEN)", // categories
     "",
     "columnHeights(string): comma separated list of heights for the columns of the compressor, \
 in decreasing order of the weight. For example, columnHeights=\"6,0,6\" produces a (6,0,6:5) GPC",
