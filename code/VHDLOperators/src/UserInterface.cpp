@@ -64,6 +64,7 @@ namespace flopoco
 
 		depGraphDrawing = "no";
 		generateFigures = false;
+		showHiddenOperators = false;
 		pipelineActive_ = true;
 		
 	}
@@ -223,6 +224,7 @@ namespace flopoco
 		parseBoolean(args, "useHardMult", &useHardMult, true);
 		parseBoolean(args, "registerLargeTables", &registerLargeTables, true);
 		parseBoolean(args, "tableCompression", &tableCompression, true);
+		parseBoolean(args, "showHiddenOperators", &showHiddenOperators, true);
 		parseBoolean(args, "generateFigures", &generateFigures, true);
 		parseBoolean(args, "useTargetOptimizations", &useTargetOptimizations, true);
 		parseString(args, "ilpSolver", &ilpSolver, true); // sticky option
@@ -776,8 +778,9 @@ namespace flopoco
 				string fcatfull=f->m_category;
 				size_t hidden = fcatfull.find("HIDDEN");
 				size_t catfound = fcatfull.find(cat);
-				if (hidden==string::npos && catfound!=string::npos) 
+				if (catfound!=string::npos && (hidden==string::npos || showHiddenOperators)) { 
 					s << f->getFullDoc();
+				}
 			}
 		}
 
@@ -812,6 +815,7 @@ namespace flopoco
 		s << "  " << COLOR_BOLD << "tiling" << COLOR_NORMAL << "=<heuristicBasicTiling,optimal,heuristicGreedyTiling,heuristicXGreedyTiling,heuristicBeamSearchTiling,csv>:        tiling method (default=heuristicBeamSearchTiling)" << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
         s << "  " << COLOR_BOLD << "hardMultThreshold" << COLOR_NORMAL << "=<float>: unused hard mult threshold (O..1, default 0.7) " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
 		s << "  " << COLOR_BOLD << "verbose" << COLOR_NORMAL << "=<int>:        verbosity level (0-4, default=1)" << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
+		s << "  " << COLOR_BOLD << "showHiddeOperators" << COLOR_NORMAL << "=<0|1>: show operators that are for internal use and normally hidden from the command line (default=0)" <<endl;
 		s << "  " << COLOR_BOLD << "generateFigures" << COLOR_NORMAL << "=<0|1>:generate graphics in SVG or LaTeX for some operators (default off) " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL << endl;
 		s << "  " << COLOR_BOLD << "dependencyGraph" << COLOR_NORMAL << "=<no|compact|full>: generate data dependence drawing of the Operator (default no) " << COLOR_RED_NORMAL << COLOR_NORMAL<<endl;
 		s << "  " << COLOR_BOLD << "nameSignalByCycle" << COLOR_NORMAL << "=<0|1>:when pipelining, names the delayed signals by their cycle name instead of their delay. This helps with clock enable and declaring group path for synthesis (default off) " << endl;

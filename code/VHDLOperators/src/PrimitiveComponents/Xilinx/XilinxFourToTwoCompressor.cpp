@@ -234,7 +234,7 @@ namespace flopoco{
 	"XilinxFourToTwoCompressor",				   // name
 	"An efficient 4:2 compressor build of xilinx primitives.", // description,
 								   // string
-	"Primitives", // category, from the list defined in UserInterface.cpp
+	"Primitives(HIDDEN)", // category, from the list defined in UserInterface.cpp
 	"",
 	"wOut(int): The wordsize of the 4:2 compressor;\
                             useLastColumn(bool)=0: if the 4:2 compressor should additonally compress two bits in the last column, this should be set to true;",
