@@ -60,7 +60,7 @@ namespace flopoco {
 	{
 
 		ostringstream name;
-		name << "IntConstMultShiftAddNew_" << wIn;
+		name << "IntConstMultShiftAdd_" << wIn;
 		setNameWithFreqAndUID(name.str());
 
     if(adder_graph_str.empty()) return; //in case the realization string is not defined, don't further process it.

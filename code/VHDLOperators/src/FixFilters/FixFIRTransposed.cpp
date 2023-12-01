@@ -29,7 +29,8 @@ namespace flopoco {
     set<int64_t> coeffAbsSet;
     for(int i=0; i < noOfTaps; i++)
     {
-      coeffAbsSet.insert(abs(coeffs[i]));
+      if(coeffs[i] != 0)
+        coeffAbsSet.insert(abs(coeffs[i]));
     }
 
     if(adder_graph.compare("\"\"") == 0)
@@ -149,7 +150,16 @@ namespace flopoco {
     {
       //the first structural adder gets a special treatment:
       //Here, an adder could potentially saved when considering negative coefficients in the adder graph
-      vhdl << endl << tab << declare("s0",wS[0]) << " <= std_logic_vector(" << ((coeffs[0] < 0) ? "-" : "") << "resize(signed(X_mult_" << -coeffs[0] << ")," << wS[0] << "));" << endl;
+      vhdl << endl << tab << declare("s0",wS[0]) << " <= ";
+      if(coeffs[0] == 0)
+      {
+        vhdl << "(others => '0');" << endl;
+      }
+      else
+      {
+        vhdl << "std_logic_vector(" << ((coeffs[0] < 0) ? "-" : "") << "resize(signed(X_mult_" << abs(coeffs[0]) << ")," << wS[0] << "));" << endl;
+      }
+
 
       for(int i=1; i < noOfTaps; i++)
       {
@@ -191,12 +201,19 @@ namespace flopoco {
              << "s" + to_string(i-1) << "_delayed"
              << (wSATruncatedLeft > 0 ? "(" + to_string(wS[i-1]-1) + " downto " + to_string(wSATruncatedLeft) + ")" : "")
              << ")," << wS[i] - savedFAs
-             << ") "
-             << (coeffs[i] < 0 ? "-" : "+") << " "
-             << "resize(signed("
-             << "X_mult_" << abs(coeffs[i])
-             << (wSATruncatedRight > 0 ? "(" + to_string(wC[abs(coeffs[i])]-1) + " downto " + to_string(wSATruncatedRight) + ")" : "")
-             << ")," << wS[i] - savedFAs << "));" << endl;
+             << ")";
+        if(coeffs[i] == 0)
+        {
+          vhdl << "); -- coefficient is zero, nothing to add" << endl;
+        }
+        else
+        {
+          vhdl << " " << (coeffs[i] < 0 ? "-" : "+") << " "
+               << "resize(signed("
+               << "X_mult_" << abs(coeffs[i])
+               << (wSATruncatedRight > 0 ? "(" + to_string(wC[abs(coeffs[i])]-1) + " downto " + to_string(wSATruncatedRight) + ")" : "")
+               << ")," << wS[i] - savedFAs << "));" << endl;
+        }
 
         if(msbLsbSplitNecessary)
         {
@@ -310,7 +327,7 @@ namespace flopoco {
     int currentIndexMod=currentIndex%noOfTaps; //  circular buffer to store the inputs
     xHistory[currentIndexMod] = x;
 
-#define DEBUG
+//#define DEBUG
 #ifdef DEBUG
     cerr << "emulate inputs (currentIndexMod=" << currentIndexMod << ")=";
 #endif
@@ -440,7 +457,7 @@ namespace flopoco {
 	    "FiltersEtc", // categories
 	    "",
 	    "wIn(int): input word size in bits;\
-                  wOut(int)=-1: output word size in bits, -1 means automatic determination without truncation;\
+                  wOut(int)=-1: output word size in bits, -1 means automatic determination without truncation, if wOut is less then necessary it will be rounded;\
                  coeff(string): colon-separated list of integer coefficients. Example: coeff=\"123:321:123\";\
                  graph(string)=\"\": Realization string of the adder graph;\
                  epsilon(int)=0: Allowable error for truncated constant multipliers (currently only used to check error for given truncations in testbench); \
