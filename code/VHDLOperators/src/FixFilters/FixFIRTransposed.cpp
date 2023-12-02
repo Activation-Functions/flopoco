@@ -144,7 +144,14 @@ namespace flopoco {
     //create the structural adders:
     if(noOfTaps == 1)
     {
-      vhdl << tab << "Y <= X_mult_" << abs(coeffs[0]) << ";" << endl; //this is the very trivial case of a 1-tap filter
+      if(coeffs[0] == 0)
+      {
+        vhdl << tab << "Y <= (others => '0');" << endl; //this is the very trivial case of a 1-tap filter with coefficient 0
+      }
+      else
+      {
+        vhdl << tab << "Y <= X_mult_" << abs(coeffs[0]) << ";" << endl; //this is the very trivial case of a 1-tap filter
+      }
     }
     else
     {
@@ -185,7 +192,16 @@ namespace flopoco {
           else if(sa_truncations_vec[i][0] > sa_truncations_vec[i][1])
           {
             //the multiplier block output is passed to the LSBs
-            vhdl << tab << declare("s" + to_string(i) + "_LSBs", wSALSBsPassed) << " <= " << "X_mult_" << abs(coeffs[i]) << "(" << wSATruncatedRight + wSALSBsPassed - 1 << " downto " << wSATruncatedRight << ")" << ";" << endl;
+            vhdl << tab << declare("s" + to_string(i) + "_LSBs", wSALSBsPassed) << " <= ";
+            if(coeffs[i] == 0)
+            {
+              vhdl << "(others => '0');" << endl;
+            }
+            else
+            {
+              vhdl << "X_mult_" << abs(coeffs[i]) << "(" << wSATruncatedRight + wSALSBsPassed - 1 << " downto " << wSATruncatedRight << ")" << ";" << endl;
+            }
+
             wSATruncatedRight += wSALSBsPassed;
           }
           else
