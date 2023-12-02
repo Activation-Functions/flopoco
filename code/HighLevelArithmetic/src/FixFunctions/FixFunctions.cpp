@@ -92,7 +92,7 @@ void	FixFunction::initialize()
 		}
 		std::ostringstream t; // write it before we take the absolute value below
 		t << "Out interval: [" << mpfr_get_d(infMP,MPFR_RNDD) << "; "<< mpfr_get_d(supMP,MPFR_RNDU) << "]";
-		//				cerr << " " << t.str() << endl;
+		//std::cerr << " " << t.str() << "   signedIn="<<signedIn << ", computed signedOut="<<signedOut <<  std::endl;
 		// Now recompute the MSB explicitely.
 		mpfr_abs(supMP, supMP, GMP_RNDU);
 		mpfr_abs(infMP, infMP, GMP_RNDU);
@@ -102,7 +102,7 @@ void	FixFunction::initialize()
 		msbOut = mpfr_get_si(tmp, GMP_RNDU);
 		if(signedOut)
 			msbOut++;
-		// cerr << "Computed msbOut=" << msbOut <<endl;
+		//std::cerr << "Computed msbOut=" << msbOut <<std::endl;
 		t << ". Output is " << (signedOut?"signed":"unsigned");
 		outputDescription=t.str();
 
