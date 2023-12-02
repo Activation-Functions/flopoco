@@ -325,7 +325,7 @@ namespace flopoco {
     const OperatorDescription<Xilinx_Comparator> op_descriptor<Xilinx_Comparator> {
 	"XilinxComparator",			    // name
 	"A comparator build of xilinx primitives.", // description, string
-	"Primitives", // category, from the list defined in UserInterface.cpp
+	"Primitives(HIDDEN)", // category, from the list defined in UserInterface.cpp
 	"",	      // seeAlso
 	// where parameterDescription is parameterName
 	// (parameterType)[=defaultValue]: parameterDescriptionString

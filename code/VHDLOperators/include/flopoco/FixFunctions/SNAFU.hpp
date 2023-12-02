@@ -28,13 +28,20 @@ namespace flopoco{
   {
   public:
 		
-		/** The constructor.will actually never be called, so no parameters
-     */
+		SNAFU(OperatorPtr parentOp, Target* target,   string f, int wIn, int wOut, string method, double inputScale, int adhocCompression);
 		
-		SNAFU(OperatorPtr parentOp, Target* target);
-		
+		void emulate(TestCase* tc);
+	
 		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
 
+	private:
+		int wIn;
+		int wOut;
+		double inputScale;
+		int adhocCompression;
+		string fl, method; // The lowercased versions of fIn and methodIn
+		string sollyaDeltaFunction; // when we use range reduction
+		FixFunction *f;
 	};
 	
 }

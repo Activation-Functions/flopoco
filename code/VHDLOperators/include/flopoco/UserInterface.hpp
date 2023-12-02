@@ -149,6 +149,7 @@ namespace flopoco
 		bool   registerLargeTables;
 		bool   tableCompression;
 		bool   generateFigures;
+		bool   showHiddenOperators;
 		double unusedHardMultThreshold;
 		bool   useTargetOptimizations;
 		std::string compression;
