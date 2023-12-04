@@ -175,21 +175,24 @@ namespace flopoco {
         vhdl << endl;
 
         //pass LSB bits of one of the inputs in case of truncations
-        int wSATruncatedLeft=sa_truncations_vec[i][0];
-        int wSATruncatedRight=sa_truncations_vec[i][1];
-        int wSALSBsPassed=abs(sa_truncations_vec[i][1] - sa_truncations_vec[i][0]); //no of bits that are passed to the LSBs
-        int bitsEliminated = min(wSATruncatedLeft, wSATruncatedRight);
+        int wSATruncatedfromSA=sa_truncations_vec[i][0]; //input from previous adder
+        int wSATruncatedfromMCM=sa_truncations_vec[i][1]; //input from multiplier block
+        int wSALSBsPassed; //no of bits that are passed to the LSBs
+
+
+        wSALSBsPassed=abs(sa_truncations_vec[i][1] - sa_truncations_vec[i][0]);
+        int bitsEliminated = min(wSATruncatedfromSA, wSATruncatedfromMCM);
         int savedFAs = bitsEliminated + wSALSBsPassed;
-        addComment("structural adder " + to_string(i) + " (input from previous adder truncated by " + to_string(sa_truncations_vec[i][0]) + " bits, input from multiplier block truncated by " + to_string(sa_truncations_vec[i][1]) + " bits, saving " + to_string(savedFAs) + " full adders):");
-        if((sa_truncations_vec[i][0] > 0) || (sa_truncations_vec[i][1] > 0))
+        addComment("structural adder " + to_string(i) + " (input from previous adder truncated by " + to_string(wSATruncatedfromSA) + " bits, input from multiplier block truncated by " + to_string(wSATruncatedfromMCM) + " bits, saving " + to_string(savedFAs) + " full adders):");
+        if((wSATruncatedfromSA > 0) || (wSATruncatedfromMCM > 0))
         {
-          if(sa_truncations_vec[i][0] < sa_truncations_vec[i][1])
+          if(wSATruncatedfromSA < wSATruncatedfromMCM)
           {
             //the previous structural adder is passed to the LSBs
-            vhdl << tab << declare("s" + to_string(i) + "_LSBs", wSALSBsPassed) << " <= " << "s" + to_string(i - 1) << "_delayed(" << wSATruncatedLeft + wSALSBsPassed - 1 << " downto " << wSATruncatedLeft << ")" << ";" << endl;
-            wSATruncatedLeft += wSALSBsPassed;
+            vhdl << tab << declare("s" + to_string(i) + "_LSBs", wSALSBsPassed) << " <= " << "s" + to_string(i - 1) << "_delayed(" << wSATruncatedfromSA + wSALSBsPassed - 1 << " downto " << wSATruncatedfromSA << ")" << ";" << endl;
+            wSATruncatedfromSA += wSALSBsPassed;
           }
-          else if(sa_truncations_vec[i][0] > sa_truncations_vec[i][1])
+          else if(wSATruncatedfromSA > wSATruncatedfromMCM)
           {
             //the multiplier block output is passed to the LSBs
             vhdl << tab << declare("s" + to_string(i) + "_LSBs", wSALSBsPassed) << " <= ";
@@ -199,10 +202,10 @@ namespace flopoco {
             }
             else
             {
-              vhdl << "X_mult_" << abs(coeffs[i]) << "(" << wSATruncatedRight + wSALSBsPassed - 1 << " downto " << wSATruncatedRight << ")" << ";" << endl;
+              vhdl << "X_mult_" << abs(coeffs[i]) << "(" << wSATruncatedfromMCM + wSALSBsPassed - 1 << " downto " << wSATruncatedfromMCM << ")" << ";" << endl;
             }
 
-            wSATruncatedRight += wSALSBsPassed;
+            wSATruncatedfromMCM += wSALSBsPassed;
           }
           else
           {
@@ -215,7 +218,7 @@ namespace flopoco {
              << " <= std_logic_vector("
              << "resize(signed("
              << "s" + to_string(i-1) << "_delayed"
-             << (wSATruncatedLeft > 0 ? "(" + to_string(wS[i-1]-1) + " downto " + to_string(wSATruncatedLeft) + ")" : "")
+             << (wSATruncatedfromSA > 0 ? "(" + to_string(wS[i - 1] - 1) + " downto " + to_string(wSATruncatedfromSA) + ")" : "")
              << ")," << wS[i] - savedFAs
              << ")";
         if(coeffs[i] == 0)
@@ -227,7 +230,7 @@ namespace flopoco {
           vhdl << " " << (coeffs[i] < 0 ? "-" : "+") << " "
                << "resize(signed("
                << "X_mult_" << abs(coeffs[i])
-               << (wSATruncatedRight > 0 ? "(" + to_string(wC[abs(coeffs[i])]-1) + " downto " + to_string(wSATruncatedRight) + ")" : "")
+               << (wSATruncatedfromMCM > 0 ? "(" + to_string(wC[abs(coeffs[i])] - 1) + " downto " + to_string(wSATruncatedfromMCM) + ")" : "")
                << ")," << wS[i] - savedFAs << "));" << endl;
         }
 
