@@ -177,43 +177,56 @@ namespace flopoco {
         //pass LSB bits of one of the inputs in case of truncations
         int wSATruncatedfromSA=sa_truncations_vec[i][0]; //input from previous adder
         int wSATruncatedfromMCM=sa_truncations_vec[i][1]; //input from multiplier block
-        int wSALSBsPassed; //no of bits that are passed to the LSBs
+        int wSALSBsPassed=0; //no of bits that are passed to the LSBs
 
 
-        wSALSBsPassed=abs(sa_truncations_vec[i][1] - sa_truncations_vec[i][0]);
         int bitsEliminated = min(wSATruncatedfromSA, wSATruncatedfromMCM);
-        int savedFAs = bitsEliminated + wSALSBsPassed;
+        int savedFAs;
+
         addComment("structural adder " + to_string(i) + " (input from previous adder truncated by " + to_string(wSATruncatedfromSA) + " bits, input from multiplier block truncated by " + to_string(wSATruncatedfromMCM) + " bits, saving " + to_string(savedFAs) + " full adders):");
         if((wSATruncatedfromSA > 0) || (wSATruncatedfromMCM > 0))
         {
           if(wSATruncatedfromSA < wSATruncatedfromMCM)
           {
             //the previous structural adder is passed to the LSBs
+            wSALSBsPassed = wSATruncatedfromMCM - wSATruncatedfromSA;
+
             vhdl << tab << declare("s" + to_string(i) + "_LSBs", wSALSBsPassed) << " <= " << "s" + to_string(i - 1) << "_delayed(" << wSATruncatedfromSA + wSALSBsPassed - 1 << " downto " << wSATruncatedfromSA << ")" << ";" << endl;
             wSATruncatedfromSA += wSALSBsPassed;
           }
           else if(wSATruncatedfromSA > wSATruncatedfromMCM)
           {
-            //the multiplier block output is passed to the LSBs
-            vhdl << tab << declare("s" + to_string(i) + "_LSBs", wSALSBsPassed) << " <= ";
-            if(coeffs[i] == 0)
+            //the multiplier block output is passed to the LSBs, this is only possible when coefficient is positive (as the term as to be subtracted in the other case)
+            if(coeffs[i] >= 0)
             {
-              vhdl << "(others => '0');" << endl;
+              wSALSBsPassed = wSATruncatedfromSA - wSATruncatedfromMCM;
+
+              vhdl << tab << declare("s" + to_string(i) + "_LSBs", wSALSBsPassed) << " <= ";
+              if(coeffs[i] == 0)
+              {
+                vhdl << "(others => '0');" << endl;
+              }
+              else
+              {
+                vhdl << "X_mult_" << abs(coeffs[i]) << "(" << wSATruncatedfromMCM + wSALSBsPassed - 1 << " downto " << wSATruncatedfromMCM << ")" << ";" << endl;
+              }
+
+              wSATruncatedfromMCM += wSALSBsPassed;
             }
             else
             {
-              vhdl << "X_mult_" << abs(coeffs[i]) << "(" << wSATruncatedfromMCM + wSALSBsPassed - 1 << " downto " << wSATruncatedfromMCM << ")" << ";" << endl;
+               wSATruncatedfromSA = wSATruncatedfromMCM; //as we can't move LSBs to the output, we keep the bits from SA required to perform the subtraction
             }
-
-            wSATruncatedfromMCM += wSALSBsPassed;
           }
           else
           {
             //nothing is passed, nothing to do
           }
         }
+        savedFAs = bitsEliminated + wSALSBsPassed;
 
         bool msbLsbSplitNecessary = (wSALSBsPassed > 0) || (bitsEliminated > 0);
+        cerr << "i=" << i << ", coeffs[i]=" << coeffs[i] << ", trunc SA=" << wSATruncatedfromSA << ", trunc MCM=" << wSATruncatedfromMCM << ", wS[i]=" << wS[i] << ", savedFAs=" << savedFAs << endl;
         vhdl << tab << declare("s" + to_string(i) + (msbLsbSplitNecessary ? "_MSBs" : ""), wS[i] - savedFAs)
              << " <= std_logic_vector("
              << "resize(signed("
