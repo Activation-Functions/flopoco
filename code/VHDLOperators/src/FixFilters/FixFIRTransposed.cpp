@@ -183,7 +183,7 @@ namespace flopoco {
         int bitsEliminated = min(wSATruncatedfromSA, wSATruncatedfromMCM);
         int savedFAs;
 
-        addComment("structural adder " + to_string(i) + " (input from previous adder truncated by " + to_string(wSATruncatedfromSA) + " bits, input from multiplier block truncated by " + to_string(wSATruncatedfromMCM) + " bits, saving " + to_string(savedFAs) + " full adders):");
+        addComment("structural adder " + to_string(i) + " (input from previous adder truncated by " + to_string(wSATruncatedfromSA) + " bits, input from multiplier block truncated by " + to_string(wSATruncatedfromMCM) + " bits):");
         if((wSATruncatedfromSA > 0) || (wSATruncatedfromMCM > 0))
         {
           if(wSATruncatedfromSA < wSATruncatedfromMCM)
