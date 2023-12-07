@@ -4,7 +4,7 @@
 #include <cstdlib>
 
 #include "flopoco/UserInterface.hpp"
-#include "flopoco/FixFilters/FixFIRTransposed.hpp"
+#include "flopoco/FixFilters/IntFIRTransposed.hpp"
 
 #if defined(HAVE_PAGLIB) && defined(HAVE_RPAGLIB)
 #include "pagsuite/log2_64.h"
@@ -17,11 +17,11 @@ using namespace std;
 
 namespace flopoco {
 
-  FixFIRTransposed::FixFIRTransposed(OperatorPtr parentOp, Target* target, int wIn, int wOut, vector<int64_t> coeffs, string adder_graph, const string& graph_truncations, const string& sa_truncations, const int epsilon): Operator(parentOp, target), wIn(wIn), wOut(wOut), coeffs(coeffs), epsilon(epsilon)
+  IntFIRTransposed::IntFIRTransposed(OperatorPtr parentOp, Target* target, int wIn, int wOut, vector<int64_t> coeffs, string adder_graph, const string& graph_truncations, const string& sa_truncations, const int epsilon): Operator(parentOp, target), wIn(wIn), wOut(wOut), coeffs(coeffs), epsilon(epsilon)
 	{
     useNumericStd();
-    srcFileName="FixFIRTransposed";
-    setName("FixFIRTransposed");
+    srcFileName="IntFIRTransposed";
+    setName("IntFIRTransposed");
 
     noOfTaps = coeffs.size();
     assert(noOfTaps > 0);
@@ -272,7 +272,7 @@ namespace flopoco {
 
   }
 
-  void FixFIRTransposed::parseSAtruncations(const string& sa_truncations, vector<vector<int>>& truncations)
+  void IntFIRTransposed::parseSAtruncations(const string& sa_truncations, vector<vector<int>>& truncations)
   {
     list<string> itemList;
     {
@@ -319,7 +319,7 @@ namespace flopoco {
 
   }
 
-  void FixFIRTransposed::buildStandardTestCases(TestCaseList * tcl)
+  void IntFIRTransposed::buildStandardTestCases(TestCaseList * tcl)
   {
     TestCase *tc;
     tc = new TestCase(this);
@@ -353,7 +353,7 @@ namespace flopoco {
 
   }
 
-	void FixFIRTransposed::emulate(TestCase * tc){
+	void IntFIRTransposed::emulate(TestCase * tc){
 		mpz_class x = tc->getInputValue("X"); 		// get the input bit vector as an integer
 
     int currentIndexMod=currentIndex%noOfTaps; //  circular buffer to store the inputs
@@ -441,7 +441,7 @@ namespace flopoco {
 
 	};
 
-	OperatorPtr FixFIRTransposed::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
+	OperatorPtr IntFIRTransposed::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
     int wIn;
     ui.parseInt(args, "wIn", &wIn);
 
@@ -477,14 +477,14 @@ namespace flopoco {
     int epsilon;
     ui.parseInt(args, "epsilon", &epsilon);
 
-    OperatorPtr tmpOp = new FixFIRTransposed(parentOp, target, wIn, wOut, coeffsInt, adder_graph, graph_truncations, sa_truncations, epsilon);
+    OperatorPtr tmpOp = new IntFIRTransposed(parentOp, target, wIn, wOut, coeffsInt, adder_graph, graph_truncations, sa_truncations, epsilon);
 
 		return tmpOp;
 	}
 
 	template <>
-	const OperatorDescription<FixFIRTransposed> op_descriptor<FixFIRTransposed> {
-	    "FixFIRTransposed", // name
+	const OperatorDescription<IntFIRTransposed> op_descriptor<IntFIRTransposed> {
+	    "IntFIRTransposed", // name
 	    "A fix-point Finite Impulse Filter generator in transposed form using shif-and-add.",
 	    "FiltersEtc", // categories
 	    "",

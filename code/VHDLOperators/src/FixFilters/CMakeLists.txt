@@ -1,6 +1,6 @@
 add_flopocolib_src(
 	FixFIR.cpp
-    FixFIRTransposed.cpp
+        IntFIRTransposed.cpp
     FixHalfSine.cpp
 	FixIIR.cpp
 	FixIIRShiftAdd.cpp
