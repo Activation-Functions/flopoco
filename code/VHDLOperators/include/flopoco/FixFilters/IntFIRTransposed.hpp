@@ -34,6 +34,9 @@ namespace flopoco{
     void buildStandardTestCases(TestCaseList * tcl);
 
 		// User-interface stuff
+
+    static TestList unitTest(int testLevel);
+
 		/** Factory method */
 		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
 

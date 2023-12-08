@@ -1141,7 +1141,7 @@ namespace flopoco {
 //  graphs.push_back(""); //
 //  graphs.push_back(""); //
 
-    if(testLevel == TestLevel::QUICK)
+    if(testLevel >= TestLevel::QUICK)
     {
       for(auto g : graphsUnsigned)
       {
