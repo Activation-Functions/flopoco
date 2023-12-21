@@ -312,7 +312,7 @@ namespace flopoco{
 			dec=1;
 		x = sizes.first - dec;
 		y = sizes.second - dec;
-		cout << "Target::getMaxDSPWidths for " << (sign?"":"un") << "signed mult returns x="<<x <<" and y=" << y<<endl << "get rid of this annoying message in Target.cpp once it is clear it works" << endl; 
+		//cout << "Target::getMaxDSPWidths for " << (sign?"":"un") << "signed mult returns x="<<x <<" and y=" << y<<endl << "get rid of this annoying message in Target.cpp once it is clear it works" << endl; 
 	}
 
 

@@ -34,27 +34,17 @@ namespace flopoco{
 		double fanoutDelay(int fanout = 1);
 		double ffDelay();
 		long   sizeOfMemoryBlock();
+		double lutConsumption(int lutInputSize);
 		double tableDelay(int wIn, int wOut, bool logicTable);
 
 		// The following is a list of methods that are not totally useful: TODO in Target.hpp
-		double adder3Delay(int size){return 0;}; // currently irrelevant for Xilinx
-		double carryPropagateDelay(){return 0;};
-		double DSPMultiplierDelay(){ 
-			return 0;
-			// TODO: return DSPMultiplierDelay_;
-		}
-		double DSPAdderDelay(){
-			// TODO: return DSPAdderDelay_;
-			return 0;
-		}
-		double DSPCascadingWireDelay(){
-			// return DSPCascadingWireDelay_;
-			return 0;
-		}
-		double DSPToLogicWireDelay(){
-			// return DSPToLogicWireDelay_;
-			return 0;
-		}
+		double adder3Delay(int size); // currently irrelevant for Xilinx
+		double carryPropagateDelay();
+		double DSPMultiplierDelay();
+		double DSPAdderDelay();
+		double DSPCascadingWireDelay();
+		double DSPToLogicWireDelay();
+		
 		int    getEquivalenceSliceDSP();
 
 		void   delayForDSP(MultiplierBlock* multBlock, double currentCp, int& cycleDelay, double& cpDelay);
@@ -68,7 +58,6 @@ namespace flopoco{
 
 		double RAMDelay() { return RAMDelay_; }
 		double LogicToRAMWireDelay() { return RAMToLogicWireDelay_; }
-		double lutConsumption(int lutInputSize);
 
 		/** 
 		 * The four 6-LUTs of a slice can be combined without routing into a 
@@ -97,8 +86,8 @@ namespace flopoco{
 		const double adderConstantDelay_  =  0.124e-9 + 0.260e-9 + 0.159e-9; /**< includes a LUT delay and the initial and final carry4delays*/
 		const double fanoutConstant_ = 1e-9/65 ; /**< Somewhere in Vivado report, someday, there has appeared a delay of 1.5e-9 for fo=65 */
 		const double typicalLocalRoutingDelay_ = 0.5e-9;
-		const double DSPMultiplierDelay_ = 0; // TODO
-		const double RAMDelay_ = 1e-9; // TODO
+		const double DSPMultiplierDelay_ = 2.392e-9  + 0.5e-9; // Vivado reports 2.392 for a logic DSP48 but we add te routing delay
+		const double RAMDelay_ = 2e-9; // TODO
 		const double RAMToLogicWireDelay_= 0; // TODO
 	};
 
