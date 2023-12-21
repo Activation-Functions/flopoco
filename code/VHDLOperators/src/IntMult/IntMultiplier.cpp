@@ -253,7 +253,7 @@ namespace flopoco {
 		if (target_->generateFigures())
 			createFigures(tilingStrategy);
 		
-		schedule();
+		schedule(); // This schedules up to the inputs of the multiplier
 
 		if (guardBits > 0) {
 			//Check truncated solution
@@ -283,6 +283,10 @@ namespace flopoco {
 
 		branchToBitheap(&bitHeap, solution, bitHeapLSBWeight);
 
+		schedule(); // This schedule up to the compressor tree
+		//		THROWERROR("stop here");
+
+		
 		if (dynamic_cast<CompressionStrategy*>(tilingStrategy)) {
 		    REPORT(LogLevel::DEBUG,  "Class is derived from CompressionStrategy, passing result for compressor tree.");
 			bitHeap.startCompression(dynamic_cast<CompressionStrategy*>(tilingStrategy));

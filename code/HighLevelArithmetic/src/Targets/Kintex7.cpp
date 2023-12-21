@@ -78,23 +78,23 @@ namespace flopoco{
 		// TODO refine
 		return addRoutingDelay( lut5Delay_ + double((size-1)/lutInputs_+1)/4*carry4Delay_ ); 
 	}
-	double Kintex7::ffDelay() {
-		return ffDelay_;
+
+	double Kintex7::lutDelay(){
+		return lut5Delay_;
 	};
-	
+
 	double Kintex7::addRoutingDelay(double d) {
 		return(d+ typicalLocalRoutingDelay_);
 	};
-	
-	
+		
 	double Kintex7::fanoutDelay(int fanout){
 		double delay= fanoutConstant_*fanout;
 		TARGETREPORT("fanoutDelay(" << fanout << ") = " << delay*1e9 << " ns.");
 		return delay;
 	};
 	
-	double Kintex7::lutDelay(){
-		return lut5Delay_;
+	double Kintex7::ffDelay() {
+		return ffDelay_;
 	};
 	
 	long Kintex7::sizeOfMemoryBlock()
@@ -127,6 +127,24 @@ namespace flopoco{
 		}
 	}
 
+	double Kintex7::adder3Delay(int size){return 0;}; // currently irrelevant for Xilinx
+		double Kintex7::carryPropagateDelay(){return 0;};
+		double Kintex7::DSPMultiplierDelay(){ 
+			return DSPMultiplierDelay_;
+		}
+		double Kintex7::DSPAdderDelay(){
+			// TODO: return DSPAdderDelay_;
+			return 0;
+		}
+		double Kintex7::DSPCascadingWireDelay(){
+			// return DSPCascadingWireDelay_;
+			return 0;
+		}
+		double Kintex7::DSPToLogicWireDelay(){
+			// return DSPToLogicWireDelay_;
+			return 0;
+		}
+
 	
 	bool Kintex7::suggestSubaddSize(int &x, int wIn){
 		int chunkSize = 4* ((int)floor( (1./frequency() - (adderConstantDelay_ + ffDelay())) / carry4Delay_ ));
@@ -140,81 +158,6 @@ namespace flopoco{
 	};
 
 
-#if 0
-	DSP* Kintex7::createDSP() 
-	{
-		int x, y;
-		getMaxDSPWidths(x, y);
-		
-		/* create DSP block with constant shift of 17
-		* and a maxium unsigned multiplier width (17x17) for this target
-		*/
-		DSP* dsp_ = new DSP(dspFixedShift_, x, y);
-		
-		return dsp_;
-	};
-#endif
-
-
-#if 0	
-	
-	bool Kintex7::suggestSubmultSize(int &x, int &y, int wInX, int wInY){
-		
-		getMaxDSPWidths(x, y);
-		
-		//	//try the two possible chunk splittings
-		//	int score1 = int(ceil((double(wInX)/double(x)))+ceil((double(wInY)/double(y))));
-		//	int score2 = int(ceil((double(wInY)/double(x)))+ceil((double(wInX)/double(y))));
-		//	
-		//	if (score2 < score1)
-		//		getMaxDSPWidths(y,x);		
-		
-		if (wInX <= x)
-			x = wInX;
-		
-		if (wInY <= y)
-			y = wInY;
-		return true;
-	}	 
-	
-	
-	bool Kintex7::suggestSlackSubaddSize(int &x, int wIn, double slack){
-		int chunkSize =  1 + (int)floor( (1./frequency() - slack - (lut2_ + muxcyStoO_ + xorcyCintoO_)) / muxcyCINtoO_ );
-		x = chunkSize;	
-		x = min(chunkSize, wIn);	
-		if (x > 0) 
-			return true;
-		else {
-			x = min(2,wIn);		
-			return false;
-		} 
-	};
-	
-//	bool Kintex7::suggestSubaddSize(int &x, int wIn){
-//		
-//		int chunkSize = 1 + (int)floor( (1./frequency() - (lut2_ + muxcyStoO_ + xorcyCintoO_)) / muxcyCINtoO_ );
-//		x = chunkSize;		
-//		if (x > 1) 
-//			return true;
-//		else {
-//			x = 2;		
-//			return false;
-//		} 
-//	};
-//	
-//	bool Kintex7::suggestSlackSubaddSize(int &x, int wIn, double slack){
-//		
-//		int chunkSize = 1 + (int)floor( (1./frequency() - slack - (lut2_ + muxcyStoO_ + xorcyCintoO_)) / muxcyCINtoO_ );
-//		x = chunkSize;		
-//		if (x > 1) 
-//			return true;
-//		else {
-//			x = 2;		
-//			return false;
-//		} 
-//	};
-//	
-#endif
 	bool Kintex7::suggestSlackSubcomparatorSize(int& x, int wIn, double slack, bool constant)
 	{
 		bool succes = true;
@@ -381,6 +324,8 @@ namespace flopoco{
 	}
 #endif
 	
+
+
 	void Kintex7::delayForDSP(MultiplierBlock* multBlock, double currentCp, int& cycleDelay, double& cpDelay)
 	{
 		double targetPeriod, totalPeriod;
@@ -392,4 +337,88 @@ namespace flopoco{
 		cpDelay = totalPeriod-targetPeriod*cycleDelay;
 	}
 
+
+#if 0
+	DSP* Kintex7::createDSP() 
+	{
+		int x, y;
+		getMaxDSPWidths(x, y);
+		
+		/* create DSP block with constant shift of 17
+		* and a maxium unsigned multiplier width (17x17) for this target
+		*/
+		DSP* dsp_ = new DSP(dspFixedShift_, x, y);
+		
+		return dsp_;
+	};
+#endif
+
+
+#if 0	
+	
+	bool Kintex7::suggestSubmultSize(int &x, int &y, int wInX, int wInY){
+		
+		getMaxDSPWidths(x, y);
+		
+		//	//try the two possible chunk splittings
+		//	int score1 = int(ceil((double(wInX)/double(x)))+ceil((double(wInY)/double(y))));
+		//	int score2 = int(ceil((double(wInY)/double(x)))+ceil((double(wInX)/double(y))));
+		//	
+		//	if (score2 < score1)
+		//		getMaxDSPWidths(y,x);		
+		
+		if (wInX <= x)
+			x = wInX;
+		
+		if (wInY <= y)
+			y = wInY;
+		return true;
+	}	 
+	
+	
+	bool Kintex7::suggestSlackSubaddSize(int &x, int wIn, double slack){
+		int chunkSize =  1 + (int)floor( (1./frequency() - slack - (lut2_ + muxcyStoO_ + xorcyCintoO_)) / muxcyCINtoO_ );
+		x = chunkSize;	
+		x = min(chunkSize, wIn);	
+		if (x > 0) 
+			return true;
+		else {
+			x = min(2,wIn);		
+			return false;
+		} 
+	};
+	
+//	bool Kintex7::suggestSubaddSize(int &x, int wIn){
+//		
+//		int chunkSize = 1 + (int)floor( (1./frequency() - (lut2_ + muxcyStoO_ + xorcyCintoO_)) / muxcyCINtoO_ );
+//		x = chunkSize;		
+//		if (x > 1) 
+//			return true;
+//		else {
+//			x = 2;		
+//			return false;
+//		} 
+//	};
+//	
+//	bool Kintex7::suggestSlackSubaddSize(int &x, int wIn, double slack){
+//		
+//		int chunkSize = 1 + (int)floor( (1./frequency() - slack - (lut2_ + muxcyStoO_ + xorcyCintoO_)) / muxcyCINtoO_ );
+//		x = chunkSize;		
+//		if (x > 1) 
+//			return true;
+//		else {
+//			x = 2;		
+//			return false;
+//		} 
+//	};
+//	
+#endif
+
+
+
+
 }
+
+
+
+
