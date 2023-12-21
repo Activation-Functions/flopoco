@@ -45,20 +45,20 @@ namespace flopoco {
 	IntMultiplier::IntMultiplier (Operator *parentOp, Target* target_, int wX_, int wY_, int wOut_, bool signedIO_, float dspOccupationThreshold, int maxDSP, bool superTiles, bool use2xk, bool useirregular, bool useLUT, bool useDSP, bool useKaratsuba, bool useGenLUT, bool useBooth, int beamRange, bool optiTrunc, bool minStages, bool squarer):
 		Operator ( parentOp, target_ ),wX(wX_), wY(wY_), wOut(wOut_),signedIO(signedIO_), dspOccupationThreshold(dspOccupationThreshold), squarer(squarer) {
         srcFileName = "IntMultiplier";
-        setCopyrightString("Martin Kumm, Florent de Dinechin, Kinga Illyes, Bogdan Popa, Bogdan Pasca, 2012");
+        setCopyrightString("Martin Kumm, Florent de Dinechin, Kinga Illyes, Bogdan Popa, Bogdan Pasca, 2012-");
 
+
+        wFullP = prodsize(wX, wY, signedIO_, signedIO_);
+        if (wOut == 0 || wFullP < wOut)
+            wOut = wFullP;
         ostringstream name, trunc_info;
-        name << "IntMultiplier";
+        name << "IntMultiplier_"<< wX << "x" << wY<< "_"<< wOut;
         setNameWithFreqAndUID(name.str());
-
+				
         // the addition operators need the ieee_std_signed/unsigned libraries
         useNumericStd();
 
         multiplierUid = parentOp->getNewUId();
-        wFullP = prodsize(wX, wY, signedIO_, signedIO_);
-
-        if (wOut == 0 || wFullP < wOut)
-            wOut = wFullP;
 
         unsigned int guardBits = 0, keepBits = 0;
         mpz_class errorBudget = 0, centerErrConstant = 0;
@@ -92,19 +92,19 @@ namespace flopoco {
 			return;
 		}
 
-        BitHeap bitHeap(this, wFullP);
+		BitHeap bitHeap(this, wFullP);
 		//BitHeap bitHeap(this, wOut + guardBits);
-        unsigned bitHeapLSBWeight = 0;
-
-		REPORT(LogLevel::DETAIL, "Creating BaseMultiplierCollection")
+		unsigned bitHeapLSBWeight = 0;
+		
+		REPORT(LogLevel::DETAIL, "Creating BaseMultiplierCollection");
 		BaseMultiplierCollection baseMultiplierCollection(getTarget());
-//		baseMultiplierCollection.print();
+		//		baseMultiplierCollection.print();
 
-MultiplierTileCollection multiplierTileCollection(getTarget(), &baseMultiplierCollection, wX, wY, superTiles, use2xk, useirregular, useLUT, useDSP, useKaratsuba, useGenLUT, useBooth, squarer);
+		MultiplierTileCollection multiplierTileCollection(getTarget(), &baseMultiplierCollection, wX, wY, superTiles, use2xk, useirregular, useLUT, useDSP, useKaratsuba, useGenLUT, useBooth, squarer);
 
 		string tilingMethod = getTarget()->getTilingMethod();
 
-		REPORT(LogLevel::DETAIL, "Creating TilingStrategy using tiling method " << tilingMethod)
+		REPORT(LogLevel::DETAIL, "Creating TilingStrategy using tiling method " << tilingMethod);
 
 		TilingStrategy* tilingStrategy;
 		if(tilingMethod.compare("heuristicBasicTiling") == 0) {
@@ -134,8 +134,8 @@ MultiplierTileCollection multiplierTileCollection(getTarget(), &baseMultiplierCo
 					superTiles,
 					useKaratsuba,
 					multiplierTileCollection,
-                    guardBits,
-                    keepBits
+					guardBits,
+					keepBits
 			);
 		}
 		else if(tilingMethod.compare("heuristicXGreedyTiling") == 0) {
@@ -153,9 +153,9 @@ MultiplierTileCollection multiplierTileCollection(getTarget(), &baseMultiplierCo
 					superTiles,
 					useKaratsuba,
 					multiplierTileCollection,
-                    guardBits,
-                    keepBits
-			);
+					guardBits,
+					keepBits
+																								 );
 		}
 		else if(tilingMethod.compare("heuristicBeamSearchTiling") == 0) {
 			tilingStrategy = new TilingStrategyBeamSearch(
@@ -173,8 +173,8 @@ MultiplierTileCollection multiplierTileCollection(getTarget(), &baseMultiplierCo
 					useKaratsuba,
 					multiplierTileCollection,
 					beamRange,
-                    guardBits,
-                    keepBits
+					guardBits,
+					keepBits
 			);
 		} else if(tilingMethod.compare("optimal") == 0){
 			tilingStrategy = new TilingStrategyOptimalILP(
@@ -187,12 +187,12 @@ MultiplierTileCollection multiplierTileCollection(getTarget(), &baseMultiplierCo
 					dspOccupationThreshold,
 					maxDSP,
 					multiplierTileCollection,
-                    guardBits,
-                    keepBits,
-                    errorBudget,
-                    centerErrConstant,
-                    optiTrunc,
-                    squarer
+					guardBits,
+					keepBits,
+					errorBudget,
+					centerErrConstant,
+					optiTrunc,
+					squarer
 			);
 
 		}  else if(tilingMethod.compare("optimalTilingAndCompression") == 0){
@@ -207,82 +207,81 @@ MultiplierTileCollection multiplierTileCollection(getTarget(), &baseMultiplierCo
 					maxDSP,
 					multiplierTileCollection,
 					&bitHeap,
-                    guardBits,
-                    keepBits,
-                    errorBudget,
-                    centerErrConstant,
-                    optiTrunc,
-                    minStages
+					guardBits,
+					keepBits,
+					errorBudget,
+					centerErrConstant,
+					optiTrunc,
+					minStages
 			);
 
 		} else if(tilingMethod.compare("csv") == 0) {
-		    tilingStrategy = new TilingStrategyCSV(
-		            wX,
-		            wY,
-		            wOut,
-		            signedIO,
-		            &baseMultiplierCollection,
-		            baseMultiplierCollection.getPreferedMultiplier(),
-		            dspOccupationThreshold,
-		            maxDSP,
-		            useirregular,
-		            use2xk,
-		            superTiles,
-		            useKaratsuba,
-		            multiplierTileCollection,
-		            guardBits,
-		            keepBits
-		            );
+			tilingStrategy = new TilingStrategyCSV(
+					 wX,
+					 wY,
+					 wOut,
+					 signedIO,
+					 &baseMultiplierCollection,
+					 baseMultiplierCollection.getPreferedMultiplier(),
+					 dspOccupationThreshold,
+					 maxDSP,
+					 useirregular,
+					 use2xk,
+					 superTiles,
+					 useKaratsuba,
+					 multiplierTileCollection,
+					 guardBits,
+					 keepBits );
 		} else {
 			THROWERROR("Tiling strategy " << tilingMethod << " unknown");
 		}
 
-		REPORT(LogLevel::DEBUG, "Solving tiling problem")
+		REPORT(LogLevel::DEBUG, "Solving tiling problem");
 		tilingStrategy->solve();
 
 		list<TilingStrategy::mult_tile_t> &solution = tilingStrategy->getSolution();
 		if(signedIO)
-            for(auto & tile : solution) {
-                //resize DSPs to be aligned with left and bottom border of the tiled area to allow the correct handling of the sign
-                tile.first = tile.first.shrinkFitDSP(tile.second.first,tile.second.second, wX, wY);
-                //Set signedness of individual tiles according to their position
-                tile.first = tile.first.setSignStatus(tile.second.first,tile.second.second, wX, wY, signedIO);
-            }
-        tilingStrategy->printSolution();
+			for(auto & tile : solution) {
+				//resize DSPs to be aligned with left and bottom border of the tiled area to allow the correct handling of the sign
+				tile.first = tile.first.shrinkFitDSP(tile.second.first,tile.second.second, wX, wY);
+				//Set signedness of individual tiles according to their position
+				tile.first = tile.first.setSignStatus(tile.second.first,tile.second.second, wX, wY, signedIO);
+			}
+		tilingStrategy->printSolution();
 		auto solLen = solution.size();
-		REPORT(LogLevel::VERBOSE, "Found solution has " << solLen << " tiles")
+		REPORT(LogLevel::VERBOSE, "Found solution has " << solLen << " tiles");
 		if (target_->generateFigures())
-            createFigures(tilingStrategy);
-
+			createFigures(tilingStrategy);
+		
 		schedule();
 
-       	if (guardBits > 0) {
-            //Check truncated solution
-            mpz_class actualTruncError = checkTruncationError(solution, guardBits, errorBudget, centerErrConstant, wX, wY, signedIO);
-            cout << "calc min req weight is=" << prodsize(wX, wY, signedIO, signedIO) - (wOut + guardBits) << endl;
-            bitHeapLSBWeight = (dynamic_cast<CompressionStrategy*>(tilingStrategy))?0:calcBitHeapLSB(solution, guardBits, errorBudget, centerErrConstant, actualTruncError, wX, wY);
-            guardBits = wFullP - wOut - bitHeapLSBWeight; //To select result bits, because the dynamic ilp does not consider guardBits
-            //if (dynamic_cast<CompressionStrategy*>(tilingStrategy) == nullptr)  //The combined optimization always considers the full product size for a BitHeap
-            //    bitHeap.resizeBitheap(wFullP-bitHeapLSBWeight, 1);  //resize BitHeap for down to size required by truncation to simplify compression
-
-		    //this is the rounding bit for a faithfully rounded truncated multiplier
+		if (guardBits > 0) {
+			//Check truncated solution
+			mpz_class actualTruncError = checkTruncationError(solution, guardBits, errorBudget, centerErrConstant, wX, wY, signedIO);
+			// cout << "calc min req weight is=" << prodsize(wX, wY, signedIO, signedIO) - (wOut + guardBits) << endl;
+			bitHeapLSBWeight = (dynamic_cast<CompressionStrategy*>(tilingStrategy))?0:calcBitHeapLSB(solution, guardBits, errorBudget, centerErrConstant, actualTruncError, wX, wY);
+			guardBits = wFullP - wOut - bitHeapLSBWeight; //To select result bits, because the dynamic ilp does not consider guardBits
+			//if (dynamic_cast<CompressionStrategy*>(tilingStrategy) == nullptr)  //The combined optimization always considers the full product size for a BitHeap
+			//    bitHeap.resizeBitheap(wFullP-bitHeapLSBWeight, 1);  //resize BitHeap for down to size required by truncation to simplify compression
+			
+			//this is the rounding bit for a faithfully rounded truncated multiplier
 			bitHeap.addConstantOneBit(static_cast<int>(guardBits) - 1);
 			//these are the constant bits to recenter the average error around 0 and allow for more truncation error
-            mpz_class colweight, bitstate;
-            int i = wFullP - wOut - guardBits ;
-            do{
-                mpz_pow_ui(colweight.get_mpz_t(), mpz_class(2).get_mpz_t(), i);
-                mpz_and(bitstate.get_mpz_t(), colweight.get_mpz_t(), centerErrConstant.get_mpz_t());
-                if (bitstate) {
-                    bitHeap.addConstantOneBit(i - (wFullP - wOut - guardBits));
-                    REPORT(LogLevel::DEBUG,  "Adding constant bit with weight=" << i << " BitHeap col=" << i - (wFullP - wOut - guardBits) << "to recenter the truncation error at 0");
-                    //cout << "height at pos " << i - (wFullP - wOut - guardBits) << ": " << bitHeap.getColumnHeight( i - (wFullP - wOut - guardBits)) << endl;
-                }
-                i++;
-            } while(colweight <= centerErrConstant);
+			mpz_class colweight, bitstate;
+			int i = wFullP - wOut - guardBits ;
+			do{
+				mpz_pow_ui(colweight.get_mpz_t(), mpz_class(2).get_mpz_t(), i);
+				mpz_and(bitstate.get_mpz_t(), colweight.get_mpz_t(), centerErrConstant.get_mpz_t());
+				if (bitstate) {
+					bitHeap.addConstantOneBit(i - (wFullP - wOut - guardBits));
+					REPORT(LogLevel::DEBUG,  "Adding constant bit with weight=" << i << " BitHeap col=" << i - (wFullP - wOut - guardBits) << "to recenter the truncation error at 0");
+					//cout << "height at pos " << i - (wFullP - wOut - guardBits) << ": " << bitHeap.getColumnHeight( i - (wFullP - wOut - guardBits)) << endl;
+				}
+				i++;
+			} while(colweight <= centerErrConstant);
 		}
 
-        branchToBitheap(&bitHeap, solution, bitHeapLSBWeight);
+		branchToBitheap(&bitHeap, solution, bitHeapLSBWeight);
 
 		if (dynamic_cast<CompressionStrategy*>(tilingStrategy)) {
 		    REPORT(LogLevel::DEBUG,  "Class is derived from CompressionStrategy, passing result for compressor tree.");
