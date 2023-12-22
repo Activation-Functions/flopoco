@@ -281,7 +281,7 @@ namespace flopoco {
         if(!isSignalDeclared("b" + to_string(j) + "se"))
             vhdl << tab << declare("b" + to_string(j) + "se",25) << " <= std_logic_vector(resize(unsigned(b" << j << "),25));" << endl;
 
-        newInstance( "DSPBlock", "dsp" + to_string(i) + "_" + to_string(j), "wX=25 wY=18 usePreAdder=0 preAdderSubtracts=0 isPipelined=0 xIsSigned=1 yIsSigned=1","X=>b" + to_string(j) + "se"  + ", Y=>a" + to_string(i) + "se"  , "R=>c" + to_string(i) + "_" + to_string(j)  );
+        newInstance( "DSPBlock", "dsp" + to_string(i) + "_" + to_string(j), "wX=25 wY=18 usePreAdder=0 preAdderSubtracts=0 xIsSigned=1 yIsSigned=1","X=>b" + to_string(j) + "se"  + ", Y=>a" + to_string(i) + "se"  , "R=>c" + to_string(i) + "_" + to_string(j)  );
 
         if(child_op == false) {
             bitHeap->addSignal("c" + to_string(i) + "_" + to_string(j)  ,(i+j)*TileBaseMultiple);
@@ -313,7 +313,7 @@ namespace flopoco {
         if(!isSignalDeclared("b" + to_string(j) + "se"))
             vhdl << tab << declare("b" + to_string(j) + "se",25) << " <= std_logic_vector(resize(unsigned(b" << j << "),25));" << endl;
 
-        newInstance( "DSPBlock", "dsp" + to_string(i) + "_" + to_string(j) + "_" + to_string(k) + "_" + to_string(l), "wX=25 wY=18 usePreAdder=1 preAdderSubtracts=1 isPipelined=0 xIsSigned=1 yIsSigned=1","X1=>b" + to_string(j) + "se, X2=>b" + to_string(l) + "se, Y=>d" + to_string(i) + "_" + to_string(k), "R=>k" + to_string(i) + "_" + to_string(j) + "_" + to_string(k) + "_" + to_string(l));
+        newInstance( "DSPBlock", "dsp" + to_string(i) + "_" + to_string(j) + "_" + to_string(k) + "_" + to_string(l), "wX=25 wY=18 usePreAdder=1 preAdderSubtracts=1 xIsSigned=1 yIsSigned=1","X1=>b" + to_string(j) + "se, X2=>b" + to_string(l) + "se, Y=>d" + to_string(i) + "_" + to_string(k), "R=>k" + to_string(i) + "_" + to_string(j) + "_" + to_string(k) + "_" + to_string(l));
 
         int wDSPOut=41; //18+24-1=41 bits necessary
 

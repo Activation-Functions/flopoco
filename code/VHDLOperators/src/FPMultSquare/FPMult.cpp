@@ -105,7 +105,6 @@ namespace flopoco{
 			vhdl << tab<< "-- exponent update"<<endl;
 			vhdl << tab<< declare("expPostNorm", wEX_+2) << " <= expSum + (" << zg(wEX_+1,0) << " & norm);"<<endl;
 
-			//  exponent update is in parallel to the mantissa shift, so get back there
 
 			//check is rounding is needed
 			if (1+wFR_ >= wFX_+wFY_+2) {
@@ -128,7 +127,7 @@ namespace flopoco{
 			}
 			else{
 				vhdl << tab<< "-- significand normalization shift"<<endl;
-				vhdl << tab << declare(getTarget()->lutDelay(), "sigProdExt", sigProdSize) << " <= sigProd" << range(sigProdSize-2, 0) << " & " << zg(1,0) <<" when norm='1' else"<<endl;
+				vhdl << tab << declare(getTarget()->logicDelay(3), "sigProdExt", sigProdSize) << " <= sigProd" << range(sigProdSize-2, 0) << " & " << zg(1,0) <<" when norm='1' else"<<endl;
 				vhdl << tab << "                      sigProd" << range(sigProdSize-3, 0) << " & " << zg(2,0) << ";"<<endl;
 
 				vhdl << tab << declare("expSig", 2 + wER_ + wFR_) << " <= expPostNorm & sigProdExt" << range(sigProdSize-1,  sigProdSize-wFR_) << ";" << endl;
@@ -138,7 +137,7 @@ namespace flopoco{
 
 					vhdl << tab << declare(getTarget()->eqConstComparatorDelay(sigProdSize-1 - wFR), "guard") << " <= '0' when sigProdExt" << range(wFX_+wFY + 1 - wFR - 1,0) << "=" << zg(wFX_+wFY + 1 - wFR - 1 +1,0) <<" else '1';" << endl;
 
-					vhdl << tab << declare(getTarget()->lutDelay(), "round") << " <= sticky and ( (guard and not(sigProdExt" << of(wFX_+wFY + 1 - wFR+1) <<")) or ("
+					vhdl << tab << declare(getTarget()->logicDelay(3), "round") << " <= sticky and ( (guard and not(sigProdExt" << of(wFX_+wFY + 1 - wFR+1) <<")) or ("
 					     << "sigProdExt" << of(wFX_+wFY + 1 - wFR+1) << " ))  ;" << endl;
 				}
 				else{
