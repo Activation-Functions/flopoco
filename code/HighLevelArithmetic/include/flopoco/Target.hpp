@@ -1,4 +1,4 @@
-/*
+/**
   The abstract class that models different chips for delay and area.
   Classes for real chips inherit from this one. They should be in subdirectory Targets
 
@@ -8,7 +8,19 @@
   Copyright © ENS-Lyon, INRIA, CNRS, UCBL,
 
   All Rights Reserved
+
+
+	This class unfortunately mixes up two notions:
+
+	- features of the hardware target, in particular FPGA ones, and methods to retrieve them and / or exploit them.
+	These are defined statically and users are not expected to modify them.
+	Among these features, many describe the delays associated to various computations. They are intended to be used as first argument of declare() in order to build self-pipelining operators.
+
+	- methods to set and retreive cost/performance objectives such as frequency, DSP utilization threshold, etc.
+
 */
+
+
 
 
 //TODO a logicTableDelay() that would replace the delay computation in Table.cpp (start from there)

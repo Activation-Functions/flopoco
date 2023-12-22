@@ -49,11 +49,6 @@ namespace flopoco{
 	}
 
 
-	double Target::localWireDelay(int fanout){
-		cerr << "Target::localWireDelay is deprecated!\n";
-		return 0.0;
-	};
-
 	// vector<Operator*> *  Target::getGlobalOpListRef(){
 	// 	return & globalOpList;
 	// }
