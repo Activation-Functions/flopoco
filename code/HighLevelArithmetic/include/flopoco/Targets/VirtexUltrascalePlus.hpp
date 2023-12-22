@@ -79,7 +79,6 @@ namespace flopoco{
 		}
 		int    getEquivalenceSliceDSP();
 
-		void   delayForDSP(MultiplierBlock* multBlock, double currentCp, int& cycleDelay, double& cpDelay);
 
 		bool   suggestSlackSubaddSize(int &x, int wIn, double slack) {return false;}; // TODO
 		bool   suggestSlackSubadd3Size(int &x, int wIn, double slack){return 0;}; // currently irrelevant for Xilinx

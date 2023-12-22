@@ -27,7 +27,6 @@ namespace flopoco {
 
 		setName( name.str() );
 		setCombinatorial();
-		addLUT( wIn + 1 );
 
 		if( fixed_signs != 0 ) {
 			build_with_fixed_sign( target, wIn, fixed_signs );
@@ -48,7 +47,6 @@ namespace flopoco {
 
 		setNameWithFreqAndUID( name.str() );
 		setCombinatorial();
-		addLUT( wIn + 1 );
 
 		if( dss ) {
 			build_with_dss( target, wIn );

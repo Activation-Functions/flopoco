@@ -65,8 +65,7 @@ namespace flopoco {
                 if( init.get() == 0 )
                     vhdl << tab << "x_out(" << i << ") <= '0';" << endl;
                 else {
-                    addLUT( 5, 1 );
-					Xilinx_LUT5 *luti = new Xilinx_LUT5( parentOp, target );
+										Xilinx_LUT5 *luti = new Xilinx_LUT5( parentOp, target );
                     inPortMap("i0", "x(0)" );
 										inPortMap("i1", "x(1)" );
 										inPortMap("i2", "x(2)" );
@@ -86,21 +85,20 @@ namespace flopoco {
                 if( init.get() == 0 )
                     vhdl << tab << "x_out(" << i << ") <= '0';" << endl;
                 else {
-                    addLUT( 6, 1 );
-					Xilinx_LUT6 *luti = new Xilinx_LUT6( parentOp, target );
-                    inPortMap("i0", "x(0)" );
-										inPortMap("i1", "x(1)" );
-										inPortMap("i2", "x(2)" );
-										inPortMap("i3", "x(3)" );
-										inPortMap("i4", "x(4)" );
-										inPortMap("i5", "x(5)" );
-                    stringstream output;
-                    output << "x_out(" << i << ")";
-                    outPortMap( "o", output.str());
-                    luti->setGeneric( "init", init.get_hex(), 64 );
-                    stringstream lutname;
-                    lutname << "bit_" << i;
-                    vhdl << luti->primitiveInstance( lutname.str() );
+									Xilinx_LUT6 *luti = new Xilinx_LUT6( parentOp, target );
+									inPortMap("i0", "x(0)" );
+									inPortMap("i1", "x(1)" );
+									inPortMap("i2", "x(2)" );
+									inPortMap("i3", "x(3)" );
+									inPortMap("i4", "x(4)" );
+									inPortMap("i5", "x(5)" );
+									stringstream output;
+									output << "x_out(" << i << ")";
+									outPortMap( "o", output.str());
+									luti->setGeneric( "init", init.get_hex(), 64 );
+									stringstream lutname;
+									lutname << "bit_" << i;
+									vhdl << luti->primitiveInstance( lutname.str() );
                 }
             }
         }
