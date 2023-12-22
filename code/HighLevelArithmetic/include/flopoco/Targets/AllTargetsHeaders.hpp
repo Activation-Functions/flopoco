@@ -4,7 +4,6 @@
 /* targets ---------------------------------------------------- */
 #include "flopoco/Target.hpp"
 // #include "flopoco/TargetModel.hpp"
-#include "flopoco/Targets/DSP.hpp"
 
 //#include "flopoco/Targets/Spartan3.hpp"
 //#include "flopoco/Targets/Virtex4.hpp"

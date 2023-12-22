@@ -35,25 +35,21 @@ namespace flopoco {
             bit_per_slice = 8;
             build_width = 2;
             slice_variant = GenericMux_SLICE_2;
-            addLUT( wIn );
         } else if( muxWidth <= 4 ) {
             addInput( "s_in", 2 );
             bit_per_slice = 4;
             build_width = 4;
             slice_variant = GenericMux_SLICE_4;
-            addLUT( wIn );
         } else if( muxWidth <= 8 ) {
             addInput( "s_in", 3 );
             bit_per_slice = 2;
             build_width = 8;
             slice_variant = GenericMux_SLICE_8;
-            addLUT( wIn * 2 );
         } else if( muxWidth <= 16 ) {
             addInput( "s_in", 4 );
             bit_per_slice = 1;
             build_width = 16;
             slice_variant = GenericMux_SLICE_16;
-            addLUT( wIn * 4 );
         }
 
         stringstream conn_size_str;

@@ -171,17 +171,6 @@ namespace flopoco{
 		return sizeOfBlock_;	
 	};
 	
-	DSP* StratixV::createDSP() 
-	{
-		int multW, multH;
-		getMaxDSPWidths(multW, multH);
-		
-		// create a DSP block having a shifting amount of 0
-		DSP* dsp_ = new DSP(0, multW, multH);
-		
-		return dsp_;
-	};
-	
 	bool StratixV::suggestSubmultSize(int &x, int &y, int wInX, int wInY){
 		// (DSP blocks are 36x36 and my be split as 9x9, 12x12 or 18x18)
 			int padX[nrConfigs_+1], padY[nrConfigs_+1], ix=1, iy=1; // nr of zero padding for a specific width multiplier
@@ -396,121 +385,6 @@ namespace flopoco{
 		}
 	}
 	
-	int StratixV::getIntMultiplierCost(int wInX, int wInY){
-		
-		int cost = 0;
-		int halfLut = lutInputs_/2;
-		int cx = int(ceil((double) wInX/halfLut));
-		int cy = int(ceil((double) wInY/halfLut));
-		if (cx > cy) // set cx as the min and cy as the max
-		{
-			int tmp = cx;
-			cx = cy;
-			cy = tmp;
-		}
-		
-		float p = (double)cy/(double)halfLut; // number of chunks concatenated per operand
-		float r = p - floor(p); // relative error; used for detecting how many operands have ceil(p) chunks concatenated
-		int chunkSize, lastChunkSize, nr, aux;
-		suggestSubaddSize(chunkSize, wInX+wInY);
-		lastChunkSize = (wInX+wInY)%chunkSize;
-		nr = ceil((double) (wInX+wInY)/chunkSize);
-		
-		
-		if (r == 0.0) // all IntNAdder operands have p concatenated partial products
-		{
-			aux = halfLut*cx;
-			
-			cost = p*lutInputs_*(aux-2)*(aux-1)/2; // registered partial products without zero paddings
-		}
-		else if (r > 0.5) // 2/3 of the IntNAdder operands have p concatenated partial products
-		{
-			aux = (halfLut-1)*cx;
-			
-			cost = ceil(p)*lutInputs_*(aux-2)*(aux-1)/2 + floor(p)*lutInputs_*((aux*cx)+(cx-2)*(cx-1)/2);// registered partial products without zero paddings
-		}
-		else if (r > 0) // 1/3 of the IntNAdder operands have p concatenated partial products
-		{
-			aux = (halfLut-1)*cx;
-			
-			cost = ceil(p)*lutInputs_*(cx-2)*(cx-1)/2 + floor(p)*lutInputs_*((aux*cx)+(aux-2)*(aux-1)/2);// registered partial products without zero paddings
-		}
-		
-		aux = halfLut*cx;
-		cost += p*lutInputs_*aux + halfLut*(aux-1)*aux/2; // registered addition results on each pipeline stage of the IntNAdder
-		cost += (nr-1)*(wInX+wInY) + (nr-1)*nr/2 + nr*lastChunkSize + nr*(nr-1)*(chunkSize+1)/2; // final IntAdder cost LUT + Registers
-		cost += cx*cy*lutInputs_*2; // LUT cost for small multiplications 
-		
-		return cost/2;
-	}
-	
-
-#if 0 // Should we do this? Or only useful for impractical large frequencies? 
-	void StratixV::getMaxDSPWidths(int &x, int &y, bool sign)
-	{ 
-	
-		if (sign == false)
-			x = y = 18;
-		else
-			x = y = 18;
-		
-		// set the multiplier width acording to the desired frequency
-		for (int i=0; i<nrConfigs_; i++)
-			if (frequency_ < 1.0/multiplierDelay_[i])
-			{
-				x = multiplierWidth_[i];
-				y = multiplierWidth_[i];
-				
-			}
-	}
-#endif
-	
-	
-	int StratixV::getEquivalenceSliceDSP(){
-		int lutCost = 0;
-		int x, y;
-		getMaxDSPWidths(x,y);
-		// add multiplier cost
-		lutCost += getIntMultiplierCost(x, y);
-		// add accumulator cost
-		//lutCost += accumulatorLUTCost(x, y);
-		// add partial cost of final adder
-		//lutCost += adderLUTCost(x,y);
-		return lutCost;
-	}
-	
-
-
-	int StratixV::getIntNAdderCost(int wIn, int n)
-	{
-		int chunkSize, lastChunkSize, nr, a, b, cost;
-		
-		suggestSubaddSize(chunkSize, wIn);
-		lastChunkSize = wIn%chunkSize;
-		nr = ceil((double) wIn/chunkSize);
-		a = (nr-1)*wIn + (nr-1)*nr/2 + wIn*((n-1)*n/2-1)+nr*(n-2);
-		b = nr*lastChunkSize + nr*(nr-1)*(chunkSize+1)/2 + nr*(n-1) + (n-2)*wIn;
-		cost = (a+b)/2;
-		return cost;
-	}
-	
-	void StratixV::delayForDSP(MultiplierBlock* multBlock, double currentCp, int& cycleDelay, double& cpDelay)
-	{
-		double targetPeriod, totalPeriod;
-		int multIndex = nrConfigs_-1;
-		
-		while((abs(multBlock->getwX()-multiplierWidth_[multIndex]) > 1) || (abs(multBlock->getwY()-multiplierWidth_[multIndex]) > 1))
-			if(multIndex == 0)
-				break;
-			else
-				multIndex--;
-				
-		targetPeriod = 1.0/frequency();
-		totalPeriod = currentCp + multiplierDelay_[multIndex];
-		
-		cycleDelay = floor(totalPeriod/targetPeriod);
-		cpDelay = totalPeriod-targetPeriod*cycleDelay;
-	}
 	
 	double StratixV::lutConsumption(int lutInputSize){
 		if (lutInputSize <= 5) {

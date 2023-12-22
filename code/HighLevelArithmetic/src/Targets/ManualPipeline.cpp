@@ -323,10 +323,5 @@ namespace flopoco{
 		return cost;
 	}
 #endif
-	void ManualPipeline::delayForDSP(MultiplierBlock* multBlock, double currentCp, int& cycleDelay, double& cpDelay)
-	{
-		cycleDelay = 0;
-		cpDelay = 0.; 
-	}
 
 }

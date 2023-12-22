@@ -35,7 +35,6 @@ namespace flopoco{
 		double DSPCascadingWireDelay(){ return DSPCascadingWireDelay_;}
 		double DSPToLogicWireDelay(){ return DSPToLogicWireDelay_;}
 		double LogicToDSPWireDelay(){ return DSPToLogicWireDelay_;}
-		void   delayForDSP(MultiplierBlock* multBlock, double currentCp, int& cycleDelay, double& cpDelay);
 
 		double RAMDelay() { return RAMDelay_; }
 		double RAMToLogicWireDelay() { return RAMToLogicWireDelay_; }
@@ -47,20 +46,8 @@ namespace flopoco{
 		double lutDelay();
 		double ffDelay();
 
-		bool   suggestSubmultSize(int &x, int &y, int wInX, int wInY);
-		bool   suggestSubaddSize(int &x, int wIn);
-		bool   suggestSubadd3Size(int &x, int wIn){return 0;}; // currently irrelevant for Xilinx
-		bool   suggestSlackSubaddSize(int &x, int wIn, double slack);
-		bool   suggestSlackSubadd3Size(int &x, int wIn, double slack){return 0;}; // currently irrelevant for Xilinx
-		bool   suggestSlackSubcomparatorSize(int &x, int wIn, double slack, bool constant);
-
-		int    getIntMultiplierCost(int wInX, int wInY);
 		long   sizeOfMemoryBlock();
 		double tableDelay(int wIn, int wOut, bool logicTable);
-		DSP*   createDSP();
-		int    getEquivalenceSliceDSP();
-		int    getNumberOfDSPs();
-		int    getIntNAdderCost(int wIn, int n);
 		int maxLutInputs() {return 8;}
 		double lutConsumption(int lutInputSize);
 

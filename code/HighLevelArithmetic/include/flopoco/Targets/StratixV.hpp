@@ -41,7 +41,6 @@ namespace flopoco{
 		double DSPCascadingWireDelay(){ return DSPCascadingWireDelay_;}//TODO
 		double DSPToLogicWireDelay (){ return DSPToLogicWireDelay_;}	
 		double LogicToDSPWireDelay (){ return DSPToLogicWireDelay_;}
-		void delayForDSP(MultiplierBlock* multBlock, double currentCp, int& cycleDelay, double& cpDelay);
 		
 		
 		double RAMDelay() { return RAMDelay_; }
@@ -61,14 +60,7 @@ namespace flopoco{
 		bool   suggestSlackSubaddSize(int &x, int wIn, double slack);
 		bool   suggestSlackSubadd3Size(int &x, int wIn, double slack);
 		bool   suggestSlackSubcomparatorSize(int &x, int wIn, double slack, bool constant);
-		
-		int    getIntMultiplierCost(int wInX, int wInY);
 		long   sizeOfMemoryBlock();
-		DSP*   createDSP(); 
-		int    getEquivalenceSliceDSP();
-		int    getIntNAdderCost(int wIn, int n);
-		int*   getDSPMultiplierWidths(){return multiplierWidth_;};
-		int    getNrDSPMultiplier(){return nrConfigs_;};	
 	
 	private:
 
