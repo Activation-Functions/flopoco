@@ -190,7 +190,7 @@ if __name__ == '__main__':
 #    if maxdsp>=0:
 #      tclscriptfile.write("synth_design -mode out_of_context -max_dsp " + str(maxdsp) + "\n")
     #else:
-    tclscriptfile.write("synth_design -mode out_of_context\n")
+    tclscriptfile.write("synth_design -mode out_of_context -retiming \n")
 
     # Reporting files
     utilization_report_file = workdir + "/"  + entity + "_utilization_"

@@ -60,10 +60,10 @@ namespace flopoco
 		 * table above)
 		 */
 		DSPBlock(Operator *parentOp, Target *target, int wX, int wY,
-			 bool xIsSigned = false, bool yIsSigned = false,
-			 bool isPipelined = false, int wZ = 0,
-			 bool usePostAdder = false, bool usePreAdder = false,
-			 bool preAdderSubtracts = false);
+						 bool xIsSigned = false, bool yIsSigned = false,
+						 int wZ = 0,
+						 bool usePostAdder = false, bool usePreAdder = false,
+						 bool preAdderSubtracts = false);
 
 		void emulate(TestCase *tc);
 		//	void buildStandardTestCases(TestCaseList* tcl);
