@@ -32,13 +32,10 @@ namespace flopoco{
 
 	class Operator;
 	class TestCaseList;
-
+	
+	
 	class TestCase {
 	public:
-		
-		/** Creates an empty TestCase for operator op */
-		TestCase(Operator* op);
-		~TestCase();
 
 		typedef enum {
 			list_of_values=0,          /**< good old technique */
@@ -46,7 +43,11 @@ namespace flopoco{
 			signed_interval=-2,          /**<  */
 			IEEE_interval=-3,          /**<  */
 			floating_point_interval=-4          /**<  */
-		} TestType;
+		} OutputType;
+
+		/** Creates an empty TestCase for operator op */
+		TestCase(Operator* op);
+		~TestCase();
 
 		/**
 		 * Adds an input for this TestCase
@@ -114,8 +115,9 @@ namespace flopoco{
 		 * @param s The signal for which to assign an expected output
 		 * @param vinf the smallest possible value which the signal might take
 		 * @param vsup the largest possible value which the signal might take
+		 * @param type type of the data, needed since we need to perform comparisons to check that output is within expected interval 
 		 */
-		void addExpectedOutputInterval(std::string s, mpz_class vinf, mpz_class vsup, TestType type=list_of_values);
+		void addExpectedOutputInterval(std::string s, mpz_class vinf, mpz_class vsup, OutputType type=unsigned_interval);
 
 		/**
 		 * returns all mpz associated to an output as a vector of mpz_class (added before by addExpectedOutput())
@@ -123,13 +125,6 @@ namespace flopoco{
 		 */
 		std::vector<mpz_class> getExpectedOutputValues(std::string s);
 		
-		/**
-		 * returns the mpz associated to an output (added before by addExpectedOutput())
-		 * in case that there are more than one output values associated, only the first one will be returned
-		 * @param s The name of the output
-		 */
-		mpz_class getExpectedOutputValue(std::string s);
-
 
 		/**
 		 * Adds a comment to the output VHDL. "--" are automatically prepended.
@@ -145,59 +140,41 @@ namespace flopoco{
 		std::string getInputVHDL(std::string prepend = "");
 
 		/**
-		 * Generate the VHDL code necessary to assert the expected output
-		 * signals.
-		 * @param prepend A string to prepend to each line.
-		 * @return A single-line VHDL code.
-		 */
-		std::string getExpectedOutputVHDL(std::string prepend = "");
-
-		/**
 		 * Return the comment string for this test case
 		 * @return A single-line VHDL code.
 		 */
 		std::string getComment();
-
-		/**
-		 * Generate one hexadecimal line for each test case
-		 * @param prepend A string to prepend to each line.
-		 * @return A single line with all the inputs, then all the outputs.
-		 */
-		std::string getCompactHexa(std::string prepend = "");
-
-
-		/**
-		 * generate a string with each inputs, one by line, and each
-		 * expected outputs, one by line too.
-		 * and the order for outputing these IO is given by IOorder
-		 */
-		std::string generateInputString(std::list<std::string> IOorderInput, std::list<std::string> IOorderOutput);
-
-		/**
-		 *    Define the test case integer identifiant
-		 */
+		
 		void setId(int id);
 
 		int getId();
+		
+		/**
+		 * generate a 4-line string: first two lines are the input vector, following two lines are the vector of expected outputs
+		 * An expected output is either defined by a positive integer n and a list of n acceptable outputs, 
+		   or by a negative integer n and two extremal acceptable outputs that define an acceptable interval.
+			 The comparison to use is defined by the OutputType enum above.
+		 */
+		std::string testFileString(std::list<std::string> inputSignalNames, std::list<std::string> outputSignalNames);
+
 
 		std::string getDescription();
 
 	private:
-		Operator *op_;                       /**< The operator for which this test case is being built */
 
-		std::map<std::string, mpz_class>          inputs;
-		std::map<std::string, std::vector<mpz_class> >   outputs;
-		std::set<std::string> outputInterval; /**< a set of the outputs that are specified as intervals */ 
-		
-		std::string comment;
-		int intId;                      /* integer identifiying the test case -- not sure it is used */
-		TestType type;
+		Operator *op_;                       /**< The operator for which this test case is being built */
+		std::map<std::string, mpz_class>          inputs; /**< map of signal names to bit vectors */
+		std::map<std::string, std::vector<mpz_class> >   outputs; /**< map of signal names to expected outputs. */
+		std::map<std::string, OutputType >  outputType; /**< map of signal names to the type of expected outputs (list of values, or intervals with their types) */
+
+		int intId;
+		std::string comment;  /**< an optional comment */
 	};
 
 
 
 	/**
-	 * Represents a list of test cases that an Operator has to pass.
+	 * Represents a list of test cases 
 	 */
 	class TestCaseList {
 	public:
@@ -236,7 +213,7 @@ namespace flopoco{
 		TestCase * getTestCase(int i);
 
 	private:
-		/** Stores the TestCase-es */
+		/** Stores the TestCase */
 		std::vector<TestCase*>  v;
 		std::map<int,TestCase*> mapCase;
 		/* id given to the last registered test case*/
