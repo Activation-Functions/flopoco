@@ -33,8 +33,8 @@ using namespace std;
 namespace flopoco{
 
 
-	TestBench::TestBench(Target* target, Operator* op_, int64_t n_, bool fromFile_):
-		Operator(nullptr, target), op(op_), n(n_), fromFile(fromFile_)
+	TestBench::TestBench(Target* target, Operator* op_, int64_t n_):
+		Operator(nullptr, target), op(op_), n(n_)
 	{
 		//We do not set the parent operator to this operator
 		setNoParseNoSchedule();
@@ -159,10 +159,7 @@ namespace flopoco{
 
 		setSequential();
 
-		if (fromFile)
-			generateTestFromFile();
-		else
-			generateTestInVhdl();
+		generateTestFromFile();
 	}
 
 
@@ -246,32 +243,9 @@ namespace flopoco{
 		
 	}
 
-#if 0 // TODO remove me
-	// produce one VHDL statement that goes in a process and sets the "testSuccess_varName" variable
-	// This VHDL inputs a testNumber and an array of possibleOutputs
-	string TestBench::oneTestVHDL(Signal* s, string prepend) {
-		ostringstream o;
-		string varName=s->getName();
-		tab << "function testOneOutput(possibilityNumber:integer; b : std_logic_vector) return boolean is\n" <<
-			tab << "begin\n" <<
 
-		o << prepend << "testSuccess_" << varName << " := false;" << endl;
-		o << prepend << "if possibilityNumber=-1 then -- interval "  << endl;
-		o << prepend <<  tab << "-- TODO "  << endl;
-		o << prepend << "end if;"  << endl;
-		o << prepend << "if  possibilityNumber>0 then -- list of possible values "  << endl;
-		o << prepend << tab << "for i in 1 to possibilityNumber loop  "  << endl;
-		o << prepend << tab << tab << "if "<<varName<<" = to_stdlogicvector(expected_"<<varName << "(i)) then testSuccess_" << varName << " := true ; end if;"  << endl;
-		o << prepend << tab << "end loop;" << endl;
-		o << prepend << "end if;" << endl;
-
-		return o.str();
-	}
-
-#endif
-
-	/* Generating the tests using a file to store the IO, allow to have a lot of IOs without
-	 * increasing the VHDL compilation time
+	/* The test vectors are stored in the test.input file and read by the VHDL.
+		 They used to be stored in the VHDL itself, but with zillions of tests the compilation of the VHDL took more time than the actual simulation..
 	 */
 	void TestBench::generateTestFromFile() {
 		vector<Signal*> inputSignalVector = op->getInputList();
@@ -279,8 +253,8 @@ namespace flopoco{
 			
 		// In order to generate the file containing inputs and expected output in a correct order
 		// we will store the use order for file decompression
-		list<string> IOorderInput;
-		list<string> IOorderOutput;
+		list<string> inputSignalNames;
+		list<string> outputSignalNames;
 
 
 		vhdl << tab << "-- Process that sets the inputs  (read from a file) " << endl;
@@ -304,8 +278,12 @@ namespace flopoco{
 		vhdl << tab << tab << "wait for 10 ns;" << endl;
 		vhdl << tab << tab << "rst <= '0';" << endl;
 
+		vhdl << tab << tab << "readline(inputsFile, input); -- skip the first line of advertising" << endl;
+		
 		vhdl << tab << tab << "while not endfile(inputsFile) loop" << endl;
+		vhdl << tab << tab << tab << "readline(inputsFile, input); -- skip the comment line" << endl;
 		vhdl << tab << tab << tab << "readline(inputsFile, input);" << endl;
+		vhdl << tab << tab << tab << "readline(inputsFile, expectedOutput); -- comment line, unused in this process" << endl;
 		vhdl << tab << tab << tab << "readline(inputsFile, expectedOutput); -- unused in this process" << endl;
 
 		// input reading and forwarding to the operator
@@ -316,7 +294,7 @@ namespace flopoco{
 			if ((s->width() == 1) && (!s->isBus())) vhdl << tab << tab << tab << s->getName() << " <= to_stdlogicvector(V_" << s->getName() << ")(0);" << endl;
 			else vhdl << tab << tab << tab << s->getName() << " <= to_stdlogicvector(V_" << s->getName() << ");" << endl;
 			// adding the IO to IOorder
-			IOorderInput.push_back(s->getName());
+			inputSignalNames.push_back(s->getName());
 		}
 		vhdl << tab << tab << tab << "wait for 10 ns;" << endl; 
 		vhdl << tab << tab << "end loop;" << endl;
@@ -340,19 +318,6 @@ namespace flopoco{
 		vhdl << tab << tab << "variable errorCounter : integer := 0;" << endl;
 		vhdl << tab << tab << "variable expectedOutputString : string(1 to 10000);" << endl;
 
-#if 0
-		/* Variable to store value for inputs and expected outputs*/
-		for(Signal* s: outputSignalVector){
-			vhdl << tab << tab << "variable V_" << s->getName();
-			if ((s->width() != 1) || (s->isBus())) vhdl << " : bit_vector("<< s->width() - 1 << " downto 0);" << endl;
-			else  vhdl << " : bit;" << endl;
-			//			vhdl << tab << tab << "variable expected_"  << s->getName() << ": string (1 to 10000);" << endl; // will be a copy of inline
-			//vhdl << tab << tab << "variable expected_size_"  << s->getName() << " : integer;" << endl;
-			vhdl << tab << tab << "type valueArray_"  << s->getName() << " is array(1 to 10) of bit_vector(" << s->width()-1 << " downto 0);" << endl;
-			vhdl << tab << tab << "variable expected_"  << s->getName() << " : valueArray_"  << s->getName() << ";" << endl;
-			vhdl << tab << tab << "variable testSuccess_"  << s->getName() << " : boolean;" << endl;
-		}
-#endif
 		vhdl << tab << tab << "variable testSuccess: boolean;" << endl;
 		vhdl << tab << "begin" << endl;
 		vhdl << tab << tab << "wait for 12 ns; -- wait for reset " << endl; 
@@ -360,14 +325,18 @@ namespace flopoco{
 			vhdl << tab << tab << "wait for "<< op->getPipelineDepth()*10 <<" ns; -- wait for pipeline to flush" <<endl;
 		};
 
+		vhdl << tab << tab << "readline(inputsFile, input); -- skip the first line of advertising" << endl;
+		
 		vhdl << tab << tab << "while not endfile(inputsFile) loop" << endl;
-		vhdl << tab << tab << tab << "readline(inputsFile, input); -- unused" << endl; // read the input line
+		vhdl << tab << tab << tab << "readline(inputsFile, input); -- input comment, unused" << endl; 
+		vhdl << tab << tab << tab << "readline(inputsFile, input); -- input line, unused" << endl; // read the input line
+		vhdl << tab << tab << tab << "readline(inputsFile, expectedOutput); -- comment line, unused in this process" << endl;
 		vhdl << tab << tab << tab << "readline(inputsFile, expectedOutput);" << endl; // read the outputs line
 		vhdl << tab << tab << tab << "expectedOutputString := expectedOutput.all & (expectedOutput'Length+1 to 10000 => ' ');" << endl;
 		vhdl << tab << tab << tab << "testSuccess := testLine(testCounter, expectedOutputString, expectedOutput'Length";
 		for(Signal* s: outputSignalVector){
 			vhdl << ", " << s->getName();
-			IOorderOutput.push_back(s->getName());
+			outputSignalNames.push_back(s->getName());
 
 		}
 		vhdl << 	");" << endl;
@@ -397,7 +366,7 @@ vhdl << tab << tab << tab << "if possibilityNumber = -1 then -- this means an in
 
 			//vhdl << oneTestVHDL(s, tab+tab+tab);
 
-			IOorderOutput.push_back(s->getName());
+			outputSignalNames.push_back(s->getName());
 		};
 		*/
 		vhdl << tab << tab << tab << "wait for 10 ns;" << endl;
@@ -420,9 +389,11 @@ vhdl << tab << tab << tab << "if possibilityNumber = -1 then -- this means an in
 				e << "FloPoCo was not able to open " << inputFileName << " in order to write inputs. " << endl;
 				throw e.str();
 			}
+			fileOut << "# TestBench input file, generated by FloPoCo:" << endl; 
+
 			for (int i = 0; i < tcl.getNumberOfTestCases(); i++)	{
 				TestCase* tc = tcl.getTestCase(i);
-				fileOut << tc->generateInputString(IOorderInput, IOorderOutput);
+				fileOut << tc->testFileString(inputSignalNames, outputSignalNames);
 			}
 
 			// closing input file
@@ -432,50 +403,6 @@ vhdl << tab << tab << tab << "if possibilityNumber = -1 then -- this means an in
 	}
 
 
-	void TestBench::generateTestInVhdl() {
-		vhdl << tab << "-- Setting the inputs" <<endl;
-		vhdl << tab << "process" <<endl;
-		vhdl << tab << "begin" <<endl;
-		vhdl << tab << tab << "-- Send reset" <<endl;
-		vhdl << tab << tab << "rst <= '1';" << endl;
-		vhdl << tab << tab << "wait for 10 ns;" << endl;
-		vhdl << tab << tab << "rst <= '0';" << endl;
-		for (int i = 0; i < tcl.getNumberOfTestCases(); i++){
-			vhdl << tcl.getTestCase(i)->getInputVHDL(tab + tab);
-			vhdl << tab << tab << "wait for 10 ns;" <<endl;
-		}
-		vhdl << tab << tab << "wait for 100000 ns; -- allow simulation to finish" << endl;
-		vhdl << tab << "end process;" <<endl;
-		vhdl <<endl;
-
-		int currentOutputTime = 0;
-		vhdl << tab << "-- Checking the outputs" <<endl;
-		vhdl << tab << "process" <<endl;
-		vhdl << tab << "begin" <<endl;
-		vhdl << tab << tab << "wait for 12 ns; -- wait for reset to complete" <<endl;
-		currentOutputTime += 12;
-		if (op->getPipelineDepth() > 0){
-			vhdl << tab << tab << "wait for "<< op->getPipelineDepth()*10 <<" ns; -- wait for pipeline to flush" <<endl;
-			currentOutputTime += op->getPipelineDepth()*10;
-		}
-
-
-		for (int i = 0; i < tcl.getNumberOfTestCases(); i++) {
-			vhdl << tab << tab << "-- current time: " << currentOutputTime <<endl;
-			TestCase* tc = tcl.getTestCase(i);
-			if (tc->getComment() != "")
-				vhdl << tab <<  "-- " << tc->getComment() << endl;
-			vhdl << tc->getInputVHDL(tab + tab + "-- input: "); // this method is in TestCase.cpp
-			vhdl << tc->getExpectedOutputVHDL(tab + tab); // this method is in TestCase.cpp
-			vhdl << tab << tab << "wait for 10 ns;" <<endl;
-			currentOutputTime += 10;
-		}
-
-
-		vhdl << tab << tab << "report \"End of simulation\" severity note;" <<endl;
-		vhdl << tab << "end process;" <<endl;
-
-	}
 
 	TestBench::~TestBench() {
 	}
@@ -705,16 +632,14 @@ vhdl << tab << tab << tab << "if possibilityNumber = -1 then -- this means an in
 
 	OperatorPtr TestBench::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 		int n;
-		bool file;
 
 		if(ui.globalOpList.empty()){
 			throw(string("TestBench has no operator to wrap (it should come after the operator it wraps)"));
 		}
 
 		ui.parseInt(args, "n", &n);
-		ui.parseBoolean(args, "file", &file);
 		Operator* toWrap = ui.globalOpList.back();
-		Operator* newOp = new TestBench(target, toWrap, n, file);
+		Operator* newOp = new TestBench(target, toWrap, n);
 		// the instance in newOp has added toWrap as a subcomponent of newOp,
 		// so we may remove it from globalOpList
 		//UserInterface::globalOpList.popback();
@@ -727,7 +652,6 @@ vhdl << tab << tab << tab << "if possibilityNumber = -1 then -- this means an in
 	    "Behavorial test bench for the preceding operator.",
 	    "TestBenches", // categories
 	    "", // seeAlso
-	    "n(int)=-2: number of random tests. If n=-2, an exhaustive test is generated (use only for small operators);\
-         file(bool)=true:Inputs and outputs are stored in file test.input (faster). If false, they are stored in the VHDL (easier to read);",
+	    "n(int)=-2: number of random tests. If n=-2, an exhaustive test is generated (use only for small operators);",
 	    ""};
 }

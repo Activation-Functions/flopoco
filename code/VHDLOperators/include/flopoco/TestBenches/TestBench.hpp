@@ -18,7 +18,7 @@ namespace flopoco{
 		 * @param op The operator which is the UUT
 		 * @param n Number of tests
 		 */
-		TestBench(Target *target, Operator *op, int64_t n, bool fromFile = false);
+		TestBench(Target *target, Operator *op, int64_t n);
 
 		/** Destructor */
 		~TestBench();
@@ -36,11 +36,6 @@ namespace flopoco{
 		void generateTestFromFile();
 
 
-		/** Generating the tests using a the vhdl code to store the IO,
-		 * Strongly increasing the VHDL compilation time with the numbers of IO
-		 */
-		void generateTestInVhdl();
-
 		/** generates an auxiliary function that implements the essence of the test 
 				and can be used both by generateTestFromFile() and generateTestInVhdl() */
 		void generateLineTestFunction(ostream & o);
@@ -57,7 +52,6 @@ namespace flopoco{
 		int64_t       n;   /**< The parameter from the constructor */
 		TestCaseList tcl; /**< Test case list */
 		int simulationTime; /**< Total simulation time */
-		bool fromFile; /**< Flag for external file I/O */
 		bool hasFPOutputs;
 		bool hasIEEEOutputs;
 	};

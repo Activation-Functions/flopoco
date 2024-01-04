@@ -4,10 +4,9 @@
 namespace flopoco{
 
 
-
-
 	TestCaseList::TestCaseList() { }
 	TestCaseList::~TestCaseList() { }
+
 
 	void TestCaseList::add(TestCase* tc){
 		v.push_back(tc);
@@ -35,10 +34,19 @@ namespace flopoco{
 	/*
 	  A test case is a mapping between I/O signal names and boolean values given as mpz.
 
-	  The signal names must be those of Operator->iolist_. Whether several
+	  The signal names must be those of Operator->iolist_. 
+
+		TODO The sentence flagged below is no longer true: since intervals, an IO may have one possible value for some inputs, and several for others.
+		Useful examples include: 
+      sin(0) in a faithful sine (previously managed by having the two possible values identical and equal to 0)  
+      atan2(0,0) which is allowed to be anything, hence an interval, when all the other inputs have either faithful or correct results.
+
+		TODO REMOVE ME but check what should become of numberOfPossibleValues_
+		Whether several
 	  possible output values are possible is stored in the
 	  numberOfPossibleValues_ attribute of the corresponding Signal stored in iolist, and
 	  only there.
+		END REMOVE ME
 
 	  The emulate() function of Operator takes a partial test case (mapping
 	  all the inputs) and completes it by mapping the outputs.
@@ -161,10 +169,8 @@ namespace flopoco{
 
 	void TestCase::addExpectedOutput(string name, mpz_class v)
 	{
-		type = list_of_values;
 		Signal* s = op_->getSignalByName(name);
 
-		//TODO Check if we have already too many values for this output
 		// std::cout << "signal width : " << s->width() << std::endl;
 		if (v >= (mpz_class(1) << s->width())){
 			ostringstream e;
@@ -181,13 +187,13 @@ namespace flopoco{
 			}
 			v += (mpz_class(1) << s->width());
 		}
+		outputType[name] = list_of_values;
 		outputs[name].push_back(v);
 	}
 
 
 	
-	void TestCase::addExpectedOutputInterval(std::string name, mpz_class vinf, mpz_class vsup, TestType type_){
-		type = type_ ;
+	void TestCase::addExpectedOutputInterval(std::string name, mpz_class vinf, mpz_class vsup, OutputType type){
 		
 		Signal* s = op_->getSignalByName(name);
 		if (type == unsigned_interval) {
@@ -226,19 +232,13 @@ namespace flopoco{
 			e << "ERROR in TestCase::addExpectedOutputInterval: Type is not an interval type" << name ;
 			throw e.str();	
 		}
-
-		outputInterval.insert(name);
 		outputs[name].push_back(vinf);
 		outputs[name].push_back(vsup);
+		outputType[name] = type;
 	}
 
 	vector<mpz_class> TestCase::getExpectedOutputValues(string s) {
 		return outputs[s]; // return all possible output values as a vector of mpz_class
-	}
-
-
-	mpz_class TestCase::getExpectedOutputValue(string s) {
-		return outputs[s][0]; // return only the first added expected output value, located at pos. 0 in the vector for output s
 	}
 
 
@@ -261,107 +261,37 @@ namespace flopoco{
 	}
 
 
-
-	string TestCase::getExpectedOutputVHDL(string prepend)
-	{
+	std::string TestCase::testFileString(list<string> inputSignalNames, list<string> outputSignalNames) {
 		ostringstream o;
-		if(outputs.size()==0) {
-			ostringstream e;
-			e << "ERROR in TestCase::getExpectedOutputVHDL: No output. Can't test.";
-			throw e.str();	
+		// A line of comments that will be ignored
+		//It would be nicer to have X=01001 etc but I am not clever enough to parse that in VHDL.
+		o << "##### Test #" << getId();
+		if(getComment()!="") {
+			o << " (" << getComment() << ") ";
 		}
-
-		/* Iterate through output signals */
-		for (auto it = outputs.begin(); it != outputs.end(); it++)
-			{
-				string signame = it->first;
-				Signal* s = op_->getSignalByName(signame);
-				vector<mpz_class> vs = it->second;
-				string expected;
-
-				o << prepend;
-				o << "assert ";  
-				
-				if (outputInterval.count(signame))
-					{//TODO for intervals
-						return "assert false severity ERROR; -- intervals yet unsupported ";  
-					}
-				else {// we just have a list of values to test : 
-					// Iterate through possible output values
-					if(vs.size()==0) {
-						ostringstream e;
-						e << "ERROR in TestCase::getExpectedOutputVHDL, " << signame << " has no expected value. Can't test.";
-						throw e.str();	
-					}
-						
-					for (vector<mpz_class>::iterator it = vs.begin(); it != vs.end(); it++)
-						{
-							mpz_class v = *it;
-							if (it!=vs.begin()) {
-								o << " or ";
-							}
-							if (s->isFP())
-								o << "fp_equal(" << s->getName() << ",fp" << s->width() << "'("<< s->valueToVHDL(v) << "))";
-							else if (s->isIEEE())
-								o << "fp_equal_ieee"<< "(" << s->getName() << ", fp" << s->width() << "'("<< s->valueToVHDL(v) << "), " << s->wE()  << ", " << s->wF() << ")";
-							else
-								o << s->getName() << "=" << s->valueToVHDL(v);
-							expected += " " + s->valueToVHDL(v,false);
-						}
-				}
-
-				o << " report \"Incorrect output value for " << s->getName() << ", expected" << expected << " | Test Number : " << getId() << "  \" severity ERROR; ";
-				o << endl;
-			}
-		return o.str();
-	}
-
-
-	string TestCase::getCompactHexa(string prepend)
-	{
-		ostringstream o;
-
-		o << prepend;
-
-		/* Iterate through input signals */
-		for (map<string, mpz_class>::iterator it = inputs.begin(); it != inputs.end(); it++)
-			{
-				string signame = it->first;
-				mpz_class v = it->second;
-				o << signame << "=" << std::hex << v << "  ";
-			}
-
-		/* Iterate through output signals */
-		for (map<string, vector<mpz_class> >::iterator it = outputs.begin(); it != outputs.end(); it++)
-			{
-				string signame = it->first;
-				o << signame << "=" ;
-				vector<mpz_class> vs = it->second;
-
-				/* Iterate through possible output values */
-				for (vector<mpz_class>::iterator it = vs.begin(); it != vs.end(); it++)
-					{
-						mpz_class v = *it;
-						o << "?"  << std::hex << v;
-					}
-				o << endl;
-			}
-
-		return o.str();
-	}
-
-	std::string TestCase::generateInputString(list<string> IOorderInput, list<string> IOorderOutput) {
-		ostringstream o;
-		/* iterate trough input signals */
-		for (list<string>::iterator it = IOorderInput.begin(); it != IOorderInput.end(); it++) {
-			Signal* s = op_->getSignalByName(*it);
-			mpz_class v = inputs[*it];
+		o << ": ";
+		for (auto x: inputSignalNames) {
+			o << " " << x;
+		}
+		o << " =" << endl << "  ";
+		// now the input vector. 
+		for (auto x: inputSignalNames) {
+			Signal* s = op_->getSignalByName(x);
+			mpz_class v = inputs[x];
 			o << s->valueToVHDL(v,false) << " ";
 		}
-		o << "\n";
-		for (list<string>::iterator it = IOorderOutput.begin();it != IOorderOutput.end(); it++) {
-			Signal* s = op_->getSignalByName(*it);
-			vector<mpz_class> vs = outputs[*it];
+		o << endl;
+		// Another line of comments that will be ignored
+		o << "#  Expected outputs for ";
+		for (auto x: outputSignalNames) {
+			o << " " << x;			
+		}
+		o << endl;
+		for (auto x: outputSignalNames) {
+			o << " ";
+			Signal* s = op_->getSignalByName(x);
+			OutputType type = outputType[x];
+			vector<mpz_class> vs = outputs[x];
 			if(type==list_of_values) {
 				o << vs.size() << " ";
 				for (auto v: vs)
@@ -381,6 +311,7 @@ namespace flopoco{
 		return o.str();	
 	}
 
+	
 
 
 	void TestCase::addComment(string c) {
@@ -394,7 +325,7 @@ namespace flopoco{
 	void TestCase::setId(int id) {
 		intId = id;
 	}
-
+	
 	int TestCase::getId() {
 		return intId;
 	}
