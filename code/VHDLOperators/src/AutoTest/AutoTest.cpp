@@ -261,7 +261,7 @@ namespace {
 						auto dest = testRoot / errname.str();
 						testCase.dumpnvcOut(dest.string());
 						std::cout << "\nFailed at simulation step.\nLog can be found in " << dest.string() << "\n";
-						std::cout << "Command was:\n" << nvcLine << "\n";
+						std::cout << "Command was:\n" << commandLineForTestCase(testCase) /* was nvcLine*/ << "\n";
 					}
 				} else {
 					detailedFile << "0, 0\n";
@@ -302,6 +302,10 @@ namespace {
 		}
 	};
 } // namespace
+
+
+
+
 // TODO: testDependences is fragile
 namespace flopoco
 {
@@ -403,16 +407,25 @@ namespace flopoco
 			tester.printStats(cout);
 		}
 
-		ofstream outputSummary{"summary.csv"};
+		// build summary.csv and a few global stats
+		auto summaryFilePath= *tmpDirHolder.tmpPath / "summary.csv"; 
+		ofstream outputSummary{summaryFilePath};
+		size_t totalTests=0, genOK=0, simOK=0;
 		outputSummary << "Operator Name, Total Tests, Generation OK, Simulation Ok\n";
 		for (auto& [opName, tester] : testerMap) {
+			totalTests += tester.getNbTests();
+			genOK += tester.nbGenerationOK();
+			simOK += tester.nbSimulationOk();
 			outputSummary << opName << ", " 
-						  << tester.getNbTests() << ", " 
-						  << tester.nbGenerationOK() << ", " 
-						  << tester.nbSimulationOk() << "\n";
+										<< tester.getNbTests() << ", " 
+										<< tester.nbGenerationOK() << ", " 
+										<< tester.nbSimulationOk() << "\n";
 		}
 
-		cout << "Tests are finished" << endl;
+		cout << "Tests are finished, see summary in " << summaryFilePath.string() << endl;
+		cout << "Total number of tests  "<< totalTests << endl;
+		cout << "Code generation OK     "<< genOK << endl;
+		cout << "Simulation OK          "<< simOK << endl;
 	}
 
 	string AutoTest::defaultTestBenchSize(map<string,string> const & unitTestParam, int testLevel)
