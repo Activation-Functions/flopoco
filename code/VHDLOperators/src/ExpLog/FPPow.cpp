@@ -85,7 +85,7 @@ namespace flopoco{
 
 		addFPInput("X", wE, wF);
 		addFPInput("Y", wE, wF);
-		addFPOutput("R", wE, wF, 1); // 2 because faithfully rounded
+		addFPOutput("R", wE, wF);
 
 		addConstant("wE", "positive", wE);
 		addConstant("wF", "positive", wF);

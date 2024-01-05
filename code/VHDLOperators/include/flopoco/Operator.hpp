@@ -180,17 +180,14 @@ namespace flopoco {
 		 */
 		void addInput  (const std::string name);
 
-		//	void addInput (const char* name); //ambiguous to addInput(const std::string name) !!!
-
 		/**
 		 * Adds  signal to the operator.
 		 * 	Adds a signal of type Signal::out to the the I/O signal list.
 		 * @param name  the name of the signal
 		 * @param width the number of bits of the signal.
-		 * @param numberOfPossibleOutputValues (optional, defaults to 1) set to 2 for a faithfully rounded operator for instance
 		 * @param isBus describes if this signal is a bus, that is, an instance of std_logic_vector
 		 */
-		void addOutput(const std::string name, const int width, const int numberOfPossibleOutputValues=1, const bool isBus=true);
+		void addOutput(const std::string name, const int width, const bool isBus=true);
 
 		/**
 		 * Adds an output wire (of type std_logic) with one possible value to the operator.
@@ -199,7 +196,6 @@ namespace flopoco {
 		 */
 		void addOutput(const std::string name);
 
-		//	void addOutput(const char* name); //ambiguous to addOutput(const std::string name) !!!
 
 #if 1
 		// Test:
@@ -226,10 +222,9 @@ namespace flopoco {
 		 * @param isSigned  is the signal signed/unsigned
 		 * @param msb the most significant bit of the signal's format
 		 * @param lsb the least significant bit of the signal's format
-		 * @param numberOfPossibleOutputValues the number of possible values that the signal can take;
 		 * 	useful for testing; related to rounding
 		 */
-		void addFixOutput(const std::string name, const bool isSigned, const int msb, const int lsb, const int numberOfPossibleOutputValues=1);
+		void addFixOutput(const std::string name, const bool isSigned, const int msb, const int lsb);
 #endif
 
 		/**
@@ -252,9 +247,8 @@ namespace flopoco {
 		 * @param name the name of the signal
 		 * @param wE   the width of the exponent
 		 * @param wF   the withh of the fraction
-		 * @param numberOfPossibleOutputValues (optional, defaults to 1) set to 2 for a faithfully rounded operator for instance
 		 */
-		void addFPOutput(const std::string name, const int wE, const int wF, const int numberOfPossibleOutputValues=1);
+		void addFPOutput(const std::string name, const int wE, const int wF);
 
 		/**
 		 * Adds a IEEE floating point input signal to the operator.
@@ -276,9 +270,8 @@ namespace flopoco {
 		 * @param name the name of the signal
 		 * @param wE   the width of the exponent
 		 * @param wF   the withh of the fraction
-		 * @param numberOfPossibleOutputValues (optional, defaults to 1) set to 2 for a faithfully rounded operator for instance
 		 */
-		void addIEEEOutput(const std::string name, const int wE, const int wF, const int numberOfPossibleOutputValues=1);
+		void addIEEEOutput(const std::string name, const int wE, const int wF);
 
 		/**
 		 * Called by addInput(), addOutput(), etc.
@@ -1121,8 +1114,6 @@ namespace flopoco {
 		 */
 		string getArchitectureName();
 
-		vector<Signal*> getTestCaseSignals();
-
 		string getSrcFileName();
 
 		int getOperatorCost();
@@ -1360,7 +1351,6 @@ protected:
 	string              srcFileName;                       /**< Used to debug and report.  */
 	string              uniqueName_;                        /**< By default, a name derived from the operator class and the parameters */
 	string 				      architectureName_;                  /**< Name of the operator architecture */
-	vector<Signal*>     testCaseSignals_;                   /**< The list of pointers to the signals in a test case entry. Its size also gives the dime../../VHDLOperators/include/flopoco/Toolsnsion of a test case */
 
 	int                  myuid;                             /**< Unique id */
 	int                  cost;                              /**< The cost of the operator depending on different metrics */

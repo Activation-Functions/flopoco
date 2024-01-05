@@ -19,10 +19,7 @@ namespace flopoco{
 		 A test case is a mapping between I/O signal names and boolean values
 		 given as mpz.
 
-		 The signal names must be those of Operator->iolist_. Whether several
-		 possible output values are possible is stored in the
-		 numberOfPossibleValues_ attribute of the corresponding Signal stored in iolist, and
-		 only there.
+		 The signal names must be those of Operator->iolist_.
 
 		 The emulate() function of Operator takes a partial test case (mapping
 		 all the inputs) and completes it by mapping the outputs.

@@ -51,7 +51,7 @@ namespace flopoco {
 		addInput  ("X"  , wIn, true);
 		addInput  ("Y"  , wIn, true);
 		addInput  ("Cin");
-		addOutput ("R"  , wIn, 1 , true);
+		addOutput ("R"  , wIn , true);
 
 		double targetPeriod = 1.0/getTarget()->frequency() - getTarget()->ffDelay();
 		// What is the maximum lexicographic time of our inputs?

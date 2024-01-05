@@ -148,7 +148,7 @@ BaseMultiplierXilinx2xkOp::BaseMultiplierXilinx2xkOp(Operator *parentOp, Target*
     addInput("X", wX, true);
     addInput("Y", wY, true);
 
-    addOutput("R", width+2, 1, true);
+    addOutput("R", width+2, true);
 
     if((wX != 2) && (wY != 2)) throw string("One of the input widths of the BaseMultiplierXilinx2xk has to be 2!");
 

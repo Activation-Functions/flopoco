@@ -106,7 +106,7 @@ namespace flopoco{
 		setNameWithFreqAndUID(o.str());
 
 		addFPInput("X", wE, wF);
-		addFPOutput("R", wE, wF, 2); // 2 because faithfully rounded
+		addFPOutput("R", wE, wF); 
 
 		int i, bitsPerStage;
 

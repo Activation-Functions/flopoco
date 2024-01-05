@@ -77,7 +77,7 @@ namespace flopoco {
 		// Set up the IO signals
 		addInput(xname, wX, true);
 		addInput(yname, wY, true);
-		addOutput("R", wOut, 2, true);
+		addOutput("R", wOut, true);
 
 		// The larger of the two inputs
 		vhdl << tab << declare(addUID("XX"), wX, true) << " <= " << xname << " ;" << endl;

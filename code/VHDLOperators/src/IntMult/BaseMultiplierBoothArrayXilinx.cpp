@@ -181,9 +181,9 @@ BaseMultiplierBoothArrayXilinxOp::BaseMultiplierBoothArrayXilinxOp(Operator *par
         addInput("Tin", wAcc, true);
     }
     if (wAcc>width && wX >= wY) {
-        addOutput("R", wX + wY + 1, 1, true);
+        addOutput("R", wX + wY + 1, true);
     } else{
-        addOutput("R", wX + wY , 1, true);
+        addOutput("R", wX + wY, true);
     }
 
     for(int j = 0; j < stages; j++){
