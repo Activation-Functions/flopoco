@@ -393,8 +393,7 @@ namespace flopoco{
 			wFIn=wF;
 
 		addFPInput("X", wE, wFIn);
-		addFPOutput("R", wE, wF, 2);  // 2 because faithfully rounded
-
+		addFPOutput("R", wE, wF); 
 
 
 		//********* Building a few MPFR constants, useful or obsolete *********

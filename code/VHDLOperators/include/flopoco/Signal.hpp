@@ -544,18 +544,6 @@ class Operator;
 
 
 		/**
-		 * Set the number of possible output values.
-		 */
-		void  setNumberOfPossibleValues(int n);
-
-
-		/**
-		 * Get the number of possible output values.
-		 */
-		int getNumberOfPossibleValues();
-
-
-		/**
 		 * Converts the value of the signal into a nicely formated VHDL expression,
 		 * including padding and putting quot or apostrophe.
 		 * @param v value
@@ -587,9 +575,6 @@ class Operator;
 		double       constValue_;                      /**< The value of the constant, for a constant signal */
 
 		std::string   tableAttributes_;                /**< The values that will be used to fill the table, when implemented as a hard RAM block, or other attributes needed when declaring the table */
-
-		int           numberOfPossibleValues_;         /**< For signals of type out, indicates how many values will be acceptable. Typically 1 for correct rounding, and 2 for faithful rounding */
-
 		int           lifeSpan_;                       /**< The max delay that will be applied to this signal; */
 		std::vector<std::pair<Signal*, int>> predecessors_; /**< the list of Signals that appear on the RHS of this signal.  */
 		std::vector<std::pair<Signal*, int>> successors_;   /**< the list of Signals for which this signal appears on the RHS. The second value in the pair contains the (possible) delay on the edge */

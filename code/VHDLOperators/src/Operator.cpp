@@ -174,7 +174,7 @@ namespace flopoco{
 		}
 	*/
 
-	void Operator::addOutput(const std::string name, const int width, const int numberOfPossibleOutputValues, const bool isBus) {
+	void Operator::addOutput(const std::string name, const int width, const bool isBus) {
 		//search if the signal has already been declared
 		if (isSignalDeclared(name)) {
 			//if yes, signal the error
@@ -184,7 +184,6 @@ namespace flopoco{
 		//create a new signal for the input
 		// initialize its members
 		Signal *s = new Signal(this, name, Signal::out, width, isBus);
-		s -> setNumberOfPossibleValues(numberOfPossibleOutputValues);
 		//add the signal to the output signal list and increase the number of inputs
 		ioList_.push_back(s);
 		//add the signal to the global signal list
@@ -193,22 +192,14 @@ namespace flopoco{
 		//connect the signal just created, if this is a subcomponent
 		connectIOFromPortMap(s);
 
-		for(int i=0; i<numberOfPossibleOutputValues; i++)
-			testCaseSignals_.push_back(s);
-
 		// add its lowercase version to the global list for sanity check
 		allSignalsLowercased.insert(name);
 }
 
 	void Operator::addOutput(const std::string name) {
-		addOutput (name, 1, 1, false);
+		addOutput (name, 1, false);
 	}
 
-	/*ambiguous to addOutput(const std::string name)!!!
-		void Operator::addOutput(const char* name) {
-		addOutput (name, 1, 1, false);
-		}
-	*/
 
 	void Operator::addFixInput(const std::string name, const bool isSigned, const int msb, const int lsb) {
 		//search if the signal has already been declared
@@ -234,7 +225,7 @@ namespace flopoco{
 		allSignalsLowercased.insert(name);
 	}
 
-	void Operator::addFixOutput(const std::string name, const bool isSigned, const int msb, const int lsb, const int numberOfPossibleOutputValues) {
+	void Operator::addFixOutput(const std::string name, const bool isSigned, const int msb, const int lsb) {
 		//search if the signal has already been declared
 		if (isSignalDeclared(name)) {
 			//if yes, signal the error
@@ -244,7 +235,6 @@ namespace flopoco{
 		//create a new signal for the input
 		// initialize its members
 		Signal *s = new Signal(this, name, Signal::out, isSigned, msb, lsb) ;
-		s->setNumberOfPossibleValues(numberOfPossibleOutputValues);
 		//add the signal to the output signal list and increase the number of outputs
 		ioList_.push_back(s);
 
@@ -253,9 +243,6 @@ namespace flopoco{
 
 		//connect the signal just created, if this is a subcomponent
 		connectIOFromPortMap(s);
-
-		for(int i=0; i<numberOfPossibleOutputValues; i++)
-		  testCaseSignals_.push_back(s);
 
 		// add its lowercase version to the global list for sanity check
 		allSignalsLowercased.insert(name);
@@ -283,7 +270,7 @@ namespace flopoco{
 
 	}
 
-	void Operator::addFPOutput(const std::string name, const int wE, const int wF, const int numberOfPossibleOutputValues) {
+	void Operator::addFPOutput(const std::string name, const int wE, const int wF) {
 		//search if the signal has already been declared
 		if (isSignalDeclared(name)) {
 			//if yes, signal the error
@@ -293,16 +280,12 @@ namespace flopoco{
 		//create a new signal for the input
 		// initialize its members
 		Signal *s = new Signal(this, name, Signal::out, wE, wF);
-		s -> setNumberOfPossibleValues(numberOfPossibleOutputValues);
 		//add the signal to the output signal list and increase the number of outputs
 		ioList_.push_back(s);
 		//add the signal to the global signal list
 		signalMap_[name] = s ;
 		//connect the signal just created, if this is a subcomponent
 		connectIOFromPortMap(s);
-
-		for(int i=0; i<numberOfPossibleOutputValues; i++)
-			testCaseSignals_.push_back(s);
 
 		// add its lowercase version to the global list for sanity check
 		allSignalsLowercased.insert(name);
@@ -331,7 +314,7 @@ namespace flopoco{
 		allSignalsLowercased.insert(name);
 	}
 
-	void Operator::addIEEEOutput(const std::string name, const int wE, const int wF, const int numberOfPossibleOutputValues) {
+	void Operator::addIEEEOutput(const std::string name, const int wE, const int wF) {
 		//search if the signal has already been declared
 		if (isSignalDeclared(name)) {
 			//if yes, signal the error
@@ -341,7 +324,6 @@ namespace flopoco{
 		//create a new signal for the input
 		// initialize its members
 		Signal *s = new Signal(this, name, Signal::out, wE, wF, true) ;
-		s -> setNumberOfPossibleValues(numberOfPossibleOutputValues);
 		//add the signal to the output signal list and increase the number of outputs
 		ioList_.push_back(s);
 		//add the signal to the global signal list
@@ -349,9 +331,6 @@ namespace flopoco{
 
 		//connect the signal just created, if this is a subcomponent
 		connectIOFromPortMap(s);
-
-		for(int i=0; i<numberOfPossibleOutputValues; i++)
-			testCaseSignals_.push_back(s);
 
 		// add its lowercase version to the global list for sanity check
 		allSignalsLowercased.insert(name);
@@ -2080,9 +2059,6 @@ namespace flopoco{
 		return architectureName_;
 	}
 
-	vector<Signal*> Operator::getTestCaseSignals(){
-		return testCaseSignals_;
-	}
 
 
 	string Operator::getSrcFileName(){
@@ -3606,7 +3582,6 @@ namespace flopoco{
 		target_                     = op->getTarget();
 		uniqueName_                 = op->getUniqueName();
 		architectureName_           = op->getArchitectureName();
-		testCaseSignals_            = op->getTestCaseSignals();
 		vhdl.vhdlCode.str(op->vhdl.vhdlCode.str());
 		vhdl.vhdlCodeBuffer.str(op->vhdl.vhdlCodeBuffer.str());
 

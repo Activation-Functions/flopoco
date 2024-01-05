@@ -50,7 +50,7 @@ namespace flopoco{
 
 	// plain logic vector, or wire
 	Signal::Signal(Operator* parentOp, const string name, const Signal::SignalType type, const int width, const bool isBus) :
-		parentOp_(parentOp), name_(name), type_(type), resetType_(noReset), width_(width), constValue_(0.0), tableAttributes_(""), numberOfPossibleValues_(1),
+		parentOp_(parentOp), name_(name), type_(type), resetType_(noReset), width_(width), constValue_(0.0), tableAttributes_(""),
 		lifeSpan_(0), cycle_(0), criticalPath_(0.0), criticalPathContribution_(0.0),
 		incompleteDeclaration_(false), hasBeenScheduled_(false), hasBeenDrawn_(false),
 		isFP_(false), isFix_(false), isIEEE_(false),
@@ -63,7 +63,7 @@ namespace flopoco{
 
 	// constant signal
 	Signal::Signal(Operator* parentOp, const std::string name, const Signal::SignalType type, const double constValue) :
-		parentOp_(parentOp), name_(name), type_(type), resetType_(noReset), constValue_(constValue), tableAttributes_(""), numberOfPossibleValues_(1),
+		parentOp_(parentOp), name_(name), type_(type), resetType_(noReset), constValue_(constValue), tableAttributes_(""),
 		lifeSpan_(0), cycle_(0), criticalPath_(0.0), criticalPathContribution_(0.0),
 		incompleteDeclaration_(false), hasBeenScheduled_(false), hasBeenDrawn_(false),
 		isFP_(false), isFix_(false), isIEEE_(false),
@@ -80,7 +80,7 @@ namespace flopoco{
 
 	// table
 	Signal::Signal(Operator* parentOp, const std::string name, const Signal::SignalType type, const int width, const std::string tableValue) :
-		parentOp_(parentOp), name_(name), type_(type), resetType_(noReset), width_(width), constValue_(0.0), tableAttributes_(tableValue), numberOfPossibleValues_(1),
+		parentOp_(parentOp), name_(name), type_(type), resetType_(noReset), width_(width), constValue_(0.0), tableAttributes_(tableValue),
 		lifeSpan_(0), cycle_(0), criticalPath_(0.0), criticalPathContribution_(0.0),
 		incompleteDeclaration_(false), hasBeenScheduled_(false), hasBeenDrawn_(false),
 		isFP_(false), isFix_(false), isIEEE_(false),
@@ -94,7 +94,7 @@ namespace flopoco{
 
 	// fixed point constructor
 	Signal::Signal(Operator* parentOp, const string name, const Signal::SignalType type, const bool isSigned, const int MSB, const int LSB) :
-		parentOp_(parentOp), name_(name), type_(type), resetType_(noReset), width_(MSB-LSB+1), constValue_(0.0), tableAttributes_(""), numberOfPossibleValues_(1),
+		parentOp_(parentOp), name_(name), type_(type), resetType_(noReset), width_(MSB-LSB+1), constValue_(0.0), tableAttributes_(""),
 		lifeSpan_(0), cycle_(0), criticalPath_(0.0), criticalPathContribution_(0.0),
 		incompleteDeclaration_(false), hasBeenScheduled_(false), hasBeenDrawn_(false),
 		isFP_(false), isFix_(true),  isIEEE_(false),
@@ -107,7 +107,7 @@ namespace flopoco{
 
 	// floating point constructor
 	Signal::Signal(Operator* parentOp, const string name, const Signal::SignalType type, const int wE, const int wF, const bool ieeeFormat) :
-		parentOp_(parentOp), name_(name), type_(type), resetType_(noReset), width_(wE+wF+3), constValue_(0.0), tableAttributes_(""), numberOfPossibleValues_(1),
+		parentOp_(parentOp), name_(name), type_(type), resetType_(noReset), width_(wE+wF+3), constValue_(0.0), tableAttributes_(""),
 		lifeSpan_(0), cycle_(0), criticalPath_(0.0), criticalPathContribution_(0.0),
 		incompleteDeclaration_(false), hasBeenScheduled_(false), hasBeenDrawn_(false),
 		isFP_(true), isFix_(false), isIEEE_(false),
@@ -124,7 +124,7 @@ namespace flopoco{
 	}
 
 	Signal::Signal(Operator* parentOp, const std::string name, const SignalType type, const std::string customType) :
-		parentOp_(parentOp), name_(name), type_(type), resetType_(noReset), width_(0), constValue_(0.0), tableAttributes_(""), numberOfPossibleValues_(1),
+		parentOp_(parentOp), name_(name), type_(type), resetType_(noReset), width_(0), constValue_(0.0), tableAttributes_(""),
 		lifeSpan_(0), cycle_(0), criticalPath_(0.0), criticalPathContribution_(0.0),
 		incompleteDeclaration_(false), hasBeenScheduled_(false), hasBeenDrawn_(false),
 		isFP_(false), isFix_(false), isIEEE_(false),
@@ -184,7 +184,6 @@ namespace flopoco{
 		cycle_ = originalSignal->getCycle();
 		criticalPath_ = originalSignal->getCriticalPath();
 		criticalPathContribution_ = originalSignal->getCriticalPathContribution();
-		numberOfPossibleValues_ = originalSignal->getNumberOfPossibleValues();
 		incompleteDeclaration_ = originalSignal->incompleteDeclaration_;
 		hasBeenScheduled_ = originalSignal->hasBeenScheduled_; //copy hasBeenScheduled_; can be true in the original signal, e.g., for functional registers
 		hasBeenDrawn_ = false;
@@ -644,15 +643,6 @@ namespace flopoco{
 		hasBeenDrawn_ = newVal;
 	}
 
-
-	void  Signal::setNumberOfPossibleValues(int n){
-		numberOfPossibleValues_ = n;
-	}
-
-
-	int  Signal::getNumberOfPossibleValues(){
-		return numberOfPossibleValues_;
-	}
 
 
 	std::string Signal::valueToVHDL(mpz_class v, bool quot){

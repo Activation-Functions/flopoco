@@ -49,7 +49,7 @@ namespace flopoco {
         int needed_cc = ( wIn / 8 ) + ( wIn % 8 > 0 ? 1 : 0 );
         addInput( "a", wIn );
         addInput( "b", wIn );
-        addOutput( "o", 1 , 2,false );
+        addOutput( "o");
         declare( "cc_s", needed_cc * 4 );
         declare( "cc_di", needed_cc * 4 );
         declare( "cc_co", needed_cc * 4 );

@@ -53,8 +53,8 @@ namespace flopoco{
 		// Set up the IO signals
 		addInput ("X"  , wIn_, true);
 		addInput ("Y"  , wIn_, true);
-		addOutput("XmY", wIn_, 1, true);
-		addOutput(son, wIn_, 1, true);
+		addOutput("XmY", wIn_, true);
+		addOutput(son, wIn_, true);
 
 
 

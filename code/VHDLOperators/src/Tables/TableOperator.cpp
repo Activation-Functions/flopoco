@@ -75,7 +75,7 @@ namespace flopoco
 
 		// Set up the IO signals -- this must come after the setShared()
 		addInput("X", wIn, true);
-		addOutput("Y", wOut, 1, true);
+		addOutput("Y", wOut, true);
 
 		// determine if this is a full table
 		if ((table.minIn == 0) && (table.maxIn == (1 << wIn) - 1))

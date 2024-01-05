@@ -36,18 +36,6 @@ namespace flopoco{
 
 	  The signal names must be those of Operator->iolist_. 
 
-		TODO The sentence flagged below is no longer true: since intervals, an IO may have one possible value for some inputs, and several for others.
-		Useful examples include: 
-      sin(0) in a faithful sine (previously managed by having the two possible values identical and equal to 0)  
-      atan2(0,0) which is allowed to be anything, hence an interval, when all the other inputs have either faithful or correct results.
-
-		TODO REMOVE ME but check what should become of numberOfPossibleValues_
-		Whether several
-	  possible output values are possible is stored in the
-	  numberOfPossibleValues_ attribute of the corresponding Signal stored in iolist, and
-	  only there.
-		END REMOVE ME
-
 	  The emulate() function of Operator takes a partial test case (mapping
 	  all the inputs) and completes it by mapping the outputs.
 
