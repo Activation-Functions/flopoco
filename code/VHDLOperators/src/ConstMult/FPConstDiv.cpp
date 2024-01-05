@@ -246,6 +246,44 @@ namespace flopoco{
 		tcl->add(tc);
 	}
 
+
+
+	TestList  FPConstDiv::unitTest(int testLevel)	{
+		// the static list of mandatory tests
+		TestList testStateList;
+		vector<pair<string,string>> paramList;
+		std::vector<std::array<int, 4>> paramValues; //  order is wE wF d arch
+
+		paramValues = { 
+			{5,10, 3, 0}, 
+			{8,23, 3, 0}, 
+			{11,52, 3, 0},   
+			{5,10, 3, 3}, 
+			{8,23, 3, 3}, 
+			{11,52, 3, 3},   
+		};
+		if(testLevel == TestLevel::QUICK)    { // The quick tests
+    }
+    else if(testLevel == TestLevel::SUBSTANTIAL)
+			{ // The substantial unit tests
+			}
+    else if(testLevel >= TestLevel::EXHAUSTIVE)
+			{ // The substantial unit tests
+			}
+		
+		for (auto params: paramValues) {
+			paramList.push_back(make_pair("wE", to_string(params[0])));
+			paramList.push_back(make_pair("wF", to_string(params[1])));
+			paramList.push_back(make_pair("d", to_string(params[2])));
+			paramList.push_back(make_pair("arch", to_string(params[3])));
+			testStateList.push_back(paramList);
+			paramList.clear();
+		}
+		return testStateList;
+	}
+
+
+	
 	OperatorPtr FPConstDiv::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 		int wE,wF, dExp, alpha, arch;
 		vector<int> divisors;
