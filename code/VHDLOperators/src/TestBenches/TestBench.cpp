@@ -168,7 +168,7 @@ namespace flopoco{
 		vector<Signal*> outputSignalVector = op->getOutputList();
 		o << tab << "function testLine(testCounter:integer; expectedOutputS: string(1 to 10000); expectedOutputSize: integer";
 		for(Signal* s: outputSignalVector){
-			o << "; "<< s->getName() << ": std_logic_vector (" << s->width()-1 << " downto 0)";
+			o << "; "<< s->getName() << ": " << s->toVHDLType();
 		}
 		o << ") return boolean is" << endl;
 		o << tab << tab << "variable expectedOutput: line;" << endl;
@@ -179,11 +179,16 @@ namespace flopoco{
 		//    o << tab << tab << "variable errorMessage: line;" << endl;
 		for(Signal* s: outputSignalVector){
 			o << tab << tab << "variable testSuccess_" << s->getName() << ": boolean;" << endl;
-			o << tab << tab << "variable expected_" << s->getName() << ": bit_vector (" << s->width()-1 << " downto 0); -- for list of values" << endl;
-			o << tab << tab << "variable inf_" << s->getName() << ": bit_vector (" << s->width() -1 << " downto 0); -- for intervals" << endl;
-			o << tab << tab << "variable sup_" << s->getName() << ": bit_vector (" << s->width() -1 << " downto 0); -- for intervals" << endl;
+			o << tab << tab << "variable expected_" << s->getName() << ": bit";
+			if (s->isBus()) {
+				o << "_vector (" << s->width()-1 << " downto 0)";
+			}
+			o << "; -- for list of values" << endl;
+			if (s->isBus()) {
+				o << tab << tab << "variable inf_" << s->getName() << ": bit_vector (" << s->width() -1 << " downto 0); -- for intervals" << endl;
+				o << tab << tab << "variable sup_" << s->getName() << ": bit_vector (" << s->width() -1 << " downto 0); -- for intervals" << endl;
+			}
 		}
-		
 		o << tab << "begin" << endl;
 		o << tab << tab << "write(expectedOutput, expectedOutputS);" << endl;
 		for(Signal* s: outputSignalVector){
@@ -203,28 +208,37 @@ namespace flopoco{
 			else if (s->isIEEE()) {
 				o << tab << tab << tab << tab << "if fp_equal_ieee(" << s->getName() << ", to_stdlogicvector(expected_" << s->getName() << "), " <<  s->wE() << ", " <<  s->wF() << ") then" << endl;
 			} else {// Fixed point or whatever, just test equality
-				o << tab << tab << tab << tab << "if " << s->getName() << " = to_stdlogicvector(expected_" << s->getName() << ") then" << endl;
+				o << tab << tab << tab << tab << "if " << s->getName() << " = to_stdlogic";
+				if (s->isBus()) {
+					o <<  "vector";
+				}
+				o << "(expected_" << s->getName() << ") then" << endl;
 			}
 			o << tab << tab << tab << tab << tab << "testSuccess_" << s->getName() << " := true;"  << endl;
 			o << tab << tab << tab << tab << "end if;" << endl;
 			o << tab << tab << tab << tab << "end loop;" << endl;
 			o << tab << tab << "end if;" << endl;
 			o << tab << tab << "if possibilityNumber < 0  then -- an interval" << endl;
-			o << tab << tab << tab << "read(expectedOutput, inf_" << s->getName() << ");" << endl;
-			o << tab << tab << tab << "read(expectedOutput, sup_" << s->getName() << ");" << endl;
-			o << tab << tab << tab << "if possibilityNumber =-1  then -- an unsigned interval" << endl;
-			o << tab << tab << tab << tab  << "testSuccess_" << s->getName() << " := (" << s->getName() << " >= to_stdlogicvector(inf_" << s->getName() << ")) and (" << s->getName() << " <= to_stdlogicvector(sup_" << s->getName() << "));" << endl;
-			o << tab << tab << tab << "elsif possibilityNumber =-2  then -- a signed interval" << endl;
-			o << tab << tab << tab << tab  << "testSuccess_" << s->getName() << " := (signed(" << s->getName() << ") >= signed(to_stdlogicvector(inf_" << s->getName() << "))) and (signed(" << s->getName() << ") <= signed(to_stdlogicvector(sup_" << s->getName() << ")));" << endl;
-			if(s->isIEEE()){
-				o << tab << tab << tab << "elsif possibilityNumber =-3  then -- an IEEE floating-point interval" << endl;
-				o << tab << tab << tab << tab  << "testSuccess_" << s->getName() << " := fp_inf_or_equal_ieee(to_stdlogicvector(inf_" << s->getName() << "), " << s->getName() << ", " <<  s->wE() << ", " <<  s->wF() << ") and fp_inf_or_equal_ieee(" << s->getName() << ", to_stdlogicvector(sup_" << s->getName() << "), " <<  s->wE() << ", " <<  s->wF() << ");" << endl;
+			if (s->isBus()) {
+				o << tab << tab << tab << "read(expectedOutput, inf_" << s->getName() << ");" << endl;
+				o << tab << tab << tab << "read(expectedOutput, sup_" << s->getName() << ");" << endl;
+				o << tab << tab << tab << "if possibilityNumber =-1  then -- an unsigned interval" << endl;
+				o << tab << tab << tab << tab  << "testSuccess_" << s->getName() << " := (" << s->getName() << " >= to_stdlogicvector(inf_" << s->getName() << ")) and (" << s->getName() << " <= to_stdlogicvector(sup_" << s->getName() << "));" << endl;
+				o << tab << tab << tab << "elsif possibilityNumber =-2  then -- a signed interval" << endl;
+				o << tab << tab << tab << tab  << "testSuccess_" << s->getName() << " := (signed(" << s->getName() << ") >= signed(to_stdlogicvector(inf_" << s->getName() << "))) and (signed(" << s->getName() << ") <= signed(to_stdlogicvector(sup_" << s->getName() << ")));" << endl;
+				if(s->isIEEE()){
+					o << tab << tab << tab << "elsif possibilityNumber =-3  then -- an IEEE floating-point interval" << endl;
+					o << tab << tab << tab << tab  << "testSuccess_" << s->getName() << " := fp_inf_or_equal_ieee(to_stdlogicvector(inf_" << s->getName() << "), " << s->getName() << ", " <<  s->wE() << ", " <<  s->wF() << ") and fp_inf_or_equal_ieee(" << s->getName() << ", to_stdlogicvector(sup_" << s->getName() << "), " <<  s->wE() << ", " <<  s->wF() << ");" << endl;
+				}
+				if(s->isFP()){
+					o << tab << tab << tab << "elsif possibilityNumber =-4  then -- a floating-point interval" << endl;
+					o << tab << tab << tab << tab  << "testSuccess_" << s->getName() << " := fp_inf_or_equal(to_stdlogicvector(inf_" << s->getName() << "), " << s->getName() << ") and fp_inf_or_equal(" << s->getName() << ", to_stdlogicvector(sup_" << s->getName() << "));" << endl;
+				}
+				o << tab << tab << tab << "end if;" << endl;
 			}
-			if(s->isFP()){
-				o << tab << tab << tab << "elsif possibilityNumber =-4  then -- a floating-point interval" << endl;
-				o << tab << tab << tab << tab  << "testSuccess_" << s->getName() << " := fp_inf_or_equal(to_stdlogicvector(inf_" << s->getName() << "), " << s->getName() << ") and fp_inf_or_equal(" << s->getName() << ", to_stdlogicvector(sup_" << s->getName() << "));" << endl;
-      }
-			o << tab << tab << tab << "end if;" << endl;
+			else {
+				o << tab << tab << tab << "report(\"Test #\" & integer'image(testCounter) & \", interval test on boolean output " << s->getName() <<	" is not supported\");" << endl;
+			}
 			o << tab << tab << "end if;" << endl;
 			o << tab << tab << "if testSuccess_" << s->getName() << " = false then" << endl;
 			o << tab << tab << tab << "report(\"Test #\" & integer'image(testCounter) & \", incorrect output for " << s->getName() << ": \" & lf"
@@ -240,14 +254,13 @@ namespace flopoco{
 		o << ";" << endl;
 		o << tab << tab << "return testSuccess;" << endl;
 		o << tab << "end testLine;" << endl;
-		
 	}
 
 
 	/* The test vectors are stored in the test.input file and read by the VHDL.
 		 They used to be stored in the VHDL itself, but with zillions of tests the compilation of the VHDL took more time than the actual simulation..
 	 */
-	void TestBench::generateTestFromFile() {
+		void TestBench::generateTestFromFile() {
 		vector<Signal*> inputSignalVector = op->getInputList();
 		vector<Signal*> outputSignalVector = op->getOutputList();
 			

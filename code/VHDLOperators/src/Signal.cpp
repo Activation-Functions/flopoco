@@ -68,7 +68,7 @@ namespace flopoco{
 		incompleteDeclaration_(false), hasBeenScheduled_(false), hasBeenDrawn_(false),
 		isFP_(false), isFix_(false), isIEEE_(false),
 		wE_(0), wF_(0), MSB_(0), LSB_(0),
-		isBus_(false), isCustom_(false), customType_("")
+		isBus_(true), isCustom_(false), customType_("")
 	{
 		width_ = intlog2(fabs(constValue_));
 		MSB_=width_-1;
@@ -85,7 +85,7 @@ namespace flopoco{
 		incompleteDeclaration_(false), hasBeenScheduled_(false), hasBeenDrawn_(false),
 		isFP_(false), isFix_(false), isIEEE_(false),
 		wE_(0), wF_(0), MSB_(width-1), LSB_(0),
-		isSigned_(false), isBus_(false), isCustom_(false), customType_("")
+		isSigned_(false), isBus_(true), isCustom_(false), customType_("")
 	{
 		predecessors_.clear();
 		successors_.clear();
@@ -112,7 +112,7 @@ namespace flopoco{
 		incompleteDeclaration_(false), hasBeenScheduled_(false), hasBeenDrawn_(false),
 		isFP_(true), isFix_(false), isIEEE_(false),
 		wE_(wE), wF_(wF), MSB_(0), LSB_(0),
-		isSigned_(false), isBus_(false), isCustom_(false), customType_("")
+		isSigned_(false), isBus_(true), isCustom_(false), customType_("")
 	{
 		if(ieeeFormat) { // correct some of the initializations above
 			width_  = wE+wF+1;
@@ -129,7 +129,7 @@ namespace flopoco{
 		incompleteDeclaration_(false), hasBeenScheduled_(false), hasBeenDrawn_(false),
 		isFP_(false), isFix_(false), isIEEE_(false),
 		wE_(0), wF_(0), MSB_(0), LSB_(0),
-		isSigned_(false), isBus_(false), isCustom_(true), customType_(customType)
+		isSigned_(false), isBus_(true), isCustom_(true), customType_(customType)
 	{
 		predecessors_.clear();
 		successors_.clear();
@@ -668,10 +668,10 @@ namespace flopoco{
 				 		
 		/* Put apostrophe / quot */
 		if (!quot) return r;
-		if ((width() > 1) || ( isBus() ))
-			return "\"" + r + "\"";
-		else
+		if ((width() == 1) && ( !isBus() ))
 			return "'" + r + "'";
+		else
+			return "\"" + r + "\"";
 	}
 
 
