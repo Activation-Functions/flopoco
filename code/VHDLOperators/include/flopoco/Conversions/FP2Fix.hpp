@@ -13,10 +13,10 @@
 
 namespace flopoco{
 
-   /** The FP2Fix class */
-   class FP2Fix : public Operator
-   {
-   public:
+	/** The FP2Fix class */
+	class FP2Fix : public Operator
+	{
+	public:
 		/**
 		 * @brief The  constructor
 		 * @param[in]		target		the target device
@@ -26,7 +26,7 @@ namespace flopoco{
 		 * @param[in]		wFI			the width of the fraction in input
 		 * @param[in]		trunc_p			the output is not rounded when trunc_p is true
 		 */
-		 FP2Fix(Operator* parentOp, Target* target, bool SignedO, int MSBO, int LSBO,  int wEI, int wFI, bool trunc_p);
+		FP2Fix(Operator* parentOp, Target* target, bool SignedO, int MSBO, int LSBO,  int wEI, int wFI, bool trunc_p);
 
 		/**
 		 * @brief destructor
@@ -35,14 +35,18 @@ namespace flopoco{
 
 
 	  void emulate(TestCase * tc);
-	  void buildStandardTestCases(TestCaseList* tcl);
-	  /* Overloading the Operator method to limit testing of negative numbers when Signed is 0*/
+
+		void buildStandardTestCases(TestCaseList* tcl);
+		/** Overloading the Operator method to limit testing of negative numbers when Signed is 0*/
 	  TestCase* buildRandomTestCase(int i);
+		/** Generate unit tests */
+		static TestList unitTest(int testLevel);
+
 
 		/** Factory method that parses arguments and calls the constructor */
 	  static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
 
-   private:
+	private:
 
 	  /** The width of the exponent for the input */
 	  int wEI;
@@ -58,6 +62,6 @@ namespace flopoco{
 	  /** when true the output is not rounded */
 
 
-   };
+	};
 }
 #endif

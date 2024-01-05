@@ -28,6 +28,8 @@ namespace flopoco{
 
 		void emulate(TestCase *tc);
 		void buildStandardTestCases(TestCaseList* tcl);
+		/** Generate unit tests */
+		static TestList unitTest(int testLevel);
 
 
 		/** Factory method that parses arguments and calls the constructor */

@@ -261,7 +261,7 @@ namespace {
 						auto dest = testRoot / errname.str();
 						testCase.dumpnvcOut(dest.string());
 						std::cout << "\nFailed at simulation step.\nLog can be found in " << dest.string() << "\n";
-						std::cout << "Command was:\n" << commandLineForTestCase(testCase) /* was nvcLine*/ << "\n";
+						std::cout << "Command was:\n" << name << " " << commandLineForTestCase(testCase) /*nvcLine*/ << "\n";
 					}
 				} else {
 					detailedFile << "0, 0\n";

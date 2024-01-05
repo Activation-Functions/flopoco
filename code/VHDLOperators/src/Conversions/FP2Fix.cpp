@@ -12,6 +12,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <array>
 
 #include <gmp.h>
 #include <gmpxx.h>
@@ -33,21 +34,28 @@ namespace flopoco{
 #define DEBUGVHDL 0
 
 
-   FP2Fix::FP2Fix(Operator* parentOp, Target* target, bool _Signed, int _MSBO, int _LSBO, int _wEI, int _wFI, bool _trunc_p) :
-         Operator(parentOp, target), wEI(_wEI), wFI(_wFI), Signed(_Signed), MSBO(_MSBO), LSBO(_LSBO),  trunc_p(_trunc_p) {
+	FP2Fix::FP2Fix(Operator* parentOp, Target* target, bool _Signed, int _MSBO, int _LSBO, int _wEI, int _wFI, bool _trunc_p) :
+		Operator(parentOp, target), wEI(_wEI), wFI(_wFI), Signed(_Signed), MSBO(_MSBO), LSBO(_LSBO),  trunc_p(_trunc_p) {
+		
+		srcFileName = "FP2Fix";
 
-      int MSB=MSBO;
-      int LSB=LSBO;
-
+		int MSB=MSBO;
+		int LSB=LSBO;
+		
       ostringstream name;
+      int absMSB = MSB>=0?MSB:-MSB;
+      int absLSB = LSB>=0?LSB:-LSB;
+      name<<"FP2Fix_" << wEI << "_" << wFI << (LSB<0?"M":"") << "_" << absLSB << "_" << (MSB<0?"M":"") << absMSB <<"_"<< (Signed?"S":"US") << "_" << (trunc_p==1?"T":"NT");
+      setNameWithFreqAndUID(name.str());
 
+      setCopyrightString("Fabrizio Ferrandi (2012)");
+
+			// Sanity checks
       if ((MSB < LSB)){
-         cerr << " FP2Fix: Input constraint LSB <= MSB not met."<<endl;
-         exit (EXIT_FAILURE);
+				THROWERROR("Input constraint LSB <= MSB not met.");
       }
       if(LSB<0 && -LSB > wFI){
-         cerr << " FP2Fix: Input constraint -LSB <= wFI not met."<<endl;
-         exit (EXIT_FAILURE);
+				THROWERROR("Input constraint -LSB <= wFI not met.");
       }
 
       int wFO = MSB - LSB + 1;
@@ -62,15 +70,8 @@ namespace flopoco{
          wFO0 = MSB + 1 - LSB;
 
       if (( maxExpWE < MSB ) || ( minExpWE > LSB)){
-         cerr << " The exponent is too small for full coverage. Try increasing the exponent !"<<endl;
-         exit (EXIT_FAILURE);
+				THROWERROR("The exponent is too small for full coverage. Try increasing the exponent.");
       }
-      int absMSB = MSB>=0?MSB:-MSB;
-      int absLSB = LSB>=0?LSB:-LSB;
-      name<<"FP2Fix_" << wEI << "_" << wFI << (LSB<0?"M":"") << "_" << absLSB << "_" << (MSB<0?"M":"") << absMSB <<"_"<< (Signed?"S":"US") << "_" << (trunc_p==1?"T":"NT");
-      setNameWithFreqAndUID(name.str());
-
-      setCopyrightString("Fabrizio Ferrandi (2012)");
 
       /* Set up the IO signals */
 
@@ -243,6 +244,42 @@ namespace flopoco{
 
    }
 
+	TestList  FP2Fix::unitTest(int testLevel)	{
+		// the static list of mandatory tests
+		TestList testStateList;
+		vector<pair<string,string>> paramList;
+		std::vector<std::array<int, 5>> paramValues;
+
+		paramValues = { //  order is wE wF signed MSB LSB
+			{5,10, 1, 7,-8}, // conversion of pseudo FP16 to fixpoint   
+			{5,10, 0, 7,-8}, // conversion of pseudo FP16 to fixpoint   
+			{5,10, 1, 0,-15}, // conversion of pseudo FP16 to fixpoint   
+			{5,10, 0, -1,-16}, // conversion of pseudo FP32 to fixpoint   
+			{8,23, 1, 7,-8}, // conversion of pseudo FP32 to fixpoint   
+			{8,23, 0, 7,-8}, // conversion of pseudo FP32 to fixpoint		
+			{8,23, 1, 0,-15}, // conversion of pseudo FP32 to fixpoint	 
+			{8,23, 0, -1,-16}, // conversion of pseudo FP32 to fixpoint		
+		};
+		if(testLevel == TestLevel::QUICK)    { // The quick tests
+    }
+    else if(testLevel == TestLevel::SUBSTANTIAL)
+			{ // The substantial unit tests
+			}
+    else if(testLevel >= TestLevel::EXHAUSTIVE)
+			{ // The substantial unit tests
+			}
+		
+		for (auto params: paramValues) {
+			paramList.push_back(make_pair("wE", to_string(params[0])));
+			paramList.push_back(make_pair("wF", to_string(params[1])));
+			paramList.push_back(make_pair("signed", to_string(params[2])));
+			paramList.push_back(make_pair("MSB", to_string(params[3])));
+			paramList.push_back(make_pair("LSB", to_string(params[4])));
+			testStateList.push_back(paramList);
+			paramList.clear();
+		}
+		return testStateList;
+	}
 
 		
 	OperatorPtr FP2Fix::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
