@@ -158,29 +158,36 @@ namespace flopoco{
 	void TestCase::addExpectedOutput(string name, mpz_class v)
 	{
 		Signal* s = op_->getSignalByName(name);
-
-		// std::cout << "signal width : " << s->width() << std::endl;
-		if (v >= (mpz_class(1) << s->width())){
-			ostringstream e;
-			e << "ERROR in TestCase::addExpectedOutput, value " << v << " of signal " << name << " out of range 0 .. " << (mpz_class(1) << s->width())-1;
-			throw e.str();
-		}
-		// TODO There should be a test if the output is a signed one instead
-		// TODO first: remove the possibily of v<0, and see which tests it breaks
-		if (v<0) {
-			if (v < - (mpz_class(1) << s->width())){
+		if (s->isSigned()) {
+			// sanity checks
+			mpz_class minval = - (mpz_class(1) << (s->width()-1)) ;
+			mpz_class maxval =  (mpz_class(1) << (s->width()-1)) -1 ;
+			if (v < minval || v>maxval){
 				ostringstream e;
-				e << "ERROR in TestCase::addExpectedOutput, negative value " << v << " of signal " << name << " out of range " << - (mpz_class(1) << s->width()) << " .. " << (mpz_class(1) << s->width())-1;
+				e << "ERROR in TestCase::addExpectedOutput, negative value " << v << " of signal " << name << " out of range " << minval << " .. " << maxval;
 				throw e.str();
 			}
-			v += (mpz_class(1) << s->width());
+			// now we may perform the two's complement
+			if (v<0) {
+				v += (mpz_class(1) << s->width());
+			}
+		}
+		else { // s is unsigned; This covers the FP and IEEE types as well.
+			// sanity checks
+			mpz_class maxval =  (mpz_class(1) << (s->width())) -1 ;
+			if (v<0 || v >maxval){
+				ostringstream e;
+				e << "ERROR in TestCase::addExpectedOutput, value " << v << " of signal " << name << " out of range 0 .. " << maxval;
+				throw e.str();
+			}
 		}
 		outputType[name] = list_of_values;
 		outputs[name].push_back(v);
 	}
 
 
-	
+	// TODO 1/ OutputType should be removed, replaced by info read from s itself
+	// 2/ implement FP and IEEE
 	void TestCase::addExpectedOutputInterval(std::string name, mpz_class vinf, mpz_class vsup, OutputType type){
 		
 		Signal* s = op_->getSignalByName(name);

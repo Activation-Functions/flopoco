@@ -196,9 +196,8 @@ namespace flopoco {
 		 */
 		void addOutput(const std::string name);
 
-
-#if 1
-		// Test:
+		// It seems a good idea to add typing to IOs but a lot of legacy operators do not do it
+		// and sometimes (IntAdder) it is counter productive
 		// One option is that fixed-point I/Os should always be plain std_logic_vectors.
 		// It just makes the framework simpler, and anyway typing is managed internally
 		// FP I/O need to be typed to manage the testbenches, e.g. FP equality does
@@ -225,7 +224,6 @@ namespace flopoco {
 		 * 	useful for testing; related to rounding
 		 */
 		void addFixOutput(const std::string name, const bool isSigned, const int msb, const int lsb);
-#endif
 
 		/**
 		 * Adds a floating point (FloPoCo format) input signal to the operator.

@@ -26,7 +26,7 @@ namespace flopoco{
 		 * @param[in]		wFI			the width of the fraction in input
 		 * @param[in]		trunc_p			the output is not rounded when trunc_p is true
 		 */
-		FP2Fix(Operator* parentOp, Target* target, bool SignedO, int MSBO, int LSBO,  int wEI, int wFI, bool trunc_p);
+		FP2Fix(Operator* parentOp, Target* target, int MSBO, int LSBO,  int wEI, int wFI, bool trunc_p);
 
 		/**
 		 * @brief destructor
@@ -37,8 +37,9 @@ namespace flopoco{
 	  void emulate(TestCase * tc);
 
 		void buildStandardTestCases(TestCaseList* tcl);
-		/** Overloading the Operator method to limit testing of negative numbers when Signed is 0*/
-	  TestCase* buildRandomTestCase(int i);
+		
+	  // TestCase* buildRandomTestCase(int i);
+
 		/** Generate unit tests */
 		static TestList unitTest(int testLevel);
 
@@ -49,17 +50,15 @@ namespace flopoco{
 	private:
 
 	  /** The width of the exponent for the input */
-	  int wEI;
+	  int wE;
 	  /** The width of the fraction for the input */
-	  int wFI;
-	  /** are all numbers positive or not */
-	  bool Signed;
+	  int wF;
 	  /** The MSB for the output */
-	  int MSBO;
+	  int MSB;
 	  /** The LSB for the output */
-	  int LSBO;
+	  int LSB;
 	  bool trunc_p;
-	  /** when true the output is not rounded */
+	  /** when true the output is truncated, when false it is rounded */
 
 
 	};
