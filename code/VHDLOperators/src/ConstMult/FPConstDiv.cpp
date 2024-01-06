@@ -262,14 +262,15 @@ namespace flopoco{
 			{8,23, 3, 3}, 
 			{11,52, 3, 3},   
 		};
-		if(testLevel == TestLevel::QUICK)    { // The quick tests
+		if(testLevel == TestLevel::QUICK)    {
+			// TODO
     }
-    else if(testLevel == TestLevel::SUBSTANTIAL)
-			{ // The substantial unit tests
-			}
-    else if(testLevel >= TestLevel::EXHAUSTIVE)
-			{ // The substantial unit tests
-			}
+    else if(testLevel == TestLevel::SUBSTANTIAL){
+			// TODO
+		}
+    else if(testLevel >= TestLevel::EXHAUSTIVE)	{
+			// TODO
+		}
 		
 		for (auto params: paramValues) {
 			paramList.push_back(make_pair("wE", to_string(params[0])));

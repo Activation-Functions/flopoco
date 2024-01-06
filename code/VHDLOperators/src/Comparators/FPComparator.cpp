@@ -281,32 +281,25 @@ namespace flopoco{
 		// the static list of mandatory tests
 		TestList testStateList;
 		vector<pair<string,string>> paramList;
+		std::vector<std::array<int, 3>> paramValues; //  order is wE wF flags
+
+		
+		paramValues = { 
+			{5,10,31}, 
+			{8,23,31}, 
+			{11,52,31}   
+		};
 		
     if(testLevel >= TestLevel::SUBSTANTIAL)
     { // The substantial unit tests
-
-			for(int flags=1;flags<32; flags++) {
-				paramList.push_back(make_pair("flags",to_string(flags)));
-				paramList.push_back(make_pair("wE",to_string(5)));
-				paramList.push_back(make_pair("wF",to_string(10)));
-				testStateList.push_back(paramList);
-				paramList.clear();
-				paramList.push_back(make_pair("flags",to_string(flags)));
-				paramList.push_back(make_pair("wE",to_string(8)));
-				paramList.push_back(make_pair("wF",to_string(23)));
-				testStateList.push_back(paramList);
-				paramList.clear();
-				paramList.push_back(make_pair("flags",to_string(flags)));
-				paramList.push_back(make_pair("wE",to_string(11)));
-				paramList.push_back(make_pair("wF",to_string(52)));
-				testStateList.push_back(paramList);
-				paramList.clear();
-				paramList.push_back(make_pair("flags",to_string(flags)));
-				paramList.push_back(make_pair("wE",to_string(16)));
-				paramList.push_back(make_pair("wF",to_string(111)));
-				testStateList.push_back(paramList);
-				paramList.clear();
+			std::vector<std::array<int, 3>> moreParamValues; //  order is wE wF flags
+			for (auto params: paramValues) {
+				for(int flags=1;flags<32; flags++) {
+					params[2]=flags;
+					moreParamValues.push_back(params);
+				}
 			}
+			paramValues=moreParamValues;
 		}
 		else     
 			{
@@ -314,6 +307,14 @@ namespace flopoco{
 			// TODO
 		}	
 		
+		for (auto params: paramValues) {
+			paramList.push_back(make_pair("wE", to_string(params[0])));
+			paramList.push_back(make_pair("wF", to_string(params[1])));
+			paramList.push_back(make_pair("flags", to_string(params[2])));
+			testStateList.push_back(paramList);
+			paramList.clear();
+		}
+
 		return testStateList;
 	}
 
