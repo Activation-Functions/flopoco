@@ -201,6 +201,16 @@ namespace flopoco{
 	}
 
 
+#if 0
+	/* If enabled, some of the operators will have signed and unsigned IOs instead of std_logic_vector.
+		 It would be a good thing.
+		 Unfortunately with the current state of the framework 
+		 it creates more problems that it solves 
+		 (need to insert conversions in instances, etc)
+		 Therefore disabled, until somebody is ready to dedicate one week of work to do it properly.
+		 This is the reason why we have to specify the interval type in TestCase::addExpectedOutputInterval for instance.
+	*/
+	
 	void Operator::addFixInput(const std::string name, const bool isSigned, const int msb, const int lsb) {
 		//search if the signal has already been declared
 		if (isSignalDeclared(name)) {
@@ -247,7 +257,8 @@ namespace flopoco{
 		// add its lowercase version to the global list for sanity check
 		allSignalsLowercased.insert(name);
 	}
-
+#endif
+	
 	void Operator::addFPInput(const std::string name, const int wE, const int wF) {
 		//search if the signal has already been declared
 		if (isSignalDeclared(name)) {
