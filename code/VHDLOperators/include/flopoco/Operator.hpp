@@ -196,15 +196,17 @@ namespace flopoco {
 		 */
 		void addOutput(const std::string name);
 
-		// It seems a good idea to add typing to IOs but a lot of legacy operators do not do it
-		// and sometimes (IntAdder) it is counter productive
-		// One option is that fixed-point I/Os should always be plain std_logic_vectors.
-		// It just makes the framework simpler, and anyway typing is managed internally
-		// FP I/O need to be typed to manage the testbenches, e.g. FP equality does
-		// not resume to equality on the bit vectors.
-		// This is not the case for fixed-point
-		// (comment by F de Dinechin)
 
+#if 0
+	/* If enabled, some of the operators will have signed and unsigned IOs instead of std_logic_vector.
+		 It would be a good thing.
+		 Unfortunately with the current state of the framework 
+		 it creates more problems that it solves 
+		 (need to insert conversions in instances, etc)
+		 and sometimes (IntAdder, FixAtan2 output) it is even counter-productive
+		 Therefore disabled, until somebody is ready to dedicate one week of work to do it properly.
+		 This is the reason why we have to specify the interval type in TestCase::addExpectedOutputInterval for instance.
+	*/
 		/**
 		 * Adds a fixed-point input signal to the operator.
 		 * @param name  the name of the signal
@@ -224,7 +226,8 @@ namespace flopoco {
 		 * 	useful for testing; related to rounding
 		 */
 		void addFixOutput(const std::string name, const bool isSigned, const int msb, const int lsb);
-
+#endif
+		
 		/**
 		 * Adds a floating point (FloPoCo format) input signal to the operator.
 		 * 	Adds a signal of type Signal::in to the the I/O signal list,

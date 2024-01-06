@@ -80,7 +80,7 @@ namespace flopoco{
 		/* Set up the IO signals */
 
 		addFPInput ("X", wE,wF);
-		addFixOutput("R", true, MSB, LSB); // signed
+		addOutput("R", true, w); // signed
 		addOutput ("ov");
 
 		/*	VHDL code description	*/

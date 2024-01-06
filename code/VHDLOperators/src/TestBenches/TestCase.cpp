@@ -191,25 +191,45 @@ namespace flopoco{
 	void TestCase::addExpectedOutputInterval(std::string name, mpz_class vinf, mpz_class vsup, OutputType type){
 		
 		Signal* s = op_->getSignalByName(name);
+
+
+
+		// Sanity checks
 		if (type == unsigned_interval) {
-			if (vinf<0 || vinf >= (mpz_class(1) << s->width())){
+			mpz_class maxval =  (mpz_class(1) << (s->width())) -1 ;
+			if (vinf<0 || vinf > maxval) {
 				ostringstream e;
 				e << "ERROR in TestCase::addExpectedOutputInterval, value " << vinf << " of signal " << name << " out of range 0 .. " << (mpz_class(1) << s->width())-1;
 				throw e.str();
 			}
-			if (vsup<0 || vsup >= (mpz_class(1) << s->width())){
+			if (vsup<0 || vsup > maxval) {
 				ostringstream e;
 				e << "ERROR in TestCase::addExpectedOutputInterval, value " << vsup << " of signal " << name << " out of range 0 .. " << (mpz_class(1) << s->width())-1;
 				throw e.str();
 			}
+			if (vinf>vsup) {
+				ostringstream e;
+				e << "WARNING in TestCase::addExpectedOutput, empty signed interval [" << vinf << ", " << vsup << " for signal " << name << ". Proceeding nevertheless" << endl;
+				cerr << e.str();
+			}
 		}
 		else if (type == signed_interval) {
-			mpz_class bound = mpz_class(1) << (s->width()-1);
-			if ( (vinf < -bound)  || (vinf >= bound)  || (vsup < -bound)  || (vsup >= bound) ){
+			mpz_class minval = - (mpz_class(1) << (s->width()-1)) ;
+			mpz_class maxval =  (mpz_class(1) << (s->width()-1)) -1 ;
+			if (vinf < minval || vinf>maxval){
 				ostringstream e;
-				e << "ERROR in TestCase::addExpectedOutputInterval, interval [" << vinf << ", " << vsup <<"] of signal "
-					<< name << " out of range [" << -bound << ", " << bound-1 << "]" << (mpz_class(1) << s->width())-1;
+				e << "ERROR in TestCase::addExpectedOutput, negative value " << vinf << " of signal " << name << " out of range " << minval << " .. " << maxval;
 				throw e.str();
+			}
+			if (vsup < minval || vsup>maxval){
+				ostringstream e;
+				e << "ERROR in TestCase::addExpectedOutput, negative value " << vsup << " of signal " << name << " out of range " << minval << " .. " << maxval;
+				throw e.str();
+			}
+			if (vinf>vsup) {
+				ostringstream e;
+				e << "WARNING in TestCase::addExpectedOutput, empty signed interval [" << vinf << ", " << vsup << " for signal " << name << ". Proceeding nevertheless" << endl;
+				cerr << e.str();
 			}
 		}	
 		else if (type == IEEE_interval) {
