@@ -327,7 +327,7 @@ namespace flopoco{
 		/* Variable declaration */
 		vhdl << tab << tab << "file inputsFile : text is \"test.input\"; " << endl; // declaration of the input file
 		vhdl << tab << tab << "variable input, expectedOutput : line; " << endl;  // variables to read a line
-		vhdl << tab << tab << "variable testCounter : integer := 1;" << endl;
+		vhdl << tab << tab << "variable testCounter : integer := 0;" << endl;
 		vhdl << tab << tab << "variable errorCounter : integer := 0;" << endl;
 		vhdl << tab << tab << "variable expectedOutputString : string(1 to 10000);" << endl;
 
