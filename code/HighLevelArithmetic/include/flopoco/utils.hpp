@@ -72,12 +72,12 @@ namespace flopoco{
 			static void init(int n, bool force = true);
 	};
 
-	/** Returns under the form of a string of given size, the unsigned binary representation of an integer.
+	/** Returns the unsigned binary representation of an integer as a VHDL string.
 	 * @param x the number to be represented in unsigned binary
 	 * @param size the size of the output string
 	 * @return the string binary representation of x
 	 */
-	std::string unsignedBinary(mpz_class x, int size);
+	std::string unsignedBinary(mpz_class x, int size, bool doubleQuotes=false);
 
 	/** Return the binary representation of a floating point number in the
 	 * FPLibrary/FloPoCo format

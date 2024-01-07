@@ -10,7 +10,7 @@ namespace flopoco{
 
 	void TestCaseList::add(TestCase* tc){
 		v.push_back(tc);
-		tc->setId(v.size()-1); // id is the index in this vector
+		tc->setId(v.size()); // id is the index in this vector
 	}
 
 	void TestCaseList::add(TestCaseList* tcl){
@@ -155,16 +155,16 @@ namespace flopoco{
 		inputs[s]=v;
 	}
 
-	void TestCase::addExpectedOutput(string name, mpz_class v)
+	void TestCase::addExpectedOutput(string name, mpz_class v, bool isSigned)
 	{
 		Signal* s = op_->getSignalByName(name);
-		if (s->isSigned()) {
+		if (isSigned) { // some day it will be s->isSigned() instead
 			// sanity checks
 			mpz_class minval = - (mpz_class(1) << (s->width()-1)) ;
 			mpz_class maxval =  (mpz_class(1) << (s->width()-1)) -1 ;
 			if (v < minval || v>maxval){
 				ostringstream e;
-				e << "ERROR in TestCase::addExpectedOutput, negative value " << v << " of signal " << name << " out of range " << minval << " .. " << maxval;
+				e << "ERROR in TestCase::addExpectedOutput, signed value " << v << " of signal " << name << " out of range " << minval << " .. " << maxval;
 				throw e.str();
 			}
 			// now we may perform the two's complement
@@ -186,8 +186,12 @@ namespace flopoco{
 	}
 
 
-	// TODO 1/ OutputType should be removed, replaced by info read from s itself
-	// 2/ implement FP and IEEE
+	/* TODO
+		 1/ implement FP and IEEE
+		 2/ OutputType could be removed, replaced by info read from s itself
+		 Unfortunately this is non trivial, and upon trying maybe not a good idea
+		 see comment around addFixInput in Operator.hpp
+	*/
 	void TestCase::addExpectedOutputInterval(std::string name, mpz_class vinf, mpz_class vsup, OutputType type){
 		
 		Signal* s = op_->getSignalByName(name);

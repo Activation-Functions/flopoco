@@ -38,12 +38,13 @@ namespace flopoco{
 		Operator(parentOp, target), wE(_wE), wF(_wF), MSB(_MSB), LSB(_LSB),  trunc_p(_trunc_p)
 	{
 		srcFileName = "FP2Fix";
-		
-		
+				
 		ostringstream name;
 		int absMSB = MSB>=0?MSB:-MSB;
 		int absLSB = LSB>=0?LSB:-LSB;
-		name<<"FP2Fix_" << wE << "_" << wF << (LSB<0?"M":"") << "_" << absLSB << "_" << (MSB<0?"M":"") << absMSB <<"_" << "_" << (trunc_p==1?"T":"NT");
+		name<<"FP2Fix_" << wE << "_" << wF << "_" << "_"
+				<< (MSB<0?"M":"") << absMSB << "_" << (LSB<0?"M":"")  << absLSB
+				<< "_" << (trunc_p==1?"T":"R");
 		setNameWithFreqAndUID(name.str());
 		
 		setCopyrightString("Fabrizio Ferrandi, Florent de Dinechin (2012-2023)");
@@ -57,6 +58,7 @@ namespace flopoco{
 		int minExp = 1 - maxExp;
 		int minPos = minExp-wF;
 		int padBitsMSB=0;
+		int bias =  maxExp - 1;
 		if(MSB > maxExp){
 			REPORT(LogLevel::MESSAGE, "For wE=" << wE << ", maxExp=" << maxExp << " < MSB="<<MSB<< ". Some output bits are useless.");
 			padBitsMSB = MSB-maxExp;
@@ -66,116 +68,75 @@ namespace flopoco{
 			REPORT(LogLevel::MESSAGE, "For wE=" << wE << " and  wF=" << wF << ", minExp-wF=" << minPos << " > LSB="<<LSB<< ". Some output bits are useless.");
 			padBitsLSB=minPos-LSB;
 		}
-		
-		/*      int wFO0;
-						if(eMax+1 < MSB + 1)
-						wFO0 = eMax + 1 - LSB;
-						else
-						wFO0 = MSB + 1 - LSB;
-							
-						if (( maxExpWE < MSB ) || ( minExpWE > LSB)){
-						THROWERROR("The exponent is too small for full coverage. Try increasing the exponent.");
-						}
-		*/
-		/* Set up the IO signals */
 
+		/* Set up the IO signals */
 		addFPInput ("X", wE,wF);
-		addOutput("R", true, w); // signed
+		addOutput("R", w); 
 		addOutput ("ov");
 
-		/*	VHDL code description	*/
-		vhdl << tab << declare("eA0",wE) << " <= X" << range(wE+wF-1,wF) << ";"<<endl;
-		vhdl << tab << declare("fA0",wF+1) << " <= \"1\" & X" << range(wF-1, 0)<<";"<<endl;
-    int bias =  maxExp - 1;
+		/*	VHDL code	*/
+		vhdl << tab << declare("exn",2) << " <= X" << range(wE+wF+2,wE+wF+1) << ";"<<endl;
+		vhdl << tab << declare("sign") << " <= X" << of(wE+wF) << ";"<<endl;
+		vhdl << tab << declare("exponentField",wE) << " <= X" << range(wE+wF-1,wF) << ";"<<endl;
+		vhdl << tab << declare("zero") << " <= '1' when exn=\"00\" else '0';"<<endl;
+		vhdl << tab << declare("infNaN") << " <= '1' when exn(1)='1' else '0';"<<endl;
+	
+		/* We shift right because we accept to lose bits on the right;  
+			 drawing with wE=3, MSB=7, LSB=0 of the two extremal shift values
+			 0xxxx					 shift=0	(leave one bit for the sign bit) (shift<0: overflow)
+			         xxxx	 shift=maxShift			(shift>maxShift: return 0)	 
+			 |      |r		 r is the round bit
+			MSB		 LSB
 
-		vhdl << tab << declare(getTarget()->adderDelay(wE), "eA1", wE) << " <= eA0 - conv_std_logic_vector(" << bias << ", "<< wE<<");"<<endl;
-			
-#if 0      
-      int wShiftIn = intlog2(w+2);
-      if(wShiftIn < wE)
-        vhdl << tab << declare("shiftedby", wShiftIn) <<  " <= eA1" << range(wShiftIn-1, 0)                 << " when eA1" << of(wE-1) << " = '0' else " << rangeAssign(wShiftIn-1,0,"'0'") << ";"<<endl;
-      else
-        vhdl << tab << declare("shiftedby", wShiftIn) <<  " <= " << rangeAssign(wShiftIn-wE,0,"'0'") << " & eA1 when eA1" << of(wE-1) << " = '0' else " << rangeAssign(wShiftIn-1,0,"'0'") << ";"<<endl;
+			shift=0 when E-bias=MSB-1
+			=> shift = (MSB+bias-1)- E
+			and maxShift = w-1
+		*/
 
-      //FXP shifter
+		if(padBitsLSB==0 && padBitsMSB==0) { // general case
+			int maxShift = w-1; // see drawing above
+			int shiftSize = intlog2(maxShift);
+			// shift=MSB-E-bias = (MSB-bias) - E
+			// In this case we also know that shiftSize <=wE, so let's perform the subtraction on this size, plus 1 bit to detect if < 0
+			vhdl << tab << declare(getTarget()->adderDelay(wE+1), "shiftVal", wE+1)
+					 << " <= " << unsignedBinary(signedToBitVector(MSB+bias-1, wE+1), wE+1, true) << "- ('0'&exponentField);" << endl;		
+			vhdl << tab << declare("overflow") << " <= shiftVal" << of(wE) << "; --sign bit"<<endl;
+			vhdl << tab << declare("underflow") << " <= '1' when signed(shiftVal) > " << signedToBitVector(maxShift, wE+1) << " else '0'; "<<endl;
+			vhdl << tab << declare("mantissa",wF+1) << " <= (not (zero or underflow)) & X" << range(wF-1, 0)<<";"<<endl;
+
+			vhdl << tab << declare("shiftValShort", shiftSize)
+					 << " <= " << unsignedBinary(maxShift, shiftSize, true) << " when (underflow or zero)='1' else shiftVal" << range(shiftSize-1, 0) << ";" << endl; 
+
+			// We use the cheapest shifter variant here.
+			// Adding the computeSticky option would allow for RN ties to even
+			// but it costs  20% more  area and delay, just to get the tie situations right.
+			// but RNE is defined when the _output_ is floating point, not the case here 
 			newInstance("Shifter",
 									"FXP_shifter",
-									"wX=" + to_string(wF+1) + " maxShift=" + to_string(wFO0+2) + " dir=0",
-									"X=>fA0,S=>shiftedby",
-									"R=>fA1");
-			
-      if(trunc_p)
-      {
-         if(!isSigned)
-         {
-            vhdl << tab << declare("fA4",wFO) <<  "<= fA1" << range(wFO0+wF+LSB, wF+1+LSB)<< ";"<<endl;
-         }
-         else
-         {
-            vhdl << tab << declare("fA2",wFO) <<  "<= fA1" << range(wFO0+wF+LSB, wF+1+LSB)<< ";"<<endl;
-            vhdl << tab << declare(getTarget()->adderDelay(wFO),  "fA4",wFO) <<  "<= fA2 when I" << of(wE+wF) <<" = '0' else -isSigned(fA2);" <<endl;
-         }
-      }
-      else
-      {
-         vhdl << tab << declare("fA2a",wFO+1) <<  "<= '0' & fA1" << range(wFO0+wF+LSB, wF+1+LSB)<< ";"<<endl;
-         if(!isSigned)
-         {
-            vhdl << tab << declare(getTarget()->logicDelay(), "notallzero") << " <= '0' when fA1" << range(wF+LSB-1, 0) << " = " << rangeAssign(wF+LSB-1, 0,"'0'") << " else '1';"<<endl;
-            vhdl << tab << declare(getTarget()->logicDelay(), "round") << " <= fA1" << of(wF+LSB) << " and notallzero ;"<<endl;
-         }
-         else
-         {
-            vhdl << tab << declare(getTarget()->logicDelay(), "notallzero") << " <= '0' when fA1" << range(wF+LSB-1, 0) << " = " << rangeAssign(wF+LSB-1, 0,"'0'") << " else '1';"<<endl;
-            vhdl << tab << declare("round") << " <= (fA1" << of(wF+LSB) << " and I" << of(wE+wF) << ") or (fA1" << of(wF+LSB) << " and notallzero and not I" << of(wE+wF) << ");"<<endl;
-         }   
-         vhdl << tab << declare("fA2b",wFO+1) <<  "<= '0' & " << rangeAssign(wFO-1,1,"'0'") << " & round;"<<endl;
-				 newInstance("IntAdder", "fracAdder", "wIn="+to_string(wFO+1), "X=>fA2a,Y=>fA2b", "R=fA3>", "Cin=>'1'");
+									"wX=" + to_string(wF+1) + " wR=" + to_string(w) + " maxShift=" + to_string(maxShift) + " dir=1",
+									"X=>mantissa, S=>shiftValShort",
+									"R=>unsignedFixVal");
+			//cerr << "fixValSize=" << getSignalByName("fixVal")->width()<< endl;
+			// Now we have to negate AND perform rounding.
+			// one addition each, but they can be merged
+			vhdl << tab << declare("xoredFixVal",w+1) << " <= "
+					 << rangeAssign(w,0,"sign") << " xor ('0' & unsignedFixVal);"<<endl;
+			//			vhdl << tab << declare("roundcst",w+1) << " <= " << zg(w-1) << " & (sign and not (underflow or zero))  & (not sign and  not (underflow or zero));"<<endl;
+			vhdl << tab << declare("roundcst",w+1) << " <= " << zg(w-1) << " & (sign)  & (not sign);"<<endl;
+			newInstance("IntAdder", "roundAdder", "wIn="+to_string(w+1), "X=>xoredFixVal,Y=>roundcst", "R=>signedFixVal", "Cin=>'0'");
+			//			vhdl << tab << "R <= " << zg(w) << "when underflow='1'   else signedFixVal" << range(w,1) << ";" << endl;
+			vhdl << tab << "R <=  signedFixVal" << range(w,1) << ";" << endl;
+			vhdl << tab << "ov <= (not zero) and (infNaN or overflow) ;" << endl;
+		}
+		else {
+			THROWERROR("Degenerate case currently unsupported");
+		}
 
-				 if(!isSigned)
-         {
-            vhdl << tab << declare("fA4",wFO) <<  "<= fA3" << range(wFO-1, 0)<< ";"<<endl;
-         }
-         else
-         {
-            vhdl << tab << declare(getTarget()->adderDelay(wFO+1), "fA3b",wFO+1) <<  "<= -isSigned(fA3);" <<endl;
-            vhdl << tab << declare(getTarget()->logicDelay(),  "fA4",wFO) <<  "<= fA3" << range(wFO-1, 0) << " when I" << of(wE+wF) <<" = '0' else fA3b" << range(wFO-1, 0) << ";" <<endl;
-         }
-      }
-      if (eMax > MSB)
-      {
-         vhdl << tab << declare("overFl0") << "<= '1' when I" << range(wE+wF-1,wF) << " > conv_std_logic_vector("<< eMax+MSB << "," << wE << ") else I" << of(wE+wF+2)<<";"<<endl;
-      }
-      else
-      {
-         vhdl << tab << declare("overFl0") << "<= I" << of(wE+wF+2)<<";"<<endl;
-      }
-      
-      if(trunc_p)
-      {
-         if(!isSigned)
-            vhdl << tab << declare("overFl1") << " <= fA1" << of(wFO0+wF+1+LSB) << ";"<<endl;
-         else
-         {
-					 vhdl << tab << declare(getTarget()->logicDelay(), "notZeroTest") << " <= '1' when fA4 /= conv_std_logic_vector(0," << wFO <<")"<< " else '0';"<<endl;
-					 vhdl << tab << declare(getTarget()->logicDelay(), "overFl1") << " <= (fA4" << of(wFO-1) << " xor I" << of(wE+wF) << ") and notZeroTest;"<<endl;
-        }
-      }
-      else
-      {
-         vhdl << tab << declare("overFl1") << " <= fA3" << of(wFO) << ";"<<endl;
-      }
-
-      vhdl << tab << declare(getTarget()->logicDelay(), "eTest") << " <= (overFl0 or overFl1);" << endl;
-
-      vhdl << tab << "O <= fA4 when eTest = '0' else" << endl;
-      vhdl << tab << tab << "I" << of(wE+wF) << " & (" << wFO-2 << " downto 0 => not I" << of(wE+wF) << ");"<<endl;
-#endif
-   }
+	}
 
 
-   FP2Fix::~FP2Fix() {
-   }
+	FP2Fix::~FP2Fix() {
+	}
 
 
    void FP2Fix::emulate(TestCase * tc)
@@ -192,25 +153,32 @@ namespace flopoco{
       mpfr_t cst;
       mpfr_init2(cst, 10000); //init to infinite prec
       mpfr_set_ui(cst, 1 , GMP_RNDN);
-      mpfr_mul_2si(cst, cst, -LSB , GMP_RNDN); // cst = 2^(-LSB)
+      mpfr_mul_2si(cst, cst, -LSB+1 , GMP_RNDN); // cst = 2^(-LSB+1)
       mpfr_mul(x, x, cst, GMP_RNDN); // exact
 
-      if(trunc_p)
+			/*     if(trunc_p)
 				mpfr_get_z(svO.get_mpz_t(), x, GMP_RNDD); // truncation 
       else
-				mpfr_get_z(svO.get_mpz_t(), x, GMP_RNDN); // round to nearest
+			*/
+			// don't use GMP_RN here since we want to round to nearest, ties to up
+			mpfr_get_z(svO.get_mpz_t(), x, GMP_RNDZ); // truncation
+			svO +=1; // round bit
+			svO = svO>>1; // and discard the round bit
 
 			// Do we have an overflow ?
 			int w=MSB-LSB+1;
 			mpz_class minval = -(mpz_class(1)  << (w-1));
 			mpz_class maxval = (mpz_class(1)  << (w-1)) -1;
-			bool overflow = (svO <minval) || (svO > maxval);
+			mpz_class exn = fpX.getExceptionSignalValue();
+			bool infNaN = exn>=2;
+			bool zero = exn==0;
+			bool overflow = zero ? false : ((svO <minval) || (svO > maxval) || infNaN);
 			//      std::cerr << "FIX " << svO << std::endl;
       tc->addExpectedOutput("ov", overflow?1:0);
 			if(overflow) // we don't care what value is output
 				tc->addExpectedOutputInterval("R", minval, maxval, TestCase::signed_interval);
 			else
-				tc->addExpectedOutput("R", svO);
+				tc->addExpectedOutput("R", svO, true /*signed*/); 
 				
       // clean-up
       mpfr_clears(x,cst, NULL);

@@ -47,16 +47,20 @@ namespace flopoco{
 	//gmp_randstate_t* FloPoCoRandomState::getState() { return m_state;};
 
 	/** return a string representation of an mpz_class on a given number of bits */
-	string unsignedBinary(mpz_class x, int size){
+	string unsignedBinary(mpz_class x, int size, bool doubleQuotes){
 		string s;
 		mpz_class po2, number;
 		char bit;
 
+		// sanity checks
 		if(x<0) {
-			cerr<<"Error: unsignedBinary: Positive number expected, got x=" << x.get_d() << endl;
+			cerr<<"Error: unsignedBinary: Positive number expected, got x=" << x << endl;
 			exit(EXIT_FAILURE);
 		}
-		// What, no sanity check that x<= 2^Size? TODO add this test and see if it breaks anything. 
+		if(x > (mpz_class(1) << size)-1) {
+			cerr<<"Error: unsignedBinary: value x=" << x << " does not fit on " << size << " bits" << endl;
+			exit(EXIT_FAILURE);
+		}
 		po2 = ((mpz_class) 1)<<size;
 		number=x;
 
@@ -71,7 +75,10 @@ namespace flopoco{
 			}
 			s +=  bit;
 		}
-		return s;
+		if (doubleQuotes)
+			return "\"" + s + "\"";
+		else
+			return s;
 	}
 
 
