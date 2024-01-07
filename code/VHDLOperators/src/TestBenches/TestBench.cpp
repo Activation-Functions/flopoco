@@ -327,7 +327,7 @@ namespace flopoco{
 		/* Variable declaration */
 		vhdl << tab << tab << "file inputsFile : text is \"test.input\"; " << endl; // declaration of the input file
 		vhdl << tab << tab << "variable input, expectedOutput : line; " << endl;  // variables to read a line
-		vhdl << tab << tab << "variable testCounter : integer := 0;" << endl;
+		vhdl << tab << tab << "variable testCounter : integer := 1;" << endl;
 		vhdl << tab << tab << "variable errorCounter : integer := 0;" << endl;
 		vhdl << tab << tab << "variable expectedOutputString : string(1 to 10000);" << endl;
 
@@ -385,7 +385,7 @@ vhdl << tab << tab << tab << "if possibilityNumber = -1 then -- this means an in
 		vhdl << tab << tab << tab << "wait for 10 ns;" << endl;
 		vhdl << tab << tab << "end loop;" << endl;
 		vhdl << tab << tab << "report integer'image(errorCounter) & \" error(s) encoutered.\" severity note;" << endl;
-		vhdl << tab << tab << "report \"End of simulation after \" & integer'image(testCounter) & \" tests\" severity note;" <<endl;
+		vhdl << tab << tab << "report \"End of simulation after \" & integer'image(testCounter-1) & \" tests\" severity note;" <<endl;
 		vhdl << tab << "end process;" <<endl;
 
 

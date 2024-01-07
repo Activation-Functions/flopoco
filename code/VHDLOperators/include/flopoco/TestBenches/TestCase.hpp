@@ -104,8 +104,9 @@ namespace flopoco{
 		 * Adds an expected output for this signal
 		 * @param s The signal for which to assign an expected output
 		 * @param v One possible value which the signal might have
+		 * @param isSigned if true, v is considered a signed integer, unsigned integer otherwise.
 		 */
-		void addExpectedOutput(std::string s, mpz_class v);
+		void addExpectedOutput(std::string s, mpz_class v, bool isSigned=false);
 
 		/**
 		 * Adds an expected output interval for this signal (both endpoints included)
@@ -164,7 +165,7 @@ namespace flopoco{
 		std::map<std::string, std::vector<mpz_class> >   outputs; /**< map of signal names to expected outputs. */
 		std::map<std::string, OutputType >  outputType; /**< map of signal names to the type of expected outputs (list of values, or intervals with their types) */
 
-		int intId;
+		int intId; 
 		std::string comment;  /**< an optional comment */
 	};
 
