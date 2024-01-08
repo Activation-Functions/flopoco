@@ -52,7 +52,7 @@ namespace flopoco{
 		ostringstream name;
 		int absMSB = MSB>=0?MSB:-MSB;
 		int absLSB = LSB>=0?LSB:-LSB;
-		name<<"FP2Fix_" << wE << "_" << wF << "_" << "_"
+		name<<"FP2Fix_" << wE << "_" << wF << "_"
 				<< (MSB<0?"M":"") << absMSB << "_" << (LSB<0?"M":"")  << absLSB
 				<< "_" << (trunc_p==1?"T":"R");
 		setNameWithFreqAndUID(name.str());
@@ -100,7 +100,7 @@ namespace flopoco{
 
 			 We shift right because we accept to lose bits on the right;  
 			 drawing with wE=3, MSB=7, LSB=0 of the two extremal shift values
-			 0xxxx					 shift=0	(leave one bit for the sign bit) (shift<0: overflow)
+			 0xxxx         shift=0	(leave one bit for the sign bit) (shift<0: overflow)
 			         xxxx	 shift=maxShift			(shift>maxShift: return 0)	 
 			 |      |r		 r is the round bit
 			MSB		 LSB
@@ -116,7 +116,7 @@ namespace flopoco{
 			
 			One option is to detect this specific case. It costs one we+wf constant comparator:
 			cheap (on FPGAs) and no time overhead since it is performed on the input. 
-      Only the higher bit of the mantissa needs to be updated, the rest of the architecture produces the proper lower bits.
+      Only the higher bit of the mantissa needs to be updated, the rest of the architecture produces the proper lower bits. Unfortunately this update adds logic on the critical path
 
 			Another option is to allow for one more bit in the shift:
 			 xxxx					 shift=0	 (shift<0: overflow)
@@ -141,9 +141,12 @@ namespace flopoco{
 					 << " <= " << unsignedBinary(signedToBitVector(MSB+bias-1, wE+1), wE+1, true) << "- ('0'&exponentField); -- shift right" << endl;		
 			vhdl << tab << declare("overflow1") << " <= shiftVal" << of(wE) << "; --sign bit"<<endl;
 			vhdl << tab << declare("underflow") << " <= '1' when signed(shiftVal) > " << signedToBitVector(maxShift, wE+1) << " else '0'; "<<endl;
-			vhdl << tab << declare("mantissa",wF+1) << " <= (not (zero or underflow)) & X" << range(wF-1, 0)<<";"<<endl;
-			// TODO sanity check on the following line
-			vhdl << tab << declare("minusTwoToMSB") << " <= '1' when X=\"011" << unsignedBinary(mpz_class(MSB+bias), wE, false) << zg(wF,-2) << "\" else '0'; -- -2^MSB"<<endl;
+
+			// If 1+wF > w  we may as well truncate the mantissa now to w bits only.
+			int wFT = 2+wF > w ? w-1: wF;
+			vhdl << tab << declare("mantissa",wFT+1) << " <= (not (zero or underflow)) & X" << range(wF-1, wF-wFT)<<";"<<endl;
+			// the bit that flags the annoying asymetrical negative endpoint
+			vhdl << tab << declare("minusTwoToMSB") << " <= '1'  when X"<<range(wE+wF+2, wF-wFT) << "=\"011" << unsignedBinary(mpz_class(MSB+bias), wE, false) << zg(wFT,-2) << "\" else '0'; -- -2^MSB"<<endl;
 			vhdl << tab << declare("shiftValShort", shiftSize)
 					 << " <= " << unsignedBinary(maxShift, shiftSize, true) << " when (underflow or zero)='1' else shiftVal" << range(shiftSize-1, 0) << ";" << endl; 
 
@@ -153,7 +156,7 @@ namespace flopoco{
 			// Note that RNE is defined when the _output_ is floating point, not the case here 
 			newInstance("Shifter",
 									"FXP_shifter",
-									"wX=" + to_string(wF+1) + " wR=" + to_string(w) + " maxShift=" + to_string(maxShift) + " dir=1",
+									"wX=" + to_string(wFT+1) + " wR=" + to_string(w) + " maxShift=" + to_string(maxShift) + " dir=1",
 									"X=>mantissa, S=>shiftValShort",
 									"R=>unsignedFixVal");
 			//cerr << "fixValSize=" << getSignalByName("fixVal")->width()<< endl;
@@ -164,8 +167,8 @@ namespace flopoco{
 			//			vhdl << tab << declare("roundcst",w+1) << " <= " << zg(w-1) << " & (sign and not (underflow or zero))  & (not sign and  not (underflow or zero));"<<endl;
 			vhdl << tab << declare("roundcst",w+1) << " <= " << zg(w-1) << " & (sign)  & (not sign);"<<endl;
 			newInstance("IntAdder", "roundAdder", "wIn="+to_string(w+1), "X=>xoredFixVal,Y=>roundcst", "R=>signedFixVal", "Cin=>'0'");
-			//			vhdl << tab << "R <= " << zg(w) << "when underflow='1'   else signedFixVal" << range(w,1) << ";" << endl;
-			vhdl << tab << "R <=  (minusTwoToMSB or signedFixVal" << of(w) << ") & signedFixVal" << range(w-1,1) << ";" << endl;
+			vhdl << tab << "R <= " << zg(w) << "when underflow='1'   else signedFixVal" << range(w,1) << ";" << endl;
+			//			vhdl << tab << "R <=  (minusTwoToMSB or signedFixVal" << of(w) << ") & signedFixVal" << range(w-1,1) << ";" << endl;
 			vhdl << tab << "ov <= (not zero) and (infNaN or overflow1) and (not minusTwoToMSB);" << endl;
 		}
 		else {
@@ -281,6 +284,8 @@ namespace flopoco{
 		paramValues = { //  order is wE wF MSB LSB trunc
 			{5,10, 7,-8	 , 1}, // conversion of pseudo FP16 to fixpoint	 
 			{5,10, 7,-8	 , 0}, // conversion of pseudo FP16 to fixpoint	 
+			{5,10, 7, 0	 , 1}, // conversion of pseudo FP16 to int8	 
+			{5,10, 7, 0	 , 0}, // conversion of pseudo FP16 to int8	 
 			{5,10, 0,-15 , 1}, // conversion of pseudo FP16 to fixpoint	 
 			{5,10, -1,-16, 0}, // conversion of pseudo FP32 to fixpoint	 
 			{5,10, 15,0	 , 1}, // conversion of pseudo FP16 to integer	
