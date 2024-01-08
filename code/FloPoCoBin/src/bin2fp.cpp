@@ -128,7 +128,7 @@ int main(int argc, char* argv[] )
   // output on enough bits
 	mpfr_out_str (stdout, // please allocate this memory
 								10, // base
-								0, // enough digits so that number may be read back
+								80, // used to be 0: enough digits so that number may be read back but it was a pain for small precisions
 								sig, 
 								MPFR_RNDN);
   cout << endl;
