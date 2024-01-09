@@ -2002,13 +2002,23 @@ namespace flopoco{
 		}
 	}
 
+	
+	mpz_class Operator::countInputBits() {
+		auto inputSignalVector = getInputList(); 
+		mpz_class bits = 0;
+		for (size_t i = 0; i < inputSignalVector.size(); i++) {
+			bits += inputSignalVector[i]->width();
+		}
+		return bits;
+	}
+	
 	int Operator::buildExhaustiveTestCaseList(TestCaseList* tcl){
 		auto inputSignalVector = getInputList();			//			REPORT(LogLevel::MESSAGE, "Found " << length << "inputs"); 
 		int numberOfInputs = inputSignalVector.size();
 		string* inputName = new string[numberOfInputs];
 		int*   inputWidth = new int[numberOfInputs];
 		// getting signal width
-		for (int i = 0; i < numberOfInputs; i++) {
+		for (size_t i = 0; i < numberOfInputs; i++) {
 			inputName[i]  = inputSignalVector[i]->getName();
 			inputWidth[i] = inputSignalVector[i]->width();
 		}
@@ -2024,7 +2034,7 @@ namespace flopoco{
 			TestCase* tc = new TestCase(this);
 			// and inside we just break out the loop index into bit vectors corresponding to the inputs
       mpz_class t = mpz_class((unsigned long int) testIndex);
-			for (int i = 0; i < numberOfInputs; i++) {
+			for (size_t i = 0; i < numberOfInputs; i++) {
         mpz_class mask = (mpz_class(1) << inputWidth[i]) -1;
 				tc->addInput(inputName[i], t & mask);
 				t = t>>inputWidth[i];

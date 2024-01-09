@@ -403,13 +403,6 @@ namespace flopoco {
 		double getOutputDelay(string s);
 
 		/**
-		 *@param[in] inputList the list of input signals
-		 *@return the maximum delay of the inputs list
-		 */
-		//double getMaxInputDelays(vector<Signal*> inputList);
-
-
-		/**
 		 * Return the cycle of the signal specified by @param name
 		 * @param name the name of the signal
 		 */
@@ -782,6 +775,9 @@ namespace flopoco {
 		 */
 		virtual TestCase* buildRandomTestCase(int i);
 
+		/** return the total number of input bits for an operator. 
+				Useful for exhaustive testbench generation */
+		mpz_class countInputBits();
 
 		/**
 		 * Generate exhaustive test case list.
