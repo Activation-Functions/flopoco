@@ -886,7 +886,7 @@ namespace flopoco {
         }
         string outputName = "R_" + factorToString(node->output_factor);
         mpz_class outputValue_mpz = outputValue;
-        tc->addExpectedOutput(outputName, outputValue_mpz);
+        tc->addExpectedOutput(outputName, outputValue_mpz, isSigned);
         if(epsilon > 0)
         {
           //Probably not the most efficient way for large epsilons...
