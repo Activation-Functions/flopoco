@@ -47,27 +47,31 @@ namespace flopoco{
 		srcFileName="TestBench";
 		setNameWithFreqAndUID("TestBench_" + op->getName());
 
-		//		REPORT(LogLevel::MESSAGE,"Test bench for "+ op->getName());
+		REPORT(LogLevel::MESSAGE,"Test bench for "+ op->getName());
+		REPORT(LogLevel::VERBOSE,"Operator has " <<  op->countInputBits() << " input bits");
 
-		// initialization of flopoco random generator
-		// TODO : has to be initialized before any use of getLargeRandom or getRandomIEEE...
-		//        maybe best to be placed in main.cpp ?
-		FloPoCoRandomState::init(n);
-
-		if(n == -2) {
+		if( (n == -2)
+				|| ((n == -1) && (op->countInputBits() <= 16)) /* 65536 tests typicall take less than one second*/
+				) {
 			REPORT(LogLevel::MESSAGE,"Generating the exhaustive test bench, this may take some time");
 			n = op-> buildExhaustiveTestCaseList(&tcl);
-			REPORT(LogLevel::MESSAGE, n << " test cases have been generated");
 		}
-		else
-			{
-				// Generate the standard and random test cases for this operator
-				op-> buildStandardTestCases(&tcl);
-				// initialization of randomstate generator with the seed base on the number of
-				// random testcase to be generated
-				op-> buildRandomTestCaseList(&tcl, n);
+		else {
+			if (n == -1) {
+				n=10000;
 			}
+			// Generate the standard and random test cases for this operator
+			op-> buildStandardTestCases(&tcl);
+			// initialization of randomstate generator with n as the seed
+			// this allows to get different tests when one adds 1 to n
+			FloPoCoRandomState::init(n);
+			
+			// random testcase to be generated
+			op-> buildRandomTestCaseList(&tcl, n);
+		}
 
+		REPORT(LogLevel::MESSAGE, n << " test cases have been generated");
+		
 		simulationTime = 10*(
 												 1 // reset time
 												 + op->getPipelineDepth()
@@ -665,6 +669,6 @@ vhdl << tab << tab << tab << "if possibilityNumber = -1 then -- this means an in
 	    "Behavorial test bench for the preceding operator.",
 	    "TestBenches", // categories
 	    "", // seeAlso
-	    "n(int)=-2: number of random tests. If n=-2, an exhaustive test is generated (use only for small operators);",
+	    "n(int)=-1: number of random tests. If n=-2, an exhaustive test is generated (use only for small operators). If n=-1, an exhaustive test is selected if there are fewer than 16 input bits, otherwise 10000 random tests are performed;",
 	    ""};
 }
