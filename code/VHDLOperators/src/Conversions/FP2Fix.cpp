@@ -110,10 +110,11 @@ namespace flopoco{
 					 so maxShift=w
 					 When input is negative we get
 					 11000          shift=0	 (shift<0: overflow)
-					 111111111000 	 shift=maxShift			(shift>maxShift: return 0)	 
+					 111111111000 	 shift=maxShift			(shift>maxShift: return 1111111)	 
 					 |       |r		 r is the round bit
 					MSB		  LSB
 
+					I am not sure I have the most compact solution below.
 					*/
 				// first negate the full mantissa 
 				vhdl << tab << declare("mantissa",wF+1) << " <=  '1' & X" << range(wF-1, 0)<<";"<<endl;
@@ -139,23 +140,27 @@ namespace flopoco{
 
 				vhdl << tab << declare("minusTwoToMSB") << " <= '1'  when X"<<range(wE+wF+2, 0) << "=\"011" << unsignedBinary(mpz_class(MSB+bias), wE, false) << zg(wF,-2) << "\" else '0'; -- -2^MSB"<<endl;
 
+				// If 2+wF > w  we may as well truncate the mantissa now to w bits only.
+				int shiftInSize=wF+2;
+				string shiftInName="signedMantissa";
+				if(wF+2>w) {
+					shiftInName="truncatedSignedMantissa";
+					vhdl << tab << declare(shiftInName, w) << " <= signedMantissa" << range(wF+1, 2+wF-w) << ";"<<endl;
+					shiftInSize=w;
+				}
+				
 				newInstance("Shifter",
 										"FXP_shifter",
-										"wX=" + to_string(wF+2) + " wR=" + to_string(w) + " maxShift=" + to_string(maxShift) + " dir=1 inputPadBit=true",
-										"X=>signedMantissa, S=>shiftValShort, padBit=>sign",
+										"wX=" + to_string(shiftInSize) + " wR=" + to_string(w) + " maxShift=" + to_string(maxShift) + " dir=1 inputPadBit=true",
+										"X=>"+shiftInName+", S=>shiftValShort, padBit=>sign",
 										"R=>fixedPointVal");
 				//cerr << "fixValSize=" << getSignalByName("fixVal")->width()<< endl;
 				// Now we have to negate AND perform rounding.
 				// one addition each, but they can be merged
-#if 1 // the shifter produces the expected string of zeroes since we saturate it in the underflow case, saving this final  mux (w LUTs)
-			// (kept as documentation)
 
 				vhdl << tab << "R <= minusTwoToMSB & " << zg(w-1) << " when (zero or minusTwoToMSB) ='1'  " <<endl
 						 << tab << tab << " else fixedPointVal;" << endl;
-#else
-				vhdl << tab << "R <= fixedPointVal;"  << endl;
-#endif
-				
+
 				vhdl << tab << "ov <= ((not zero) and (infNaN or overflow)) and (not minusTwoToMSB);" << endl;
 			}
 
@@ -357,7 +362,7 @@ namespace flopoco{
 		// the static list of mandatory tests
 		TestList testStateList;
 		vector<pair<string,string>> paramList;
-		std::vector<std::array<int, 5>> paramValues;
+		std::vector<std::array<int, 5>> paramValues, moreParamValues;
 
 		paramValues = { //  order is wE wF MSB LSB trunc
 			{5, 4, 6,0	 , 0}, // conversion of pseudo FP16 to fixpoint	 
@@ -366,24 +371,28 @@ namespace flopoco{
 			{5, 4, 7,0	 , 1}, // conversion of pseudo FP16 to fixpoint	 
 			{5, 4, 8,0	 , 0}, // conversion of pseudo FP16 to fixpoint	 
 			{5, 4, 8,0	 , 1}, // conversion of pseudo FP16 to fixpoint	 
-			{5,10, 7,0	 , 0}, // conversion of pseudo FP16 to fixpoint	 
-			{5,10, 7, 0	 , 1}, // conversion of pseudo FP16 to int8	 
-			{5,10, 7, 0	 , 0}, // conversion of pseudo FP16 to int8	 
-			{5,10, 0,-15 , 1}, // conversion of pseudo FP16 to fixpoint	 
-			{5,10, -1,-16, 0}, // conversion of pseudo FP32 to fixpoint	 
-			{5,10, 15,0	 , 1}, // conversion of pseudo FP16 to integer	
-			{5,10, 15,0	 , 0}, // conversion of pseudo FP32 to integer	
-			{8,23, 7,-8	 , 1}, // conversion of pseudo FP32 to fixpoint	 
-			{8,23, 7,-8	 , 0}, // conversion of pseudo FP32 to fixpoint		
-			{8,23, 0,-15 , 1}, // conversion of pseudo FP32 to fixpoint	 
-			{8,23, -1,-16, 0}, // conversion of pseudo FP32 to fixpoint		
-			{8,23, 23, 0 , 1}, // conversion of pseudo FP32 to integer
-			{8,23, 23, 0 , 0}, // conversion of pseudo FP32 to integer
 		};
 		if(testLevel == TestLevel::QUICK)    { // The quick tests
     }
     else if(testLevel == TestLevel::SUBSTANTIAL)
 			{ // The substantial unit tests
+				moreParamValues  = {
+					{5,10, 7,0	 , 0}, // conversion of pseudo FP16 to fixpoint	 
+					{5,10, 7, 0	 , 1}, // conversion of pseudo FP16 to int8	 
+					{5,10, 7, 0	 , 0}, // conversion of pseudo FP16 to int8	 
+					{5,10, 0,-15 , 1}, // conversion of pseudo FP16 to fixpoint	 
+					{5,10, -1,-16, 0}, // conversion of pseudo FP32 to fixpoint	 
+					{5,10, 15,0	 , 1}, // conversion of pseudo FP16 to integer	
+					{5,10, 15,0	 , 0}, // conversion of pseudo FP32 to integer	
+					{8,23, 7,-8	 , 1}, // conversion of pseudo FP32 to fixpoint	 
+					{8,23, 7,-8	 , 0}, // conversion of pseudo FP32 to fixpoint		
+					{8,23, 0,-15 , 1}, // conversion of pseudo FP32 to fixpoint	 
+					{8,23, -1,-16, 0}, // conversion of pseudo FP32 to fixpoint		
+					{8,23, 23, 0 , 1}, // conversion of pseudo FP32 to integer
+					{8,23, 23, 0 , 0}, // conversion of pseudo FP32 to integer
+				};
+				for (auto i: moreParamValues)
+					paramValues.push_back(i);
 			}
     else if(testLevel >= TestLevel::EXHAUSTIVE)
 			{ // The substantial unit tests
@@ -423,6 +432,6 @@ namespace flopoco{
                         wF(int): input mantissa size in bits;\
                         MSB(int): weight of the MSB of the output;\
                         LSB(int): weight of LSB of the output;\
-                        trunc(bool)=true: true means truncated (cheaper), false means rounded",
+                        trunc(bool)=true: true means truncated, false means rounded. Truncated is not really cheaper.",
 	    ""};
 }
