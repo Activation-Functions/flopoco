@@ -4,7 +4,7 @@
   Kumm, M., Gustafsson, O., Garrido, M., & Zipf, P. (2018). Optimal Single Constant Multiplication using Ternary Adders.
   IEEE Transactions on Circuits and Systems II: Express Briefs, 65(7), 928–932. http://doi.org/10.1109/TCSII.2016.2631630
 
-  Author : Martin Kumm kumm@uni-kassel.de, (emulate adapted from Florent de Dinechin, Florent.de.Dinechin@ens-lyon.fr)
+  Author : Martin Kumm kumm@uni-kassel.de, (emulate adapted from Florent de Dinechin, Florent.de-Dinechin@insa-lyon.fr)
 
   All rights reserved.
 
