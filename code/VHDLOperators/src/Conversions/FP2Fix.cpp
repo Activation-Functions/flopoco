@@ -91,8 +91,77 @@ namespace flopoco{
 		vhdl << tab << declare("zero") << " <= '1' when exn=\"00\" else '0';"<<endl;
 		vhdl << tab << declare("infNaN") << " <= '1' when exn(1)='1' else '0';"<<endl;
 	
-		/* 
 
+		if(padBitsLSB==0 && padBitsMSB==0) { // general case
+			if(trunc_p) {
+				/* 
+					 TRUNCATED CASE 
+					 negate then shift has a similar cost and latency compared to shift then negate
+					 Since we need to compute exact negation before shifting let's negate then shift.
+					 An alternative, possibly cheaper if w<<wF  would be shift+sticky then negate
+					 but it is more technical to get right so let's leave it for future work.
+					 
+					 drawing with wE=3, MSB=7, LSB=0 of the two extremal shift values
+					 negation adds a sign bit to the mantissa 1xxx ->sxxxx on wF+2 bits
+					 sxxxx           shift=0	 (shift<0: overflow)
+					 sssssssssxxxx	 shift=maxShift			(shift>maxShift: return 0)	 
+					 |       |r		 r is the round bit
+					MSB		  LSB
+					 so maxShift=w
+					 When input is negative we get
+					 11000          shift=0	 (shift<0: overflow)
+					 111111111000 	 shift=maxShift			(shift>maxShift: return 0)	 
+					 |       |r		 r is the round bit
+					MSB		  LSB
+
+					*/
+				// first negate the full mantissa 
+				vhdl << tab << declare("mantissa",wF+1) << " <=  '1' & X" << range(wF-1, 0)<<";"<<endl;
+				vhdl << tab << declare("xoredMantissa",wF+2) << " <= "
+						 << rangeAssign(wF+1,0,"sign") << " xor '0' & mantissa;"<<endl;
+
+				vhdl << tab << declare("bigZero",wF+2) << " <= " << zg(wF+2) << ";"<<endl;
+				newInstance("IntAdder",
+										"negAdder",
+										"wIn="+to_string(wF+2),
+										"X=>xoredMantissa,Y=>bigZero,Cin=>sign", "R=>signedMantissa"
+										);
+				int maxShift = w-1; // see drawing above
+				int shiftSize = intlog2(maxShift);
+				// when shift=0 we have E-bias = MSB-1,  hence shift = MSB-1-E+bias = (MSB+bias-1) - E
+				// In this case we also know that shiftSize <=wE, so let's perform the subtraction on this size, plus 1 bit to detect if < 0
+				vhdl << tab << declare(getTarget()->adderDelay(wE+1), "shiftVal", wE+1)
+						 << " <= " << unsignedBinary(signedToBitVector(MSB+bias-1, wE+1), wE+1, true) << "- ('0'&exponentField); -- shift right" << endl;		
+				vhdl << tab << declare("overflow") << " <= shiftVal" << of(wE) << "; --sign bit"<<endl;
+				vhdl << tab << declare("underflow") << " <= '1' when signed(shiftVal) > " << signedToBitVector(maxShift, wE+1) << " else '0'; "<<endl;
+				vhdl << tab << declare("shiftValShort", shiftSize)
+						 << " <= " << unsignedBinary(maxShift, shiftSize, true) << " when (underflow or zero)='1' else shiftVal" << range(shiftSize-1, 0) << ";" << endl; 
+
+				vhdl << tab << declare("minusTwoToMSB") << " <= '1'  when X"<<range(wE+wF+2, 0) << "=\"011" << unsignedBinary(mpz_class(MSB+bias), wE, false) << zg(wF,-2) << "\" else '0'; -- -2^MSB"<<endl;
+
+				newInstance("Shifter",
+										"FXP_shifter",
+										"wX=" + to_string(wF+2) + " wR=" + to_string(w) + " maxShift=" + to_string(maxShift) + " dir=1 inputPadBit=true",
+										"X=>signedMantissa, S=>shiftValShort, padBit=>sign",
+										"R=>fixedPointVal");
+				//cerr << "fixValSize=" << getSignalByName("fixVal")->width()<< endl;
+				// Now we have to negate AND perform rounding.
+				// one addition each, but they can be merged
+#if 1 // the shifter produces the expected string of zeroes since we saturate it in the underflow case, saving this final  mux (w LUTs)
+			// (kept as documentation)
+
+				vhdl << tab << "R <= minusTwoToMSB & " << zg(w-1) << " when (zero or minusTwoToMSB) ='1'  " <<endl
+						 << tab << tab << " else fixedPointVal;" << endl;
+#else
+				vhdl << tab << "R <= fixedPointVal;"  << endl;
+#endif
+				
+				vhdl << tab << "ov <= ((not zero) and (infNaN or overflow)) and (not minusTwoToMSB);" << endl;
+			}
+
+			else { //if(trunc_p)
+		/*
+			 ROUNDED CASE
 			 First question: shift then negate, or negate then shift ?
 			 We choose "shift then negate" because this allows to merge the negation with the rounding addition, so one single carry propagation. 
 
@@ -131,53 +200,54 @@ namespace flopoco{
 			The larger shift adds log2(w) muxes but there may also be a threshold effect that adds one more level.
 			Altogether the first option seems more desirable.
 		*/
+				int maxShift = w-1; // see drawing above
+				int shiftSize = intlog2(maxShift);
+				// when shift=0 we have E-bias = MSB-1,  hence shift = MSB-1-E+bias = (MSB+bias-1) - E
+				// In this case we also know that shiftSize <=wE, so let's perform the subtraction on this size, plus 1 bit to detect if < 0
+				vhdl << tab << declare(getTarget()->adderDelay(wE+1), "shiftVal", wE+1)
+						 << " <= " << unsignedBinary(signedToBitVector(MSB+bias-1, wE+1), wE+1, true) << "- ('0'&exponentField); -- shift right" << endl;		
+				vhdl << tab << declare("overflow1") << " <= shiftVal" << of(wE) << "; --sign bit"<<endl;
+				vhdl << tab << declare("underflow") << " <= '1' when signed(shiftVal) > " << signedToBitVector(maxShift, wE+1) << " else '0'; "<<endl;
 
-		if(padBitsLSB==0 && padBitsMSB==0) { // general case
-			int maxShift = w-1; // see drawing above
-			int shiftSize = intlog2(maxShift);
-			// shift=MSB-E-bias = (MSB-bias) - E
-			// In this case we also know that shiftSize <=wE, so let's perform the subtraction on this size, plus 1 bit to detect if < 0
-			vhdl << tab << declare(getTarget()->adderDelay(wE+1), "shiftVal", wE+1)
-					 << " <= " << unsignedBinary(signedToBitVector(MSB+bias-1, wE+1), wE+1, true) << "- ('0'&exponentField); -- shift right" << endl;		
-			vhdl << tab << declare("overflow1") << " <= shiftVal" << of(wE) << "; --sign bit"<<endl;
-			vhdl << tab << declare("underflow") << " <= '1' when signed(shiftVal) > " << signedToBitVector(maxShift, wE+1) << " else '0'; "<<endl;
+				// If 1+wF > w  we may as well truncate the mantissa now to w bits only.
+				int wFT = 2+wF > w ? w-1: wF;
+				vhdl << tab << declare("mantissa",wFT+1) << " <= (not (zero or underflow)) & X" << range(wF-1, wF-wFT)<<";"<<endl;
+				// the bit that flags the annoying asymetrical negative endpoint
+				vhdl << tab << declare("minusTwoToMSB") << " <= '1'  when X"<<range(wE+wF+2, wF-wFT) << "=\"011" << unsignedBinary(mpz_class(MSB+bias), wE, false) << zg(wFT,-2) << "\" else '0'; -- -2^MSB"<<endl;
+				vhdl << tab << declare("shiftValShort", shiftSize)
+						 << " <= " << unsignedBinary(maxShift, shiftSize, true) << " when (underflow or zero)='1' else shiftVal" << range(shiftSize-1, 0) << ";" << endl; 
 
-			// If 1+wF > w  we may as well truncate the mantissa now to w bits only.
-			int wFT = 2+wF > w ? w-1: wF;
-			vhdl << tab << declare("mantissa",wFT+1) << " <= (not (zero or underflow)) & X" << range(wF-1, wF-wFT)<<";"<<endl;
-			// the bit that flags the annoying asymetrical negative endpoint
-			vhdl << tab << declare("minusTwoToMSB") << " <= '1'  when X"<<range(wE+wF+2, wF-wFT) << "=\"011" << unsignedBinary(mpz_class(MSB+bias), wE, false) << zg(wFT,-2) << "\" else '0'; -- -2^MSB"<<endl;
-			vhdl << tab << declare("shiftValShort", shiftSize)
-					 << " <= " << unsignedBinary(maxShift, shiftSize, true) << " when (underflow or zero)='1' else shiftVal" << range(shiftSize-1, 0) << ";" << endl; 
+				// We use the cheapest shifter variant here.
+				// Adding the computeSticky option would allow for RN ties to even
+				// but it costs  20% more  area and delay, just to get the tie situations right.
+				// Note that RNE is defined when the _output_ is floating point, not the case here 
+				newInstance("Shifter",
+										"FXP_shifter",
+										"wX=" + to_string(wFT+1) + " wR=" + to_string(w) + " maxShift=" + to_string(maxShift) + " dir=1",
+										"X=>mantissa, S=>shiftValShort",
+										"R=>unsignedFixVal");
+				//cerr << "fixValSize=" << getSignalByName("fixVal")->width()<< endl;
+				// Now we have to negate AND perform rounding.
+				// one addition each, but they can be merged
+				vhdl << tab << declare("xoredFixVal",w+1) << " <= "
+						 << rangeAssign(w,0,"sign") << " xor ('0' & unsignedFixVal);"<<endl;
+				vhdl << tab << declare("roundcst",w+1) << " <= " << zg(w-1) << " & (sign)  & (not sign);"<<endl;
+				newInstance("IntAdder", "roundAdder", "wIn="+to_string(w+1), "X=>xoredFixVal,Y=>roundcst", "R=>signedFixVal", "Cin=>'0'");
+#if 0 // the shifter produces the expected string of zeroes since we saturate it in the underflow case, saving this final  mux (w LUTs)
+			// (kept as documentation)
 
-			// We use the cheapest shifter variant here.
-			// Adding the computeSticky option would allow for RN ties to even
-			// but it costs  20% more  area and delay, just to get the tie situations right.
-			// Note that RNE is defined when the _output_ is floating point, not the case here 
-			newInstance("Shifter",
-									"FXP_shifter",
-									"wX=" + to_string(wFT+1) + " wR=" + to_string(w) + " maxShift=" + to_string(maxShift) + " dir=1",
-									"X=>mantissa, S=>shiftValShort",
-									"R=>unsignedFixVal");
-			//cerr << "fixValSize=" << getSignalByName("fixVal")->width()<< endl;
-			// Now we have to negate AND perform rounding.
-			// one addition each, but they can be merged
-			vhdl << tab << declare("xoredFixVal",w+1) << " <= "
-					 << rangeAssign(w,0,"sign") << " xor ('0' & unsignedFixVal);"<<endl;
-			//			vhdl << tab << declare("roundcst",w+1) << " <= " << zg(w-1) << " & (sign and not (underflow or zero))  & (not sign and  not (underflow or zero));"<<endl;
-			vhdl << tab << declare("roundcst",w+1) << " <= " << zg(w-1) << " & (sign)  & (not sign);"<<endl;
-			newInstance("IntAdder", "roundAdder", "wIn="+to_string(w+1), "X=>xoredFixVal,Y=>roundcst", "R=>signedFixVal", "Cin=>'0'");
-#if 0
-			vhdl << tab << "R <= " << zg(w) << "when underflow='1' " <<endl
-					 << tab << tab << " else (minusTwoToMSB or signedFixVal" << of(w) << ") & signedFixVal" << range(w-1,1) << ";" << endl;
+				vhdl << tab << "R <= " << zg(w) << "when underflow='1' " <<endl
+						 << tab << tab << " else (minusTwoToMSB or signedFixVal" << of(w) << ") & signedFixVal" << range(w-1,1) << ";" << endl;
 #else
-			vhdl << tab << "R <= (minusTwoToMSB or signedFixVal" << of(w) << ") & signedFixVal" << range(w-1,1) << ";"  << endl;
+				vhdl << tab << "R <= (minusTwoToMSB or signedFixVal" << of(w) << ") & signedFixVal" << range(w-1,1) << ";"  << endl;
 #endif
 				
-			vhdl << tab << "ov <= (not zero) and (infNaN or overflow1) and (not minusTwoToMSB);" << endl;
+				vhdl << tab << "ov <= (not zero) and (infNaN or overflow1) and (not minusTwoToMSB);" << endl;
+			}
 		}
 		else {
-			THROWERROR("Degenerate case currently unsupported");
+			THROWERROR("Degenerate case currently unsupported, mail us if you have a use case for it");
+			// In truth it is not that difficult to implement: compute MSB' and LSB', do as above, then pad.
 		}
 
 	}
@@ -201,17 +271,20 @@ namespace flopoco{
       mpfr_t cst;
       mpfr_init2(cst, 10000); //init to infinite prec
       mpfr_set_ui(cst, 1 , GMP_RNDN);
-      mpfr_mul_2si(cst, cst, -LSB+1 , GMP_RNDN); // cst = 2^(-LSB+1)
-      mpfr_mul(x, x, cst, GMP_RNDN); // exact
-
-			/*     if(trunc_p)
-				mpfr_get_z(svO.get_mpz_t(), x, GMP_RNDD); // truncation 
-      else
-			*/
+      
+			if(trunc_p) {
+				mpfr_mul_2si(cst, cst, -LSB , GMP_RNDN); // cst = 2^(-LSB)
+				mpfr_mul(x, x, cst, GMP_RNDN); // exact
+				mpfr_get_z(svO.get_mpz_t(), x, GMP_RNDD); // truncation
+			}
+      else {
+				mpfr_mul_2si(cst, cst, -LSB+1 , GMP_RNDN); // cst = 2^(-LSB+1)
+				mpfr_mul(x, x, cst, GMP_RNDN); // exact
 			// don't use GMP_RN here since we want to round to nearest, ties to up
-			mpfr_get_z(svO.get_mpz_t(), x, GMP_RNDZ); // truncation
-			svO +=1; // round bit
-			svO = svO>>1; // and discard the round bit
+				mpfr_get_z(svO.get_mpz_t(), x, GMP_RNDZ); // truncation
+				svO +=1; // round bit
+				svO = svO>>1; // and discard the round bit
+			}
 
 			// Do we have an overflow ?
 			int w=MSB-LSB+1;
@@ -287,8 +360,13 @@ namespace flopoco{
 		std::vector<std::array<int, 5>> paramValues;
 
 		paramValues = { //  order is wE wF MSB LSB trunc
-			{5,10, 7,-8	 , 1}, // conversion of pseudo FP16 to fixpoint	 
-			{5,10, 7,-8	 , 0}, // conversion of pseudo FP16 to fixpoint	 
+			{5, 4, 6,0	 , 0}, // conversion of pseudo FP16 to fixpoint	 
+			{5, 4, 6,0	 , 1}, // conversion of pseudo FP16 to fixpoint	 
+			{5, 4, 7,0	 , 0}, // conversion of pseudo FP16 to fixpoint	 
+			{5, 4, 7,0	 , 1}, // conversion of pseudo FP16 to fixpoint	 
+			{5, 4, 8,0	 , 0}, // conversion of pseudo FP16 to fixpoint	 
+			{5, 4, 8,0	 , 1}, // conversion of pseudo FP16 to fixpoint	 
+			{5,10, 7,0	 , 0}, // conversion of pseudo FP16 to fixpoint	 
 			{5,10, 7, 0	 , 1}, // conversion of pseudo FP16 to int8	 
 			{5,10, 7, 0	 , 0}, // conversion of pseudo FP16 to int8	 
 			{5,10, 0,-15 , 1}, // conversion of pseudo FP16 to fixpoint	 
