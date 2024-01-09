@@ -167,8 +167,13 @@ namespace flopoco{
 			//			vhdl << tab << declare("roundcst",w+1) << " <= " << zg(w-1) << " & (sign and not (underflow or zero))  & (not sign and  not (underflow or zero));"<<endl;
 			vhdl << tab << declare("roundcst",w+1) << " <= " << zg(w-1) << " & (sign)  & (not sign);"<<endl;
 			newInstance("IntAdder", "roundAdder", "wIn="+to_string(w+1), "X=>xoredFixVal,Y=>roundcst", "R=>signedFixVal", "Cin=>'0'");
-			vhdl << tab << "R <= " << zg(w) << "when underflow='1'   else signedFixVal" << range(w,1) << ";" << endl;
-			//			vhdl << tab << "R <=  (minusTwoToMSB or signedFixVal" << of(w) << ") & signedFixVal" << range(w-1,1) << ";" << endl;
+#if 0
+			vhdl << tab << "R <= " << zg(w) << "when underflow='1' " <<endl
+					 << tab << tab << " else (minusTwoToMSB or signedFixVal" << of(w) << ") & signedFixVal" << range(w-1,1) << ";" << endl;
+#else
+			vhdl << tab << "R <= (minusTwoToMSB or signedFixVal" << of(w) << ") & signedFixVal" << range(w-1,1) << ";"  << endl;
+#endif
+				
 			vhdl << tab << "ov <= (not zero) and (infNaN or overflow1) and (not minusTwoToMSB);" << endl;
 		}
 		else {

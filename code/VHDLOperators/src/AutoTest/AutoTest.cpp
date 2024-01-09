@@ -433,35 +433,16 @@ namespace flopoco
 		// This  was definitely fragile, we can't rely on information extracted this way
 		// Better make it explicit in the unitTest methods
 
-#if 0
-		string testBench = " TestBench n=";
-
-		int bitsSum = 0;
-
-		map<string,string>::iterator itParam;
-		for(itParam = unitTestParam->begin(); itParam != unitTestParam->end(); ++itParam)	{
-			// We look for something that looks like an input 
-			//cerr << itParam->first << endl;
-			if( (itParam->first.substr(0,1) == "w")	|| (itParam->first.find("In") != string::npos)) {
-				bitsSum += stoi(itParam->second);
-			}
-		}
-
-		if(bitsSum >= 8) {
-			testBench += "1000";
-		}
-		else	{
-			testBench += "-2";
-		}
-#endif
-
 		string testBench;
+#if 0
 
     if(testLevel == TestLevel::QUICK)
 		 testBench = "100";
 		else
 		 testBench = "1000";
-
+#else
+		testBench="-1";
+#endif		
 		return testBench;
 	}
 };
