@@ -172,6 +172,7 @@ namespace flopoco{
 		//		bool XneY = (cmp!=0) and not unordered;
 		tc->addExpectedOutput("unordered", unordered);
 		if(flags&1)  tc->addExpectedOutput("XltY", XltY);
+
 		if(flags&2)  tc->addExpectedOutput("XeqY", XeqY);
 		if(flags&4)  tc->addExpectedOutput("XgtY", XgtY);
 		if(flags&8)  tc->addExpectedOutput("XleY", XleY);
@@ -190,6 +191,7 @@ namespace flopoco{
 		tc = new TestCase(this);
 		tc->addFPInput("X", FPNumber::NaN);
 		tc->addFPInput("Y", FPNumber::NaN);
+
 		emulate(tc);
 		tcl->add(tc);
 
@@ -281,7 +283,7 @@ namespace flopoco{
 		// the static list of mandatory tests
 		TestList testStateList;
 		vector<pair<string,string>> paramList;
-		std::vector<std::array<int, 3>> paramValues; //  order is wE wF flags
+		std::vector<std::array<int, 3>> paramValues, moreParamValues; //  order is wE wF flags
 
 		
 		paramValues = { 
@@ -292,7 +294,6 @@ namespace flopoco{
 		
     if(testLevel >= TestLevel::SUBSTANTIAL)
     { // The substantial unit tests
-			std::vector<std::array<int, 3>> moreParamValues; //  order is wE wF flags
 			for (auto params: paramValues) {
 				for(int flags=1;flags<32; flags++) {
 					params[2]=flags;

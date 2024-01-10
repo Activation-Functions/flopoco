@@ -50,6 +50,10 @@ namespace flopoco{
 		REPORT(LogLevel::MESSAGE,"Test bench for "+ op->getName());
 		REPORT(LogLevel::VERBOSE,"Operator has " <<  op->countInputBits() << " input bits");
 
+		// initialization of randomstate generator with n as the seed
+		// this allows to get different tests when one adds 1 to n
+		FloPoCoRandomState::init(n);
+		
 		if( (n == -2)
 				|| ((n == -1) && (op->countInputBits() <= 16)) /* 65536 tests typicall take less than one second*/
 				) {
@@ -60,11 +64,10 @@ namespace flopoco{
 			if (n == -1) {
 				n=10000;
 			}
+
 			// Generate the standard and random test cases for this operator
 			op-> buildStandardTestCases(&tcl);
-			// initialization of randomstate generator with n as the seed
-			// this allows to get different tests when one adds 1 to n
-			FloPoCoRandomState::init(n);
+	
 			
 			// random testcase to be generated
 			op-> buildRandomTestCaseList(&tcl, n);
