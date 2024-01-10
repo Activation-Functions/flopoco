@@ -284,7 +284,6 @@ namespace flopoco{
 		TestList testStateList;
 		vector<pair<string,string>> paramList;
 		std::vector<std::array<int, 3>> paramValues, moreParamValues; //  order is wE wF flags
-
 		
 		paramValues = { 
 			{5,10,31}, 

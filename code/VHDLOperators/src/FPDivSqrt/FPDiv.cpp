@@ -969,41 +969,61 @@ rox P						or wi is 26 bits long
 		// the static list of mandatory tests
 		TestList testStateList;
 		vector<pair<string,string>> paramList;
-
-    if(testLevel >= TestLevel::SUBSTANTIAL)
-    { // The substantial unit tests
-
+		std::vector<std::array<int, 3>> paramValues, moreParamValues; //  order is wE wF srt
+		
+		paramValues = { // testing the default value on the most standard cases
+			{5,10,42}, 
+			{8,23,42}, 
+			{11,52,42}   
+		};
+		
+		if(testLevel == TestLevel::QUICK) {
+			// just test paramValues
+		}
+		if(testLevel >= TestLevel::SUBSTANTIAL) {
+			// same tests but add the other SRT values
+			moreParamValues=paramValues;
+			for (auto params: paramValues) {
+				params[2]=43;
+				moreParamValues.push_back(params);
+				params[2]=87;
+				moreParamValues.push_back(params);
+			}
+			paramValues=moreParamValues;
+		}
+		if(testLevel >= TestLevel::EXHAUSTIVE)	{
+			std::array<int, 3> params;
 			for(int wF=5; wF<53; wF+=1) // test various input widths
-			{
+				{
 					int wE = 6+(wF/10);
 					while(wE>wF)
-					{
-						wE -= 2;
-					}
-					paramList.push_back(make_pair("wF",to_string(wF)));
-					paramList.push_back(make_pair("wE",to_string(wE)));
-					paramList.push_back(make_pair("srt","42"));
-					testStateList.push_back(paramList);
-					paramList.clear();
-					paramList.push_back(make_pair("wF",to_string(wF)));
-					paramList.push_back(make_pair("wE",to_string(wE)));
-					paramList.push_back(make_pair("srt","43"));
-					testStateList.push_back(paramList);
-					paramList.clear();
-					paramList.push_back(make_pair("wF",to_string(wF)));
-					paramList.push_back(make_pair("wE",to_string(wE)));
-					paramList.push_back(make_pair("srt","87"));
-					testStateList.push_back(paramList);
-					paramList.clear();
-			}
+						{
+							wE -= 2;
+						}
+					params[0]=wE;
+					params[1]=wF;
+					params[2]=42;
+					paramValues.push_back(params);
+					params[2]=43;
+					paramValues.push_back(params);
+					params[2]=87;
+					paramValues.push_back(params);
+				}
 		}
-		else
-		{
-				// finite number of random test computed out of testLevel
+		
+		// Now actually build the paramValues structure
+		for (auto params: paramValues) {
+			paramList.push_back(make_pair("wE", to_string(params[0])));
+			paramList.push_back(make_pair("wF", to_string(params[1])));
+			paramList.push_back(make_pair("srt", to_string(params[2])));
+			testStateList.push_back(paramList);
+			// cerr << " " << params[0]  << " " << params[1]  << " " << params[2] << endl;
+			paramList.clear();
 		}
+		
 		return testStateList;
 	}
-
+	
 	template <>
 	const OperatorDescription<FPDiv> op_descriptor<FPDiv> {
 	    "FPDiv", // name

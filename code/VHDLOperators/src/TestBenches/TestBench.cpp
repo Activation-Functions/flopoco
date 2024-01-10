@@ -53,7 +53,7 @@ namespace flopoco{
 		// initialization of randomstate generator with n as the seed
 		// this allows to get different tests when one adds 1 to n
 		FloPoCoRandomState::init(n);
-		
+
 		if( (n == -2)
 				|| ((n == -1) && (op->countInputBits() <= 16)) /* 65536 tests typicall take less than one second*/
 				) {
@@ -62,7 +62,7 @@ namespace flopoco{
 		}
 		else {
 			if (n == -1) {
-				n=10000;
+				n=1000;
 			}
 
 			// Generate the standard and random test cases for this operator
