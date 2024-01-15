@@ -711,33 +711,37 @@ namespace flopoco{
 		tcl->add(tc);
 	}
 
-    TestList FPConstMultInterfaced::unitTest(int testLevel) {
-        TestList testStateList;
-        vector<pair<string,string>> paramList;
-        std::vector<std::array<int, 6>> paramValues;
-        paramValues = { // testing the default value on the most standard cases
-            {5,  10, -1, -1, 0, 0},
-            {8,  23, -1, -1, 0, 0},
-            {11, 52, -1, -1, 0, 0}
-        };
-        if (testLevel == TestLevel::QUICK) {
+	TestList FPConstMultInterfaced::unitTest(int testLevel) {
+		TestList testStateList;
+		vector<pair<string,string>> paramList;
+		std::vector<std::array<int, 5>> paramValues; // wE, wF, wEin, wFin, cst_width, constant
+		std::vector<std::string> cstValues; // which constants to test
+		paramValues = { // testing the default value on the most standard cases
+			{5,  10, -1, -1, 0},
+			{8,	 23, -1, -1, 0},
+			{11, 52, -1, -1, 0}
+		};
+		cstValues={"1", "pi", "log(2)/2"};
+
+			if (testLevel == TestLevel::QUICK) {
 			// just test paramValues
 		}
         // Now actually build the paramValues structure
-		for (auto params: paramValues) {
-			paramList.push_back(make_pair("wE", to_string(params[0])));
-            paramList.push_back(make_pair("wF", to_string(params[1])));
-            paramList.push_back(make_pair("wEout", to_string(params[2])));
-            paramList.push_back(make_pair("wFout", to_string(params[3])));
-            paramList.push_back(make_pair("cst_width", to_string(params[4])));
-            paramList.push_back(make_pair("constant", "13176795b-22"));
-			testStateList.push_back(paramList);
-			// cerr << " " << params[0]  << " " << params[1]  << " " << params[2] << endl;
-			paramList.clear();
+		for (auto cst: cstValues) {
+			for (auto params: paramValues) {
+				paramList.push_back(make_pair("wE", to_string(params[0])));
+				paramList.push_back(make_pair("wF", to_string(params[1])));
+				paramList.push_back(make_pair("wEout", to_string(params[2])));
+				paramList.push_back(make_pair("wFout", to_string(params[3])));
+				paramList.push_back(make_pair("cst_width", to_string(params[4])));
+				paramList.push_back(make_pair("constant", cst));
+				testStateList.push_back(paramList);
+				paramList.clear();
+			}
 		}
-        return testStateList;
+		return testStateList;
     }
-
+	
 	OperatorPtr FPConstMultInterfaced::parseArguments(OperatorPtr parentOp, Target* target, vector<string>& args, UserInterface& ui)
 	{
 		int wE_in, wE_out, wF_in, wF_out, cst_width;
@@ -764,6 +768,9 @@ namespace flopoco{
         std::vector<std::array<int, 6>> paramValues;
         paramValues = {
             // testing the default value on the most standard cases
+            {5,  10, -1, -1, 1, 3},
+            {8,  23, -1, -1, 1, 3},
+            {11, 52, -1, -1, 1, 3},
             {5,  10, -1, -1, 42, 31},
             {8,  23, -1, -1, 42, 31},
             {11, 52, -1, -1, 42, 31}
@@ -819,8 +826,8 @@ namespace flopoco{
 	    "\"cos(3*pi/2)\" or \"13176795b-22\");"
 	    "wEout(int)=-1: output exponent width, -1 means same as wE;"
 	    "wFout(int)=-1: output significand width, -1 means same as wF;"
-	    "cst_width(int)=0:constant precision. If set to zero, the actual "
-	    "width will be computed in order to get a faithful result.",
+	    "cst_width(int)=0:constant precision (number of bits). If set to zero, the "
+	    "width will be computed to ensure a faithful result.",
 	    "An early version of the technique used is described in  <a "
 	    "href=\"bib/flopoco.html#BrisebarreMullerDinechin2008:ASAP\">this "
 	    "article</a>."};

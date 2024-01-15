@@ -88,8 +88,7 @@ namespace {
 		std::string commandLineForTestCase(TestConfig const &testcase) const
 		{
 			auto commandLine = opFact->name();
-			for (auto const &[paramName, paramValue] :
-			     testcase.parameters) {
+			for (auto const &[paramName, paramValue] : testcase.parameters) {
 				commandLine +=
 				    " " + paramName + "=" + paramValue;
 			}
@@ -213,10 +212,14 @@ namespace {
 			auto nvcPath = bp::search_path("nvc");
 			auto nbTests = tests.size();
 			for (auto & testCase : tests) {
+				auto command = commandLineForTestCase(testCase);
+#if 0  // nice but I had rather see the command line
 				std::cout << "\33[2K\rRunning test " << (id + 1) << " / " << nbTests;
 				std::cout.flush();
 				fs::remove(bufferOut);
-				auto command = commandLineForTestCase(testCase);
+#else
+				std::cout << "Running test " << (id + 1) << " / " << nbTests << "    "   << " " << command << endl;
+#endif
 				detailedFile << id << ", " << name << " " << command << ", ";
 				auto flopocoStatus =  bp::system(name + " " + command, (bp::std_out & bp::std_err) > bufferOut.string(), bp::start_dir(testRoot.string())); 
 				std::string nvcLine{""};
