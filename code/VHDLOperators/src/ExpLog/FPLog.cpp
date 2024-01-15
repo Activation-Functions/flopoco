@@ -31,14 +31,14 @@ using namespace std;
 
 
 namespace flopoco{
-	
+
 	FPLog::FPLog(OperatorPtr parentOp, Target* target, int wE, int wF):
 		Operator(parentOp, target), wE(wE), wF(wF)
 	{}
 
 	FPLog::~FPLog() {}
 
-	
+
 	void FPLog::emulate(TestCase * tc)
 	{
 		/* Get I/O values */
@@ -146,13 +146,19 @@ namespace flopoco{
 		// the static list of mandatory tests
 			TestList testStateList;
 			vector<pair<string,string>> paramList;
-			
-			if(testLevel >= TestLevel::SUBSTANTIAL)
-		  { // The substantial unit tests
+            std::vector<std::array<int, 4>> paramValues;
+            paramValues = { // testing the default value on the most standard cases
+                {5,  10, 0, 0},
+                {8,  23, 0, 0},
+                {11, 52, 0, 0}
+            };
+
+			if (testLevel >= TestLevel::SUBSTANTIAL) {
+                // The substantial unit tests
 
 			// First test with plainVHDL, then with cool multipliers
 			for(int wF=5; wF<53; wF+=1) // test various input widths
-			{ 
+			{
 				int nbByteWE = 6+(wF/10);
 				while(nbByteWE>wF){
 					nbByteWE -= 2;
@@ -160,12 +166,12 @@ namespace flopoco{
 
 				paramList.push_back(make_pair("wF",to_string(wF)));
 				paramList.push_back(make_pair("wE",to_string(nbByteWE)));
-				paramList.push_back(make_pair("plainVHDL","true")); 
+				paramList.push_back(make_pair("plainVHDL","true"));
 				testStateList.push_back(paramList);
 				paramList.clear();
 			}
 			for(int wF=5; wF<53; wF+=1) // test various input widths
-			{ 
+			{
 				int nbByteWE = 6+(wF/10);
 				while(nbByteWE>wF){
 					nbByteWE -= 2;
@@ -177,17 +183,27 @@ namespace flopoco{
 				paramList.clear();
 			}
 		}
-		else     
+		else
 		{
 				// finite number of random test computed out of testLevel
-		}	
-
+		}
+            // Now actually build the paramValues structure
+        for (auto params: paramValues) {
+            paramList.push_back(make_pair("wE", to_string(params[0])));
+            paramList.push_back(make_pair("wF", to_string(params[1])));
+            paramList.push_back(make_pair("method", to_string(params[2])));
+            paramList.push_back(make_pair("inTableSize", to_string(params[3])));
+            testStateList.push_back(paramList);
+            // cerr << " " << params[0]  << " " << params[1]  << " " << params[2] << endl;
+            paramList.clear();
+        }
 		return testStateList;
+
 	}
 
 
 
-	
+
 	OperatorPtr FPLog::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 		int wE;
 		ui.parseStrictlyPositiveInt(args, "wE", &wE);
@@ -203,7 +219,7 @@ namespace flopoco{
 			{
 				throw(string("TODO for Correntin"));
 			}
-		else 
+		else
 			{
 				throw(string("FPLog: the method parameter should currently be 0 or 1"));
 			}
@@ -216,10 +232,10 @@ namespace flopoco{
 	    "ElementaryFunctions", // categories
 	    "",
 	    "wE(int): exponent size in bits; "
-            "wF(int): mantissa size in bits; "
-	    	"method(int)=0: 0 for iterative, 1 for polynomial; "
-	    	"inTableSize(int)=0: The input size to the tables of the iterative "
-	    			"method, in bits, between 6 and 16. 0 choses a a sensible value",
+        "wF(int): mantissa size in bits; "
+        "method(int)=0: 0 for iterative, 1 for polynomial; "
+        "inTableSize(int)=0: The input size to the tables of the iterative "
+            "method, in bits, between 6 and 16. 0 choses a a sensible value",
 	    "For details on the technique used, see <a "
 	    "href=\"bib/flopoco.html#DetDinPuj2007:Arith\">this article</a> "
 	    "and <a href=\"bib/flopoco.html#2010-RR-FPLog\">this research "

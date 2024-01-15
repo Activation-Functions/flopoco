@@ -162,9 +162,9 @@ namespace flopoco{
 			vhdl << ";" <<  endl;
 
 		newInstance(
-				"LZOC", 
-				getName()+"right1counter", 
-				"wIn=" + to_string(wF) + " countType=0", 
+				"LZOC",
+				getName()+"right1counter",
+				"wIn=" + to_string(wF) + " countType=0",
 				"I=>fracYreverted",
 				"O=>Z_rightY"
 			);
@@ -282,29 +282,29 @@ namespace flopoco{
 		vhdl << tab << declare("logIn", 3+wE + logwF) << " <= flagsX & \"0\" & expFieldX & fracX & " << rangeAssign(logwF-wF-1, 0, "'0'") << " ;" << endl;
 
 		newInstance(
-				"FPLog", 
-				getName()+"log", 
-				"wE=" + to_string(wE) + " wF=" + to_string(logwF), 
+				"FPLog",
+				getName()+"log",
+				"wE=" + to_string(wE) + " wF=" + to_string(logwF),
 				"X=>logIn",
 				"R=>lnX"
 			);
 
 		newInstance(
-				"FPMult", 
-				getName()+"mult", 
+				"FPMult",
+				getName()+"mult",
 				"wE=" + to_string(wE) + " wF=" + to_string(logwF)
 				+ " wEY=" + to_string(wE) + " wFY=" + to_string(wF)
 				+ " wEOut=" + to_string(wE) + " wFOut=" + to_string(wF+wE+expG)
-				+ " correctlyRounded=0", // faithful is enough here 
+				+ " correctlyRounded=0", // faithful is enough here
 				"Y=>Y, X=>lnX",
 				"R=>P"
 			);
 
 		newInstance(
-				"FPExp", 
-				getName()+"exp", 
+				"FPExp",
+				getName()+"exp",
 				"wE=" + to_string(wE) + " wF=" + to_string(wF)
-				+ " g=" + to_string(expG) + " fullInput=1", 
+				+ " g=" + to_string(expG) + " fullInput=1",
 				"X=>P",
 				"R=>E"
 			);
@@ -570,6 +570,33 @@ namespace flopoco{
 		emulate(tc);
 		return tc;
 	}
+
+    TestList FPPow::unitTest(int testLevel) {
+        TestList testStateList;
+        vector<pair<string,string>> paramList;
+        std::vector<std::array<int, 3>> paramValues;
+        paramValues = { // testing the default value on the most standard cases
+            {5,  10, 0},
+            {8,  23, 0},
+            {11, 52, 0},
+            {5,  10, 1},
+            {8,  23, 1},
+            {11, 52, 1}
+        };
+        if (testLevel == TestLevel::QUICK) {
+			// just test paramValues
+		}
+        // Now actually build the paramValues structure
+		for (auto params: paramValues) {
+			paramList.push_back(make_pair("wE", to_string(params[0])));
+			paramList.push_back(make_pair("wF", to_string(params[1])));
+			paramList.push_back(make_pair("type", to_string(params[2])));
+			testStateList.push_back(paramList);
+			// cerr << " " << params[0]  << " " << params[1]  << " " << params[2] << endl;
+			paramList.clear();
+		}
+        return testStateList;
+    }
 
 	OperatorPtr FPPow::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 		int wE;

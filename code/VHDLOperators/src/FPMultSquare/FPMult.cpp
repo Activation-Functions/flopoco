@@ -231,10 +231,15 @@ namespace flopoco{
 		// the static list of mandatory tests
 		TestList testStateList;
 		vector<pair<string,string>> paramList;
-		
-    if(testLevel >= TestLevel::SUBSTANTIAL)
-    { // The substantial unit tests
-
+        std::vector<std::array<int, 8>> paramValues, moreParamValues; //  order is wE wF srt
+        // Testing the default value on the most standard cases
+		paramValues = {
+			{5, 10, 0, 0, 0, 0, 1, 0},
+			{8, 23, 0, 0, 0, 0, 1, 0},
+			{11,52, 0, 0, 0, 0, 1, 0}
+		};
+        if (testLevel >= TestLevel::SUBSTANTIAL) {
+            // The substantial unit tests
 			paramList.push_back(make_pair("wE","5"));
 			paramList.push_back(make_pair("wF","10"));
 			testStateList.push_back(paramList);
@@ -247,26 +252,37 @@ namespace flopoco{
 			paramList.push_back(make_pair("wF","52"));
 			testStateList.push_back(paramList);
 			paramList.clear();
-			for(int wF=5; wF<53; wF+=(wF<25?1:3) ) {
-				int wE = 6+(wF/10);
-				while(wE>wF)
-					wE -= 1;			
+			for(int wF = 5; wF < 53; wF += (wF < 25 ? 1 : 3)) {
+				int wE = 6 + (wF/10);
+				while (wE>wF)
+					wE -= 1;
 				paramList.push_back(make_pair("wF",to_string(wF)));
 				paramList.push_back(make_pair("wE",to_string(wE)));
 				testStateList.push_back(paramList);
 				paramList.clear();
 			}
-			
-		}
-		else     
-		{
-				// finite number of random test computed out of testLevel
+		} else {
+            // finite number of random test computed out of testLevel
 			// TODO
-		}	
+		}
+        // Now actually build the paramValues structure
+        for (auto params: paramValues) {
+            paramList.push_back(make_pair("wE", to_string(params[0])));
+            paramList.push_back(make_pair("wF", to_string(params[1])));
+            paramList.push_back(make_pair("wEY", to_string(params[2])));
+            paramList.push_back(make_pair("wFY", to_string(params[3])));
+            paramList.push_back(make_pair("wEOut", to_string(params[4])));
+            paramList.push_back(make_pair("wFOut", to_string(params[5])));
+            paramList.push_back(make_pair("correctlyRounded", to_string(params[6])));
+            paramList.push_back(make_pair("dspThreshold", to_string(params[7])));
+            testStateList.push_back(paramList);
+            // cerr << " " << params[0]  << " " << params[1]  << " " << params[2] << endl;
+            paramList.clear();
+        }
 		return testStateList;
 	}
-	
-	
+
+
 	OperatorPtr FPMult::parseArguments(OperatorPtr parentOp, Target *target , vector<string> &args, UserInterface& ui){
 		int wEX, wFX, wEY, wFY, wEOut, wFOut;
 		bool correctlyRounded;

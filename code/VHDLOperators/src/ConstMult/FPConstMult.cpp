@@ -3,18 +3,18 @@
 
   This file is part of the FloPoCo project developed by the Arenaire
   team at Ecole Normale Superieure de Lyon
-  
+
   Author : Florent de Dinechin, Florent.de-Dinechin@insa-lyon.fr
 
   Initial software.
-  Copyright © ENS-Lyon, INRIA, CNRS, UCBL,  
+  Copyright © ENS-Lyon, INRIA, CNRS, UCBL,
   2008-2011.
   All rights reserved.
 */
 
 
 // TODO Case mantissa=1, wE_out>wE_in
-// TODO pipeline, 
+// TODO pipeline,
 // TODO standard test vectors: 1, 0, various exn, xcut borders
 
 #include <iostream>
@@ -44,8 +44,8 @@ namespace flopoco{
 	// The expert version // TODO define correctRounding
 
 	FPConstMult::FPConstMult(OperatorPtr parentOp, Target* target, int wE_in_, int wF_in_, int wE_out_, int wF_out_, int cstSgn_, int cst_exp_, mpz_class cstIntSig_):
-		Operator(parentOp,target), 
-		wE_in(wE_in_), wF_in(wF_in_), wE_out(wE_out_), wF_out(wF_out_), 
+		Operator(parentOp,target),
+		wE_in(wE_in_), wF_in(wF_in_), wE_out(wE_out_), wF_out(wF_out_),
 		cstSgn(cstSgn_), cst_exp_when_mantissa_int(cst_exp_), cstIntSig(cstIntSig_), constant_is_zero(false)
 	{
 		srcFileName="FPConstMult";
@@ -73,22 +73,22 @@ namespace flopoco{
 			}
 			mantissa_is_one = false;
 			if(cstIntSig==1) {
-				REPORT(LogLevel::DETAIL, "Constant mantissa is 1, multiplying by it will be easy"); 
+				REPORT(LogLevel::DETAIL, "Constant mantissa is 1, multiplying by it will be easy");
 				mantissa_is_one = true;
 			}
 
 			cstWidth = intlog2(cstIntSig);
-			cst_exp_when_mantissa_1_2 = cst_exp_when_mantissa_int + cstWidth - 1; 
+			cst_exp_when_mantissa_1_2 = cst_exp_when_mantissa_int + cstWidth - 1;
 
 			// initialize mpfr constant
 			mpfr_init2(cstSig, max(cstWidth, 2));
 			mpfr_set_z(cstSig, cstIntSig.get_mpz_t(), GMP_RNDN); // exact op
 			mpfr_mul_2si(cstSig, cstSig, -(cstWidth-1), GMP_RNDN);  // exact op, gets cstSig in 1..2
-			
+
 			mpfr_init(mpfrC);
 			mpfr_set(mpfrC, cstSig, GMP_RNDN);
 			mpfr_mul_2si(mpfrC, mpfrC, cst_exp_when_mantissa_1_2, GMP_RNDN);
-			
+
 			if(cstSgn==1)
 				mpfr_neg(mpfrC,  mpfrC, GMP_RNDN);
 			REPORT(LogLevel::DETAIL, "mpfrC = " << mpfr_get_d(mpfrC, GMP_RNDN));
@@ -119,7 +119,7 @@ namespace flopoco{
 
 	// The rational version
 	FPConstMult::FPConstMult(OperatorPtr parentOp, Target* target, int wE_in_, int wF_in_, int wE_out_, int wF_out_, int a_, int b_):
-		Operator(parentOp,target), 
+		Operator(parentOp,target),
 		wE_in(wE_in_), wF_in(wF_in_), wE_out(wE_out_), wF_out(wF_out_), constant_is_zero(false)
 	{
 
@@ -145,14 +145,14 @@ namespace flopoco{
 		mpfr_set_si(mpb, b, GMP_RNDN);
 		mpfr_set_prec(mpfrC, 10*(wE_in+wF_in+wE_out+wF_out)); // should be enough for anybody
 		mpfr_div(mpfrC, mpa, mpb, GMP_RNDN);
-		
+
 		REPORT(LogLevel::DEBUG, "Constant evaluates as " << mpfr_get_d( mpfrC, GMP_RNDN) );
 
 		if(a<0){
 			cstSgn=1;
 			a=-a;
 		}
-		
+
 
 		// First simplify the fraction: compute GCD by Euclide, then divide a and b by it
 		int ae=max(a,b);
@@ -170,7 +170,7 @@ namespace flopoco{
 		// Now get rid of powers of two in both a and b.
 		// we transform them into (a',b',expUpdate) such that a' and b' are both odd
 		// and a/b = a'/b'.2^expUpdate
-		int expUpdate=0; 
+		int expUpdate=0;
 		while((a&1)==0) {
 			a=a>>1;
 			expUpdate++;
@@ -179,7 +179,7 @@ namespace flopoco{
 			b=b>>1;
 			expUpdate--;
 		}
-		
+
 		REPORT(LogLevel::DEBUG, "fraction " << a_ << "/" << b_ << " rewritten as 2^" << expUpdate << "*" << a << "/" << b  );
 		if(b==1) {
 			throw("This fraction does not have an infinite binary representation -- not implemented yet");
@@ -194,16 +194,16 @@ namespace flopoco{
 		}
 		else
 			{
-		
+
 			// Now look for a period
-			int periodSize, headerSize; 
+			int periodSize, headerSize;
 			mpz_class periodicPattern, header; // The two values to look for
 			mpfr_set_si(mpa, a, GMP_RNDN);
 			mpfr_set_si(mpb, b, GMP_RNDN);
 
 
 			mpz_class aa, bb, cc;
-			aa=a; 
+			aa=a;
 			bb=b;
 
 			// First euclidean division of a by b
@@ -223,22 +223,22 @@ namespace flopoco{
 			periodicPattern = cc*twotoperiodSize/b;
 
 
-			// The period may begin with zeroes. 
+			// The period may begin with zeroes.
 			// Example: 1/3, or any other smaller than 0.5
 			// but the following will generate optimal code
-			// 
+			//
 
 
-			REPORT(LogLevel::VERBOSE, "Found header " << header.get_str(2) << " of size "<< headerSize 
+			REPORT(LogLevel::VERBOSE, "Found header " << header.get_str(2) << " of size "<< headerSize
 						 << " and period " << periodicPattern.get_str(2) << " of size " << periodSize);
-	 
+
 			int wC;
 
 			if(wF_out >= wF_in) {
 				correctRounding=true;
 				wC = wF_out + 1  +1 + intlog2(b);
 				REPORT(LogLevel::DETAIL, "Building a correctly rounded multiplier");
-			} 
+			}
 			else {
 				correctRounding=false;
 				wC = wF_out + 3;
@@ -283,12 +283,12 @@ namespace flopoco{
 			 	patternLeadingZeroes = periodSize - intlog2(periodicPattern);
 				REPORT(LogLevel::VERBOSE, "Null header, and period starting with  " << patternLeadingZeroes << " zero(s)...");
 				cstWidth -= patternLeadingZeroes;
-				REPORT(LogLevel::VERBOSE, "   ... so the practical size of the constant is " << cstWidth 
+				REPORT(LogLevel::VERBOSE, "   ... so the practical size of the constant is " << cstWidth
 							 << " bits, and it does provide "<< cstWidth + patternLeadingZeroes << " bits of accuracy");
 			}
-			
 
-			cst_exp_when_mantissa_1_2 = mpfr_get_exp(mpfrC) - 1; //mpfr_get_exp() assumes significand in [1/2,1)  
+
+			cst_exp_when_mantissa_1_2 = mpfr_get_exp(mpfrC) - 1; //mpfr_get_exp() assumes significand in [1/2,1)
 			//			cst_exp_when_mantissa_1_2 += expUpdate;
 			cst_exp_when_mantissa_int = cst_exp_when_mantissa_1_2 - cstWidth;
 
@@ -307,15 +307,15 @@ namespace flopoco{
 			icm = new IntConstMultShiftAddPlain(parentOp, target, wF_in+1, cstIntSig, periodicPattern, patternLSBZeroes, periodSize, header, headerSize, i, j);
 
 		}
-		
-		
+
+
 		// build the name
-		ostringstream name; 
+		ostringstream name;
 		name <<"FPConstMultRational_"
 				 <<wE_in<<"_"<<wF_in<<"_"<<wE_out<<"_"<<wF_out<<"_"
 				 <<(cstSgn==0?"":"M") <<a<<"div"<<b<<"_"<<(correctRounding?"CR":"faithful");
 		setNameWithFreqAndUID(name.str());
-		
+
 		buildVHDL();
 
  		mpfr_clears(mpa, mpb, NULL);
@@ -331,14 +331,14 @@ namespace flopoco{
 
 	// The parser version
 	FPConstMult::FPConstMult(OperatorPtr parentOp, Target* target, int wE_in_, int wF_in_, int wE_out_, int wF_out_, int wF_C, string constant):
-		Operator(parentOp,target), 
+		Operator(parentOp,target),
 		wE_in(wE_in_), wF_in(wF_in_), wE_out(wE_out_), wF_out(wF_out_), cstWidth(wF_C), mantissa_is_one(false), constant_is_zero(false)
 	{
 		sollya_obj_t node;
 
 		srcFileName="FPConstMult";
 		/* Convert the input string into a sollya evaluation tree */
-		node = sollya_lib_parse_string(constant.c_str());	
+		node = sollya_lib_parse_string(constant.c_str());
 		/* If  parse error throw an exception */
 		if (sollya_lib_obj_is_error(node))
 			{
@@ -352,39 +352,39 @@ namespace flopoco{
 		mpfr_inits(mpfrC, NULL);
 		sollya_lib_get_constant(mpfrC, node);
 		REPORT(LogLevel::DEBUG, "Constant evaluates to " << mpfr_get_d(mpfrC, GMP_RNDN));
-		
-		
-		
+
+
+
 		// Nonperiodic version
 
 		if(wF_C==0) //  means: please compute wF_C for faithful rounding
 			cstWidth=wF_out+3;
 		else
 			cstWidth=wF_C;
-		
+
 		mpfr_set_prec(mpfrC, cstWidth);
 		sollya_lib_get_constant(mpfrC, node);
-		
+
 
 		setupSgnAndExpCases();
 		computeExpSig();
 		computeIntExpSig();
 		normalizeCst();
-		
+
 		if(!constant_is_zero && !mantissa_is_one) {
 			icm = new IntConstMultShiftAddPlain(parentOp, target, wF_in+1, cstIntSig);
 		}
-			
-		
-		
+
+
+
 		// build the name
-		ostringstream name; 
+		ostringstream name;
 		name <<"FPConstMult_"<<(cstSgn==0?"":"M") <<cstIntSig<<"b"
 				 <<(cst_exp_when_mantissa_int<0?"M":"")<<abs(cst_exp_when_mantissa_int)
 				 <<"_"<<wE_in<<"_"<<wF_in<<"_"<<wE_out<<"_"<<wF_out;
 		setNameWithFreqAndUID(name.str());
-		
-		
+
+
 		buildVHDL();
 	}
 
@@ -397,7 +397,7 @@ namespace flopoco{
 
 
 	// Set up the various constants out of an MPFR constant
-	// The constant precision must be set up properly in 
+	// The constant precision must be set up properly in
 	void FPConstMult::setupSgnAndExpCases()
 	{
 
@@ -411,7 +411,7 @@ namespace flopoco{
 		if(mpfr_sgn(mpfrC)<0) {
 			mpfr_neg(mpfrC, mpfrC, GMP_RNDN);
 			cstSgn=1;
-		} 
+		}
 		else {
 			cstSgn=0;
 		}
@@ -419,14 +419,14 @@ namespace flopoco{
 
 
 	// Needs: cstWidth, mpfrC
-	// Provides: 
+	// Provides:
 	void FPConstMult::computeExpSig()
 	{
 		// compute exponent and mantissa
-		cst_exp_when_mantissa_1_2 = mpfr_get_exp(mpfrC) - 1; //mpfr_get_exp() assumes significand in [1/2,1)  
+		cst_exp_when_mantissa_1_2 = mpfr_get_exp(mpfrC) - 1; //mpfr_get_exp() assumes significand in [1/2,1)
 		mpfr_init2( cstSig, cstWidth);
 		mpfr_div_2si(cstSig, mpfrC, cst_exp_when_mantissa_1_2, GMP_RNDN);
-		REPORT(LogLevel::DETAIL, "cstSig  = " << mpfr_get_d(cstSig, GMP_RNDN));		
+		REPORT(LogLevel::DETAIL, "cstSig  = " << mpfr_get_d(cstSig, GMP_RNDN));
 	}
 
 
@@ -441,13 +441,13 @@ namespace flopoco{
 		mpfr_set_d(mpfr_xcut_sig, 2.0, GMP_RNDN);               // exaxt op
 		mpfr_div(mpfr_xcut_sig, mpfr_xcut_sig, cstSig, GMP_RNDD);
 
-		// now  round it down to wF_in+1 bits 
+		// now  round it down to wF_in+1 bits
 		mpfr_t xcut_wF;
 		mpfr_init2(xcut_wF, wF_in+1);
 		mpfr_set(xcut_wF, mpfr_xcut_sig, GMP_RNDD);
 		mpfr_mul_2si(xcut_wF, xcut_wF, wF_in, GMP_RNDN);
-		
-		// It should now be an int; cast it into a mpz, then a mpz_class 
+
+		// It should now be an int; cast it into a mpz, then a mpz_class
 		mpz_init2(zz, wF_in+1);
 		mpfr_get_z(zz, xcut_wF, GMP_RNDN);
 		xcut_sig_rd = mpz_class(zz);
@@ -474,20 +474,20 @@ namespace flopoco{
 		}
 
 		if(cstIntSig==1) {
-			REPORT(LogLevel::DETAIL, "Constant mantissa is 1, multiplying by it will be easy"); 
+			REPORT(LogLevel::DETAIL, "Constant mantissa is 1, multiplying by it will be easy");
 			mantissa_is_one = true;
 			return;
 		}
 		return; // normal constant
 	}
-	
+
 
 
 
 
 	FPConstMult::FPConstMult(OperatorPtr parentOp, Target* target, int wE_in, int wF_in, int wE_out, int wF_out):
 		Operator(parentOp,target),
-		wE_in(wE_in), wF_in(wF_in), wE_out(wE_out), wF_out(wF_out) 
+		wE_in(wE_in), wF_in(wF_in), wE_out(wE_out), wF_out(wF_out)
 	{
 	}
 
@@ -513,19 +513,19 @@ namespace flopoco{
 		if(constant_is_zero) {
 			vhdl << tab << declare("x_exn",2) << " <=  X("<<wE_in<<"+"<<wF_in<<"+2 downto "<<wE_in<<"+"<<wF_in<<"+1);"<<endl;
 			vhdl << tab << declare("x_sgn") << " <=  X("<<wE_in<<"+"<<wF_in<<");"<<endl;
-			
-			vhdl << tab << declare("r_exn", 2) << " <=      \"00\" when ((x_exn = \"00\") or (x_exn = \"01\"))  -- zero"<<endl 
+
+			vhdl << tab << declare("r_exn", 2) << " <=      \"00\" when ((x_exn = \"00\") or (x_exn = \"01\"))  -- zero"<<endl
 					 << tab << "         else \"11\" ;-- 0*inf = 0*NaN = NaN" << endl;
 
 			vhdl  << tab << "R <= r_exn & x_sgn & " << rangeAssign(wE_out+wF_out-1, 0, "'0'") << ";"<<endl;
-			
+
 			return;
 		}
 
 		// bit width of constant exponent
 		int wE_cst=intlog2(abs(cst_exp_when_mantissa_1_2));
 		REPORT(LogLevel::DEBUG, "wE_cst = " << wE_cst);
-	
+
 		// We have to compute Er = E_X - bias(wE_in) + E_C + bias(wE_R)
 		// Let us pack all the constants together
 		mpz_class expAddend = -bias(wE_in) + cst_exp_when_mantissa_1_2  + bias(wE_out);
@@ -538,7 +538,7 @@ namespace flopoco{
 		wE_sum = intlog2(expAddend);
 		if(wE_in > wE_sum)
 			wE_sum = wE_in;
-		if(wE_out > wE_sum) 
+		if(wE_out > wE_sum)
 			wE_sum = wE_out;
 		REPORT(LogLevel::DEBUG, "expAddend: " << expAddendSign << " " << expAddend << "   wE_sum " << wE_sum);
 
@@ -549,7 +549,7 @@ namespace flopoco{
 
 		vhdl <<endl << tab << "-- significand processing"<<endl;
 
-		if(mantissa_is_one) {			
+		if(mantissa_is_one) {
 			vhdl << tab << "-- The mantissa of the constant is  1" << endl;
 			if(wF_out == wF_in) {
 				vhdl << tab << declare("r_frac", wF_out) << " <= X("<<wF_in-1 <<" downto 0);"<<endl;
@@ -571,25 +571,25 @@ namespace flopoco{
 			inPortMap  ("X", "x_sig");
 			outPortMap ("R","sig_prod");
 			vhdl << instance(icm, "sig_mult");
-			
-			// TODO setCycleFromSignal("sig_prod"); 
+
+			// TODO setCycleFromSignal("sig_prod");
 			// TODO setCriticalPath(icm->getOutputDelay("R"));
 			vhdl << tab << declare("norm") << " <= sig_prod" << of(icm->rsize -1) << ";"<<endl;
 			// TODO setSignalDelay("norm", getCriticalPath()); // save the delay for later
-			
+
 			// one mux controlled by the diffusion of the "norm" bit
 			// TODO manageCriticalPath(getTarget()->localWireDelay(wF_out+1) + getTarget()->lutDelay());
-			
+
 			vhdl << tab << declare("shifted_frac",    wF_out+1) << " <= sig_prod("<<icm->rsize -2<<" downto "<<icm->rsize - wF_out-2 <<")  when norm = '1'"<<endl
-			     << tab << "           else sig_prod("<<icm->rsize -3<<" downto "<<icm->rsize - wF_out - 3<<");"<<endl;  
+			     << tab << "           else sig_prod("<<icm->rsize -3<<" downto "<<icm->rsize - wF_out - 3<<");"<<endl;
 		}
-		
+
 		// Here if mantissa was 1 critical path is 0. Otherwise we want to reset critical path to the norm bit
 		//TODO		setCycleFromSignal("norm", getSignalDelay("norm"));
-		
+
 		// TODO manageCriticalPath(getTarget()->localWireDelay() + getTarget()->adderDelay(wE_sum+1));
 		vhdl <<endl << tab << "-- exponent processing"<<endl;
-		
+
 		vhdl << tab << declare("abs_unbiased_cst_exp",wE_sum+1) << " <= \""
 		     << unsignedBinary(expAddend, wE_sum+1) << "\";" << endl;
 		vhdl << tab << declare("r_exp_br",    wE_out+1) << " <= "
@@ -600,10 +600,10 @@ namespace flopoco{
 
 
 		vhdl <<endl << tab << "-- final rounding"<<endl;
-		
-		if(mantissa_is_one) {			
+
+		if(mantissa_is_one) {
 			vhdl << tab << declare("expfrac_rnd",   wE_out+1+wF_out) << " <= r_exp_br & r_frac;"<<endl;
-		} 
+		}
 		else {
 			// TODO manageCriticalPath(getTarget()->localWireDelay() + getTarget()->adderDelay(wE_out+1+wF_out+1));
 			vhdl << tab << declare("expfrac_br",   wE_out+1+wF_out+1) << " <= r_exp_br & shifted_frac;"<<endl;
@@ -623,7 +623,7 @@ namespace flopoco{
 		vhdl << tab << declare("overflow") << " <= " ;
 		if (maxExp(wE_in) + cst_exp_when_mantissa_1_2 + 1 < maxExp(wE_out)) // no overflow can ever happen
 			vhdl << "'0'; --  overflow never happens for this constant and these (wE_in, wE_out)" << endl;
-		else 
+		else
 			vhdl <<  "expfrac_rnd(" << wE_out+wF_out << ");" << endl;
 
 		// underflow handling
@@ -631,13 +631,13 @@ namespace flopoco{
 		vhdl << tab << declare("underflow") << " <= " ;
 		if (minExp(wE_in) + cst_exp_when_mantissa_1_2 >= minExp(wE_out)) // no underflow can ever happen
 			vhdl << "'0'; --  underflow never happens for this constant and these (wE_in, wE_out)" << endl;
-		else 
+		else
 			vhdl <<  "r_exp_rnd(" << wE_sum << ");" << endl;
-			 
-	
+
+
 		//		vhdl << tab << declare("r_exp", wE_out) << " <= r_exp_br("<<wE_out-1<<" downto 0) ;"<<endl;
 
-		vhdl << tab << declare("r_exn", 2) << " <=      \"00\" when ((x_exn = \"00\") or (x_exn = \"01\" and underflow='1'))  -- zero"<<endl 
+		vhdl << tab << declare("r_exn", 2) << " <=      \"00\" when ((x_exn = \"00\") or (x_exn = \"01\" and underflow='1'))  -- zero"<<endl
 			  << tab << "         else \"10\" when ((x_exn = \"10\") or (x_exn = \"01\" and overflow='1'))   -- infinity" << endl
 			  << tab << "         else \"11\" when  (x_exn = \"11\")                      -- NaN" << endl
 			  << tab << "         else \"01\";                                          -- normal number" << endl;
@@ -662,10 +662,10 @@ namespace flopoco{
 		mpfr_init2(x, 1+wF_in);
 		fpx.getMPFR(x);
 		if(correctRounding){
-			mpfr_init2(rn, 1+wF_out); 
+			mpfr_init2(rn, 1+wF_out);
 			mpfr_mul(rn, x, mpfrC, GMP_RNDN);
 
-			// Set outputs 
+			// Set outputs
 			FPNumber  fprn(wE_out, wF_out, rn);
 			mpz_class svRN = fprn.getSignalValue();
 			tc->addExpectedOutput("R", svRN);
@@ -673,12 +673,12 @@ namespace flopoco{
 			mpfr_clears(x, rn, NULL);
 		}
 		else{
-			mpfr_init2(ru, 1+wF_out); 
-			mpfr_init2(rd, 1+wF_out); 
+			mpfr_init2(ru, 1+wF_out);
+			mpfr_init2(rd, 1+wF_out);
 			mpfr_mul(ru, x, mpfrC, GMP_RNDU);
 			mpfr_mul(rd, x, mpfrC, GMP_RNDD);
 
-			// Set outputs 
+			// Set outputs
 			FPNumber  fpru(wE_out, wF_out, ru);
 			mpz_class svRU = fpru.getSignalValue();
 			tc->addExpectedOutput("R", svRU);
@@ -691,28 +691,53 @@ namespace flopoco{
 	}
 
 
-	
+
 	void FPConstMult::buildStandardTestCases(TestCaseList* tcl){
 		TestCase *tc;
 
-		tc = new TestCase(this); 
+		tc = new TestCase(this);
 		tc->addFPInput("X", 1.0);
 		emulate(tc);
 		tcl->add(tc);
 
-		tc = new TestCase(this); 
+		tc = new TestCase(this);
 		tc->addFPInput("X", FPNumber::plusDirtyZero);
 		emulate(tc);
 		tcl->add(tc);
 
-		tc = new TestCase(this); 
+		tc = new TestCase(this);
 		tc->addFPInput("X", FPNumber::minusDirtyZero);
 		emulate(tc);
 		tcl->add(tc);
 	}
 
+    TestList FPConstMultInterfaced::unitTest(int testLevel) {
+        TestList testStateList;
+        vector<pair<string,string>> paramList;
+        std::vector<std::array<int, 6>> paramValues;
+        paramValues = { // testing the default value on the most standard cases
+            {5,  10, -1, -1, 0, 0},
+            {8,  23, -1, -1, 0, 0},
+            {11, 52, -1, -1, 0, 0}
+        };
+        if (testLevel == TestLevel::QUICK) {
+			// just test paramValues
+		}
+        // Now actually build the paramValues structure
+		for (auto params: paramValues) {
+			paramList.push_back(make_pair("wE", to_string(params[0])));
+            paramList.push_back(make_pair("wF", to_string(params[1])));
+            paramList.push_back(make_pair("wEout", to_string(params[2])));
+            paramList.push_back(make_pair("wFout", to_string(params[3])));
+            paramList.push_back(make_pair("cst_width", to_string(params[4])));
+            paramList.push_back(make_pair("constant", "13176795b-22"));
+			testStateList.push_back(paramList);
+			// cerr << " " << params[0]  << " " << params[1]  << " " << params[2] << endl;
+			paramList.clear();
+		}
+        return testStateList;
+    }
 
-	
 	OperatorPtr FPConstMultInterfaced::parseArguments(OperatorPtr parentOp, Target* target, vector<string>& args, UserInterface& ui)
 	{
 		int wE_in, wE_out, wF_in, wF_out, cst_width;
@@ -726,12 +751,40 @@ namespace flopoco{
 		ui.parseInt(args, "wFout", &wF_out);
 		if(-1==wF_out)
 			wF_out=wF_in;
-		
+
 		ui.parsePositiveInt(args, "cst_width", &cst_width);
 		ui.parseString(args, "constant", &constant);
 
 		return new FPConstMult(parentOp, target, wE_in, wF_in, wE_out, wF_out, cst_width, constant);
 	}
+
+    TestList FPConstMultRationalInterfaced::unitTest(int testLevel) {
+        TestList testStateList;
+        vector<pair<string,string>> paramList;
+        std::vector<std::array<int, 6>> paramValues;
+        paramValues = {
+            // testing the default value on the most standard cases
+            {5,  10, -1, -1, 42, 31},
+            {8,  23, -1, -1, 42, 31},
+            {11, 52, -1, -1, 42, 31}
+        };
+        if (testLevel == TestLevel::QUICK) {
+			// just test paramValues
+		}
+        // Now actually build the paramValues structure
+		for (auto params: paramValues) {
+			paramList.push_back(make_pair("wE", to_string(params[0])));
+            paramList.push_back(make_pair("wF", to_string(params[1])));
+            paramList.push_back(make_pair("wEout", to_string(params[2])));
+            paramList.push_back(make_pair("wFout", to_string(params[3])));
+            paramList.push_back(make_pair("a", to_string(params[4])));
+            paramList.push_back(make_pair("b", to_string(params[5])));
+			testStateList.push_back(paramList);
+			// cerr << " " << params[0]  << " " << params[1]  << " " << params[2] << endl;
+			paramList.clear();
+		}
+        return testStateList;
+    }
 
 	OperatorPtr FPConstMultRationalInterfaced::parseArguments(OperatorPtr parentOp, Target* target, vector<string>& args, UserInterface& ui)
 	{

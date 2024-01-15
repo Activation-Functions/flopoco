@@ -74,6 +74,7 @@ namespace flopoco{
 
 		void emulate(TestCase *tc);
 		void buildStandardTestCases(TestCaseList* tcl);
+        static TestList unitTest(int testLevel);
 
 		/* The value of the constant multiplicand */
 		mpfr_t mpY;
@@ -83,10 +84,12 @@ namespace flopoco{
 
 	struct FPConstMultInterfaced  {
 		static OperatorPtr parseArguments(OperatorPtr parentOp, Target* target, vector<string>& args, UserInterface& ui);
+        static TestList unitTest(int testLevel);
 	};
 
 	struct FPConstMultRationalInterfaced  {
 		static OperatorPtr parseArguments(OperatorPtr parentOp, Target* target, vector<string>& args, UserInterface& ui);
+        static TestList unitTest(int testLevel);
 	};
 
 }
