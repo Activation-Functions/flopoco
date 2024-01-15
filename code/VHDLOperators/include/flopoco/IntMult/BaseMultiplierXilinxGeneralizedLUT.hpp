@@ -16,8 +16,7 @@ namespace flopoco
         unsigned getArea(void) override {return area;}
         int getRelativeResultLSBWeight(Parametrization const& param) const override {return lsb;};
         int getRelativeResultMSBWeight(Parametrization const& param) const override {return msb;};
-        //int getRelativeResultMSBWeight(Parametrization const& param, bool isSignedX, bool isSignedY) const override {return BaseMultiplierXilinxGeneralizedLUT::getRelativeResultMSBWeight(
-        //            static_cast<TILE_SHAPE>(param.getShapePara()), isSignedX, isSignedY);};
+        int getRelativeResultMSBWeight(Parametrization const& param, bool isSignedX, bool isSignedY) const override {return msb;};
         bool shapeValid(int x, int y) override;
         bool shapeValid(Parametrization const& param, unsigned x, unsigned y) const override;
         bool signSupX() override {return false;}
