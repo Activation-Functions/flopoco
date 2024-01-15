@@ -282,7 +282,7 @@ namespace flopoco{
 
 		// First check if wF is small enough to tabulate e^Y in a block RAM
 		if(guardBits==-1) // otherwise we don't touch it from the initialization
-			g=2; 
+			g=2;
 		sizeY=wF+g;
 		sizeExpY = wF+g+1+2; // e^Y has MSB weight 1; 2 added because it enables to keep g=2 and it costs nothing here, being at the table output.
 		mpz_class sizeExpATable= (mpz_class(1)<<sizeY) * sizeExpY;
@@ -331,7 +331,7 @@ namespace flopoco{
 				g=4;
 			if(k==0 && d==0) { 		// if automatic mode, set up the parameters
 				REPORT(LogLevel::VERBOSE, "Chosing sensible defaults for both k and d");
-				d=2; 
+				d=2;
 				k=9;
 
 				if (wF<32){
@@ -353,7 +353,7 @@ namespace flopoco{
 			}
 			else if(k!=0 && d==0) {
 				// The idea here is that if k only was provided then we just do a single polynomial with no further table.
-				d = max(wF/k-2, 0) ; // because Y<2^(-k) hence y^k<2^(-dk)				
+				d = max(wF/k-2, 0) ; // because Y<2^(-k) hence y^k<2^(-dk)
 				REPORT(LogLevel::VERBOSE, "k=" << k << " provided, chosing sensible default for d: d="<<d);
 			}
 			else if(k==0 && d!=0) {
@@ -393,7 +393,7 @@ namespace flopoco{
 			wFIn=wF;
 
 		addFPInput("X", wE, wFIn);
-		addFPOutput("R", wE, wF); 
+		addFPOutput("R", wE, wF);
 
 
 		//********* Building a few MPFR constants, useful or obsolete *********
@@ -971,7 +971,7 @@ namespace flopoco{
 		OperatorPtr FPExp::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 			int wE, wF, k, d, g;
 			bool fullInput;
-			ui.parseStrictlyPositiveInt(args, "wE", &wE); 
+			ui.parseStrictlyPositiveInt(args, "wE", &wE);
 			ui.parseStrictlyPositiveInt(args, "wF", &wF);
 			ui.parsePositiveInt(args, "k", &k);
 			ui.parsePositiveInt(args, "d", &d);
@@ -987,42 +987,58 @@ namespace flopoco{
 		// the static list of mandatory tests
 			TestList testStateList;
 			vector<pair<string,string>> paramList;
+            std::vector<std::array<int, 6>> paramValues;
 
-      if(testLevel >= TestLevel::SUBSTANTIAL)
-      { // The substantial unit tests
+            paramValues = { // testing the default value on the most standard cases
+                {5,  10, 0, 0, -1, 0},
+                {8,  23, 0, 0, -1, 0},
+                {11, 52, 0, 0, -1, 0}
+            };
+            if (testLevel == TestLevel::QUICK) {
+                // just test paramValues
+            }
 
-        // First test with plainVHDL, then with cool multipliers
-        for(int wF=5; wF<53; wF+=1) // test various input widths
-        {
-          int nbByteWE = 6+(wF/10);
-          while(nbByteWE>wF){
-            nbByteWE -= 2;
-          }
-
-          paramList.push_back(make_pair("wF",to_string(wF)));
-          paramList.push_back(make_pair("wE",to_string(nbByteWE)));
-          paramList.push_back(make_pair("plainVHDL","true"));
-          testStateList.push_back(paramList);
-          paramList.clear();
+        if (testLevel >= TestLevel::SUBSTANTIAL) {
+            // The substantial unit tests
+            // First test with plainVHDL, then with cool multipliers
+        for (int wF=5; wF<53; wF+=1) {
+            // test various input widths
+            int nbByteWE = 6+(wF/10);
+            while(nbByteWE>wF){
+                nbByteWE -= 2;
+            }
+            paramList.push_back(make_pair("wF",to_string(wF)));
+            paramList.push_back(make_pair("wE",to_string(nbByteWE)));
+            paramList.push_back(make_pair("plainVHDL","true"));
+            testStateList.push_back(paramList);
+            paramList.clear();
         }
-        for(int wF=5; wF<53; wF+=1) // test various input widths
-        {
-          int nbByteWE = 6+(wF/10);
-          while(nbByteWE>wF){
-            nbByteWE -= 2;
-          }
-
-          paramList.push_back(make_pair("wF",to_string(wF)));
-          paramList.push_back(make_pair("wE",to_string(nbByteWE)));
-          testStateList.push_back(paramList);
-          paramList.clear();
+        for (int wF=5; wF<53; wF+=1) {
+            // test various input widths
+            int nbByteWE = 6+(wF/10);
+            while(nbByteWE>wF){
+                nbByteWE -= 2;
+            }
+            paramList.push_back(make_pair("wF",to_string(wF)));
+            paramList.push_back(make_pair("wE",to_string(nbByteWE)));
+            testStateList.push_back(paramList);
+            paramList.clear();
         }
-      }
+        }
       else
       {
           // finite number of random test computed out of testLevel
       }
-
+        for (auto const params: paramValues) {
+             paramList.push_back(make_pair("wE", to_string(params[0])));
+             paramList.push_back(make_pair("wF", to_string(params[1])));
+             paramList.push_back(make_pair("d", to_string(params[2])));
+             paramList.push_back(make_pair("k", to_string(params[3])));
+             paramList.push_back(make_pair("g", to_string(params[4])));
+             paramList.push_back(make_pair("fullInput", to_string(params[5])));
+             testStateList.push_back(paramList);
+             paramList.clear();
+        }
   		return testStateList;
 	}
 
@@ -1033,11 +1049,11 @@ namespace flopoco{
 	    "ElementaryFunctions",
 	    "", // seeAlso
 	    "wE(int): exponent size in bits; \
-			wF(int): mantissa size in bits;  \
-			d(int)=0: degree of the polynomial. 0 choses a sensible default.; \
-			k(int)=0: input size to the range reduction table, should be between 5 and 15. 0 choses a sensible default.;\
-			g(int)=-1: number of guard bits;\
-			fullInput(bool)=0: input a mantissa of wF+wE+g bits (useful mostly for FPPow)",
+         wF(int): mantissa size in bits;  \
+         d(int)=0: degree of the polynomial. 0 choses a sensible default.; \
+         k(int)=0: input size to the range reduction table, should be between 5 and 15. 0 choses a sensible default.;\
+         g(int)=-1: number of guard bits;\
+         fullInput(bool)=0: input a mantissa of wF+wE+g bits (useful mostly for FPPow)",
 	    "Parameter d and k control the DSP/RamBlock tradeoff. In both "
 	    "cases, a value of 0 choses a sensible default. Parameter g is "
 	    "mostly for internal use.<br> For all the details, see <a "

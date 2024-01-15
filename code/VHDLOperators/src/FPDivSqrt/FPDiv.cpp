@@ -18,20 +18,20 @@
 
 
 /*
-Benchmarks for ./flopoco frequency=2 fpdiv we=8 wf=23 
+Benchmarks for ./flopoco frequency=2 fpdiv we=8 wf=23
 
-current best is 42 : 543 LUTs  32.263ns   
+current best is 42 : 543 LUTs  32.263ns
 
 (best FPAdder is 329 LUTs, 11,7ns )
 
- 
-REMARK: 
-extraBit could possibly be reduced by 1: 
-it is possible to replace the late  normalization step by an early comparison of 1.FX and 1.FY, 
- and 1-bit shift left 1.FX if 1.FX < 1.FY (it turns out this won't break the convergence condition on first step) 
+
+REMARK:
+extraBit could possibly be reduced by 1:
+it is possible to replace the late  normalization step by an early comparison of 1.FX and 1.FY,
+ and 1-bit shift left 1.FX if 1.FX < 1.FY (it turns out this won't break the convergence condition on first step)
 
 Florent tested it and it is not worth it: we get a small saving in latency, no saving in area for odd wF, e.g.23: 544 LUT,  31.487ns
-BUT large  overhead in latency and area for even wF (when nbDigits is not reduced). 
+BUT large  overhead in latency and area for even wF (when nbDigits is not reduced).
 In short when nDigits is not reduced we have a  mantissa comparison that is a strict overhead.
 
  */
@@ -70,12 +70,12 @@ namespace flopoco{
 		// what is the weight of the MSB of d, the bits of D passed to selFunTable?
 		// dMin between 0.5 and 0.75 -> msbWeight=0.5
 		// dMin between 0.75 and 0.111_2 - > msbwWeight=1/4
-		double dmsbweight=.5; // 
+		double dmsbweight=.5; //
 		while(dMin >= (1-dmsbweight/2))	{   // e.g when dMin=0.5 or 0.6, no loop
 	 		dmsbweight *= 0.5;
 		}
 		vector<mpz_class> t;
-		for (int x=0; x<(1<<wIn); x++) {					
+		for (int x=0; x<(1<<wIn); x++) {
 			int w = (x>>nbBitD);	 // splitting x into  w and d
 			int d = x - (w<<nbBitD); // when nbitD=0, this ensures d=0
 			int wSign = (w >> (nbBitW-1)) << (nbBitW-1); //getting the sign bit
@@ -84,18 +84,18 @@ namespace flopoco{
 			// Now compute the intervals that these values represent: any number in [realwMin, realwMax) may have been truncated to w.
 			double realwMin = 2*radix * ((double)w) / ((double)(1<<nbBitW)); // exact, in [-beta, beta). This bound is reached
 			double realwMax = 2*radix * ((double)w+1) / ((double)(1<<nbBitW)); // exact, in [-beta, beta). This bound is never reached
-			double epsilon = ( (double) 1)  / (1ULL<<40) ; 
-			realwMax -= epsilon; // dirty hack 
+			double epsilon = ( (double) 1)  / (1ULL<<40) ;
+			realwMax -= epsilon; // dirty hack
 
 			double realdMin = (1-dmsbweight)  +  dmsbweight * ((double)d) / ((double)(1<<nbBitD)); // exact, in [0, 1). This bound is reached
 			double realdMax = (1-dmsbweight)  +  dmsbweight *  ((double)d+1) / ((double)(1<<nbBitD)); // exact, in [0, 1). This bound is reached
 			realdMax -= epsilon; // dirty hack
-			
+
 			realdMin = max(realdMin,dMin); // ignore whatever is on the left of dMin
 			realdMax = min(realdMax,dMax); // ignore whatever is on the right of dMax
 			int result;
 			double uSlope, lSlope, uBound, lBound;
-					
+
 			result=1<<30;
 
 			// was: 			for(int k = -alpha; k <= alpha; k++)		{
@@ -115,17 +115,17 @@ namespace flopoco{
 				uSlope = k+rho;
 				lSlope = k-rho;
 
-				uBound = uSlope * (uSlope>=0? realdMin: realdMax);	
-				lBound = lSlope * (lSlope>=0? realdMax: realdMin);	
+				uBound = uSlope * (uSlope>=0? realdMin: realdMax);
+				lBound = lSlope * (lSlope>=0? realdMax: realdMin);
 
-				/* the actual test is the first line. 
-					 The second and third are there to pad with -alpha and alpha the unreachable parts 
-					 of the domain, becaause we don't have don't cares in FloPoCo yet. 
+				/* the actual test is the first line.
+					 The second and third are there to pad with -alpha and alpha the unreachable parts
+					 of the domain, becaause we don't have don't cares in FloPoCo yet.
 					 Incidentally, it protects us from the Pentium bug */
 				//cerr << "k=" << k<< " realwMax=" << realwMax << " <=  uBound="<< uBound << "? :"<< (realwMax <= uBound) << "   realwMin=" << realwMin << ">= lBound="<<lBound << " ?" <<endl;
 				if( (realwMax <= uBound && realwMin >= lBound)
-						|| (k == alpha && realwMin >= lBound)  
-						|| (k == -alpha && realwMax <= uBound) 
+						|| (k == alpha && realwMin >= lBound)
+						|| (k == -alpha && realwMax <= uBound)
 						)
 					{
 						result = k;
@@ -136,11 +136,11 @@ namespace flopoco{
 				THROWERROR("digit selection failed for w=" << w << " and d=" << d);
 			}
 		int result2c = result;
-			if(result < 0)	
+			if(result < 0)
 				result2c+=(1<<wOut); //switch to two's complement
 
 			mpz_class mpzresult;
-						
+
 			mpzresult = mpz_class(result2c);
 
 			//cerr << " w="<< w  << "  "<<  realwMin  << "  "<<  realwMax  <<" d=" << d << "  "<<  realdMin  << "  "<<  realdMax << " qi=" << result << "  " << result << endl;
@@ -149,7 +149,7 @@ namespace flopoco{
 		return t;
 	}
 
-	
+
 	FPDiv::FPDiv(OperatorPtr parentOp, Target* target, int wE, int wF, int srt) :
 		Operator(parentOp, target), wE(wE), wF(wF) {
 
@@ -329,10 +329,10 @@ namespace flopoco{
 
 			//The last +3 in computing nDigit is for this part
 			// Here we get rid of the leading bit, which is a known zero, we keep
-			// 1 bit for the norm, 1+wF fraction bits, 1 round bit, and one sticky bit out of the LSBs			
+			// 1 bit for the norm, 1+wF fraction bits, 1 round bit, and one sticky bit out of the LSBs
 			qSize=3*nDigit; // where nDigit is  floor((wF + extraBit)/3);
 			qMsbToDiscard=1;
-			
+
 			}
 
 
@@ -341,7 +341,7 @@ namespace flopoco{
 
 		else
 			/*****************************RADIX 4 SRT **********************************************/
-			// For alpha=3, we need 2 LUTs/bit in the recurrence but the table is small 
+			// For alpha=3, we need 2 LUTs/bit in the recurrence but the table is small
 			// For alpha=2 with no prescaling we have a large sel table (10 bits in) but 1 LUT/bit recurrence.
 			//             with prescaling the tables get much smaller (8 input bits)
 		{
@@ -357,7 +357,7 @@ namespace flopoco{
 				extraBit=6; //
 				tableContent = selFunctionTable(0.5, 1.0, nbBitsD, nbBitsW, alpha, radix);
 			}
-			
+
 			else if(alpha==2){
 				if(prescaling==1) {
 					nbBitsD=2;
@@ -374,14 +374,14 @@ namespace flopoco{
 				extraBit=7; // one more than for alpha=3 due to the initial alignment to respect rhoD
 			}
 			else THROWERROR("alpha="<< alpha << " is not an option");
-			
+
 			nDigit = (wF+extraBit) >> 1;
 
 			int dSize, subSize;
 			if(prescaling==0) {
 				dSize=wF+1;
 				vhdl << tab << declare("D", dSize) << " <= fY ;"<< endl;
-				vhdl << tab << declare("psX", dSize+1) << " <= \"0\" & fX ;"<< endl;				
+				vhdl << tab << declare("psX", dSize+1) << " <= \"0\" & fX ;"<< endl;
 			}
 			else if(prescaling==1) {
 				vhdl << tab << " -- prescaling " << endl;
@@ -389,12 +389,12 @@ namespace flopoco{
 				vhdl << tab << declare("D", dSize) << " <=  (fY & \"0\") when fY" << of(wF-1) << " = '1' -- D when D was in [1.5,2)"<< endl
 						 << tab << tab << " else (\"0\" & fY) + (fY & \"0\") ; -- 3/2*D when D was in [1, 1.5)"  << endl;
 				vhdl << tab << " -- Now D is in [3/2, 9/4) and one bit wider " << endl;
-				
+
 				vhdl << tab << declare("psX", dSize+1) << " <=  (\"0\" & fX & \"0\") when fY" << of(wF-1) << " = '1'"<< endl
 						 << tab << tab << " else (\"00\" & fX) + (\"0\" & fX & \"0\") ; "<< endl;
 			}
 			else THROWERROR("prescaling="<< prescaling << " is not an option");
-			
+
 			if(alpha==3) {
 			  vhdl << tab << " -- compute 3D" << endl;
 			  vhdl << tab << declare(getTarget()->adderDelay(dSize+1), "Dx3",dSize+1)
@@ -402,7 +402,7 @@ namespace flopoco{
       }
 
 			subSize=dSize+3; // Size of the subtraction in the main iteration
-			
+
 
 #if 0 // experiments with prescaling
 			nbBitsD=0;
@@ -411,7 +411,7 @@ namespace flopoco{
 #endif
 #if 0 // experiments with prescaling
 			// 42 with prescaling by 3/2 when D<42/64 allows to save one table input bit. After synthesis of just this experiment the
-			// LUTs are reduced from 564 to 533. Since the prescaling itself will cost 2 x 27 LUTs, it is a loss. 
+			// LUTs are reduced from 564 to 533. Since the prescaling itself will cost 2 x 27 LUTs, it is a loss.
 			nbBitsD=3;
 			nbBitsW=5;
 			tableContent = selFunctionTable(42./64, 1, nbBitsD, nbBitsW, alpha, radix);
@@ -449,13 +449,13 @@ rox P						or wi is 26 bits long
 				if(i==nDigit-1){
 					if(alpha==2) {
 						vhdl << tab << declare(wi, subSize) << " <=  \"00\" & psX;" << endl;
-					} 
+					}
 					else { // alpha=3
 						vhdl << tab << declare(wi, subSize) << " <=  \"0\" & psX & \"0\";" << endl;
 					}
 				}
 				else {
-					//					
+					//
 					vhdl << tab << declare(wi,subSize) << " <= " << wifull<<range(subSize-3,0)<<" & \"00\"; -- multiplication by the radix" << endl;
 				}
 
@@ -463,37 +463,37 @@ rox P						or wi is 26 bits long
 					vhdl << tab << declare(seli, nbBitsW+nbBitsD) << " <= " << wi << range(subSize-1, subSize-nbBitsW) << " & D" << range(dSize-1,dSize-nbBitsD)  << ";" << endl;
 				}
 				else {
-					vhdl << tab << declare(seli, nbBitsW+nbBitsD) << " <= " << wi << range(subSize-1, subSize-nbBitsW) << " & D" << range(dSize-2,dSize-1-nbBitsD)  << ";" << endl;				 
+					vhdl << tab << declare(seli, nbBitsW+nbBitsD) << " <= " << wi << range(subSize-1, subSize-nbBitsW) << " & D" << range(dSize-2,dSize-1-nbBitsD)  << ";" << endl;
 				}
-				
+
 				newSharedInstance(selfunctiontable , "SelFunctionTable" + to_string(i), "X=>"+seli, "Y=>"+ qi);
 				vhdl << endl;
 
 				if(alpha==3) {
-					// Two options for here. More experiments are needed, the best is probably target-dependent 
-#if 1  // The following leads to higher frequency and higher resource usage: 
-					// For (8,23) on Virtex6 with ISE this gives 466Mhz, 1083 regs+ 1029 LUTs 
+					// Two options for here. More experiments are needed, the best is probably target-dependent
+#if 1  // The following leads to higher frequency and higher resource usage:
+					// For (8,23) on Virtex6 with ISE this gives 466Mhz, 1083 regs+ 1029 LUTs
 					vhdl << tab << "with " << qi << " select" << endl;
 					vhdl << tab << tab << declare(getTarget()->fanoutDelay(subSize) + getTarget()->adderDelay(subSize), qiTimesD,subSize)
-							 << " <= "<< endl 
+							 << " <= "<< endl
 							 << tab << tab << tab << "\"000\" & D  		   when \"001\" | \"111\"," << endl
 							 << tab << tab << tab << "\"00\" & D & \"0\"	 when \"010\" | \"110\"," << endl
 							 << tab << tab << tab << "\"00\" & Dx3    	   when \"011\" | \"101\"," << endl
 							 << tab << tab << tab << "(" << subSize-1 << " downto 0 => '0')	when others;" << endl<< endl;
-#else // Recompute 3Y locally to save the registers: the LUT is used anyway (wrong! on Virtex6 ISE finds a MUX) 
-					// For (8,23) on Virtex6 with ISE this gives 345Mhz, 856 regs+ 1051 LUTs 
-					// Note that this option probably scales worse if we pipeline this addition  
+#else // Recompute 3Y locally to save the registers: the LUT is used anyway (wrong! on Virtex6 ISE finds a MUX)
+					// For (8,23) on Virtex6 with ISE this gives 345Mhz, 856 regs+ 1051 LUTs
+					// Note that this option probably scales worse if we pipeline this addition
 					vhdl << tab << "with " << qi << " select" << endl
 							 << tab << tab << declare(getTarget()->fanoutDelay(subSize) + getTarget()->lutDelay(), join("addendA",i),subSize)
-							 << " <= " << endl 
+							 << " <= " << endl
 							 << tab << tab << tab << "\"000\" & D              when \"001\" | \"111\" | \"011\" | \"101\"," << endl
 							 << tab << tab << tab << "(" << subSize-1 << " downto 0 => '0')  when others;" << endl;
 
 					vhdl << tab << "with " << qi << " select" << endl
-							 << tab << tab << declare(join("addendB",i),subSize) << " <= "<< endl 
+							 << tab << tab << declare(join("addendB",i),subSize) << " <= "<< endl
 							 << tab << tab << tab << "\"00\" & D & \"0\"       when \"010\" | \"110\"| \"011\" | \"101\"," << endl
 							 << tab << tab << tab << "(" << subSize-1 << " downto 0 => '0')  when others;" << endl;
-					
+
 					vhdl << tab << tab << declare(getTarget()->adderDelay(subSize), qiTimesD,subSize)
 							 << " <= " << join("addendA",i) << " + " << join("addendB",i) << ";"<< endl << endl;
 #endif
@@ -505,15 +505,15 @@ rox P						or wi is 26 bits long
 
 				} // end if alpha=3
 
-				
+
 				else { // alpha=2
 					vhdl << tab << "with " << qi << " select" << endl;
 					// no delay for qiTimesD, it should be merged in the following addition
-					vhdl << tab << tab << declare(qiTimesD,subSize) << " <= "<< endl 
+					vhdl << tab << tab << declare(qiTimesD,subSize) << " <= "<< endl
 							 << tab << tab << tab << "\"000\" & D						 when \"001\" | \"111\", -- mult by 1" << endl
 							 << tab << tab << tab << "\"00\" & D & \"0\"			   when \"010\" | \"110\", -- mult by 2" << endl
 							 << tab << tab << tab << "(" << subSize-1 << " downto 0 => '0')	 when others;        -- mult by 0" << endl << endl;
-					
+
 					//				vhdl << tab << declare(wi, subSize) << " <= " << wi << " & \"0\";" << endl;
 
 					vhdl << tab << "with " << qi << "(2) select" << endl
@@ -556,19 +556,19 @@ rox P						or wi is 26 bits long
 			if(alpha==2)
 				qMsbToDiscard=1;// due to initial alignment to respect R0<rho D with rho=2/3
 			else
-				qMsbToDiscard=0; 
+				qMsbToDiscard=0;
 		}
-		
+
 		vhdl << tab << "-- We need a mR in (0, -wf-2) format: 1+wF fraction bits, 1 round bit, and 1 guard bit for the normalisation," << endl;
 		vhdl << tab << "-- quotient is the truncation of the exact quotient to at least 2^(-wF-2) bits" << endl;
 		vhdl << tab << "-- now discarding its possible known MSB zeroes, and dropping the possible extra LSB bit (due to radix 4) " << endl;
 		int lsbSize = qSize-qMsbToDiscard-(wF+3);
 		vhdl << tab << declare(getTarget()->lutDelay(), "mR", wF+3) << " <= quotient(" << qSize-1-qMsbToDiscard << " downto "<< lsbSize <<"); " << endl;
 
-		vhdl << tab << "-- normalisation" << endl;		
+		vhdl << tab << "-- normalisation" << endl;
 		vhdl << tab << declare(getTarget()->lutDelay(), "fRnorm", wF+1) << " <=    mR(" << wF+1 << " downto 1)  when mR" << of(wF+2) << "= '1'" << endl;
 		vhdl << tab << "        else mR(" << wF << " downto 0);  -- now fRnorm is a (-1, -wF-1) fraction" << endl;
-		
+
 		vhdl << tab << declare(getTarget()->lutDelay(), "round") << " <= fRnorm(0); " << endl;
 
 		vhdl << tab << declare(getTarget()->adderDelay(wE+2), "expR1", wE+2) << " <= expR0"
@@ -577,7 +577,7 @@ rox P						or wi is 26 bits long
 		vhdl << tab << "-- final rounding" <<endl;
 		vhdl << tab <<  declare("expfrac", wE+wF+2) << " <= "
 				 << "expR1 & fRnorm(" <<wF << " downto " << 1 << ") ;" << endl;
-		
+
 		vhdl << tab << declare("expfracR", wE+wF+2) << " <= "
 				 << "expfrac + ((" << wE+wF+1 << " downto 1 => '0') & round);" << endl;
 
@@ -970,17 +970,17 @@ rox P						or wi is 26 bits long
 		TestList testStateList;
 		vector<pair<string,string>> paramList;
 		std::vector<std::array<int, 3>> paramValues, moreParamValues; //  order is wE wF srt
-		
+
 		paramValues = { // testing the default value on the most standard cases
-			{5,10,42}, 
-			{8,23,42}, 
-			{11,52,42}   
+			{5,  10, 42},
+			{8,  23, 42},
+			{11, 52, 42}
 		};
-		
-		if(testLevel == TestLevel::QUICK) {
+
+		if (testLevel == TestLevel::QUICK) {
 			// just test paramValues
 		}
-		if(testLevel >= TestLevel::SUBSTANTIAL) {
+		if (testLevel >= TestLevel::SUBSTANTIAL) {
 			// same tests but add the other SRT values
 			moreParamValues=paramValues;
 			for (auto params: paramValues) {
@@ -991,10 +991,10 @@ rox P						or wi is 26 bits long
 			}
 			paramValues=moreParamValues;
 		}
-		if(testLevel >= TestLevel::EXHAUSTIVE)	{
+		if (testLevel >= TestLevel::EXHAUSTIVE)	{
 			std::array<int, 3> params;
-			for(int wF=5; wF<53; wF+=1) // test various input widths
-				{
+			for (int wF=5; wF<53; wF+=1) // test various input widths
+                {
 					int wE = 6+(wF/10);
 					while(wE>wF)
 						{
@@ -1010,7 +1010,6 @@ rox P						or wi is 26 bits long
 					paramValues.push_back(params);
 				}
 		}
-		
 		// Now actually build the paramValues structure
 		for (auto params: paramValues) {
 			paramList.push_back(make_pair("wE", to_string(params[0])));
@@ -1020,10 +1019,10 @@ rox P						or wi is 26 bits long
 			// cerr << " " << params[0]  << " " << params[1]  << " " << params[2] << endl;
 			paramList.clear();
 		}
-		
+
 		return testStateList;
 	}
-	
+
 	template <>
 	const OperatorDescription<FPDiv> op_descriptor<FPDiv> {
 	    "FPDiv", // name

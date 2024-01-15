@@ -24,6 +24,7 @@ namespace flopoco{
 		//		Overloading the virtual functions of Operator
 		void emulate(TestCase * tc);
 		void buildStandardTestCases(TestCaseList* tcl);
+        static TestList unitTest(int testLevel);
 		/**Overloading the function of Operator */
 		TestCase* buildRandomTestCase(int n);
 

@@ -68,7 +68,7 @@ namespace flopoco{
 		vhdl << tab << declare("eRn1", wE) << " <= eRn0 + (\"00\" & " << rangeAssign(wE-3, 0, "'1'") << ") + X(" << wF << ");" << endl;
 
 
-		
+
 		if(method==0) {
 			vhdl << tab << "-- now implementing the recurrence: d_i has position -i " << endl;
 			// R1 = 2R0 - 2S0 -2^-1 d_0
@@ -83,9 +83,9 @@ namespace flopoco{
 			// d_i \in |{0,1\}  has position -i in S_i
 			// 2S_{i-1} has format ufix(1,-i+2)
 			// d_i^2 == d_i is added at position -i
-			// so tentative subtrahand is  2S_{i-1} + 2^{-i}    is   2S_{i-1} 01, format ufix(1,-i)  
+			// so tentative subtrahand is  2S_{i-1} + 2^{-i}    is   2S_{i-1} 01, format ufix(1,-i)
 			// but subtraction has result on sfix(2,-wF-1) to keep the sign,
-			// so effective subtraction on format sfix(2, -i) : size i+3 
+			// so effective subtraction on format sfix(2, -i) : size i+3
 			vhdl << tab << " -- initialization " << endl;
 			vhdl << tab << declare("d0") << " <= '1';" << endl;
 			vhdl << tab << declare("S0", 1) << " <= \"1\";" << endl;
@@ -124,7 +124,7 @@ namespace flopoco{
 						 << tab << "       " << TwoRim1H << range(subsize-2,0) <<"; " << endl;
 				vhdl << tab << declare(Ri, wF+3)
 						 << " <= " << Rih  << (i <= wF? " & " + TwoRim1L: "") <<"; " << endl;
-				
+
 			} // end  digit iteration
 
 			vhdl << tab << declare(target->lutDelay(), "fR", wF) << " <= "<< join("S", maxstep) <<range(wF, 1) << ";-- removing leading 1" << endl;
@@ -147,7 +147,7 @@ namespace flopoco{
 			vhdl << tab << declare(getTarget()->adderDelay(4),
 														 "T1", wF+4) << " <= (\"0111\" + fracXnorm" << range(wF+3, wF)<< ") & fracXnorm" << range(wF-1, 0)<< ";"<< endl;
 
-			
+
 		//		vhdl << tab << declare(join("d",wF+3)) << " <= '0';" << endl;
 		//		vhdl << tab << declare(join("s",wF+3)) << " <= '1';" << endl;
 			vhdl << tab << "-- now implementing the recurrence " << endl;
@@ -327,27 +327,39 @@ namespace flopoco{
 		// the static list of mandatory tests
 		TestList testStateList;
 		vector<pair<string,string>> paramList;
-		
-    if(testLevel >= TestLevel::SUBSTANTIAL)
-    { // The substantial unit tests
+        std::vector<std::array<int, 3>> paramValues;
 
-			for(int wF=5; wF<53; wF+=1) // test various input widths
-			{
-					int wE = 6+(wF/10);
-					while(wE>wF)
-					{
-						wE -= 2;
-					}
-					paramList.push_back(make_pair("wF",to_string(wF)));
-					paramList.push_back(make_pair("wE",to_string(wE)));
-					testStateList.push_back(paramList);
-					paramList.clear();
+        paramValues = { // testing the default value on the most standard cases
+			{5,  10, 0},
+			{8,  23, 1},
+			{11, 52, 0}
+		};
+        if (testLevel == TestLevel::QUICK) {
+            // just test paramValues
+        }
+        if (testLevel >= TestLevel::SUBSTANTIAL) {
+            // The substantial unit tests
+			for (int wF=5; wF<53; wF+=1) {
+                // test various input widths
+                int wE = 6+(wF/10);
+                while (wE>wF) {
+                    wE -= 2;
+                }
+                paramList.push_back(make_pair("wF",to_string(wF)));
+                paramList.push_back(make_pair("wE",to_string(wE)));
+                testStateList.push_back(paramList);
+                paramList.clear();
 			}
+		} else {
+            // finite number of random test computed out of testLevel
 		}
-		else     
-		{
-				// finite number of random test computed out of testLevel
-		}	
+        for (auto const params: paramValues) {
+             paramList.push_back(make_pair("wE", to_string(params[0])));
+             paramList.push_back(make_pair("wF", to_string(params[1])));
+             paramList.push_back(make_pair("method", to_string(params[2])));
+             testStateList.push_back(paramList);
+             paramList.clear();
+        }
 		return testStateList;
 	}
 
