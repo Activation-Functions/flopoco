@@ -19,7 +19,7 @@ namespace flopoco{
 	public:
 
 		/** @brief The standard constructor, inputs the number to implement */
-		IntConstMult(OperatorPtr parentOp, Target* target, const int wIn, const mpz_class constant);
+		IntConstMult(OperatorPtr parentOp, Target* target, const int wIn, const mpz_class constant, string method);
 
     void emulate(TestCase *tc);
     static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
