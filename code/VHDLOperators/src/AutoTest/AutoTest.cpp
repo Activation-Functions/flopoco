@@ -190,7 +190,7 @@ namespace {
 		}
 
 		void runTests() {
-			std::cout << "Running tests for " << opFact->name() << ":\n";
+			std::cout << endl << "Running tests for " << opFact->name() << ":\n";
 			namespace bp = boost::process;
 			if (!fs::create_directory(testRoot)) {
 				fs::remove_all(testRoot);
@@ -288,7 +288,7 @@ namespace {
       }
       else
       {
-        out << endl << "Tests for " << opFact->name() << endl;
+        out  << "Results for " << opFact->name() << endl;
         size_t nbGenOk{nbGenerationOK()}, nbSimOk{nbSimulationOk()};
         auto plural = [](int val){if (val > 1) return std::string_view{"tests"}; else return std::string_view{"test"};};
         double percentageGen = 0.;
@@ -379,14 +379,16 @@ namespace flopoco
 		// Select the Operator(s) to test
 		if(allOpTest)
 		{
-			for (auto facto : factRegistry.getPublicRegistry())	{
-				if(facto->name() != "AutoTest")
-					testedOperator.insert(facto->name());
+			for (auto f : factRegistry.getPublicRegistry())	{
+				if(f->name() != "AutoTest" && !f->isHidden())
+					testedOperator.insert(f->name());
 			}
 		} else {
-			auto opFact = factRegistry.getFactoryByName(opName);
-			testedOperator.insert(opFact->name());
-				// Do we check for dependences ?
+			auto f = factRegistry.getFactoryByName(opName);
+			if(!f->isHidden()) { 
+				testedOperator.insert(f->name());
+			}
+				// Do we check for dependences ? No point really
 		}
 
 

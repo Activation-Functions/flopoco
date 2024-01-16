@@ -47,7 +47,7 @@ namespace flopoco
   const OperatorDescription<Xilinx_CARRY4> op_descriptor<Xilinx_CARRY4> {
       "XilinxCARRY4",			       // name
       "Provides the Xilinx CARRY4 primitive.", // description, string
-      "Primitives(HIDDEN)", // category, from the list defined in UserInterface.cpp
+      "Hidden", // category, from the list defined in UserInterface.cpp
       "",
       "",
       ""};

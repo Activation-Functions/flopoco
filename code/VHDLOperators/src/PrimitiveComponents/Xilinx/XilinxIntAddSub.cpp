@@ -358,7 +358,7 @@ namespace flopoco {
 	const OperatorDescription<XilinxIntAddSub> op_descriptor<XilinxIntAddSub> {
 	    "XilinxIntAddSub",				       // name
 	    "An adder/subtractor build of xilinx primitives.", // description
-	    "Primitives(HIDDEN)", // category, from the list defined in UserInterface.cpp
+	    "Hidden", // category, from the list defined in UserInterface.cpp
 	    "",
 	    "wIn(int): The wordsize of the adder;"
       "xNegative(bool)=false: set to true if x (first) input should be subtracted, only works when yNegative=false;"

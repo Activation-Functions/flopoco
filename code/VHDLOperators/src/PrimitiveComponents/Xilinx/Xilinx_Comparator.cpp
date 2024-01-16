@@ -323,13 +323,13 @@ namespace flopoco {
 
     template <>
     const OperatorDescription<Xilinx_Comparator> op_descriptor<Xilinx_Comparator> {
-	"XilinxComparator",			    // name
-	"A comparator build of xilinx primitives.", // description, string
-	"Primitives(HIDDEN)", // category, from the list defined in UserInterface.cpp
-	"",	      // seeAlso
-	// where parameterDescription is parameterName
-	// (parameterType)[=defaultValue]: parameterDescriptionString
-	"wIn (int): Wordsize of comparator inputs; \
-                             type (string): Type of comparator ( gt,ge,lt,le,eq,ne )",
-	"Nope."};
+			"XilinxComparator",			    // name
+				"A comparator build of xilinx primitives.", // description, string
+				"Hidden", // category, from the list defined in UserInterface.cpp
+				"",	      // seeAlso
+				// where parameterDescription is parameterName
+				// (parameterType)[=defaultValue]: parameterDescriptionString
+				"wIn (int): Wordsize of comparator inputs; \
+         type (string): Type of comparator ( gt,ge,lt,le,eq,ne )",
+				"Nope."};
 }

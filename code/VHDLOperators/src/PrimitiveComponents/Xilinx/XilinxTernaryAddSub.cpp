@@ -489,7 +489,7 @@ namespace flopoco
     "XilinxTernaryAddSub",              // name
     "A ternary adder subtractor build of xilinx primitives.", // description,
     // string
-    "Primitives(HIDDEN)", // category, from the list defined in
+    "Hidden", // category, from the list defined in
     // UserInterface.cpp
     "",
     "wIn(int): The wordsize of the adder; \

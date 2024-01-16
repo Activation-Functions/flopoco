@@ -71,15 +71,14 @@ template <>
 const OperatorDescription<BaseMultiplierBoothArrayXilinx>
     op_descriptor<BaseMultiplierBoothArrayXilinx>{
 	"BaseMultiplierBoothArrayXilinx", // name
-	"Implements a XxY-LUT-Multiplier that can be realized efficiently on "
-	"some Xilinx-FPGAs",
-	"BasicInteger", // categories
+	"Implements a XxY-LUT-Multiplier that can be realized efficiently on some Xilinx-FPGAs",
+	"Hidden", // categories
 	"",
-	"wX(int): size of input X;\
-        	wY(int): size of input Y;\
-                wAcc(int)=0: size of the accumulate input;\
-		xIsSigned(bool)=0: input X is signed;\
-		yIsSigned(bool)=0: input Y is signed;",
+		"wX(int): size of input X;\
+     wY(int): size of input Y;\
+     wAcc(int)=0: size of the accumulate input;\
+		 xIsSigned(bool)=0: input X is signed;\
+		 yIsSigned(bool)=0: input Y is signed;",
 	""};
 
 //copied from 2xk

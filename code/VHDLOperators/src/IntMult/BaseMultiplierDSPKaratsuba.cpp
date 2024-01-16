@@ -162,7 +162,7 @@ namespace flopoco {
 	    "BaseMultiplierDSPKaratsuba", // name
 	    "Implements the Karatsuba pattern with DSPs where certain "
 	    "multipliers can be omitted to save DSPs",
-	    "BasicInteger", // categories
+	    "Hidden", // categories
 	    "",
 	    "wX(int): size of input X of a single DSP-block;\
                         wY(int): size of input Y of a single DSP-block;\
