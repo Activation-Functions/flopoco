@@ -2,6 +2,7 @@
 #include <iomanip>
 #include <sstream>
 #include <cstdlib>
+#include <assert.h>
 
 #include "flopoco/UserInterface.hpp"
 #include "flopoco/FixFilters/IntFIRTransposed.hpp"
