@@ -5,7 +5,7 @@ using namespace std;
 
 namespace flopoco{
 
-IntConstMult::IntConstMult(OperatorPtr parentOp, Target* target, int wIn, mpz_class constant) : Operator(parentOp, target), wIn(wIn), constant(constant)
+IntConstMult::IntConstMult(OperatorPtr parentOp, Target* target, int wIn, mpz_class constant, string method) : Operator(parentOp, target), wIn(wIn), constant(constant)
 {
   srcFileName="IntConstMult";
 
@@ -13,6 +13,10 @@ IntConstMult::IntConstMult(OperatorPtr parentOp, Target* target, int wIn, mpz_cl
   name << "IntConstMult_" << wIn;
   setNameWithFreqAndUID(name.str());
 
+  if(method == "auto")
+  {
+    REPORT(LogLevel::DETAIL, "");
+  }
 
   int wOut = intlog2(constant * ((mpz_class(1)<<wIn)-1));
 
@@ -47,7 +51,10 @@ OperatorPtr flopoco::IntConstMult::parseArguments(OperatorPtr parentOp, Target *
   ui.parseString(args, "constant", &constant);
   mpz_class const_mpz(constant); // TODO catch exceptions here?
 
-  return new IntConstMult(parentOp, target, wIn, const_mpz);
+  string method;
+  ui.parseString(args, "method", &method);
+
+  return new IntConstMult(parentOp, target, wIn, const_mpz, method);
 }
 
 }//namespace
@@ -61,7 +68,8 @@ namespace flopoco {
 	    // UserInterface.cpp
 	    "",
 	    "wIn(int): Wordsize of pag inputs;"
-      "constant(int): constant to multiply with",
+      "constant(int): constant to multiply with;"
+      "method(string)=auto: desired method. Can be 'KCM', 'ShiftAdd', 'ShiftAddRPAG' or 'auto' (let FloPoCo decide which operator performs best)",
 	    ""};
 }//namespace
 
