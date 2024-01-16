@@ -132,10 +132,11 @@ namespace flopoco{
 	  // INSERTED PART FOR PRIMITIVES
 		if( !op->getGenerics().empty() ) {
 			vhdl << tab << tab << "generic map ( ";
-			std::map<string, string>::iterator it = op->getGenerics().begin();
+			auto generics = op->getGenerics();
+			auto it = generics.begin();
 			vhdl << it->first << " => " << it->second;
 
-			for( ++it; it != op->getGenerics().end(); ++it  ) {
+			for( ++it; it != generics.end(); ++it  ) {
 				vhdl << "," << endl << tab << tab << it->first << " => " << it->second;
 			}
 
