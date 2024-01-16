@@ -86,11 +86,12 @@ namespace flopoco
 		//		v.push_back(make_pair("LNS", "Logarithm Number System" ));
 		v.push_back(make_pair("Conversions", "Conversions between number systems" ));
 		v.push_back(make_pair("FiltersEtc", "Filters and FFTs"));
-		v.push_back(make_pair("TestBenches", "Test Benches"));
-		v.push_back(make_pair("AutoTest", "AutoTest"));
+		// comment the following to hide all the primitive operators
 		v.push_back(make_pair("Primitives", "Highly target optimized primitive operators"));
 		v.push_back(make_pair("Sorters", "Sorting operators"));
 		v.push_back(make_pair("Miscellaneous", "Miscellaneous"));
+		v.push_back(make_pair("TestBenches", "Test Benches"));
+		v.push_back(make_pair("AutoTest", "AutoTest"));
 		return v;
 	}();
 
@@ -793,6 +794,7 @@ namespace flopoco
 
 		s << "Usage: " << COLOR_BOLD << "flopoco  [options]  OperatorName parameters  [OperatorName parameters]..." << COLOR_NORMAL << endl;
 		s << "  Both options and parameters are lists of " << COLOR_BOLD << "name=value" << COLOR_NORMAL << " pairs (with case-insensitive name)" << endl;
+		s << "  Sticky options apply to the rest of the command line, unless changed again" <<endl;
 		s << COLOR_BLUE_NORMAL<< "Example: " << COLOR_NORMAL << "flopoco  frequency=300 target=Virtex5   FPExp  wE=8 wF=23 name=SinglePrecisionFPExp" << endl;
 		s << "Generic options include:" << endl;
 		s << "  " << COLOR_BOLD << "name" << COLOR_NORMAL << "=<string>:                override the the default entity name "<<endl;
@@ -802,6 +804,7 @@ namespace flopoco
 		s << "  " << COLOR_BOLD << "frequency" << COLOR_NORMAL << "=<float>:            target frequency in MHz (default 0, 0 means: no pipeline) " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
 		s << "  " << COLOR_BOLD << "plainVHDL" << COLOR_NORMAL << "=<0|1>:              use plain VHDL (default 0), or not " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL << endl;
 		s << "  " << COLOR_BOLD << "useHardMult" << COLOR_NORMAL << "=<0|1>:            use hardware multipliers " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
+		s << "  " << COLOR_BOLD << "hardMultThreshold" << COLOR_NORMAL << "=<float>: unused hard mult threshold. If a multiplier can fill at least hardMultThreshold of a DSP block, then a DSP block will be used, otherwise logic (O..1, default 0.7)." << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
 		s << "  " << COLOR_BOLD << "tableCompression" << COLOR_NORMAL << "=<0|1>:       use errorless table compression when possible (default false while experimental)" << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
 		s << "  " << COLOR_BOLD << "tableCostModel" << COLOR_NORMAL << "=<";
 						for (auto & i : table_cost_models) { s << std::get<0>(i) << ", "; }
@@ -813,14 +816,12 @@ namespace flopoco
 		s << "  " << COLOR_BOLD << "ilpTimeout" << COLOR_NORMAL << "=<int>:             sets the timeout in seconds for the ILP solver for operators optimized by ILP (default=3600)" << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
 		s << "  " << COLOR_BOLD << "compression" << COLOR_NORMAL << "=<heuristicMaxEff,heuristicPA,heuristicFirstFit,optimal,optimalMinStages>:        compression method (default=heuristicMaxEff)" << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
 		s << "  " << COLOR_BOLD << "tiling" << COLOR_NORMAL << "=<heuristicBasicTiling,optimal,heuristicGreedyTiling,heuristicXGreedyTiling,heuristicBeamSearchTiling,csv>:        tiling method (default=heuristicBeamSearchTiling)" << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
-        s << "  " << COLOR_BOLD << "hardMultThreshold" << COLOR_NORMAL << "=<float>: unused hard mult threshold (O..1, default 0.7) " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
 		s << "  " << COLOR_BOLD << "verbose" << COLOR_NORMAL << "=<int>:        verbosity level (0-4, default=1)" << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
-		s << "  " << COLOR_BOLD << "showHiddeOperators" << COLOR_NORMAL << "=<0|1>: show operators that are for internal use and normally hidden from the command line (default=0)" <<endl;
 		s << "  " << COLOR_BOLD << "generateFigures" << COLOR_NORMAL << "=<0|1>:generate graphics in SVG or LaTeX for some operators (default off) " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL << endl;
 		s << "  " << COLOR_BOLD << "dependencyGraph" << COLOR_NORMAL << "=<no|compact|full>: generate data dependence drawing of the Operator (default no) " << COLOR_RED_NORMAL << COLOR_NORMAL<<endl;
 		s << "  " << COLOR_BOLD << "nameSignalByCycle" << COLOR_NORMAL << "=<0|1>:when pipelining, names the delayed signals by their cycle name instead of their delay. This helps with clock enable and declaring group path for synthesis (default off) " << endl;
 		s << "  " << COLOR_BOLD << "clockEnable" << COLOR_NORMAL << "=<0|1>:when pipelining, adds clock enable signals that enables the different pipeline stages to progress. In testbenches, these pipelining operations are not tested (default off) " << endl;
-		s << "Sticky options apply to the rest of the command line, unless changed again" <<endl;
+		s << "  " << COLOR_BOLD << "showHiddeOperators" << COLOR_NORMAL << "=<0|1>: show operators that are for internal use and normally hidden from the command line (default=0)" <<endl;
 		
 		return s.str();
 	}
