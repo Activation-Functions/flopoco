@@ -304,7 +304,7 @@ namespace flopoco{
 		const OperatorDescription<SNAFU> op_descriptor<SNAFU> {
 	    "SNAFU", // name
 				"Simple Neural Activation Function Unit, without reinventing the wheel",
-				"FunctionApproximation(HIDDEN)",
+				"Hidden", // some day: FunctionApproximation ?
 				"Also see generic options",
 				"f(string): function of interest, among \"Tanh\", \"Sigmoid\", \"ReLU\", \"GELU\", \"ELU\", \"SiLU\" (case-insensitive);"
 				"wIn(int): number of bits of the input ;" 

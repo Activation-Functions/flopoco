@@ -84,7 +84,7 @@ namespace flopoco {
   const OperatorDescription<Xilinx_LUT5> op_descriptor<Xilinx_LUT5> {
 	"Xilinx_LUT5",					// name
 	"Provides variants of Xilinx LUT5 primitives.", // description, string
-	"Primitives(HIDDEN)", // category, from the list defined in UserInterface.cpp
+	"Hidden", // category, from the list defined in UserInterface.cpp
 	"",
 	"variant(string): The LUT variant (LUT5, LUT5_L, etc.);\
           init(string): The LUT content;",

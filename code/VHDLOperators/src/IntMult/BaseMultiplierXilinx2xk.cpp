@@ -63,7 +63,7 @@ const OperatorDescription<BaseMultiplierXilinx2xk> op_descriptor<BaseMultiplierX
 	"BaseMultiplierXilinx2xk", // name
 	"Implements a 2xY-LUT-Multiplier that can be realized efficiently on "
 	"some Xilinx-FPGAs",
-	"BasicInteger", // categories
+	"Hidden", // categories
 	"",
 	"wX(int): size of input X;\
                         wY(int): size of input Y;\

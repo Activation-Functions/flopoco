@@ -44,18 +44,7 @@ THIS INCLUDES WRITING ITS AUTOTEST
 		FPConstDiv
 		
 * Version 5 versus ASA book
-** TODO between the book submission and its publication
-*** IntMultiplier: use global options useHardMult and hardMultThreshold instead of the local ones.
-*** IntMultiplier: pipeline
-*** isShared, isLibraryComponent
-*** revive FixMultAdd so that plainVHDL is no longer a mandatory option
-*** Constant mults:
-*** move all the primitive mults to Primitives
-*** F2D: harmonize signedInput among the various FixFunctionBy
-
-*** resurrect DualPortROM
-*** pipeline in IntAdder broken: fix discrepancy between prediction and adderDelay()
-*** F2D: fix-point-in, FP out version of FPExp 
+** TODO before the publication of the ASA book: moved to the book's git
 ** TODO some day
 *** Resurrect and fuse CordicAtan2 and FixAtan2
 *** Resurrect Cordic2DNorm (or whatever it is called)

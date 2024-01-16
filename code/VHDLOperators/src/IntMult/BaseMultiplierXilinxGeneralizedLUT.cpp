@@ -936,7 +936,7 @@ namespace flopoco
   const OperatorDescription<BaseMultiplierXilinxGeneralizedLUT> op_descriptor<BaseMultiplierXilinxGeneralizedLUT> {
     "BaseMultiplierXilinxGeneralizedLUT", // name
     "Implements a non rectangular LUT multiplier from a set that yields a relatively high efficiency compared to rectangular LUT multipliers \n",
-    "BasicInteger", // categories
+    "Hidden", // categories
     "",
     "wS(string): colon seperated list of x,y coordinates that define the tile, the actual coordinates are preceded by the x,y dimensions of the tile;\
         xSigned(bool)=false: input X can be signed or unsigned;\

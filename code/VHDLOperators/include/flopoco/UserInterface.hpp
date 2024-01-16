@@ -126,7 +126,7 @@ namespace flopoco
 
 		/** Build flopoco bash autocompletion file **/
 		void buildAutocomplete();
-
+		bool   showHiddenOperators;
 	public:
 		std::vector<OperatorPtr>  globalOpList;  /**< Level-0 operators. Each of these can have sub-operators */
 		std::vector<std::vector<OperatorPtr>>  globalOpListStack;  /**< a stack on which to save globalOpList when you don't want to mess with it */
@@ -149,7 +149,6 @@ namespace flopoco
 		bool   registerLargeTables;
 		bool   tableCompression;
 		bool   generateFigures;
-		bool   showHiddenOperators;
 		double unusedHardMultThreshold;
 		bool   useTargetOptimizations;
 		std::string compression;
@@ -213,12 +212,15 @@ namespace flopoco
 		virtual const std::string &name() const // You can see in this prototype that it was not written by Florent
 		{ return m_name; }
 
-		/** Provide a std::string with the full documentation. */
+		/** is this Operator hidden ? This method always answers true if the CLI parameter "showHiddenOperators" is true */
+		bool isHidden() const;
+		/** get the full documentation. */
 		std::string getFullDoc() const;
-		/** Provide a std::string with the full documentation in HTML. */
+		/** get the full documentation in HTML. */
 		std::string getHTMLDoc() const;
-		/** Provide a std::string with the full JSON description. */
+		/** get the full JSON description. */
 		std::string getJSONDescription() const;
+
 
 		const std::vector<std::string> &param_names(void) const;
 

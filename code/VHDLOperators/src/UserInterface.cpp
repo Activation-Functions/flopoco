@@ -87,7 +87,7 @@ namespace flopoco
 		v.push_back(make_pair("Conversions", "Conversions between number systems" ));
 		v.push_back(make_pair("FiltersEtc", "Filters and FFTs"));
 		// comment the following to hide all the primitive operators
-		v.push_back(make_pair("Primitives", "Highly target optimized primitive operators"));
+		// v.push_back(make_pair("Hidden", "Hidden operator, either because they are for internal use or because they are not ready"));
 		v.push_back(make_pair("Sorters", "Sorting operators"));
 		v.push_back(make_pair("Miscellaneous", "Miscellaneous"));
 		v.push_back(make_pair("TestBenches", "Test Benches"));
@@ -768,18 +768,20 @@ namespace flopoco
 		ostringstream s;
 
 		s <<  COLOR_BOLD << "List of operators with command-line interface"<< COLOR_NORMAL << " (a few more are hidden inside FloPoCo)" <<endl;
-
+		auto cats = UserInterface::categories;
+		if(showHiddenOperators) { // this way the hidden operators come last
+			cats.push_back(make_pair("Hidden", "Hidden operator, either because they are for internal use or because they are not ready"));
+		}
 		// The following is an inefficient double loop to avoid duplicating the data structure: nobody needs efficiency here
-		for(auto catIt: UserInterface::categories) {
+
+		for(auto catIt: cats) {
 			string cat =  catIt.first;
 			string catDesc =  catIt.second;
 			s <<COLOR_BOLD_MAGENTA_NORMAL << "========"<< catDesc << "========"<< COLOR_NORMAL << endl;
 			
 			for(auto f: factRegistry.getPublicRegistry()) {
-				string fcatfull=f->m_category;
-				size_t hidden = fcatfull.find("HIDDEN");
-				size_t catfound = fcatfull.find(cat);
-				if (catfound!=string::npos && (hidden==string::npos || showHiddenOperators)) { 
+				size_t catfound = f->m_category.find(cat);
+				if (catfound!=string::npos) { 
 					s << f->getFullDoc();
 				}
 			}
@@ -1240,12 +1242,17 @@ namespace flopoco
 		cout << "\t\t. ~/.bash_completion.d/flopoco" << endl;
 	}
 
-
-
-
-
 	////////////////// Operator factory /////////////////////////
 	// Currently very rudimentary
+
+
+	bool OperatorFactory::isHidden() const {
+		auto ui= UserInterface::getUserInterface();
+		return (m_category=="Hidden") && !ui.showHiddenOperators; 
+	//getCategory().find("Hidden") && !UserInterface::getUserInterface().showHiddenOperators
+	}
+
+
 
 	string OperatorFactory::getFullDoc() const{
 		ostringstream s;

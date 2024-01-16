@@ -397,7 +397,7 @@ const OperatorDescription<BaseMultiplierDSPSuperTilesXilinx> op_descriptor<BaseM
 	"BaseMultiplierDSPSuperTilesXilinx", // name
 	"Implements a DSP block commonly found in FPGAs incl. pre-adders and "
 	"post-adders computing R = (X1+X2) * Y + Z",
-	"BasicInteger", // categories
+	"Hidden", // categories
 	"",
 	"shape(int): Shape ID (1-12) of the DSP-Superblock;\
                         isPipelined(bool)=0: use pipelining;\
