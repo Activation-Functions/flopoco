@@ -47,7 +47,7 @@ namespace flopoco{
 			THROWERROR( "As far as we know, wR>wX doesn't make sense. If you believe otherwise, get in touch!");
 		}
 		if(wR==wX && computeSticky) {
-			THROWERROR( "As far as we know, computeSticky only makes sense if wR<wX doesn't make sense. If you believe otherwise, get in touch!");
+			THROWERROR( "As far as we know, computeSticky only makes sense if wR<wX. If you believe otherwise, get in touch!");
 		}
 		 
 		ostringstream name;
@@ -184,7 +184,7 @@ namespace flopoco{
 
 	void Normalizer::emulate(TestCase* tc)
 	{
-		mpz_class inputValue  = tc->getInputValue("I");
+		mpz_class inputValue  = tc->getInputValue("X");
 
 		mpz_class sozb = 42; //dummy value
 		if (countType == -1)
@@ -197,13 +197,22 @@ namespace flopoco{
 
 		mpz_class bit = (countType == -1) ? sozb : (countType == 0 ? 0 : 1); /* what are we counting in the specific case */
 
-		int j=wX-1;
-		while ((count < (1<<wCount)-1) &&  (j>=0)  && mpz_tstbit(inputValue.get_mpz_t(), j) == bit)   {
-			count ++;
-			j--;
-			shiftOutputValue = shiftOutputValue <<1;
+		// The choice here is the simplest architecture: it doesn't do anything special to saturate count
+		// Hence the architecture outputs count=11...11 on LZC(00...00)
+		// However it saturates to count=wX on LOC(11...11) since the 1s are replaced with zeroes in the shift.
+		if(bit==0 && inputValue==0) {
+			count = (1<<wCount)-1;
+			shiftOutputValue=0; 
+		}
+		else {
+			int j=wX-1;
+			while ((count < (1<<wCount)-1) &&  (j>=0)  && mpz_tstbit(inputValue.get_mpz_t(), j) == bit)   {
+				count ++;
+				j--;
+				shiftOutputValue = shiftOutputValue <<1;
 			}
-
+		}
+		
 		// Now reformat the output value to its size, and compute the sticky of the remaining bits.
 		// The max size of shiftOutputValue is ((1<<wCount)-1) + wX
 		mpz_class outputMask = (mpz_class(1) << wR) -1;
@@ -220,13 +229,58 @@ namespace flopoco{
 		}
 			
 		
-		tc->addExpectedOutput("O", shiftOutputValue);
+		tc->addExpectedOutput("R", shiftOutputValue);
 		tc->addExpectedOutput("Count", count);
 
 		if (computeSticky)
 			tc->addExpectedOutput("Sticky",sticky);
 	}
 
+
+	TestList Normalizer::unitTest(int testLevel)
+	{
+		// the static list of mandatory tests
+		vector<pair<string,string>> paramList;
+		std::vector<std::array<int, 5>> paramValues, moreParamValues; //  order is wX wR maxShift computeSticky counttype
+
+		paramValues = { // testing the default value on the most standard cases
+			{6,6,6, 0, 0}, // something happens around power of two, so we soaktest around 8 with exhaustive tests
+			{7,7,7, 0, 0},
+			{8,8,8, 0, 0},
+			{9,9,9, 0, 0},
+			{6,3,6, 1, 0}, // something happens around power of two, so we soaktest around 8 with exhaustive tests
+			{7,4,7, 1, 0},
+			{8,4,8, 1, 0},
+			{9,3,9, 1, 0},
+			{6,6,6, 0, -1}, // something happens around power of two, so we soaktest around 8 with exhaustive tests
+			{7,7,7, 0, -1},
+			{8,8,8, 0, -1},
+			{9,9,9, 0, -1},
+		};
+
+		if (testLevel == TestLevel::QUICK) {
+			// just test paramValues
+		}
+		if (testLevel >= TestLevel::SUBSTANTIAL) {
+		}
+		if (testLevel >= TestLevel::EXHAUSTIVE)	{
+		}
+
+		// Now actually build the paramValues structure
+		TestList testStateList;
+		for (auto params: paramValues) {
+			paramList.push_back(make_pair("wX", to_string(params[0])));
+			paramList.push_back(make_pair("wR", to_string(params[1])));
+			paramList.push_back(make_pair("maxShift", to_string(params[2])));
+			paramList.push_back(make_pair("computeSticky", to_string(params[3])));
+			paramList.push_back(make_pair("countType", to_string(params[4])));
+			testStateList.push_back(paramList);
+			// cerr << " " << params[0]  << " " << params[1]  << " " << params[2] << endl;
+			paramList.clear();
+		}
+
+		return testStateList;
+	}
 
 	
 
@@ -244,8 +298,7 @@ namespace flopoco{
 	template <>
 	const OperatorDescription<Normalizer> op_descriptor<Normalizer> {
 	    "Normalizer", // name
-	    "A combined leading zero/one counter and left shifter, useful for "
-	    "floating-point normalization.",
+	    "A combined leading zero/one counter and left shifter, useful for floating-point normalization.",
 	    "ShiftersLZOCs", // category
 	    "",		     // see also
 	    "wX(int): input size in bits;\
