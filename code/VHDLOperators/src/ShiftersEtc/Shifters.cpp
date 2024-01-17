@@ -194,38 +194,29 @@ namespace flopoco{
 	Shifter::~Shifter() {
 	}
 
-
 	void Shifter::emulate(TestCase* tc)
 	{
 		mpz_class sx = tc->getInputValue("X");
 		mpz_class ss = tc->getInputValue("S");
-		mpz_class sr ;
 
-		mpz_class shiftedInput = sx;
-		int i;
+		uint64_t s = ss.get_ui(); // will fail for large shift values, FIXME if the need arises
 
+		mpz_class sr;
 		if (direction==Left){
-			mpz_class shiftAmount = ss;
-			for (i=0;i<shiftAmount;i++)
-				shiftedInput=shiftedInput*2;
-
-			for (i= wX+intpow2(wShiftIn)-1-1; i>=wR;i--)
-				if ( mpzpow2(i) <= shiftedInput )
-					shiftedInput-=mpzpow2(i);
-		}else{
-			mpz_class shiftAmount = maxShift-ss;
-
-			if (shiftAmount > 0){
-				for (i=0;i<shiftAmount;i++)
-					shiftedInput=shiftedInput*2;
-			}else{
-				for (i=0;i>shiftAmount;i--)
-					shiftedInput=shiftedInput/2;
-			}
+			sr = sx << s; // this is the reason for the cast to int above, otherwise c++ crash
+			sr = sr & ((mpz_class(1)<<wR)-1);
 		}
+		else { // Shift right
+			sr = sx << (wR-wX); // wR>=wX so after the following line we are sure to have at least wR bits
+			sr = sr >> s; 
+		}		
 
-		sr=shiftedInput;
-		tc->addExpectedOutput("R", sr);
+		if(s<=maxShift) {
+			tc->addExpectedOutput("R", sr);
+		}
+		else { // beheaviour unspecified, allow any value
+			tc->addExpectedOutputInterval("R", 0, ((mpz_class(1))<<wR)-1);
+		}
 	}
 
 
