@@ -18,7 +18,7 @@ namespace flopoco
     setCopyrightString("Marco Kleinlein");
     setCombinatorial();
     setShared();
-    setLibraryComponent();
+    setExternal();
     addPrimitiveLibrary(parentOp,target); //includes the necessary libraries
   }
 
