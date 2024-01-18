@@ -823,7 +823,7 @@ namespace flopoco
 		s << "  " << COLOR_BOLD << "dependencyGraph" << COLOR_NORMAL << "=<no|compact|full>: generate data dependence drawing of the Operator (default no) " << COLOR_RED_NORMAL << COLOR_NORMAL<<endl;
 		s << "  " << COLOR_BOLD << "nameSignalByCycle" << COLOR_NORMAL << "=<0|1>:when pipelining, names the delayed signals by their cycle name instead of their delay. This helps with clock enable and declaring group path for synthesis (default off) " << endl;
 		s << "  " << COLOR_BOLD << "clockEnable" << COLOR_NORMAL << "=<0|1>:when pipelining, adds clock enable signals that enables the different pipeline stages to progress. In testbenches, these pipelining operations are not tested (default off) " << endl;
-		s << "  " << COLOR_BOLD << "showHiddeOperators" << COLOR_NORMAL << "=<0|1>: show operators that are for internal use and normally hidden from the command line (default=0)" <<endl;
+		s << "  " << COLOR_BOLD << "showHiddenOperators" << COLOR_NORMAL << "=<0|1>: show operators that are for internal use and normally hidden from the command line (default=0)" <<endl;
 		
 		return s.str();
 	}

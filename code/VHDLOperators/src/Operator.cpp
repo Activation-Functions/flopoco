@@ -1258,17 +1258,18 @@ namespace flopoco{
 
 		*** If the subcomponent is unique/not shared, the following order is expected (and ensured by newInstance)
 		1/ schedule the actual inputs
-		2/ build the tmpPortMapList by calling inPortMap and outPortMap
+		2/ build the tmpPortMapList by calling inPortMap and outPortMap -- this is a map actual -> formal 
 		3/ call the constructor of the subcomponents
-		3.1/ its addInput() and addOutput recovers the IO maping from tmpPortMapList.
-		For the outputs, the actuals are incompleteDeclarations
-		3.2/ its signal graph is built
-		4/ the declaration of the output signals is finalized by instance()
+		3.1/ its addInput() recovers the IO mapping from tmpPortMapList.
+		 hence the timing of the subcomponent inputs
+    its addOutput() ... For the outputs, the caller's signal are incompleteDeclarations
+		3.2/ The signal graph of the subcomponent is built, hence the timing of the outputs becomes known
+		4/ the declaration of the output signals is finalized by instance() (transfer of timing information)
 
 		*** If the subcomponent is shared, the following order is expected
-		1/ call the constructor, put this operator in the globalOpList, schedule it
+		1/ call the constructor, put this operator in the globalOpList, (?) 
 		2/ build  the tmpPortMapList  by calling inPortMap and outPortMap
-		3/ call instance() clone the subcomponent's IO signal, and clone the relevant IO dependency.
+		3/ call instance(), clone the subcomponent's IO signal, and clone the relevant IO dependency + timing.
 
 	*/
 
