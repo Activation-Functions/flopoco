@@ -70,11 +70,11 @@ namespace flopoco{
 		hasDelay1Feedbacks_         = false;
 
 		isShared_                   = false;
-		isTopLevelDotDrawn_ 		= false;
-		isLibraryComponent_         = false;
+		isTopLevelDotDrawn_ 		    = false;
+    isExternal_                 = false;
 		noParseNoSchedule_          = false;
 		isOperatorScheduled_        = false;
-        isOperatorImplemented_      = false;
+		isOperatorImplemented_      = false;
 
 		parentOp_                   = parentOp;
 		isOperatorApplyScheduleDone_= false;
@@ -553,7 +553,7 @@ namespace flopoco{
 
 
 	void Operator::outputVHDLComponent(std::ostream& o, std::string name) {
-		if(!isLibraryComponent()) //don't generate component declaration for library components
+		if(!isExternal()) //don't generate component declaration for library components
 			{
 				unsigned int i;
 
@@ -3632,7 +3632,7 @@ namespace flopoco{
 		isTopLevelDotDrawn_ = op->isOperatorDrawn();
 
 		isShared_                   = op->isShared();
-		isLibraryComponent_         = op->isLibraryComponent();
+    isExternal_         = op->isExternal();
 
 		generics_					= op->getGenerics();
 	}
@@ -3886,12 +3886,12 @@ namespace flopoco{
 		return isShared_;
 	}
 
-	void Operator::setLibraryComponent(){
-		isLibraryComponent_ = true;
+	void Operator::setExternal(){
+    isExternal_ = true;
 	}
 
-	bool Operator::isLibraryComponent(){
-		return isLibraryComponent_;
+	bool Operator::isExternal(){
+		return isExternal_;
 	}
 
 	map<std::string, std::string> Operator::getGenerics(){
