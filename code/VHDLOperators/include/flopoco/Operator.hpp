@@ -1317,7 +1317,7 @@ namespace flopoco {
 		void setLibraryComponent();
 
 		/**
-		 * Is this operator just a wrapper to a library component (like primitives)?
+		 * Is this operator just a wrapper to an external library component (e.g. vendor primitives)?
 		 */
 		bool isLibraryComponent();
 
@@ -1384,7 +1384,7 @@ private:
 	bool 					isTopLevelDotDrawn_;
 	bool                   noParseNoSchedule_;              /**< Flag instructing the VHDL to go through unchanged */
 	bool                   isShared_;                       /**< Flag to show whether the instances of this operator are flattened in the design or not */
-	bool                   isLibraryComponent_;             /**< Flag that indicates the the component is a library component (e.g., like primitives) and no code for the component or entity is generated. */
+	bool                   isLibraryComponent_;             /**< Flag that indicates that the component is defined in an external library, so no code for the component or entity should be generated. True e.g. for vendor primitives such as Xilinx LUT6, DSP48, etc */
 
 	vector<triplet<string, string, int>> unresolvedDependenceTable;   /**< The list of dependence relations which contain on either the lhs or rhs an (still) unknown name */
 	std::ostringstream     dotDiagram;                          /**< The internal stream to which the drawing methods will output */
