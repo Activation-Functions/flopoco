@@ -19,12 +19,14 @@ namespace flopoco{
 	public:
 
 		/** @brief The standard constructor, inputs the number to implement */
-		IntConstMult(OperatorPtr parentOp, Target* target, const int wIn, const mpz_class constant, string method);
+		IntConstMult(OperatorPtr parentOp, Target* target, const int wIn, const string constant, const string method);
 
-    void emulate(TestCase *tc);
+//    void emulate(TestCase *tc);
     static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
   private:
-    mpz_class constant;
+    std::vector<std::string> explode(std::string & s, char delim);
+    void implementSCM(mpz_class const_mpz);
+    string constant;
     int wIn;
   };
 }
