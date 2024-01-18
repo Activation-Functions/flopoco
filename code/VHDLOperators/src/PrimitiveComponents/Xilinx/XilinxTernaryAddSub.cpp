@@ -92,6 +92,9 @@ namespace flopoco
         if (i == 0)
         {  // FIRST SLICE
           XilinxTernaryAddSubSlice *first_slice = new XilinxTernaryAddSubSlice(this, target, 4, true, lut_content);
+
+//#define OLD
+#ifdef OLD
           addSubComponent(first_slice);
           inPortMap("x_in", "x_int" + range(3, 0));
           inPortMap("y_in", "y_int" + range(3, 0));
@@ -103,6 +106,34 @@ namespace flopoco
           outPortMap("carry_out", "carry" + of(0));
           outPortMap("sum_out", "R" + range(3, 0));
           vhdl << instance(first_slice, join("slice_", i)) << endl;
+#else
+          vhdl << tab << declare("x_in0",4) << " <= x_int" << range(3, 0) << ";" << endl;
+          vhdl << tab << declare("y_in0",4) << " <= y_int" << range(3, 0) << ";" << endl;
+          vhdl << tab << declare("z_in0",4) << " <= z_int" << range(3, 0) << ";" << endl;
+          vhdl << tab << declare("bbus_in0",4) << " <= bbus" << range(3, 0) << ";" << endl;
+
+      		std::stringstream inportmap;
+      		std::stringstream outportmap;
+          inportmap << "x_in => x_in0,";
+          inportmap << "y_in => y_in0,";
+          inportmap << "z_in => z_in0,";
+          inportmap << "sel_in => sel,";
+          inportmap << "bbus_in => bbus_in0,";
+          inportmap << "carry_in => carry_cct";
+
+          outportmap << "bbus_out => bbus_out0,";
+          outportmap << "carry_out => carry0,";
+          outportmap << "sum_out => sum_out0";
+
+          vhdl << tab << "bbus" << range(4, 1) << " <= " << declare("bbus_out0",4) << ";" << endl;
+          vhdl << tab << "carry" + of(0) << " <= " << declare("carry0") << ";" << endl;
+          vhdl << tab << "R" << range(3, 0) << " <= " << declare("sum_out0",4) << ";" << endl;
+
+
+//      		newInstance("IntSquarer", "squarerX", squarer_args, "X=>X", "R=>XX");
+//				newSharedInstance(selfunctiontable , "SelFunctionTable" + to_string(i), "X=>"+seli, "Y=>"+ qi);
+          newSharedInstance(first_slice , "first_slice", inportmap.str(), outportmap.str());
+#endif
         }
         else if (i == (num_slices - 1))
         { // LAST SLICE
