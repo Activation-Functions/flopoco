@@ -374,7 +374,7 @@ namespace flopoco {
 		// First fill with a few ones, then a few zeroes
 		TestCase *tc;
 
-#if 1 // Test on the impulse response, useful for debugging
+#if 0 // Feed an impulse, so the output will be the impulse response (useful for debugging)
 		tc = new TestCase(this);
 		tc->addInput("X", (mpz_class(1)<<(-lsbIn))-1 ); // 1 (almost)
 		emulate(tc);
@@ -386,8 +386,9 @@ namespace flopoco {
 			emulate(tc);
 			tcl->add(tc);
 		}
-
 #endif
+
+		cerr << endl << endl << endl << "buildWorstCaseTestBench="<< buildWorstCaseTestBench << endl  << endl << endl ; 
 		if(buildWorstCaseTestBench) {
 			// compute the impulse response
 			computeImpulseResponse();
@@ -466,16 +467,21 @@ namespace flopoco {
 		TestList testStateList;
 		vector<pair<string,string>> paramList;
 
-		if (testLevel == TestLevel::QUICK) {
-			// just test paramValues
-            paramList.push_back(make_pair("lsbIn", to_string(-8)));
-            paramList.push_back(make_pair("lsbOut", to_string(-8)));
-            paramList.push_back(make_pair("coeffb", "1:0:-1"));
-            paramList.push_back(make_pair("coeffa", "-1.99510896:0.999985754"));
-            testStateList.push_back(paramList);
-			paramList.clear();
-		}
-        if (testLevel >= TestLevel::SUBSTANTIAL) {
+		// the test we'll always do (the quick one)
+		paramList.push_back(make_pair("lsbIn", to_string(-8)));
+		paramList.push_back(make_pair("lsbOut", to_string(-8)));
+		paramList.push_back(make_pair("coeffb", "1:0:-1"));
+		paramList.push_back(make_pair("coeffa", "-1.6:0.9")); // absolutely meaningless values for which the WCPG is computed quickly
+		paramList.push_back(make_pair("buildWorstCaseTestBench", "true"));  
+		paramList.push_back(make_pair("TestBench n=", "5000"));
+		// otherwise the previous is ignored:
+		// TestBench thinks "only 9 input bits, let's do an exhaustive test bench"
+		// then "the standard test cases will be included in the exhaustive test bench, so no need to add them first"
+		// but of course here it is wrong since this exhaustive test bench is not exhaustive for an operator with memory
+		// No big deal.
+		testStateList.push_back(paramList);
+		paramList.clear();
+		if (testLevel >= TestLevel::SUBSTANTIAL) {
             // The substantial unit tests
 			// No parameter sweep here, just a few representative examples
 			// A Butterworth
@@ -483,6 +489,8 @@ namespace flopoco {
 			paramList.push_back(make_pair("lsbOut", "-12"));
 			paramList.push_back(make_pair("coeffb",  "\"0x1.7bdf4656ab602p-9:0x1.1ce774c100882p-7:0x1.1ce774c100882p-7:0x1.7bdf4656ab602p-9\""));
 			paramList.push_back(make_pair("coeffa",  "\"-0x1.2fe25628eb285p+1:0x1.edea40cd1955ep+0:-0x1.106c2ec3d0af8p-1\""));
+			paramList.push_back(make_pair("buildWorstCaseTestBench", "true")); 
+			paramList.push_back(make_pair("TestBench n=", "10000"));  // otherwise the previous is ignored, with an "exhaustive" test bench which is not exhaustive for 
 			testStateList.push_back(paramList);
 			paramList.clear();
 
@@ -491,6 +499,8 @@ namespace flopoco {
 			paramList.push_back(make_pair("lsbOut", "-12"));
 			paramList.push_back(make_pair("coeffb",  "\"0x1.89ff611d6f472p-13:-0x1.2778afe6e1ac0p-11:0x1.89f1af73859fap-12:0x1.89f1af73859fap-12:-0x1.2778afe6e1ac0p-11:0x1.89ff611d6f472p-13\""));
 			paramList.push_back(make_pair("coeffa",  "\"-0x1.3f4f52485fe49p+2:0x1.3e9f8e35c8ca8p+3:-0x1.3df0b27610157p+3:0x1.3d42bdb9d2329p+2:-0x1.fa89178710a2bp-1\""));
+			paramList.push_back(make_pair("buildWorstCaseTestBench", "true")); 
+			paramList.push_back(make_pair("TestBench n=", "10000"));  // otherwise the previous is ignored, with an "exhaustive" test bench which is not exhaustive for 
 			testStateList.push_back(paramList);
 			paramList.clear();
 
