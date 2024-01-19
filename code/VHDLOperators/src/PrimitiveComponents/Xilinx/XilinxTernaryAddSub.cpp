@@ -93,8 +93,8 @@ namespace flopoco
         {  // FIRST SLICE
           XilinxTernaryAddSubSlice *first_slice = new XilinxTernaryAddSubSlice(this, target, 4, true, lut_content);
 
-//#define OLD
-#ifdef OLD
+//#define OLD1
+#ifdef OLD1
           addSubComponent(first_slice);
           inPortMap("x_in", "x_int" + range(3, 0));
           inPortMap("y_in", "y_int" + range(3, 0));
@@ -111,6 +111,7 @@ namespace flopoco
           vhdl << tab << declare("y_in0",4) << " <= y_int" << range(3, 0) << ";" << endl;
           vhdl << tab << declare("z_in0",4) << " <= z_int" << range(3, 0) << ";" << endl;
           vhdl << tab << declare("bbus_in0",4) << " <= bbus" << range(3, 0) << ";" << endl;
+          declare("carry0");
 
       		std::stringstream inportmap;
       		std::stringstream outportmap;
@@ -126,18 +127,17 @@ namespace flopoco
           outportmap << "sum_out => sum_out0";
 
           vhdl << tab << "bbus" << range(4, 1) << " <= " << declare("bbus_out0",4) << ";" << endl;
-          vhdl << tab << "carry" + of(0) << " <= " << declare("carry0") << ";" << endl;
           vhdl << tab << "R" << range(3, 0) << " <= " << declare("sum_out0",4) << ";" << endl;
 
-
-//      		newInstance("IntSquarer", "squarerX", squarer_args, "X=>X", "R=>XX");
-//				newSharedInstance(selfunctiontable , "SelFunctionTable" + to_string(i), "X=>"+seli, "Y=>"+ qi);
           newSharedInstance(first_slice , "first_slice", inportmap.str(), outportmap.str());
 #endif
         }
         else if (i == (num_slices - 1))
         { // LAST SLICE
-          XilinxTernaryAddSubSlice *last_slice = new XilinxTernaryAddSubSlice(this, target, wIn - (4 * i), false, lut_content);
+          int bits_in_last_slice = wIn - (4 * i);
+          XilinxTernaryAddSubSlice *last_slice = new XilinxTernaryAddSubSlice(this, target, bits_in_last_slice, false, lut_content);
+//#define OLD2
+#ifdef OLD2
           addSubComponent(last_slice);
           inPortMap("x_in", "x_int" + range(wIn - 1, 4 * i));
           inPortMap("y_in", "y_int" + range(wIn - 1, 4 * i));
@@ -145,14 +145,43 @@ namespace flopoco
           inPortMap("sel_in", "sel");
           inPortMap("bbus_in", "bbus" + range(wIn - 1, 4 * i));
           inPortMap("carry_in", "carry" + of(i - 1));
+
           outPortMap("bbus_out", "bbus" + range(wIn, 4 * i + 1));
           outPortMap("carry_out", "carry" + of(i));
           outPortMap("sum_out", "R" + range(wIn - 1, 4 * i));
           vhdl << instance(last_slice, join("slice_", i)) << endl;
+#else
+          vhdl << tab << declare("x_in" + to_string(i),bits_in_last_slice) << " <= x_int" << range(wIn - 1, 4 * i) << ";" << endl;
+          vhdl << tab << declare("y_in" + to_string(i),bits_in_last_slice) << " <= y_int" << range(wIn - 1, 4 * i) << ";" << endl;
+          vhdl << tab << declare("z_in" + to_string(i),bits_in_last_slice) << " <= z_int" << range(wIn - 1, 4 * i) << ";" << endl;
+          vhdl << tab << declare("bbus_in" + to_string(i),bits_in_last_slice) << " <= bbus" << range(wIn - 1, 4 * i) << ";" << endl;
+          declare("carry" + to_string(i));
+
+      		std::stringstream inportmap;
+      		std::stringstream outportmap;
+          inportmap << "x_in => x_in" << to_string(i) << ",";
+          inportmap << "y_in => y_in" << to_string(i) << ",";
+          inportmap << "z_in => z_in" << to_string(i) << ",";
+          inportmap << "sel_in => sel,";
+          inportmap << "bbus_in => bbus_in" << to_string(i) << ",";
+          inportmap << "carry_in => " << "carry" << to_string(i-1);
+
+          outportmap << "bbus_out => bbus_out" << to_string(i) << ",";
+          outportmap << "carry_out => carry" << to_string(i) << ",";
+          outportmap << "sum_out => sum_out" << to_string(i);
+
+          vhdl << tab << "bbus" <<range(wIn, 4 * i + 1) << " <= " << declare("bbus_out" + to_string(i),bits_in_last_slice) << ";" << endl;
+          vhdl << tab << "R" << range(wIn - 1, 4 * i) << " <= " << declare("sum_out" + to_string(i),bits_in_last_slice) << ";" << endl;
+
+          newSharedInstance(last_slice , "last_slice", inportmap.str(), outportmap.str());
+#endif //OLD
+
         }
         else
         {
           XilinxTernaryAddSubSlice *full_slice = new XilinxTernaryAddSubSlice(this, target, 4, false, lut_content);
+//#define OLD3
+#ifdef OLD3
           addSubComponent(full_slice);
           inPortMap("x_in", "x_int" + range((4 * i) + 3, 4 * i));
           inPortMap("y_in", "y_int" + range((4 * i) + 3, 4 * i));
@@ -164,6 +193,32 @@ namespace flopoco
           outPortMap("carry_out", "carry" + of(i));
           outPortMap("sum_out", "R" + range((4 * i) + 3, 4 * i));
           vhdl << instance(full_slice, join("slice_", i)) << endl;
+#else
+          vhdl << tab << declare("x_in" + to_string(i),4) << " <= x_int" << range((4 * i) + 3, 4 * i) << ";" << endl;
+          vhdl << tab << declare("y_in" + to_string(i),4) << " <= y_int" << range((4 * i) + 3, 4 * i) << ";" << endl;
+          vhdl << tab << declare("z_in" + to_string(i),4) << " <= z_int" << range((4 * i) + 3, 4 * i) << ";" << endl;
+          vhdl << tab << declare("bbus_in" + to_string(i),4) << " <= bbus" << range((4 * i) + 3, 4 * i) << ";" << endl;
+          declare("carry" + to_string(i));
+
+      		std::stringstream inportmap;
+      		std::stringstream outportmap;
+          inportmap << "x_in => x_in" << to_string(i) << ",";
+          inportmap << "y_in => y_in" << to_string(i) << ",";
+          inportmap << "z_in => z_in" << to_string(i) << ",";
+          inportmap << "sel_in => sel,";
+          inportmap << "bbus_in => bbus_in" << to_string(i) << ",";
+          inportmap << "carry_in => " << "carry" << to_string(i-1);
+
+          outportmap << "bbus_out => bbus_out" << to_string(i) << ",";
+          outportmap << "carry_out => carry" << to_string(i) << ",";
+          outportmap << "sum_out => sum_out" << to_string(i);
+
+          vhdl << tab << "bbus" << range((4 * i) + 4, 4 * i + 1) << " <= " << declare("bbus_out" + to_string(i),4) << ";" << endl;
+          vhdl << tab << "R" << range((4 * i) + 3, 4 * i) << " <= " << declare("sum_out" + to_string(i),4) << ";" << endl;
+
+          newSharedInstance(full_slice , "full_slice" + to_string(i), inportmap.str(), outportmap.str());
+#endif //OLD3
+
         }
       }
     }
