@@ -93,20 +93,6 @@ namespace flopoco
         {  // FIRST SLICE
           XilinxTernaryAddSubSlice *first_slice = new XilinxTernaryAddSubSlice(this, target, 4, true, lut_content);
 
-//#define OLD1
-#ifdef OLD1
-          addSubComponent(first_slice);
-          inPortMap("x_in", "x_int" + range(3, 0));
-          inPortMap("y_in", "y_int" + range(3, 0));
-          inPortMap("z_in", "z_int" + range(3, 0));
-          inPortMap("sel_in", "sel");
-          inPortMap("bbus_in", "bbus" + range(3, 0));
-          inPortMap("carry_in", "carry_cct");
-          outPortMap("bbus_out", "bbus" + range(4, 1));
-          outPortMap("carry_out", "carry" + of(0));
-          outPortMap("sum_out", "R" + range(3, 0));
-          vhdl << instance(first_slice, join("slice_", i)) << endl;
-#else
           vhdl << tab << declare("x_in0",4) << " <= x_int" << range(3, 0) << ";" << endl;
           vhdl << tab << declare("y_in0",4) << " <= y_int" << range(3, 0) << ";" << endl;
           vhdl << tab << declare("z_in0",4) << " <= z_int" << range(3, 0) << ";" << endl;
@@ -130,27 +116,11 @@ namespace flopoco
           vhdl << tab << "R" << range(3, 0) << " <= " << declare("sum_out0",4) << ";" << endl;
 
           newSharedInstance(first_slice , "first_slice", inportmap.str(), outportmap.str());
-#endif
         }
         else if (i == (num_slices - 1))
         { // LAST SLICE
           int bits_in_last_slice = wIn - (4 * i);
           XilinxTernaryAddSubSlice *last_slice = new XilinxTernaryAddSubSlice(this, target, bits_in_last_slice, false, lut_content);
-//#define OLD2
-#ifdef OLD2
-          addSubComponent(last_slice);
-          inPortMap("x_in", "x_int" + range(wIn - 1, 4 * i));
-          inPortMap("y_in", "y_int" + range(wIn - 1, 4 * i));
-          inPortMap("z_in", "z_int" + range(wIn - 1, 4 * i));
-          inPortMap("sel_in", "sel");
-          inPortMap("bbus_in", "bbus" + range(wIn - 1, 4 * i));
-          inPortMap("carry_in", "carry" + of(i - 1));
-
-          outPortMap("bbus_out", "bbus" + range(wIn, 4 * i + 1));
-          outPortMap("carry_out", "carry" + of(i));
-          outPortMap("sum_out", "R" + range(wIn - 1, 4 * i));
-          vhdl << instance(last_slice, join("slice_", i)) << endl;
-#else
           vhdl << tab << declare("x_in" + to_string(i),bits_in_last_slice) << " <= x_int" << range(wIn - 1, 4 * i) << ";" << endl;
           vhdl << tab << declare("y_in" + to_string(i),bits_in_last_slice) << " <= y_int" << range(wIn - 1, 4 * i) << ";" << endl;
           vhdl << tab << declare("z_in" + to_string(i),bits_in_last_slice) << " <= z_int" << range(wIn - 1, 4 * i) << ";" << endl;
@@ -174,26 +144,10 @@ namespace flopoco
           vhdl << tab << "R" << range(wIn - 1, 4 * i) << " <= " << declare("sum_out" + to_string(i),bits_in_last_slice) << ";" << endl;
 
           newSharedInstance(last_slice , "last_slice", inportmap.str(), outportmap.str());
-#endif //OLD
-
         }
         else
         {
           XilinxTernaryAddSubSlice *full_slice = new XilinxTernaryAddSubSlice(this, target, 4, false, lut_content);
-//#define OLD3
-#ifdef OLD3
-          addSubComponent(full_slice);
-          inPortMap("x_in", "x_int" + range((4 * i) + 3, 4 * i));
-          inPortMap("y_in", "y_int" + range((4 * i) + 3, 4 * i));
-          inPortMap("z_in", "z_int" + range((4 * i) + 3, 4 * i));
-          inPortMap("sel_in", "sel");
-          inPortMap("bbus_in", "bbus" + range((4 * i) + 3, 4 * i));
-          inPortMap("carry_in", "carry" + of(i - 1));
-          outPortMap("bbus_out", "bbus" + range((4 * i) + 4, 4 * i + 1));
-          outPortMap("carry_out", "carry" + of(i));
-          outPortMap("sum_out", "R" + range((4 * i) + 3, 4 * i));
-          vhdl << instance(full_slice, join("slice_", i)) << endl;
-#else
           vhdl << tab << declare("x_in" + to_string(i),4) << " <= x_int" << range((4 * i) + 3, 4 * i) << ";" << endl;
           vhdl << tab << declare("y_in" + to_string(i),4) << " <= y_int" << range((4 * i) + 3, 4 * i) << ";" << endl;
           vhdl << tab << declare("z_in" + to_string(i),4) << " <= z_int" << range((4 * i) + 3, 4 * i) << ";" << endl;
@@ -217,8 +171,6 @@ namespace flopoco
           vhdl << tab << "R" << range((4 * i) + 3, 4 * i) << " <= " << declare("sum_out" + to_string(i),4) << ";" << endl;
 
           newSharedInstance(full_slice , "full_slice" + to_string(i), inportmap.str(), outportmap.str());
-#endif //OLD3
-
         }
       }
     }
