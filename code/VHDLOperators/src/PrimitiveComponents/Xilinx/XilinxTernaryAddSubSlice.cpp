@@ -35,8 +35,8 @@ namespace flopoco {
         addOutput( "bbus_out", wIn );
         addOutput( "sum_out", wIn );
 
-//#define DOTTEST
-#ifndef DOTTEST
+#define TESTSHARED
+#ifndef TESTSHARED
         declare( "lut_o6", wIn );
         declare( "cc_di", 4 );
         declare( "cc_s", 4 );
