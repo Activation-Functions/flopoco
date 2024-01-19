@@ -43,7 +43,7 @@ namespace flopoco
 
     if (bitmask_ == bitmask2_)
     {
-      vhdl << declare("sel") << " <= '0';" << std::endl;
+      vhdl << tab << declare("sel") << " <= '0';" << std::endl;
     }
     else
     {
@@ -72,17 +72,31 @@ namespace flopoco
     if (num_slices == 1)
     {
       XilinxTernaryAddSubSlice *single_slice = new XilinxTernaryAddSubSlice(this, target, wIn, true, lut_content);
-      addSubComponent(single_slice);
-      inPortMap("x_in", "x_int");
-      inPortMap("y_in", "y_int");
-      inPortMap("z_in", "z_int");
-      inPortMap("sel_in", "sel");
-      inPortMap("bbus_in", "bbus" + range(wIn - 1, 0));
-      inPortMap("carry_in", "carry_cct");
-      outPortMap("bbus_out", "bbus" + range(wIn, 1));
-      outPortMap("carry_out", "carry" + of(0));
-      outPortMap("sum_out", "R" + range(wIn - 1, 0));
-      vhdl << instance(single_slice, "slice_i");
+
+      vhdl << tab << declare("x_in0",wIn) << " <= x_int" << ";" << endl;
+      vhdl << tab << declare("y_in0",wIn) << " <= y_int" << ";" << endl;
+      vhdl << tab << declare("z_in0",wIn) << " <= z_int" << ";" << endl;
+      vhdl << tab << declare("bbus_in0",wIn) << " <= bbus" << range(wIn - 1, 0) << ";" << endl;
+      declare("carry0");
+
+      std::stringstream inportmap;
+      std::stringstream outportmap;
+      inportmap << "x_in => x_in0,";
+      inportmap << "y_in => y_in0,";
+      inportmap << "z_in => z_in0,";
+      inportmap << "sel_in => sel,";
+      inportmap << "bbus_in => bbus_in0,";
+      inportmap << "carry_in => carry_cct";
+
+      outportmap << "bbus_out => bbus_out0,";
+      outportmap << "carry_out => carry0,";
+      outportmap << "sum_out => sum_out0";
+
+      vhdl << tab << "bbus" << range(wIn, 1) << " <= " << declare("bbus_out0",wIn) << ";" << endl;
+      vhdl << tab << "R" << range(wIn - 1, 0) << " <= " << declare("sum_out0",wIn) << ";" << endl;
+
+      newSharedInstance(single_slice , "single_slice", inportmap.str(), outportmap.str());
+
     }
 
     if (num_slices > 1)
@@ -92,7 +106,6 @@ namespace flopoco
         if (i == 0)
         {  // FIRST SLICE
           XilinxTernaryAddSubSlice *first_slice = new XilinxTernaryAddSubSlice(this, target, 4, true, lut_content);
-
           vhdl << tab << declare("x_in0",4) << " <= x_int" << range(3, 0) << ";" << endl;
           vhdl << tab << declare("y_in0",4) << " <= y_int" << range(3, 0) << ";" << endl;
           vhdl << tab << declare("z_in0",4) << " <= z_int" << range(3, 0) << ";" << endl;
@@ -338,8 +351,8 @@ namespace flopoco
       THROWERROR("No carry init found");
     }
 
-    vhdl << "\tcarry_cct <= " << carry_cct << ";" << endl;
-    vhdl << "\tbbus(0) <= " << bbus << ";" << endl;
+    vhdl << tab << "carry_cct <= " << carry_cct << ";" << endl;
+    vhdl << tab << "bbus(0) <= " << bbus << ";" << endl;
   }
 
   void XilinxTernaryAddSub::computeState()
