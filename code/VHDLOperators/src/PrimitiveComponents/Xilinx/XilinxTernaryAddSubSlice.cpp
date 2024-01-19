@@ -34,6 +34,9 @@ namespace flopoco {
         addOutput( "carry_out" );
         addOutput( "bbus_out", wIn );
         addOutput( "sum_out", wIn );
+
+//#define DOTTEST
+#ifndef DOTTEST
         declare( "lut_o6", wIn );
         declare( "cc_di", 4 );
         declare( "cc_s", 4 );
@@ -89,7 +92,10 @@ namespace flopoco {
 
         vhdl << tab << "carry_out	<= cc_co" << of( wIn - 1 ) << ";" << std::endl;
         vhdl << tab << "sum_out <= cc_o" << range( wIn-1, 0 ) << ";" << std::endl;
-
+#else
+        vhdl << tab << declare(1.2345E-9 ,"tmp", wIn) << "<= x_in" << ";" << endl; //assign to some tmp signal and adding some delay
+        vhdl << tab << "sum_out <= tmp" << ";" << endl;
+#endif
 	};
 
 }//namespace
