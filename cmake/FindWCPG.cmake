@@ -89,9 +89,9 @@ if (NOT WCPG_INCLUDE_DIR AND NOT WCPG_LIBRARY AND WCPG_BUILD_NOTFOUND)
             RESULT_VARIABLE        WCPG_LOCAL_INSTALL_RES
           )
           if(${WCPG_LOCAL_INSTALL_RES} EQUAL "0")
-            set(WCPG_LIBRARY ${wcpg_BINARY_DIR}/lib/libwcpg.a CACHE FILEPATH "WCPG library")
-            set(WCPG_INCLUDE_DIR ${wcpg_BINARY_DIR}/include CACHE PATH "WCPG include dir")
-            set(WCPG_LOCAL_BUILD CACHE BOOL INTERNAL)
+            set(WCPG_LIBRARY ${wcpg_BINARY_DIR}/lib/libwcpg.a)
+            set(WCPG_INCLUDE_DIR ${wcpg_BINARY_DIR}/include)
+            set(WCPG_LOCAL_BUILD)
           else()
             message(WARNING "Error when running local installation of WCPG")
           endif()
@@ -112,18 +112,16 @@ endif()
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(
   WCPG
-  FOUND_VAR WCPG_FOUND 
+  FOUND_VAR WCPG_FOUND
   REQUIRED_VARS
     WCPG_LIBRARY
     WCPG_INCLUDE_DIR
   VERSION_VAR WCPG_VERSION
 )
-
 if(WCPG_FOUND)
   set(WCPG_LIBRARIES ${WCPG_LIBRARY})
   set(WCPG_INCLUDE_DIRS ${WCPG_INCLUDE_DIR})
   set(WCPG_DEFINITIONS ${PC_WCPG_FLAGS_OTHER})
-
 endif()
 
 if (WCPG_FOUND AND NOT TARGET WCPG::WCPG)
@@ -131,7 +129,7 @@ if (WCPG_FOUND AND NOT TARGET WCPG::WCPG)
   find_package(MPFR REQUIRED)
   find_package(MPFI REQUIRED)
   add_library(WCPG::WCPG UNKNOWN IMPORTED)
-  set_target_properties(WCPG::WCPG PROPERTIES 
+  set_target_properties(WCPG::WCPG PROPERTIES
     IMPORTED_LOCATION "${WCPG_LIBRARY}"
     INTERFACE_COMPILE_OPTIONS "${PC_WCPG_FLAGS_OTHER}"
     INTERFACE_INCLUDE_DIRECTORIES "${WCPG_INCLUDE_DIR}"
