@@ -53,12 +53,13 @@ namespace flopoco {
 		srcFileName="FixIIR";
 		setCopyrightString ( "Florent de Dinechin, Louis Beseme, Matei Istoan (2014-2019)" );
 		useNumericStd_Unsigned();
-
+		setSequential();  // even if frequency is 0
 
 		ostringstream name;
-		name << "FixIIR";
-		setNameWithFreqAndUID( name.str() );
+		name << "FixIIR" << "_uid" << getNewUId();
+		setName( name.str() );
 
+		sollya_lib_set_roundingwarnings(sollya_lib_parse_string("off"));
 		m = coeffa.size();
 		n = coeffb.size();
 

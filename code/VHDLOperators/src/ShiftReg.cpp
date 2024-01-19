@@ -19,6 +19,7 @@ namespace flopoco {
 		srcFileName="ShiftReg";
 		setCopyrightString ( "Louis Beseme, Florent de Dinechin, Matei Istoan (2014-2016)" );
 		useNumericStd_Unsigned();
+		setSequential(); // even if frequency is 0
 
 		ostringstream name;
 		name << "ShiftReg_"<< w_;

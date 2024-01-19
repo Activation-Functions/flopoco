@@ -610,7 +610,6 @@ namespace flopoco{
 
 	void Operator::outputVHDLEntity(std::ostream& o) {
 		unsigned int i;
-
 		if(uniqueName_.empty()) THROWERROR("No name was set for this operator.");
 
 		o << "entity " << uniqueName_ << " is" << endl;
