@@ -52,6 +52,7 @@ namespace flopoco
     useNumericStd();
     useNumericStd_Signed();
     useNumericStd_Unsigned();
+		setSequential();  // even if frequency is 0
 
     ostringstream name;
     name << "FixIIRShiftAdd";

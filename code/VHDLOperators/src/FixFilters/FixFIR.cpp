@@ -39,6 +39,7 @@ namespace flopoco {
 		ostringstream name;
 		name << "FixFIR_uid" << getNewUId();
 		setNameWithFreqAndUID( name.str() );
+		setSequential();  // even if frequency is 0
 
 		sollya_lib_set_roundingwarnings(sollya_lib_parse_string("off"));
 	}
