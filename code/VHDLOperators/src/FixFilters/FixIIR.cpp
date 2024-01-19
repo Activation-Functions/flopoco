@@ -23,7 +23,7 @@ extern "C"
 #include "flopoco/FixFilters/FixSOPC.hpp"
 
 
-/* Test with 
+/* Test with
 ./flopoco FixIIR coeffb="1:2" coeffa="1/2:1/4" lsbIn=-12 lsbOut=-12   TestBench n=1000
 
 
@@ -58,9 +58,9 @@ namespace flopoco {
 		ostringstream name;
 		name << "FixIIR";
 		setNameWithFreqAndUID( name.str() );
-		
+
 		m = coeffa.size();
-		n = coeffb.size();  
+		n = coeffb.size();
 
 		addInput("X", 1-lsbIn, true);
 
@@ -85,7 +85,7 @@ namespace flopoco {
 			mpfr_init2(coeffb_mp[i], 10000);
 			sollya_lib_get_constant(coeffb_mp[i], node);
 			coeffb_d[i] = mpfr_get_d(coeffb_mp[i], GMP_RNDN);
-			REPORT(LogLevel::VERBOSE, "b[" << i << "]=" << setprecision(15) << scientific  << coeffb_d[i]);			
+			REPORT(LogLevel::VERBOSE, "b[" << i << "]=" << setprecision(15) << scientific  << coeffb_d[i]);
 		}
 
 		for (uint32_t i=0; i< m; i++)		{
@@ -95,14 +95,14 @@ namespace flopoco {
 			node = sollya_lib_parse_string(coeffa[i].c_str());
 			if(node == 0)					// If conversion did not succeed (i.e. parse error)
 				THROWERROR("Unable to parse string " << coeffb[i] << " as a numeric constant");
-			
+
 			mpfr_init2(coeffa_mp[i], 10000);
 			sollya_lib_get_constant(coeffa_mp[i], node);
 			coeffa_d[i] = mpfr_get_d(coeffa_mp[i], GMP_RNDN);
-			REPORT(LogLevel::VERBOSE, "a[" << i << "]=" << scientific << setprecision(15) << coeffa_d[i]);			
+			REPORT(LogLevel::VERBOSE, "a[" << i << "]=" << scientific << setprecision(15) << coeffa_d[i]);
 		}
 
-		
+
 		// TODO here compute H if it is not provided
 		if(H==0 && Heps==0) {
 #if HAVE_WCPG
@@ -113,12 +113,12 @@ namespace flopoco {
 				THROWERROR("Could not compute WCPG");
 			REPORT(LogLevel::DETAIL, "Computed filter worst-case peak gain: H=" << H);
 
-			double one_d[1] = {1.0}; 
+			double one_d[1] = {1.0};
 			if (!WCPG_tf(&Heps, one_d, coeffa_d, 1, m, (int)0))
 				THROWERROR("Could not compute WCPG");
 			REPORT(LogLevel::DETAIL, "Computed error amplification worst-case peak gain: Heps=" << Heps);
-			
-#else 
+
+#else
 			THROWERROR("WCPG was not found (see cmake output), cannot compute worst-case peak gain H. Either provide H, or compile FloPoCo with WCPG");
 #endif
 		}
@@ -126,19 +126,19 @@ namespace flopoco {
 			REPORT(LogLevel::DETAIL, "Filter worst-case peak gain: H=" << H);
 			REPORT(LogLevel::DETAIL, "Error amplification worst-case peak gain: Heps=" << Heps);
 		}
-		
+
 		// guard bits for a faithful result
 		int lsbExt = lsbOut-1-intlog2(Heps);
 
 
 #if 0 // sabotaging, to test if we overestimate
 		// The example with poles close to 1 still passes with lsbExt+=3, fails with lsbExt+=4
-		// The easy IIR8 still passes with lsbExt+=2, fails with lsbExt+=3 
+		// The easy IIR8 still passes with lsbExt+=2, fails with lsbExt+=3
 		// The trickiest IIR8 (with WCPG~8000) still passes with lsbExt+=3, fails with lsbExt+=4
-		
+
 	  lsbExt +=3 ;
 #endif
-		
+
 		msbOut = ceil(log2(H)); // see the paper
 		REPORT(LogLevel::DETAIL, "We ask for a SOPC faithful to lsbExt=" << lsbExt);
 		REPORT(LogLevel::DETAIL, "msbOut=" << msbOut);
@@ -169,7 +169,7 @@ namespace flopoco {
 								"X=>X", outportmap);  // the in and out port maps
 
 
-		vhdl << tab << declare("Y0", msbOut-lsbExt+1) << " <= Yinternal;" << endl; // just so that the inportmap finds it  
+		vhdl << tab << declare("Y0", msbOut-lsbExt+1) << " <= Yinternal;" << endl; // just so that the inportmap finds it
 		// The instance of the shift register for Yd1...Ydn-1
 		outportmap = "";
 		for (uint32_t i = 1; i<m+1; i++) {
@@ -178,12 +178,12 @@ namespace flopoco {
 		newInstance("ShiftReg", "outputShiftReg",
 								"w=" + to_string(msbOut-lsbExt+1) + " n=" + to_string(m) + " reset=1",
 								"X=>Y0", outportmap);
-		
+
 		// Now building a single SOPC. For this we need the following info:
 		//		FixSOPC(Target* target, vector<double> maxX, vector<int> lsbIn, int msbOut, int lsbOut, vector<string> coeff_, int g=-1);
 		// We will concatenate coeffb of size n then then coeffa of size m
 		// not using the newInstance() interface here.
-		
+
 		vector<double> maxInSOPC;
 		vector<int> lsbInSOPC;
 		vector<string> coeffSOPC;
@@ -193,7 +193,7 @@ namespace flopoco {
 			coeffSOPC.push_back(coeffb[i]);
 		}
 		for (uint32_t i = 0; i<m; i++)	{
-			maxInSOPC.push_back(H); // max (y) = H. 
+			maxInSOPC.push_back(H); // max (y) = H.
 			lsbInSOPC.push_back(lsbExt); // for y
 			coeffSOPC.push_back("-("+coeffa[i]+")");
 		}
@@ -247,7 +247,7 @@ namespace flopoco {
 	void FixIIR::emulate(TestCase * tc){
 		mpz_class sx;
 		mpfr_t x, s, t;
-		
+
 		mpfr_init2 (s, hugePrec);
 		mpfr_init2 (t, hugePrec);
 		mpfr_set_d(s, 0.0, GMP_RNDN); // initialize s to 0
@@ -286,13 +286,13 @@ namespace flopoco {
 				mpfr_get_d(yHistory[(currentIndex +i+1)%(m+2)],GMP_RNDN) << "*" << mpfr_get_d(coeffa_mp[i],GMP_RNDN);
 		}
 		cout << endl;
-		  
+
 #endif
 
 		currentIndex--;
 
 		//		coeff		  1 2 3
-		//    yh      y 0 0 0 
+		//    yh      y 0 0 0
 		// now we should have in s the (exact in most cases) sum
 		// round it up and down
 
@@ -318,7 +318,7 @@ namespace flopoco {
 		ruz=signedToBitVector(ruz, msbOut-lsbOut+1);
 		tc->addExpectedOutput ("R", ruz);
 #endif
-		
+
 		mpfr_clears (x, t, s, NULL);
 
 	};
@@ -333,30 +333,30 @@ namespace flopoco {
 		//initialize the ui and yi
 		for(uint32_t i=0; i<n+m; i++) {
 			ui.push_back(0);
-			yi.push_back(0);		
+			yi.push_back(0);
 		}
 		ui.push_back(1); // input impulse
-		yi.push_back(0);		
+		yi.push_back(0);
 
 		k=0;
 		int storageOffset=n+m;
-		
+
 		while (epsilon>threshold) {
 			// make room
-			ui.push_back(0);			
-			yi.push_back(0);		
+			ui.push_back(0);
+			yi.push_back(0);
 			// compute the new y
 			double y=0;
 			for(uint32_t i=0; i<n; i++) {
 				y += ui[storageOffset+ k-i]*coeffb_d[i] ;
 			}
 			for(uint32_t i=0; i<m; i++) {
-				//		cout << "    k=" << k <<" i=" << i <<  "  yi[storageOffset+ k-i] =" << yi[storageOffset+ k-i] << endl;  
+				//		cout << "    k=" << k <<" i=" << i <<  "  yi[storageOffset+ k-i] =" << yi[storageOffset+ k-i] << endl;
 				y -= yi[storageOffset+ k-i]*coeffa_d[i] ;
 			}
 			k++;
 			yi[storageOffset+k] = y;
-				 
+
 			epsilon = abs(y);
 			//cout << "k=" << k << " yi=" << y << endl;
 			if(k>=300000){
@@ -368,12 +368,12 @@ namespace flopoco {
 		REPORT(LogLevel::MESSAGE, "Impulse response vanishes for k=" << k);
 	}
 
-	
+
 	void FixIIR::buildStandardTestCases(TestCaseList* tcl){
 		// First fill with a few ones, then a few zeroes
 		TestCase *tc;
 
-#if 1 // Test on the impulse response, useful for debugging 
+#if 1 // Test on the impulse response, useful for debugging
 		tc = new TestCase(this);
 		tc->addInput("X", (mpz_class(1)<<(-lsbIn))-1 ); // 1 (almost)
 		emulate(tc);
@@ -385,7 +385,7 @@ namespace flopoco {
 			emulate(tc);
 			tcl->add(tc);
 		}
-		
+
 #endif
 		if(buildWorstCaseTestBench) {
 			// compute the impulse response
@@ -405,7 +405,7 @@ namespace flopoco {
 				}
 #else // multiplying by 1 and -1 ensures no rounding error in the FIR part
 			// hence the following code
-			// But no observable difference... 
+			// But no observable difference...
 				val = ((mpz_class(1)<<(-lsbIn)) -1) * 9 / 10; // 011111;  *9/10 to trigger rounding errors
 				if(yi[kmax-i]>=0) {
 					// two's complement
@@ -413,18 +413,18 @@ namespace flopoco {
 				}
 #endif
 				tc = new TestCase(this);
-				tc->addInput("X", val); 
+				tc->addInput("X", val);
 				emulate(tc);
 				tcl->add(tc);
-			
+
 			}
 
 			REPORT(LogLevel::MESSAGE,"Filter output remains in [" << miny << ", " << maxy<<"]");
-		}		
+		}
 	};
 
 
-	
+
 	OperatorPtr FixIIR::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 		int lsbIn;
 		ui.parseInt(args, "lsbIn", &lsbIn);
@@ -439,7 +439,7 @@ namespace flopoco {
 		ui.parseString(args, "coeffa", &in);
 		bool buildWorstCaseTestBench;
 		ui.parseBoolean(args, "buildWorstCaseTestBench", &buildWorstCaseTestBench);
-		
+
 		// tokenize a string, thanks Stack Overflow
 		stringstream ss(in);
 		while( ss.good() )	{
@@ -456,7 +456,7 @@ namespace flopoco {
 				getline( ssb, substr, ':' );
 				inputb.push_back( substr );
 			}
-		
+
 		return new FixIIR(parentOp, target, lsbIn, lsbOut, inputb, inputa, h, heps, buildWorstCaseTestBench);
 	}
 
@@ -464,11 +464,19 @@ namespace flopoco {
 	{
 		TestList testStateList;
 		vector<pair<string,string>> paramList;
-		
-    if(testLevel >= TestLevel::SUBSTANTIAL)
-    { // The substantial unit tests
-			// No parameter sweep here, just a few representative examples
 
+		if (testLevel == TestLevel::QUICK) {
+			// just test paramValues
+            paramList.push_back(make_pair("lsbIn", to_string(-8)));
+            paramList.push_back(make_pair("lsbOut", to_string(-8)));
+            paramList.push_back(make_pair("coeffb", "1:0:-1"));
+            paramList.push_back(make_pair("coeffa", "-1.99510896:0.999985754"));
+            testStateList.push_back(paramList);
+			paramList.clear();
+		}
+        if (testLevel >= TestLevel::SUBSTANTIAL) {
+            // The substantial unit tests
+			// No parameter sweep here, just a few representative examples
 			// A Butterworth
 			paramList.push_back(make_pair("lsbIn",  "-12"));
 			paramList.push_back(make_pair("lsbOut", "-12"));
@@ -485,9 +493,7 @@ namespace flopoco {
 			testStateList.push_back(paramList);
 			paramList.clear();
 
-		}
-	else
-		{
+		} else {
 			// finite number of random test computed out of testLevel
 		}
 
