@@ -1149,12 +1149,16 @@ namespace flopoco{
 	void Operator::outPortMap(string componentPortName, string actualSignalName){
 
 		//declare the signal only if not existing (existing signals may happen when port maps to different ranges are performed, hence we cannot treat this as an error)
-		if(!isSignalDeclared(actualSignalName))
-			{
-				declare(actualSignalName, -1); // -1 for incomplete declaration
-				REPORT(LogLevel::FULL,"outPortMap: Created incomplete " << actualSignalName);
-			}
-
+    if(!isSignalDeclared(actualSignalName))
+    {
+      declare(actualSignalName, -1); // -1 for incomplete declaration
+      REPORT(LogLevel::FULL,"outPortMap: Created incomplete " << actualSignalName);
+    }
+    else
+    {
+      Signal* sig = getSignalByName(actualSignalName);
+//      if(sig->width() != -1) THROWERROR("Output port " << actualSignalName << " is already declared but it is not incomplete!");
+    }
 		/* should be removed soon:
 
 		// check if the signal already exists, when we're supposed to create a new signal
