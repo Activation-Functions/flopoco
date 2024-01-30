@@ -34,7 +34,7 @@ namespace flopoco
       namestr << "_s" << (bitmask2_ & 0x7);
     }
 
-    setNameWithFreqAndUID(namestr.str());
+    setName(namestr.str());
     string lut_content = computeLUT();
     setCombinatorial();
     addInput("X", wIn);
@@ -77,7 +77,6 @@ namespace flopoco
       vhdl << tab << declare("y_in0",wIn) << " <= y_int" << ";" << endl;
       vhdl << tab << declare("z_in0",wIn) << " <= z_int" << ";" << endl;
       vhdl << tab << declare("bbus_in0",wIn) << " <= bbus" << range(wIn - 1, 0) << ";" << endl;
-      declare("carry0");
 
       std::stringstream inportmap;
       std::stringstream outportmap;
@@ -92,8 +91,8 @@ namespace flopoco
       outportmap << "carry_out => carry0,";
       outportmap << "sum_out => sum_out0";
 
-      vhdl << tab << "bbus" << range(wIn, 1) << " <= " << declare("bbus_out0",wIn) << ";" << endl;
-      vhdl << tab << "R" << range(wIn - 1, 0) << " <= " << declare("sum_out0",wIn) << ";" << endl;
+      vhdl << tab << "bbus" << range(wIn, 1) << " <= bbus_out0;" << endl;
+      vhdl << tab << "R" << range(wIn - 1, 0) << " <= sum_out0;" << endl;
 
       newSharedInstance(single_slice , "single_slice", inportmap.str(), outportmap.str());
 
@@ -110,7 +109,6 @@ namespace flopoco
           vhdl << tab << declare("y_in0",4) << " <= y_int" << range(3, 0) << ";" << endl;
           vhdl << tab << declare("z_in0",4) << " <= z_int" << range(3, 0) << ";" << endl;
           vhdl << tab << declare("bbus_in0",4) << " <= bbus" << range(3, 0) << ";" << endl;
-          declare("carry0");
 
       		std::stringstream inportmap;
       		std::stringstream outportmap;
@@ -125,8 +123,8 @@ namespace flopoco
           outportmap << "carry_out => carry0,";
           outportmap << "sum_out => sum_out0";
 
-          vhdl << tab << "bbus" << range(4, 1) << " <= " << declare("bbus_out0",4) << ";" << endl;
-          vhdl << tab << "R" << range(3, 0) << " <= " << declare("sum_out0",4) << ";" << endl;
+          vhdl << tab << "bbus" << range(4, 1) << " <= bbus_out0;" << endl;
+          vhdl << tab << "R" << range(3, 0) << " <= sum_out0;" << endl;
 
           newSharedInstance(first_slice , "first_slice", inportmap.str(), outportmap.str());
         }
@@ -138,7 +136,6 @@ namespace flopoco
           vhdl << tab << declare("y_in" + to_string(i),bits_in_last_slice) << " <= y_int" << range(wIn - 1, 4 * i) << ";" << endl;
           vhdl << tab << declare("z_in" + to_string(i),bits_in_last_slice) << " <= z_int" << range(wIn - 1, 4 * i) << ";" << endl;
           vhdl << tab << declare("bbus_in" + to_string(i),bits_in_last_slice) << " <= bbus" << range(wIn - 1, 4 * i) << ";" << endl;
-          declare("carry" + to_string(i));
 
       		std::stringstream inportmap;
       		std::stringstream outportmap;
@@ -153,8 +150,8 @@ namespace flopoco
           outportmap << "carry_out => carry" << to_string(i) << ",";
           outportmap << "sum_out => sum_out" << to_string(i);
 
-          vhdl << tab << "bbus" <<range(wIn, 4 * i + 1) << " <= " << declare("bbus_out" + to_string(i),bits_in_last_slice) << ";" << endl;
-          vhdl << tab << "R" << range(wIn - 1, 4 * i) << " <= " << declare("sum_out" + to_string(i),bits_in_last_slice) << ";" << endl;
+          vhdl << tab << "bbus" <<range(wIn, 4 * i + 1) << " <= bbus_out;" << endl;
+          vhdl << tab << "R" << range(wIn - 1, 4 * i) << " <= sum_out;" << endl;
 
           newSharedInstance(last_slice , "last_slice", inportmap.str(), outportmap.str());
         }
@@ -165,7 +162,6 @@ namespace flopoco
           vhdl << tab << declare("y_in" + to_string(i),4) << " <= y_int" << range((4 * i) + 3, 4 * i) << ";" << endl;
           vhdl << tab << declare("z_in" + to_string(i),4) << " <= z_int" << range((4 * i) + 3, 4 * i) << ";" << endl;
           vhdl << tab << declare("bbus_in" + to_string(i),4) << " <= bbus" << range((4 * i) + 3, 4 * i) << ";" << endl;
-          declare("carry" + to_string(i));
 
       		std::stringstream inportmap;
       		std::stringstream outportmap;
@@ -180,8 +176,8 @@ namespace flopoco
           outportmap << "carry_out => carry" << to_string(i) << ",";
           outportmap << "sum_out => sum_out" << to_string(i);
 
-          vhdl << tab << "bbus" << range((4 * i) + 4, 4 * i + 1) << " <= " << declare("bbus_out" + to_string(i),4) << ";" << endl;
-          vhdl << tab << "R" << range((4 * i) + 3, 4 * i) << " <= " << declare("sum_out" + to_string(i),4) << ";" << endl;
+          vhdl << tab << "bbus" << range((4 * i) + 4, 4 * i + 1) << " <= bbus_out;" << endl;
+          vhdl << tab << "R" << range((4 * i) + 3, 4 * i) << " <= sum_out;" << endl;
 
           newSharedInstance(full_slice , "full_slice" + to_string(i), inportmap.str(), outportmap.str());
         }
