@@ -150,8 +150,8 @@ namespace flopoco
           outportmap << "carry_out => carry" << to_string(i) << ",";
           outportmap << "sum_out => sum_out" << to_string(i);
 
-          vhdl << tab << "bbus" <<range(wIn, 4 * i + 1) << " <= bbus_out;" << endl;
-          vhdl << tab << "R" << range(wIn - 1, 4 * i) << " <= sum_out;" << endl;
+          vhdl << tab << "bbus" <<range(wIn, 4 * i + 1) << " <= bbus_out" << to_string(i) << ";" << endl;
+          vhdl << tab << "R" << range(wIn - 1, 4 * i) << " <= sum_out" << to_string(i) << ";"<< endl;
 
           newSharedInstance(last_slice , "last_slice", inportmap.str(), outportmap.str());
         }
@@ -176,8 +176,8 @@ namespace flopoco
           outportmap << "carry_out => carry" << to_string(i) << ",";
           outportmap << "sum_out => sum_out" << to_string(i);
 
-          vhdl << tab << "bbus" << range((4 * i) + 4, 4 * i + 1) << " <= bbus_out;" << endl;
-          vhdl << tab << "R" << range((4 * i) + 3, 4 * i) << " <= sum_out;" << endl;
+          vhdl << tab << "bbus" << range((4 * i) + 4, 4 * i + 1) << " <= bbus_out" << to_string(i) << ";" << endl;
+          vhdl << tab << "R" << range((4 * i) + 3, 4 * i) << " <= sum_out"  << to_string(i) << ";" << endl;
 
           newSharedInstance(full_slice , "full_slice" + to_string(i), inportmap.str(), outportmap.str());
         }
@@ -591,6 +591,7 @@ namespace flopoco
 
   TestList XilinxTernaryAddSub::unitTest(int testLevel)
   {
+    cerr << "!!! XilinxTernaryAddSub::unitTest" << endl;
     TestList testStateList;
     vector<pair<string, string>> paramList;
 

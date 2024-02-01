@@ -101,7 +101,7 @@ namespace flopoco
     return getParentOp()->instance(this, instanceName);
   }
 
-
+/*
   void Primitive::schedule()
   {
     for (int i = 0; i < this->ioList_.size(); i++)
@@ -130,5 +130,6 @@ namespace flopoco
     }
     this->setIsOperatorScheduled(true);
   }
+*/
 
 }//namespace
