@@ -29,7 +29,10 @@ namespace flopoco
     addOutput("o");
     if(!init.empty())
       setGeneric("init", init, 64);
-    //vhdl << "o <= i0" << endl;
+
+    //dummy assignment for schedule() to get timing right (will not be outputed in VHDL file but read by parser):
+    vhdl << declare(target->lutDelay(), "o_i") << " <= i0 xor i1 xor i2 xor i3 xor i4 xor i5;" << endl;
+    vhdl << "o <= o_i;" << endl;
   }
 
   Xilinx_LUT6_2::Xilinx_LUT6_2(Operator *parentOp, Target *target, string init) : XilinxLUT(parentOp, target)
@@ -40,13 +43,11 @@ namespace flopoco
     if(!init.empty())
       setGeneric("init", init, 64);
 
-    /*
-    vhdl << "--dummy assignment for schedule(), dirty hack!!" << endl;
-    vhdl << declare(1E-9, "o5_i") << " <= i0 xor i1 xor i2 xor i3 xor i4 xor i5;" << endl;
-    vhdl << declare(1E-9,"o6_i") << " <= i0 xor i1 xor i2 xor i3 xor i4 xor i5;" << endl;
+    //dummy assignment for schedule() to get timing right (will not be outputed in VHDL file but read by parser):
+    vhdl << declare(target->lutDelay(), "o5_i") << " <= i0 xor i1 xor i2 xor i3 xor i4 xor i5;" << endl;
+    vhdl << declare(target->lutDelay(),"o6_i") << " <= i0 xor i1 xor i2 xor i3 xor i4 xor i5;" << endl;
     vhdl << "o5 <= o5_i;" << endl;
     vhdl << "o6 <= o6_i;" << endl;
-     */
   }
 
   Xilinx_LUT6_L::Xilinx_LUT6_L(Operator *parentOp, Target *target, string init) : XilinxLUT(parentOp, target)
@@ -55,7 +56,14 @@ namespace flopoco
     addOutput("lo");
     if(!init.empty())
       setGeneric("init", init, 64);
+
+    //dummy assignment for schedule() to get timing right (will not be outputed in VHDL file but read by parser):
+    vhdl << declare(target->lutDelay(), "o_i") << " <= i0 xor i1 xor i2 xor i3 xor i4 xor i5;" << endl;
+    vhdl << "lo <= o_i;" << endl;
+
   }
+
+#if 0
 
   Xilinx_LUT6_D::Xilinx_LUT6_D(Operator *parentOp, Target *target, string init) : XilinxLUT(parentOp, target)
   {
@@ -75,6 +83,7 @@ namespace flopoco
     if(!init.empty())
       setGeneric("init", init, 64);
   }
+#endif
 
   OperatorPtr XilinxLUT::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui)
   {
@@ -93,10 +102,12 @@ namespace flopoco
       return new Xilinx_LUT6_2(parentOp, target, init);
     else if(variant == "LUT6_L")
       return new Xilinx_LUT6_L(parentOp, target, init);
+#if 0
     else if(variant == "LUT6_D")
       return new Xilinx_LUT6_D(parentOp, target, init);
     else if(variant == "LUT6_CY")
       return new Xilinx_LUT6_CY(parentOp, target, init);
+#endif
     else
       throw std::runtime_error("Unknown variant: " + variant);
   }

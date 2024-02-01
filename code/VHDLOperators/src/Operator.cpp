@@ -2178,7 +2178,7 @@ namespace flopoco{
 				return;
 			}
 
-		if (! vhdl.isEmpty() ){
+		if (!vhdl.isEmpty() && !isExternal()){
 			licence(o);
 			pipelineInfo(o);
 			signalSignature(o);

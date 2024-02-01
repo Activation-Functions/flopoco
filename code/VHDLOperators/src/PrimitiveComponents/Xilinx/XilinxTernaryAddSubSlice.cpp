@@ -42,6 +42,10 @@ namespace flopoco {
         declare( "cc_s", 4 );
         declare( "cc_o", 4 );
         declare( "cc_co", 4 );
+        declare( "bbus_int", wIn );
+
+        vhdl << tab << "bbus_out <= bbus_int;" << endl;
+
         addConstant( "fillup_width", "integer", join( "4 - ", wIn ) );
 
         if( wIn <= 0 || wIn > 4 ) {
@@ -65,7 +69,7 @@ namespace flopoco {
             inPortMap( "i3", "sel_in" );
             inPortMap( "i4", "bbus_in" + of( i ) );
             inPortMapCst( "i5", "'1'" );
-            outPortMap( "o5", "bbus_out" + of( i ));
+            outPortMap( "o5", "bbus_int" + of( i ));
             outPortMap( "o6", "lut_o6" + of( i ));
             vhdl << lut_bit_i->primitiveInstance( join( "lut_bit_", i ) );
         }
