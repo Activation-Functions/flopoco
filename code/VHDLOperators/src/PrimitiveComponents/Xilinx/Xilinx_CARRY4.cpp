@@ -26,13 +26,11 @@ namespace flopoco
     addOutput("co", 4);
     addOutput("o", 4);
 
-    /*
-    vhdl << "--dummy assignment for schedule(), dirty hack!!" << endl;
-    vhdl << declare(1E-9, "o_i",4) << " <= di xor s;" << endl;
-    vhdl << declare(1E-9,"co_i",4) << " <= di xor s;" << endl;
-    vhdl << "co <= co_i;" << endl;
+    //dummy assignment for schedule() to get timing right (will not be outputed in VHDL file but read by parser):
+    vhdl << declare(target->carryPropagateDelay(), "o_i") << " <= di xor s;" << endl;
+    vhdl << declare(target->carryPropagateDelay(), "co_i") << " <= di xor s;" << endl;
     vhdl << "o <= o_i;" << endl;
-  */
+    vhdl << "co <= co_i;" << endl;
   }
 
   OperatorPtr Xilinx_CARRY4::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui)
