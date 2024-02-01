@@ -123,10 +123,10 @@ namespace flopoco
           outportmap << "carry_out => carry0,";
           outportmap << "sum_out => sum_out0";
 
+          newSharedInstance(first_slice , "first_slice", inportmap.str(), outportmap.str());
+
           vhdl << tab << "bbus" << range(4, 1) << " <= bbus_out0;" << endl;
           vhdl << tab << "R" << range(3, 0) << " <= sum_out0;" << endl;
-
-          newSharedInstance(first_slice , "first_slice", inportmap.str(), outportmap.str());
         }
         else if (i == (num_slices - 1))
         { // LAST SLICE
@@ -150,10 +150,10 @@ namespace flopoco
           outportmap << "carry_out => carry" << to_string(i) << ",";
           outportmap << "sum_out => sum_out" << to_string(i);
 
+          newSharedInstance(last_slice , "last_slice", inportmap.str(), outportmap.str());
+
           vhdl << tab << "bbus" <<range(wIn, 4 * i + 1) << " <= bbus_out" << to_string(i) << ";" << endl;
           vhdl << tab << "R" << range(wIn - 1, 4 * i) << " <= sum_out" << to_string(i) << ";"<< endl;
-
-          newSharedInstance(last_slice , "last_slice", inportmap.str(), outportmap.str());
         }
         else
         {
@@ -176,10 +176,10 @@ namespace flopoco
           outportmap << "carry_out => carry" << to_string(i) << ",";
           outportmap << "sum_out => sum_out" << to_string(i);
 
+          newSharedInstance(full_slice , "full_slice" + to_string(i), inportmap.str(), outportmap.str());
+
           vhdl << tab << "bbus" << range((4 * i) + 4, 4 * i + 1) << " <= bbus_out" << to_string(i) << ";" << endl;
           vhdl << tab << "R" << range((4 * i) + 3, 4 * i) << " <= sum_out"  << to_string(i) << ";" << endl;
-
-          newSharedInstance(full_slice , "full_slice" + to_string(i), inportmap.str(), outportmap.str());
         }
       }
     }

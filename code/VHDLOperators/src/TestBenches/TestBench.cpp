@@ -91,9 +91,10 @@ namespace flopoco{
 		for(int i=0; i < op->getIOList().size(); i++){
 			Signal* s = op->getIOListSignal(i);
 			// Instance does not declare the output signals anymore, need to do it here
-			declare(s->getName(), s->width(), s->isBus());
+  		declare(s->getName(), s->width(), s->isBus()); //<- it does! commented out for test!
 		
 			if(s->type() == Signal::in) {
+//			  declare(s->getName(), s->width(), s->isBus());
 				inPortMap (s->getName(), s->getName());
 			}
 			if(s->type() == Signal::out) {
