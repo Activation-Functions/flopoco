@@ -537,7 +537,7 @@ namespace flopoco {
 				    unsigned int truncated = (outLSBWeight < bitheapLSBWeight) ? bitheapLSBWeight - outLSBWeight : 0;           // calc result LSBs to be ignored
 				    unsigned int bitHeapOffset = (outLSBWeight < bitheapLSBWeight) ? 0 : outLSBWeight - bitheapLSBWeight;       // calc bits between the tiles output LSB and the bitheaps LSB
 				    unsigned int toSkip = ((LSBWeight < 0) ? static_cast<unsigned int>(-LSBWeight) : 0) + truncated;            // calc LSB bits to be ignored in the tiles output
-				    unsigned int tokeep = parameters.getOutputSizes()[i] - toSkip;                                              // the tiles MSBs that are actually used
+				    int tokeep = parameters.getOutputSizes()[i] - toSkip;                                              // the tiles MSBs that are actually used
 				    if(tokeep < 1) continue;    //the pariticular output of the tile does not contribute to the bitheap
 
 				    unsigned int xInputLength = parameters.getTileXWordSize();
