@@ -56,6 +56,7 @@ namespace flopoco
     int wIn;
     bool isSigned;
     double epsilon;
+    int wSel;
 
     bool isTruncated; //if true, the operator is truncated truncated
     map<pair<mpz_class, int>, vector<int> > wordSizeMap; //stores the truncations of inputs; key is a pair of constant and stage, value is a vector of the number of truncated bits
