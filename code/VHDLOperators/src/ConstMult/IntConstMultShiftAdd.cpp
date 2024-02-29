@@ -247,8 +247,12 @@ namespace flopoco {
         if(noOfConfigurations > 1)
         {
           //more than one configuration found, declare select input:
-          int wSel = ceil(log2(noOfConfigurations+1));
+          wSel = ceil(log2(noOfConfigurations));
           addInput(generateSelectName(),wSel);
+        }
+        else
+        {
+          wSel = 0;
         }
       }
       else
@@ -657,7 +661,6 @@ namespace flopoco {
       }
       else
       {
-        int wSel = ceil(log2(noOfConfigurations+1));
         //for the configurable add/sub, the negation was already performed on the input signal
         for(int c = 0; c < cnode->input_is_negative.size(); c++)
         {
@@ -798,7 +801,6 @@ namespace flopoco {
     }
 
     int wMUX=computeWordSize(node->output_factor, wIn);
-    int wSel = ceil(log2(noOfConfigurations+1));
 
     vhdl << tab << "with " << generateSelectName() << " select" << endl;
     vhdl << tab << declare(generateSignalName(node->output_factor, node->stage),wMUX) << " <= " << endl << tab << tab << tab;;
