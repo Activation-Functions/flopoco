@@ -72,6 +72,7 @@ namespace flopoco
     void generateAdderGraph(PAGSuite::adder_graph_t* adder_graph);
     void generateInputNode(PAGSuite::input_node_t* node);
     void generateOutputNode(PAGSuite::output_node_t* node);
+    void generateZeroNode(PAGSuite::zero_node_t* node);
     void generateRegisterNode(PAGSuite::register_node_t* node);
     void generateMuxNode(PAGSuite::mux_node_t* node);
     void generateConfAdderSubtractorNode(PAGSuite::conf_adder_subtractor_node_t* node);
