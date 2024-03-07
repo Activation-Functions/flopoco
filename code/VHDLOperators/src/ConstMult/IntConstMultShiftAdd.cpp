@@ -355,8 +355,27 @@ namespace flopoco {
     REPORT(DEBUG,"generating output " << name << " storing " << node->output_factor << " in stage " << node->stage << " using " << wOut << " bits");
     addOutput(name, wOut);
 
+
+    string sign="";
+    std::vector<std::vector<int64_t> > output_vec_fun = adder_graph_t::fundamental(node->output_factor);
+    std::vector<std::vector<int64_t> > input_vec_fun = adder_graph_t::fundamental(node->input->output_factor);
+    if(output_vec_fun != input_vec_fun)
+    {
+      //factors do not match, check if changing sign is necessary:
+      if(adder_graph_t::normalize(output_vec_fun) == adder_graph_t::normalize(input_vec_fun))
+      {
+        REPORT(DETAIL,"Output_factor is negative of input factor, this usualy costs one extra adder!");
+        sign = "-";
+      }
+      else
+      {
+        THROWERROR("Factor of output node does not mach input factor!");
+      }
+
+    }
+
     string signed_str = isSigned ? "signed" : "unsigned";
-    vhdl << tab << name << " <= std_logic_vector(" << signed_str << "(shift_left(resize(" << signed_str << "(" << generateSignalName(node->input->output_factor,node->input->stage) << ")," << wOut << ")," << node->input_shift << ")));" << endl;
+    vhdl << tab << name << " <= std_logic_vector(" << signed_str << "(shift_left(resize(" << sign << signed_str << "(" << generateSignalName(node->input->output_factor,node->input->stage) << ")," << wOut << ")," << node->input_shift << ")));" << endl;
   }
 
   void IntConstMultShiftAdd::generateRegisterNode(PAGSuite::register_node_t* node)
@@ -1096,6 +1115,9 @@ namespace flopoco {
 
     //Simple MCM with negative coefficients -5 and -7 computed from constant 0 (not optimal):
     graphsSigned.push_back("{{'A',[7],1,[1],0,3,[-1],0,0},{'A',[5],1,[1],0,0,[1],0,2},{'A',[-7],2,[0],0,0,[-7],1,0},{'A',[-5],2,[0],0,0,[-5],1,0},{'O',[-7],2,[-7],2,0},{'O',[-5],2,[-5],2,0}}");
+
+    //Simple SCM with negative coefficient -7 by inversion (not optimal):
+    graphsSigned.push_back("{{'A',[7],1,[1],0,3,[-1],0,0},{'O',[-7],1,[7],1,0}}");
 
 		//CMM of 123*x1+321*x2 345*x1-543*x2, obtained from rpag --cmm 123,321 345,-543:
 		graphsSigned.push_back("{{'A',[0,5],1,[0,1],0,0,[0,1],0,2},{'A',[0,17],1,[0,1],0,0,[0,1],0,4},{'A',[5,0],1,[1,0],0,0,[1,0],0,2},{'A',[128,1],1,[0,1],0,0,[1,0],0,7},{'A',[257,0],1,[1,0],0,0,[1,0],0,8},{'R',[0,5],2,[0,5],1},{'A',[5,68],2,[0,17],1,2,[5,0],1,0},{'A',[123,1],2,[128,1],1,0,[-5,0],1,0},{'A',[385,1],2,[128,1],1,0,[257,0],1,0},{'A',[123,321],3,[0,5],2,6,[123,1],2,0},{'A',[345,-543],3,[385,1],2,0,[-5,-68],2,3},{'O',[123,321],3,[123,321],3,0},{'O',[345,-543],3,[345,-543],3,0}}");
