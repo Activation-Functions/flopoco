@@ -84,12 +84,20 @@ namespace flopoco {
     REPORT(LogLevel::VERBOSE, "parse graph...")
     bool validParse = adder_graph.parse_to_graph(adder_graph_str);
 
+    cout  << endl << "-----------------------------------"  << endl;
+    adder_graph.print_graph();
+    cout  << endl << "-----------------------------------"  << endl;
+
     adder_graph.check_and_correct();
 //    adder_graph.normalize_graph(); //normalize corrects order of signs such that an adder's first input is always positive (if possible)
 //    adder_graph.check_and_correct();
 
     if(validParse) {
       adder_graph.drawdot("pag_input_graph.dot");
+
+
+      if(is_log_lvl_enabled(LogLevel::DEBUG))
+        adder_graph.print_graph();
 
       stringstream outstream;
       adder_graph.writesyn(outstream);
@@ -293,6 +301,11 @@ namespace flopoco {
       {
         generateConfAdderSubtractorNode((conf_adder_subtractor_node_t*) node);
       }
+      else if(is_a<zero_node_t>(*node))
+      {
+        generateZeroNode((zero_node_t*) node);
+        noOfInputs++;
+      }
       else
       {
         cerr << "Error: Unknown node " << node << endl;
@@ -322,6 +335,14 @@ namespace flopoco {
     addInput(inputname, wIn);
 
     vhdl << tab << declare(generateSignalName(node->output_factor,node->stage),wIn) << " <= " << inputname << ";" << endl;
+
+  }
+
+  void IntConstMultShiftAdd::generateZeroNode(PAGSuite::zero_node_t *node)
+  {
+    REPORT(DEBUG,"processing zero " << node->output_factor);
+
+    vhdl << tab << declare(generateSignalName(node->output_factor,node->stage),wIn) << " <= (others => '0');" << endl;
 
   }
 
@@ -1017,12 +1038,6 @@ namespace flopoco {
     //SCM by 7, but swapped inputs such that the first input is negative (check for problems with unsigned input):
     graphsUnsigned.push_back("{{'A',[7],1,[-1],0,0,[1],0,3},{'O',[7],1,[7],1,0}}");
 
-    //Simple SCM with negative result -7:
-    graphsSigned.push_back("{{'A',[-7],1,[1],0,0,[-1],0,3},{'O',[-7],1,[-7],1,0}}");
-
-    //Simple SCM with negative result -9 and both inputs negative:
-    graphsSigned.push_back("{{'A',[-9],1,[-1],0,0,[-1],0,3},{'O',[-9],1,[-9],1,0}}");
-
 		//SCM by 123, obtained from rpag 123:
 		graphsUnsigned.push_back("{{'R',[1],1,[1],0},{'A',[5],1,[1],0,0,[1],0,2},{'A',[123],2,[1],1,7,[-5],1,0},{'O',[123],2,[123],2,0}}");
 
@@ -1061,11 +1076,26 @@ namespace flopoco {
 		graphsUnsigned.push_back("{{'R',[1],1,[1],0},{'A',[3],3,[1],0,0,[1],1,1},{'O',[6],5,[3],3,1}}");
 
 
-    //adder graph having negative outputs (can be only evaluated for signed):
+    //adder graphs having negative outputs (can be only evaluated for signed):
+
+
+    //Simple SCM with negative coefficient -7:
 		graphsSigned.push_back("{{'A',[-7],1,[-1],0,3,[1],0,0},{'O',[-7],1,[-7],1,0}}");
+
+    //Another simple SCM with negative coefficient -7 and swapped inputs:
+    graphsSigned.push_back("{{'A',[-7],1,[1],0,0,[-1],0,3},{'O',[-7],1,[-7],1,0}}");
 
     //adder graph having a non-common order of nodes (output first):
 		graphsSigned.push_back("{{'O',[-7],1,[-7],1,0},{'A',[-7],1,[-1],0,3,[1],0,0}}");
+
+    //Simple SCM with negative coefficient -9 and both inputs negative:
+    graphsSigned.push_back("{{'A',[-9],1,[-1],0,0,[-1],0,3},{'O',[-9],1,[-9],1,0}}");
+
+    //Simple SCM with negative coefficient -7 computed from constant 0 (not optimal):
+    graphsSigned.push_back("{{'A',[7],1,[1],0,3,[-1],0,0},{'A',[-7],2,[0],0,0,[-7],1,0},{'O',[-7],2,[-7],2,0}}");
+
+    //Simple MCM with negative coefficients -5 and -7 computed from constant 0 (not optimal):
+    graphsSigned.push_back("{{'A',[7],1,[1],0,3,[-1],0,0},{'A',[5],1,[1],0,0,[1],0,2},{'A',[-7],2,[0],0,0,[-7],1,0},{'A',[-5],2,[0],0,0,[-5],1,0},{'O',[-7],2,[-7],2,0},{'O',[-5],2,[-5],2,0}}");
 
 		//CMM of 123*x1+321*x2 345*x1-543*x2, obtained from rpag --cmm 123,321 345,-543:
 		graphsSigned.push_back("{{'A',[0,5],1,[0,1],0,0,[0,1],0,2},{'A',[0,17],1,[0,1],0,0,[0,1],0,4},{'A',[5,0],1,[1,0],0,0,[1,0],0,2},{'A',[128,1],1,[0,1],0,0,[1,0],0,7},{'A',[257,0],1,[1,0],0,0,[1,0],0,8},{'R',[0,5],2,[0,5],1},{'A',[5,68],2,[0,17],1,2,[5,0],1,0},{'A',[123,1],2,[128,1],1,0,[-5,0],1,0},{'A',[385,1],2,[128,1],1,0,[257,0],1,0},{'A',[123,321],3,[0,5],2,6,[123,1],2,0},{'A',[345,-543],3,[385,1],2,0,[-5,-68],2,3},{'O',[123,321],3,[123,321],3,0},{'O',[345,-543],3,[345,-543],3,0}}");
