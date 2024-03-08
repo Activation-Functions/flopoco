@@ -48,7 +48,7 @@ namespace flopoco {
 	    Operator* parentOp,
 	    Target* target,
 	    int wIn_,
-	    string adder_graph_str,
+	    string graphStr,
       bool isSigned,
 	    int epsilon_,
 	    string truncations
@@ -63,18 +63,34 @@ namespace flopoco {
 		name << "IntConstMultShiftAdd_" << wIn;
 		setNameWithFreqAndUID(name.str());
 
-    if(adder_graph_str.empty()) return; //in case the realization string is not defined, don't further process it.
+    if(graphStr.empty()) return; //in case the realization string is not defined, don't further process it.
 
-    ProcessIntConstMultShiftAdd(target,adder_graph_str,truncations,epsilon_);
+    if(graphStr.substr(graphStr.length() - 3, 3) == ".ag")
+    {
+      REPORT(DETAIL,"reading adder graphStr from file " << graphStr);
+      ifstream file(graphStr, ios::in);
+
+      if(!file.is_open())
+      {
+        THROWERROR("failed to open file " << graphStr);
+      }
+      else
+      {
+        getline(file, graphStr); //overwrite filename with the actual graph string
+        file.close();
+      }
+    }
+
+    ProcessIntConstMultShiftAdd(target, graphStr, truncations, epsilon_);
   };
 
-  void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(Target* target, string adder_graph_str, string truncations, int epsilon)
+  void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(Target* target, string graphStr, string truncations, int epsilon)
   {
-    if(adder_graph_str.empty()) return; //in case the realization string is not defined, don't further process it.
+    if(graphStr.empty()) return; //in case the realization string is not defined, don't further process it.
 
     useNumericStd();
 
-    REPORT(DEBUG,"reading adder_graph_str=" << adder_graph_str);
+    REPORT(DETAIL,"reading adder graph=" << graphStr);
 
     if(is_log_lvl_enabled(LogLevel::DEBUG))
       adder_graph.quiet = false; //enable debug output
@@ -82,11 +98,15 @@ namespace flopoco {
       adder_graph.quiet = true; //disable debug output, except errors
 
     REPORT(LogLevel::VERBOSE, "parse graph...")
-    bool validParse = adder_graph.parse_to_graph(adder_graph_str);
+    bool validParse = adder_graph.parse_to_graph(graphStr);
 
-    cout  << endl << "-----------------------------------"  << endl;
-    adder_graph.print_graph();
-    cout  << endl << "-----------------------------------"  << endl;
+    if(is_log_lvl_enabled(LogLevel::DEBUG))
+    {
+      cout  << endl << "-----------------------------------"  << endl;
+      cout  << endl << "Detailed adder graph:"  << endl;
+      adder_graph.print_graph();
+      cout  << endl << "-----------------------------------"  << endl;
+    }
 
     adder_graph.check_and_correct();
 //    adder_graph.normalize_graph(); //normalize corrects order of signs such that an adder's first input is always positive (if possible)
@@ -1351,7 +1371,7 @@ namespace flopoco {
 	    "ConstMultDiv", // category, from the list defined in UserInterface.cpp
 	    "",
 	    "wIn(int): Wordsize of pag inputs; \
-       graph(string): Realization string of the adder graph; \
+       graph(string): Adder graph description (see PAGSuite project) as string or as text file with file extension \".ag\"; \
        signed(bool)=true: signedness of input and output; \
        epsilon(int)=0: Allowable error for truncated constant multipliers; \
        truncations(string)=\"\": provides the truncations for intermediate values (format: const1,stage:trunc_input_0,trunc_input_1,...|const2,stage:trunc_input_0,trunc_input_1,...)",""};
