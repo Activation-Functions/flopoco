@@ -25,7 +25,7 @@ namespace flopoco
       Operator *parentOp,
       Target *target,
       int wIn_,
-      string adder_graph_str,
+      string graphStr,
       bool isSigned = true,
       int epsilon_ = 0,
       string truncations = ""
@@ -64,7 +64,7 @@ namespace flopoco
 //    bool RPAGused;
 //    int emu_conf;
 
-    void ProcessIntConstMultShiftAdd(Target* target, string adder_graph_str, string truncations="", int epsilon=0);
+    void ProcessIntConstMultShiftAdd(Target* target, string graphStr, string truncations="", int epsilon=0);
 
     void parseTruncation(string truncationList);
     void parseTruncationRecord(string record);
