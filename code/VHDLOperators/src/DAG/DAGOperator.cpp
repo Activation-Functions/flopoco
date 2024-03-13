@@ -126,8 +126,12 @@ Comment         <- < '#' [^\n]* '\n' >
 			return  vs.token_to_string();
 		};
 
-		DAGparser["String"] = [](const peg::SemanticValues &vs) { 
-			return  vs.token_to_string(); // 
+		DAGparser["String"] = [](const peg::SemanticValues &vs) {
+			// cerr << "found string " << vs.token_to_string();
+			string s=vs.token_to_string();
+			string ss = s.substr(1,s.length()-2); //
+			// cerr << " string cut to " << ss << endl;
+			return ss;
 		};
 
 		DAGparser["Integer"] = [](const peg::SemanticValues &vs) { 
