@@ -15,6 +15,7 @@
 */
 
 #include "flopoco/FixFunctions/FixFunction.hpp"
+#include <cstdio>
 #include <sstream>
 
 namespace flopoco{
@@ -74,16 +75,50 @@ void	FixFunction::initialize()
 		uselessNoise << "[" << (signedIn?"-1":"0") << ";" << maxvalIn << "]";
 		inputRangeS = sollya_lib_parse_string(uselessNoise.str().c_str());
 #endif
-		
-		sollya_obj_t outIntervalS = sollya_lib_evaluate(fS,inputRangeS);
-		sollya_obj_t supS = sollya_lib_sup(outIntervalS);
-		sollya_obj_t infS = sollya_lib_inf(outIntervalS);
+		sollya_obj_t outIntervalS, supS, infS;
 		mpfr_t supMP, infMP, tmp;
 		mpfr_init2(supMP, 1000); // no big deal if we are not accurate here 
 		mpfr_init2(infMP, 1000); // no big deal if we are not accurate here 
 		mpfr_init2(tmp, 1000); // no big deal if we are not accurate here 
-		sollya_lib_get_constant(supMP, supS);
-		sollya_lib_get_constant(infMP, infS);
+
+		// TODO: Use a more intelligent method for this, using the zeroes of the derivative
+		if (wIn < 17) {
+			// Compute exhaustively the values taken by the function
+			mpfr_t x, delta, r;
+			mpfr_inits2(wIn, x, delta, NULL);
+			mpfr_init2(r, 1000);
+			mpfr_set_d(x, signedIn ? -1.0 : 0.0, MPFR_RNDN);
+
+			// delta = 2^lsbIn
+			mpfr_set_d(delta, lsbIn, MPFR_RNDN);
+			mpfr_exp2(delta, delta, MPFR_RNDN);
+
+			// Initialize the bounds
+			mpfr_set_inf(supMP, -1);
+			mpfr_set_inf(infMP, +1);
+
+			// Loop
+			while (mpfr_cmp_d(x, 1.0) < 0) {
+				sollya_lib_evaluate_function_at_point(r, fS, x, NULL);
+				mpfr_max(supMP, supMP, r, MPFR_RNDU);
+				mpfr_min(infMP, infMP, r, MPFR_RNDD);
+
+				mpfr_add(x, x, delta, MPFR_RNDN);
+			}
+		} else {
+			std::cerr << "Warning: the input width is greater than 16, a less precise algorithm will be used to determine the minimal output width.\n";
+
+			outIntervalS = sollya_lib_evaluate(fS,inputRangeS);
+			supS = sollya_lib_sup(outIntervalS);
+			infS = sollya_lib_inf(outIntervalS);
+			sollya_lib_get_constant(supMP, supS);
+			sollya_lib_get_constant(infMP, infS);
+
+			sollya_lib_clear_obj(supS);
+			sollya_lib_clear_obj(infS);
+			sollya_lib_clear_obj(outIntervalS);
+		}
+
 		if(mpfr_sgn(infMP) >= 0)	{
 			signedOut=false;
 			}
@@ -106,9 +141,6 @@ void	FixFunction::initialize()
 		t << ". Output is " << (signedOut?"signed":"unsigned");
 		outputDescription=t.str();
 
-		sollya_lib_clear_obj(outIntervalS);
-		sollya_lib_clear_obj(supS);
-		sollya_lib_clear_obj(infS);
  		mpfr_clears(supMP,infMP,tmp, NULL);
 
 		wOut=msbOut-lsbOut+1;
