@@ -38,3 +38,6 @@ doc/flopoco_developer_manual/flopoco_developer_manual.blg
 
 #tata
 fftest
+.cache/clangd/index
+.direnv
+build
