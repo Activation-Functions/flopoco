@@ -1,8 +1,8 @@
 /*
-  
+
   This file is part of the FloPoCo project
   developed by the Arenaire team at Ecole Normale Superieure de Lyon
-  
+
   Author : Florent de Dinechin, Florent.de-Dinechin@insa-lyon.fr
 
   Initial software.
@@ -13,35 +13,33 @@
 */
 #pragma once
 
-#include <vector>
-#include <sstream>
-
+#include "flopoco/FixFunctions/FixFunction.hpp"
 #include "flopoco/Operator.hpp"
 
-namespace flopoco{
+#include <vector>
 
-	/** A generator of Simple Neural Actication Function Units (SNAFU) 
+namespace flopoco
+{
+
+  /** A generator of Simple Neural Actication Function Units (SNAFU)
 			without reinventing the wheel
 	*/
 
-  class SNAFU : public Operator
-  {
-  public:
-		
-		SNAFU(OperatorPtr parentOp, Target* target,   string f, int wIn, int wOut, string method, double inputScale, int adhocCompression);
-		
-		void emulate(TestCase* tc);
-	
-		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
+  class SNAFU : public Operator {
+    public:
+    SNAFU(OperatorPtr parentOp, Target* target, string f, int wIn, int wOut, string method, double inputScale, int adhocCompression);
 
-	private:
-		int wIn;
-		int wOut;
-		double inputScale;
-		int adhocCompression;
-		string fl, method; // The lowercased versions of fIn and methodIn
-		string sollyaDeltaFunction; // when we use range reduction
-		FixFunction *f;
-	};
-	
-}
+    void emulate(TestCase* tc);
+
+    static OperatorPtr parseArguments(OperatorPtr parentOp, Target* target, vector<string>& args, UserInterface& ui);
+    private:
+    int wIn;
+    int wOut;
+    double inputScale;
+    int adhocCompression;
+    string fl, method;           // The lowercased versions of fIn and methodIn
+    string sollyaDeltaFunction;  // when we use range reduction
+    FixFunction* f;
+  };
+
+}  // namespace flopoco

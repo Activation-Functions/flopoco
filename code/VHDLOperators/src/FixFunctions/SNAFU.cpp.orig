@@ -161,6 +161,35 @@ namespace flopoco
     }
 
 
+<<<<<<< HEAD
+		// if necessary scale the output so the value 1 is never reached
+		if(needsSlightRescale) {
+			lsbOut = -wOut +(signedOutput?1:0);
+			sollyaFunction = "(1-1b"+to_string(lsbOut)+")*("+sollyaFunction+")";
+			sollyaReLU = "(1-1b"+to_string(lsbOut)+")*("+sollyaReLU+")";
+		}
+		else if (reluVariant) {
+			lsbOut = -wOut + sizeInBits(inputScale);
+		}
+		else {
+			throw(string("unable to set lsbOut"));
+		}
+		const bool signedIn=true;
+||||||| parent of a0cfd34a (chore(snafu): Format existing code)
+		// if necessary scale the output so the value 1 is never reached
+		if(needsSlightRescale) {
+			lsbOut = -wOut +(signedOutput?1:0);
+			sollyaFunction = "(1-1b"+to_string(lsbOut)+")*("+sollyaFunction+")";
+			sollyaReLU = "(1-1b"+to_string(lsbOut)+")*("+sollyaReLU+")";
+		}
+		else if (reluVariant) {
+			lsbOut = -wOut + intlog2(inputScale);
+		}
+		else {
+			throw(string("unable to set lsbOut"));
+		}
+		const bool signedIn=true;
+=======
     // if necessary scale the output so the value 1 is never reached
     if(needsSlightRescale) {
       lsbOut = -wOut + (signedOutput ? 1 : 0);
@@ -172,6 +201,7 @@ namespace flopoco
       throw(string("unable to set lsbOut"));
     }
     const bool signedIn = true;
+>>>>>>> a0cfd34a (chore(snafu): Format existing code)
 
     // Only then we may define the delta function
     if(adhocCompression) {
