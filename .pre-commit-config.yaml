@@ -6,7 +6,7 @@ repos:
         language: "system"
         always_run: false
         entry: "clang-format -style=file -i"
-        exclude: "^$"
+        exclude: "(^(Attic|build)/.*$)|(CMakeFiles)"
         fail_fast: false
         files: ""
         pass_filenames: true
@@ -14,4 +14,4 @@ repos:
         stages: ["commit"]
         types: ["file"]
         types_or: ["c", "c++"]
-        verbose: false
+        verbose: true
