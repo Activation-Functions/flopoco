@@ -98,15 +98,47 @@ namespace flopoco
   };
 
 
+  enum Method { PlainTable, MultiPartite, Horner2, Horner3, PiecewiseHorner2, PiecewiseHorner3, Auto };
+  static const map<string, Method> methodMap = {
+    {"plaintable", PlainTable},
+    {"multipartite", MultiPartite},
+    {"horner2", Horner2},
+    {"horner3", Horner3},
+    {"piecewisehorner2", PiecewiseHorner2},
+    {"piecewisehorner3", PiecewiseHorner3},
+    {"auto", Auto},
+  };
+
+  static inline const string methodOperator(Method m)
+  {
+    switch(m) {
+    case PlainTable:
+      return "FixFunctionByTable";
+    case MultiPartite:
+      return "FixFunctionByMultipartiteTable";
+    case Horner2:
+    case Horner3:
+      return "FixFunctionBySimplePoly";
+    case PiecewiseHorner2:
+    case PiecewiseHorner3:
+      return "FixFunctionByPiecewisePoly";
+    default:
+      throw("Unsupported method.");
+    };
+  };
+
+  static const Method defaultMethod = PlainTable;
+
   SNAFU::SNAFU(OperatorPtr parentOp_, Target* target_, string fIn, int wIn_, int wOut_, string methodIn, double inputScale_, int adhocCompression_)
       : Operator(parentOp_, target_), wIn(wIn_), wOut(wOut_), inputScale(inputScale_), adhocCompression(adhocCompression_)
   {
     if(inputScale <= 0) {
       throw(string("inputScale should be strictly positive"));
     }
+
     OperatorPtr op;
     string fl = toLowerCase(fIn);
-    string method = toLowerCase(methodIn);
+    Method method = methodMap.at(toLowerCase(methodIn));
 
 
     auto af = activationFunction[fl];
@@ -178,17 +210,18 @@ namespace flopoco
       sollyaDeltaFunction = "(" + sollyaReLU + ")-(" + sollyaFunction + ")";
     }
 
-
-    if(method == "auto") {  // means "please choose for me"
+    // means "please choose for me"
+    if(method == Auto) {
       // TODO a complex sequence of if then else once the experiments are done
-      method = "plaintable";
+      method = PlainTable;
     }
 
     REPORT(LogLevel::MESSAGE,
       "Function after pre-processing: " << functionDescription << " evaluated on [-1,1)" << endl
                                         << " wIn=" << wIn << " translates to lsbIn=" << lsbIn << endl
                                         << " wOut=" << wOut << " translates to lsbOut=" << lsbOut);
-    REPORT(LogLevel::MESSAGE, "Method is " << method);
+    REPORT(LogLevel::MESSAGE, "Method is " << methodIn);
+
     if(adhocCompression) {
       REPORT(LogLevel::MESSAGE,
         "To plot the function with its delta function, copy-paste the following lines in Sollya" << endl
@@ -219,10 +252,11 @@ namespace flopoco
     addOutput("Y", wOut);
 
     if(!adhocCompression) {
-      if(method == "plaintable") {
+      switch(method) {
+      case PlainTable: {
         addComment("This function is correctly rounded");
         string paramString = "f=" + sollyaFunction + join(" lsbIn=", lsbIn) + join(" lsbOut=", lsbOut) + " signedIn=true";
-        OperatorPtr op = newInstance("FixFunctionByTable", functionName + "_Table", paramString, "X=>X", "Y=>TableOut");
+        OperatorPtr op = newInstance(methodOperator(method), functionName + "_Table", paramString, "X=>X", "Y=>TableOut");
         correctlyRounded = true;
         vhdl << tab << "Y <= TableOut ;" << endl;
         // sanity check
@@ -236,11 +270,15 @@ namespace flopoco
             "Something went wrong, operator output size is  " << w << " instead of the requested wOut=" << wOut << endl
                                                               << "Attempting to proceed nevertheless.");
         }
-
-      } else {
-        throw(string("Method: ") + method + " currently unsupported");
+        break;
       }
-    } else {  ///////////////// Ad-hoc compresssion
+      default:
+        throw(string("Method: ") + methodIn + " currently unsupported");
+        break;
+      };
+    } else {
+      ///////////////// Ad-hoc compresssion
+
       // we have already tested that before and printed out something
       // if (!reluVariant) {
       // 	throw(string("Function ")+ fIn + " is not a ReLU variant, it doesn't make sense to apply adhocCompression");
