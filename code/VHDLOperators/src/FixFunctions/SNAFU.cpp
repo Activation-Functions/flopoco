@@ -286,6 +286,13 @@ namespace flopoco
       if(wIn != wOut) {
         throw(string("Too lazy so far to support wIn<>wOut in case of ad-hoc compression "));
       };
+
+      if(fl == "relu") {
+        // Special case for ReLU
+        vhdl << tab << "Y <= " << zg(wOut) << " when X" << of(wIn - 1) << "='1'   else '0' & X" << range(wIn - 2, 0) << ";" << endl;
+        return;
+      }
+
       vhdl << tab << declare("ReLU", wOut) << " <= " << zg(wOut) << " when X" << of(wIn - 1) << "='1'   else '0' & X" << range(wIn - 2, 0) << ";"
            << endl;
       string paramString = "f=" + sollyaDeltaFunction + join(" lsbIn=", lsbIn) + join(" lsbOut=", lsbOut) + " signedIn=false";
