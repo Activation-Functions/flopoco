@@ -1,21 +1,21 @@
 #ifndef FixFunctionBySimplePoly_HPP
 #define FixFunctionBySimplePoly_HPP
-#include <vector>
 
-#include "flopoco/InterfacedOperator.hpp"
-#include "flopoco/Operator.hpp"
-#include "flopoco/FixFunctions/FixFunction.hpp"
 #include "flopoco/FixFunctions/BasicPolyApprox.hpp"
+#include "flopoco/FixFunctions/FixFunction.hpp"
+#include "flopoco/Operator.hpp"
 #include "flopoco/UserInterface.hpp"
 
-namespace flopoco{
+#include <vector>
+
+namespace flopoco
+{
 
 
-	/** The FixFunctionBySimplePoly class */
-	class FixFunctionBySimplePoly : public Operator
-	{
-	public:
-		/**
+  /** The FixFunctionBySimplePoly class */
+  class FixFunctionBySimplePoly : public Operator {
+    public:
+    /**
 		 * The FixFunctionBySimplePoly constructor
 			 @param[string] func    a string representing the function, input range should be [0,1]
 			 @param[int]    lsbIn   input LSB weight
@@ -29,31 +29,30 @@ namespace flopoco{
 			 This would require quite a lot of work for non-trivial functions (isolating roots of the derivative etc).
 			 So this is currently left to the user.
 		 */
-		FixFunctionBySimplePoly(OperatorPtr parentOp, Target* target, string func, bool signedIn, int lsbIn, int lsbOut, bool finalRounding = true);
+    FixFunctionBySimplePoly(OperatorPtr parentOp, Target* target, string func, bool signedIn, int lsbIn, int lsbOut, bool finalRounding = true);
 
-		/**
+    /**
 		 * FixFunctionBySimplePoly destructor
 		 */
-		~FixFunctionBySimplePoly();
+    ~FixFunctionBySimplePoly();
 
-		void emulate(TestCase * tc);
+    void emulate(TestCase* tc);
 
-		void buildStandardTestCases(TestCaseList* tcl);
+    void buildStandardTestCases(TestCaseList* tcl);
 
-		static TestList unitTest(int testLevel);
+    static TestList unitTest(int testLevel);
 
-		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
+    static OperatorPtr parseArguments(OperatorPtr parentOp, Target* target, vector<string>& args, UserInterface& ui);
+    private:
+    FixFunction* f;
+    BasicPolyApprox* poly;
+    bool finalRounding;
 
-	private:
-		FixFunction *f;
-		BasicPolyApprox *poly;
-		bool finalRounding;
+    vector<int> coeffMSB;
+    vector<int> coeffLSB;
+    vector<int> coeffSize;
+  };
 
-		vector<int> coeffMSB;
-		vector<int> coeffLSB;
-		vector<int> coeffSize;
-	};
-
-}
+}  // namespace flopoco
 
 #endif
