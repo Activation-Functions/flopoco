@@ -25,6 +25,15 @@ using namespace std;
 #define LARGE_PREC 1000  // 1000 bits should be enough for everybody
 
 
+// Mux definition for the ReLU
+static inline const string relu(int wIn, int wOut)
+{
+  std::ostringstream s;
+  s << zg(wOut) << " when X" << of(wIn - 1) << "='1'   else '0' & X" << range(wIn - 2, 0) << ";" << endl;
+
+  return s.str();
+}
+
 namespace flopoco
 {
 
@@ -289,12 +298,11 @@ namespace flopoco
 
       if(fl == "relu") {
         // Special case for ReLU
-        vhdl << tab << "Y <= " << zg(wOut) << " when X" << of(wIn - 1) << "='1'   else '0' & X" << range(wIn - 2, 0) << ";" << endl;
+        vhdl << tab << "Y <= " << relu(wIn, wOut);
         return;
       }
 
-      vhdl << tab << declare("ReLU", wOut) << " <= " << zg(wOut) << " when X" << of(wIn - 1) << "='1'   else '0' & X" << range(wIn - 2, 0) << ";"
-           << endl;
+      vhdl << tab << declare("ReLU", wOut) << " <= " << relu(wIn, wOut);
       string paramString = "f=" + sollyaDeltaFunction + join(" lsbIn=", lsbIn) + join(" lsbOut=", lsbOut) + " signedIn=false";
       //				cerr << "************  " << paramString << endl;
       OperatorPtr op = newInstance("FixFunctionByTable", functionName + "_deltaTable", paramString, "X=>X", "Y=>TableOut");
