@@ -55,7 +55,7 @@ namespace flopoco
     bool reluVariant;
   };
 
-  static map<string, ActivationFunctionData> activationFunction = {
+  static const map<string, ActivationFunctionData> activationFunction = {
     // two annoyances below:
     // 1/ we are not allowed spaces because it would mess the argument parser. Silly
     // 2/ no if then else in sollya, so we emulate with the quasi-threshold function 1/(1+exp(-1b256*X))
@@ -84,7 +84,7 @@ namespace flopoco
         "X/(1+exp(-1b256*X))",  // Here we use a quasi-threshold function
         false,                  // output unsigned
         false,                  // output does not need rescaling -- TODO if win>wout it probably does
-        true                    // ReLU variant
+        false                   // ReLU variant
       }},
     {"elu",
       {
@@ -157,16 +157,14 @@ namespace flopoco
     Method method = methodMap.at(toLowerCase(methodIn));
 
 
-    auto af = activationFunction[fl];
+    auto af = activationFunction.at(fl);
     string sollyaFunction = af.sollyaString;
     string functionName = af.stdShortName;
     string functionDescription = af.fullDescription;
     bool signedOutput = af.signedOutput;
     bool needsSlightRescale = af.needsSlightRescale;  // for output range efficiency of functions that touch 1
-    bool reluVariant = af.reluVariant;
 
-    auto reluf = activationFunction["relu"];
-    string sollyaReLU = reluf.sollyaString;
+    string sollyaReLU = activationFunction.at("relu").sollyaString;
 
     //determine the LSB of the input and output
     int lsbIn = -(wIn - 1);  // -1 for the sign bit
@@ -203,7 +201,7 @@ namespace flopoco
       lsbOut = -wOut + (signedOutput ? 1 : 0);
       sollyaFunction = "(1-1b" + to_string(lsbOut) + ")*(" + sollyaFunction + ")";
       sollyaReLU = "(1-1b" + to_string(lsbOut) + ")*(" + sollyaReLU + ")";
-    } else if(reluVariant) {
+    } else if(af.reluVariant) {
       lsbOut = -wOut + intlog2(inputScale);
     } else {
       throw(string("unable to set lsbOut"));
