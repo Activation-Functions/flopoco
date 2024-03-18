@@ -152,10 +152,15 @@ namespace flopoco
       throw(string("inputScale should be strictly positive"));
     }
 
-    OperatorPtr op;
     string fl = toLowerCase(fIn);
-    Method method = methodMap.at(toLowerCase(methodIn));
+    Method method;
+    try {
+      method = methodMap.at(to_lowercase(methodIn));
+    } catch(const std::out_of_range&) {
+      throw("the method '" + methodIn + "' is unknown");
+    }
 
+    string* function;  // Points to the function we need to approximate
 
     auto af = activationFunction.at(fl);
     string sollyaFunction = af.sollyaString;
@@ -174,9 +179,10 @@ namespace flopoco
     ///////// Ad-hoc compression consists, in the ReLU variants, to subtract ReLU
     if(1 == adhocCompression && !af.reluVariant) {  // the user asked to compress a function that is not ReLU-like
       REPORT(LogLevel::MESSAGE,
-        " ??????? You asked for the compression of " << functionDescription << " which is not a ReLU-like" << endl
-                                                     << " ??????? I will try but I am doubtful about the result." << endl
-                                                     << " Proceeeding nevertheless..." << lsbOut);
+        ""
+          << " ??????? You asked for the compression of " << functionDescription << " which is not a ReLU-like" << endl
+          << " ??????? I will try but I am doubtful about the result." << endl
+          << " Proceeeding nevertheless..." << lsbOut);
     }
 
     if(-1 == adhocCompression) {  // means "automatic" and it is the default
@@ -198,7 +204,7 @@ namespace flopoco
 
     // if necessary scale the output so the value 1 is never reached
     if(needsSlightRescale) {
-      lsbOut = -wOut + (signedOutput ? 1 : 0);
+      lsbOut = -wOut + signedOutput;
       sollyaFunction = "(1-1b" + to_string(lsbOut) + ")*(" + sollyaFunction + ")";
       sollyaReLU = "(1-1b" + to_string(lsbOut) + ")*(" + sollyaReLU + ")";
     } else if(af.reluVariant) {
@@ -206,11 +212,16 @@ namespace flopoco
     } else {
       throw(string("unable to set lsbOut"));
     }
-    const bool signedIn = true;
+
+    bool signedIn = true;
 
     // Only then we may define the delta function
     if(adhocCompression) {
       sollyaDeltaFunction = "(" + sollyaReLU + ")-(" + sollyaFunction + ")";
+      function = &sollyaDeltaFunction;
+      signedIn = false;  // We can exploit symetry on all the delta functions
+    } else {
+      function = &sollyaFunction;
     }
 
     // means "please choose for me"
@@ -254,57 +265,78 @@ namespace flopoco
     addInput("X", wIn);
     addOutput("Y", wOut);
 
-    if(!adhocCompression) {
-      switch(method) {
-      case PlainTable: {
-        addComment("This function is correctly rounded");
-        string paramString = "f=" + sollyaFunction + join(" lsbIn=", lsbIn) + join(" lsbOut=", lsbOut) + " signedIn=true";
-        OperatorPtr op = newInstance(methodOperator(method), functionName + "_Table", paramString, "X=>X", "Y=>TableOut");
-        correctlyRounded = true;
-        vhdl << tab << "Y <= TableOut ;" << endl;
-        // sanity check
-        if(int w = op->getSignalByName("X")->width() != wIn) {
-          REPORT(LogLevel::MESSAGE,
-            "Something went wrong, operator input size is  " << w << " instead of the requested wIn=" << wIn << endl
-                                                             << "Attempting to proceed nevertheless.");
-        }
-        if(int w = op->getSignalByName("Y")->width() != wOut) {
-          REPORT(LogLevel::MESSAGE,
-            "Something went wrong, operator output size is  " << w << " instead of the requested wOut=" << wOut << endl
-                                                              << "Attempting to proceed nevertheless.");
-        }
-        break;
-      }
-      default:
-        throw(string("Method: ") + methodIn + " currently unsupported");
-        break;
-      };
-    } else {
-      ///////////////// Ad-hoc compresssion
+    if(fl == "relu") {
+      // Special case for ReLU
+      // TODO: Take into account rounding if necessary
+      vhdl << tab << "Y <= " << relu(wIn, wOut);
+      return;
+    }
 
-      // we have already tested that before and printed out something
-      // if (!reluVariant) {
-      // 	throw(string("Function ")+ fIn + " is not a ReLU variant, it doesn't make sense to apply adhocCompression");
-      // }
+    // Base parameters
+    string paramString = join("f=", *function) + join(" lsbIn=", lsbIn) + join(" lsbOut=", lsbOut) + join(" signedIn=", signedIn);
+
+    if(adhocCompression) {
       if(wIn != wOut) {
         throw(string("Too lazy so far to support wIn<>wOut in case of ad-hoc compression "));
       };
 
-      if(fl == "relu") {
-        // Special case for ReLU
-        vhdl << tab << "Y <= " << relu(wIn, wOut);
-        return;
-      }
-
       vhdl << tab << declare("ReLU", wOut) << " <= " << relu(wIn, wOut);
-      string paramString = "f=" + sollyaDeltaFunction + join(" lsbIn=", lsbIn) + join(" lsbOut=", lsbOut) + " signedIn=false";
-      //				cerr << "************  " << paramString << endl;
-      OperatorPtr op = newInstance("FixFunctionByTable", functionName + "_deltaTable", paramString, "X=>X", "Y=>TableOut");
-      // if all went well TableOut should have fewer bits so need to be padded with zeroes
-      // we do that the flopoco way, not the clever VHDL way
-      int tableOutSize = getSignalByName("TableOut")->width();
-      vhdl << tab << declare("F", wOut) << " <= ReLU - (" << zg(wOut - tableOutSize) << " & TableOut);" << endl;
-      vhdl << tab << "Y <= F ;" << endl;
+    }
+
+    switch(method) {
+    case PlainTable: {
+      addComment("This function is correctly rounded");
+      correctlyRounded = true;
+      break;
+    }
+    /* case MultiPartite: {
+        string paramString = "f=" + sollyaFunction + join(" lsbIn=", lsbIn) + join(" lsbOut=", lsbOut) + " signedIn=false";
+        OperatorPtr op = newInstance(methodOperator(method), functionName + "_Table", paramString, "X=>X", "Y=>TableOut");
+        vhdl << tab << "Y <= TableOut ;" << endl;
+        break;
+      } */
+    case Horner: {
+      break;
+    }
+    case PiecewiseHorner2: {
+      paramString += " d=2";
+      break;
+    }
+    case PiecewiseHorner3: {
+      paramString += " d=3";
+      break;
+    }
+    default:
+      throw(string("Method: ") + methodIn + " currently unsupported");
+      break;
+    };
+
+    OperatorPtr op = newInstance(methodOperator(method),
+      functionName + (adhocCompression ? "_delta_SNAFU" : "_SNAFU"),
+      paramString,
+      "X=>X",
+      adhocCompression ? "Y => D" : "Y=> F");
+
+    if(adhocCompression) {
+      // Reconstruct the function
+      int deltaOutSize = getSignalByName("D")->width();
+      // if all went well deltaOut should have fewer bits so we need to pad with zeroes
+      vhdl << tab << declare("F", wOut) << " <= ReLU - (" << zg(wOut - deltaOutSize) << " & D);" << endl;
+    }
+
+    vhdl << tab << "Y <= F;" << endl;
+
+    // sanity check
+    if(int w = op->getSignalByName("X")->width() != wIn) {
+      REPORT(LogLevel::MESSAGE,
+        "Something went wrong, operator input size is  " << w << " instead of the requested wIn=" << wIn << endl
+                                                         << "Attempting to proceed nevertheless.");
+    }
+
+    if(int w = op->getSignalByName("Y")->width() != wOut) {
+      REPORT(LogLevel::MESSAGE,
+        "Something went wrong, operator output size is  " << w << " instead of the requested wOut=" << wOut << endl
+                                                          << "Attempting to proceed nevertheless.");
     }
   }
 
