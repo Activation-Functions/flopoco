@@ -322,22 +322,22 @@ namespace flopoco
       int deltaOutSize = getSignalByName("D")->width();
       // if all went well deltaOut should have fewer bits so we need to pad with zeroes
       vhdl << tab << declare("F", wOut) << " <= ReLU - (" << zg(wOut - deltaOutSize) << " & D);" << endl;
+    } else {
+      // sanity check
+      if(int w = op->getSignalByName("X")->width() != wIn) {
+        REPORT(LogLevel::MESSAGE,
+          "Something went wrong, operator input size is  " << w << " instead of the requested wIn=" << wIn << endl
+                                                           << "Attempting to proceed nevertheless.");
+      }
+
+      if(int w = op->getSignalByName("Y")->width() != wOut) {
+        REPORT(LogLevel::MESSAGE,
+          "Something went wrong, operator output size is  " << w << " instead of the requested wOut=" << wOut << endl
+                                                            << "Attempting to proceed nevertheless.");
+      }
     }
 
     vhdl << tab << "Y <= F;" << endl;
-
-    // sanity check
-    if(int w = op->getSignalByName("X")->width() != wIn) {
-      REPORT(LogLevel::MESSAGE,
-        "Something went wrong, operator input size is  " << w << " instead of the requested wIn=" << wIn << endl
-                                                         << "Attempting to proceed nevertheless.");
-    }
-
-    if(int w = op->getSignalByName("Y")->width() != wOut) {
-      REPORT(LogLevel::MESSAGE,
-        "Something went wrong, operator output size is  " << w << " instead of the requested wOut=" << wOut << endl
-                                                          << "Attempting to proceed nevertheless.");
-    }
   }
 
 
