@@ -346,8 +346,31 @@ namespace flopoco
   // 	}
   // #endif
 
+<<<<<<< HEAD
+	// How many bits does it take to write number ?
+	int sizeInBits(double number)
+	{
+		double po2 = 1.0; int result = 0;
+		while (po2 <= number) {
+			po2 *= 2;
+			result++;
+		}
+		return result;
+	}
+||||||| parent of b3a31ce7 (chore(HighLevelArithmetic/utils): Reformat)
+	// How many bits does it take to write number ?
+	int intlog2(double number)
+	{
+		double po2 = 1.0; int result = 0;
+		while (po2 <= number) {
+			po2 *= 2;
+			result++;
+		}
+		return result;
+	}
+=======
   // How many bits does it take to write number ?
-  int sizeInBits(double number)
+  int intlog2(double number)
   {
     double po2 = 1.0;
     int result = 0;
@@ -357,6 +380,7 @@ namespace flopoco
     }
     return result;
   }
+>>>>>>> b3a31ce7 (chore(HighLevelArithmetic/utils): Reformat)
 
   int intlog(mpz_class base, mpz_class number)
   {
@@ -369,17 +393,18 @@ namespace flopoco
     return result;
   }
 
-  int sizeInBits(mpz_class number)
-  {
-    if(number == 1) return 0;
-    mpz_class po2 = 1;
-    int result = 0;
-    while(po2 <= number) {
-      po2 *= 2;
-      result++;
-    }
-    return result;
-  }
+	int sizeInBits(mpz_class n)
+	{
+		if(n<0) {
+		 throw "sizeInBits: positive argument required";
+		}
+		int size=0;
+		while(n>0) {
+			n=n>>1;
+			size++;
+		}
+		return size;
+	}
 
   mpz_class popcnt(mpz_class number)
   {
