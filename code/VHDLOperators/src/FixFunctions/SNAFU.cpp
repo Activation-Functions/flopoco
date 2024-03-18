@@ -34,6 +34,15 @@ static inline const string relu(int wIn, int wOut)
   return s.str();
 }
 
+static inline string _replace(string s, const string x, const string r)
+{
+  size_t pos;
+  while((pos = s.find(x)) != string::npos) {
+    s.replace(pos, 1, r);
+  }
+  return s;
+}
+
 namespace flopoco
 {
 
@@ -184,23 +193,12 @@ namespace flopoco
     // scale the function by replacing X with (inputScale*x)
     // string replacement of "x" is dangerous because it may appear in the name of functions, so use @
     string replaceString = "(" + to_string(inputScale) + "*@)";
-    size_t pos;
-    while((pos = sollyaFunction.find("X")) != string::npos) {
-      sollyaFunction.replace(pos, 1, replaceString);
-    }
-    // then restore X
-    while((pos = sollyaFunction.find("@")) != string::npos) {
-      sollyaFunction.replace(pos, 1, "X");
-    }
+    sollyaFunction = _replace(sollyaFunction, "X", replaceString);
+    sollyaFunction = _replace(sollyaFunction, "@", "X");
 
     // do the same for the relu
-    while((pos = sollyaReLU.find("X")) != string::npos) {
-      sollyaReLU.replace(pos, 1, replaceString);
-    }
-    while((pos = sollyaReLU.find("@")) != string::npos) {
-      sollyaReLU.replace(pos, 1, "X");
-    }
-
+    sollyaReLU = _replace(sollyaReLU, "X", replaceString);
+    sollyaReLU = _replace(sollyaReLU, "@", "X");
 
     // if necessary scale the output so the value 1 is never reached
     if(needsSlightRescale) {
