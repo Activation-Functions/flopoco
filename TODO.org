@@ -1,51 +1,9 @@
 TODO file for FloPoCo
 
 * Move this file to TODO.md
+pandoc --atx-headers -s TODOs.org -o TODOs.md
 
 https://xkcd.com/844/
-* List of operators to port to the new pipeline framework
-	Remove an operator from the list below when it is done.
-THIS INCLUDES WRITING ITS AUTOTEST
-
-	IntConstMult: still need to 
-	1/ add the delays 
-	2/ resurrect IntConstMultRational (parseArgument etc)
-	3 fix the mult by 7 in 2 additions 
-
-	IntConstDiv: still need to
-	1/ add the delays 
-	2/ fix the bug that duplicates the tables
-
-
-		//FOR TEST PURPOSES ONLY
-		Table
-
-		IntSquarer
-
-		FPRealKCM
-		FPAddSub
-		FPAdd3Input
-		FPMult
-		//FPMultKaratsuba
-		FPSquare
-
-		FPLargeAcc
-		LargeAccToFP
-		FPDotProduct
-
-
-		FixRootRaisedCosine
-		add FixSinc? 
-
-		Complex/* (lots of cleanup)
-
-		UserDefinedOperator
-** ported but without autotest
-		Fix2FP
-		FP2Fix
-		FPConstMult
-		FPConstDiv
-		
 * Version 5 versus ASA book
 ** List of commands in the ASA book
 flopoco target=virtex6 XilinxTernaryAddSub wIn=16
@@ -105,6 +63,49 @@ flopoco frequency=200 FPAdd wE=8 wF=23 FPMult we=8 wf=23 FPDiv we=8 wf=23 FPSqrt
 flopoco IntConstDiv wIn=16 d=3 TestBench 
 flopoco FPAdd we=8 wf=23 TestBench n=100000
 flopoco frequency=400 FPAdd wE=8 wF=23 RegisterSandwich
+* List of operators to port to the new pipeline framework
+	Remove an operator from the list below when it is done.
+THIS INCLUDES WRITING ITS AUTOTEST
+
+	IntConstMult: still need to 
+	1/ add the delays 
+	2/ resurrect IntConstMultRational (parseArgument etc)
+	3 fix the mult by 7 in 2 additions 
+
+	IntConstDiv: still need to
+	1/ add the delays 
+	2/ fix the bug that duplicates the tables
+
+
+		//FOR TEST PURPOSES ONLY
+		Table
+
+		IntSquarer
+
+		FPRealKCM
+		FPAddSub
+		FPAdd3Input
+		FPMult
+		//FPMultKaratsuba
+		FPSquare
+
+		FPLargeAcc
+		LargeAccToFP
+		FPDotProduct
+
+
+		FixRootRaisedCosine
+		add FixSinc? 
+
+		Complex/* (lots of cleanup)
+
+		UserDefinedOperator
+** ported but without autotest
+		Fix2FP
+		FP2Fix
+		FPConstMult
+		FPConstDiv
+		
 ** TODO some day
 *** Resurrect and fuse CordicAtan2 and FixAtan2
 *** Resurrect Cordic2DNorm (or whatever it is called)
@@ -119,8 +120,9 @@ Problems:
 *** generic Hsiao compression could improve most table-based algorithms
 *** UniformPiecewisePolyApprox: we never try to give a0 more bits than the others. 
 *** Class hierarchy for FixFunctionApprox
-** FixSinCosPoly: use all the bit heaps that we advertize
-** FixSinCosPoly:  see comments in FixSinCos.cpp One optim for 24 bits would be to compute z² for free by a table using the second unused port of the blockram
+*** FixSinCosPoly: use all the bit heaps that we advertize
+*** FixSinCosPoly:  see comments in FixSinCos.cpp One optim for 24 bits would be to compute z² for free by a table using the second unused port of the blockram
+
 * Small things in the pipeline framework
 ** constant signal scheduling TODO: check
 The constant signals are currently all scheduled to cycle 0.
@@ -135,7 +137,7 @@ A quick grep seems to show it is the case.
 ** Re-check table attributes for 7 series; update Table, probably refactor this into Target 
 ** In the dot output, package shared components into dotted boxes (subgraph cluster_)
 		It doesn't seem that simple
-* Bugs
+* Bugs to fix
 ** assertion failed in    ./flopoco FixFunctionByTable f="1/(x+1)" signedin=0 lsbin=-8 lsbout=-8 tablecompression=1
 ** ./flopoco FixFunctionByTable f="1/(x+1b-4+1)-.5-1b-6" signedin=false lsbin=-4 lsbout=-5
 has a constant 0 MSB
@@ -172,7 +174,7 @@ Nobody should do this if they have read the Muller book, so... people will try t
 ** Altera 10
 
 * Towards continuous integration
-** move to gitlab
+** DONE move to gitlab
 ** autotest at commit
 ** set up a performance regression test as well
 * Possible improvements, operator by operator
