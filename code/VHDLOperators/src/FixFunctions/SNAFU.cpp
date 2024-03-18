@@ -116,12 +116,11 @@ namespace flopoco
   };
 
 
-  enum Method { PlainTable, MultiPartite, Horner2, Horner3, PiecewiseHorner2, PiecewiseHorner3, Auto };
+  enum Method { PlainTable, MultiPartite, Horner, PiecewiseHorner2, PiecewiseHorner3, Auto };
   static const map<string, Method> methodMap = {
     {"plaintable", PlainTable},
     {"multipartite", MultiPartite},
-    {"horner2", Horner2},
-    {"horner3", Horner3},
+    {"horner", Horner},
     {"piecewisehorner2", PiecewiseHorner2},
     {"piecewisehorner3", PiecewiseHorner3},
     {"auto", Auto},
@@ -134,8 +133,7 @@ namespace flopoco
       return "FixFunctionByTable";
     case MultiPartite:
       return "FixFunctionByMultipartiteTable";
-    case Horner2:
-    case Horner3:
+    case Horner:
       return "FixFunctionBySimplePoly";
     case PiecewiseHorner2:
     case PiecewiseHorner3:
@@ -344,8 +342,8 @@ namespace flopoco
     "wIn(int): number of bits of the input ;"
     "wOut(int): number of bits of the output; "
     "inputScale(real)=8.0: the input scaling factor: the 2^wIn input values are mapped on the interval[-inputScale, inputScale) ; "
-    "method(string)=auto: approximation method, among \"PlainTable\", \"MultiPartite\", \"Horner2\", \"Horner3\", \"PiecewiseHorner2\", "
-    "\"PiecewiseHorner3\", \"auto\" ;"
+    "method(string)=auto: approximation method, among \"PlainTable\",\"MultiPartite\", \"Horner\", \"PiecewiseHorner2\", \"PiecewiseHorner3\", "
+    "\"auto\" ;"
     "adhocCompression(int)=-1: 1: subtract the base function ReLU to implement only the non-linear part. 0: do nothing. -1: automatic;",
     "",
   };
