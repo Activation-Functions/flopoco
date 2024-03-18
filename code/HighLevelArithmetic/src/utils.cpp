@@ -20,10 +20,8 @@
 #include <algorithm>
 #include <cctype>
 #include <cstdlib>
-#include <functional>
 #include <gmp.h>
 #include <gmpxx.h>
-#include <iomanip>
 #include <iostream>
 #include <locale>  // std::locale, std::tolower
 #include <sstream>
@@ -667,6 +665,11 @@ namespace flopoco
 
     stream << id << n;
     return stream.str();
+  }
+
+  string join(std::string id, bool b)
+  {
+    return id + (b ? "true" : "false");
   }
 
   string join(std::string id, string sep, int n)
