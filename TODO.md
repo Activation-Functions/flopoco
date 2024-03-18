@@ -69,9 +69,6 @@ time ./flopoco IntMultiplier wX=53 wY=53 tiling=optimal maxDSP=8
 with SCIP:      1m4,584s
 with LPSolve:   5m44,218s
 
-### (->Martin) test fails because I am lazy to compile Xilinx libs
-./flopoco target=virtex6 XilinxTernaryAddSub wIn=16																			  TestBench 
-./flopoco target=virtex6 XilinxTernaryAddSub wIn=16		 AddSubBitMask=3													  TestBench 
 ### (-> Florent) test fails but the bug is likely in emulate, TODO add unitTest to the Shifters
 ./flopoco Shifter wX=12 maxShift=12 wR=12	   dir=1 computeSticky=1														  TestBench 
 
