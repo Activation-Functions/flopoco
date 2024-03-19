@@ -296,11 +296,11 @@ namespace flopoco
       break;
     }
     case PiecewiseHorner2: {
-      paramString += " d=2";
+      paramString += " d=2 approxErrorBudget=0.03125";
       break;
     }
     case PiecewiseHorner3: {
-      paramString += " d=3";
+      paramString += " d=3 approxErrorBudget=0.03125";
       break;
     }
     default:
