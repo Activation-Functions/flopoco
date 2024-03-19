@@ -40,6 +40,7 @@ namespace flopoco
     string fl, method;           // The lowercased versions of fIn and methodIn
     string sollyaDeltaFunction;  // when we use compression
     FixFunction* f;
+    bool correctlyRounded;
   };
 
 }  // namespace flopoco

@@ -267,7 +267,7 @@ namespace flopoco
                                                                                                << "  plot(f, [-1;1]); ");
     }
 
-    bool correctlyRounded = false;  // default is faithful
+    correctlyRounded = false;  // default is faithful
 
     f = new FixFunction(sollyaFunction, true, lsbIn, lsbOut);
 
@@ -368,7 +368,7 @@ namespace flopoco
 
   void SNAFU::emulate(TestCase* tc)
   {
-    emulate_fixfunction(*f, tc, true /* correct rounding */);
+    emulate_fixfunction(*f, tc, correctlyRounded);
   }
 
   OperatorPtr SNAFU::parseArguments(OperatorPtr parentOp, Target* target, vector<string>& args, UserInterface& ui)
