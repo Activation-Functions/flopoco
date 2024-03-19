@@ -28,6 +28,7 @@
       clang-tools
       rlwrap
       gnuplot
+      nvc
     ];
 
     shellHook = ''
