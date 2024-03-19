@@ -198,8 +198,8 @@ namespace flopoco {
                             s << ( t - bigM*indicatorAdder[adderCount] - edgeError[i] <= 0 );
                             s << ( edgeError[i] - t - bigM*indicatorAdder[adderCount] <= 0 );
                         } else {
-                            s << ( indicatorAdder[adderCount] == 0 then edgeError[i] - t == 0 );
-                            s << ( indicatorAdder[adderCount] == 1 then edgeError[i] - truncError[i] == 0 );
+                            s << ( indicatorAdder[adderCount] == 0 >>= edgeError[i] - t == 0 );
+                            s << ( indicatorAdder[adderCount] == 1 >>= edgeError[i] - truncError[i] == 0 );
                         }
                         ++adderCount;
                     }
@@ -261,8 +261,8 @@ namespace flopoco {
                                 s << ( shiftTerms[2*onlyPositive] - bigM*indicVar[onlyPositive] - faGain[adderCount] <= 0 );
                                 s << ( faGain[adderCount] - shiftTerms[2*onlyPositive] - bigM*indicVar[onlyPositive] <= 0 );
                             } else {
-                                s << ( indicVar[onlyPositive] == 1 then faGain[adderCount] - shiftTerms[2*onlyPositive+1] == 0 );
-                                s << ( indicVar[onlyPositive] == 0 then faGain[adderCount] - shiftTerms[2*onlyPositive] == 0 );
+                                s << ( indicVar[onlyPositive] == 1 >>= faGain[adderCount] - shiftTerms[2*onlyPositive+1] == 0 );
+                                s << ( indicVar[onlyPositive] == 0 >>= faGain[adderCount] - shiftTerms[2*onlyPositive] == 0 );
                             }
 
                             ++onlyPositive;
