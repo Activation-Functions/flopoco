@@ -45,6 +45,7 @@ static inline string _replace(string s, const string x, const string r)
 
 namespace flopoco
 {
+  enum activationFunction { Sigmoid, TanH, ReLU, SiLU, GeLU, ELU };
 
   struct ActivationFunctionData {
     string stdShortName;
@@ -53,6 +54,7 @@ namespace flopoco
     bool signedOutput;
     bool needsSlightRescale;  // for output range efficiency of functions that touch 1
     bool reluVariant;
+    activationFunction fun;
   };
 
   static const map<string, ActivationFunctionData> activationFunction = {
@@ -66,7 +68,8 @@ namespace flopoco
         "1/(1+exp(-X))",  //textbook
         false,            // output unsigned
         true,             // output touches 1 and needs to be slightly rescaled
-        false             // not a ReLU variant
+        false,            // not a ReLU variant
+        Sigmoid,          // enum
       }},
     {"tanh",
       {
@@ -75,7 +78,8 @@ namespace flopoco
         "tanh(X)",  //textbook
         true,       // output signed
         true,       // output touches 1 and needs to be slightly rescaled
-        false       // not a ReLU variant
+        false,      // not a ReLU variant
+        TanH,       // enum
       }},
     {"relu",
       {
@@ -84,7 +88,8 @@ namespace flopoco
         "X/(1+exp(-1b256*X))",  // Here we use a quasi-threshold function
         false,                  // output unsigned
         false,                  // output does not need rescaling -- TODO if win>wout it probably does
-        false                   // ReLU variant
+        false,                  // not a ReLU variant
+        ReLU,                   // enum
       }},
     {"elu",
       {
@@ -93,7 +98,8 @@ namespace flopoco
         "X/(1+exp(-1b256*X))+expm1(X)*(1-1/(1+exp(-1b256*X)))",  // Here we use a quasi-threshold function
         true,                                                    // output signed
         false,                                                   // output does not need rescaling -- TODO CHECK
-        true                                                     // ReLU variant
+        true,                                                    // ReLU variant
+        ELU,                                                     // enum
       }},
     {"silu",
       {
@@ -102,7 +108,8 @@ namespace flopoco
         "X/(1+exp(-X))",  // textbook
         true,             // output signed
         false,            // output does not need rescaling -- TODO CHECK
-        true              // ReLU variant
+        true,             // ReLU variant
+        SiLU,             // enum
       }},
     {"gelu",
       {
@@ -111,7 +118,8 @@ namespace flopoco
         "X/2*(1+erf(X/sqrt(2)))",  // textbook
         true,                      // output signed
         false,                     // output does not need rescaling -- TODO CHECK
-        true                       // ReLU variant
+        true,                      // ReLU variant
+        GeLU,                      // enum
       }},
   };
 
@@ -218,6 +226,13 @@ namespace flopoco
     // Only then we may define the delta function
     if(adhocCompression) {
       sollyaDeltaFunction = "(" + sollyaReLU + ")-(" + sollyaFunction + ")";
+
+      if(af.fun == ELU) {
+        // We need to compute on the negative values only
+        sollyaDeltaFunction = _replace(sollyaDeltaFunction, "X", "-@");
+        sollyaDeltaFunction = _replace(sollyaDeltaFunction, "@", "X");
+      }
+
       function = &sollyaDeltaFunction;
       signedIn = false;  // We can exploit symetry on all the delta functions
     } else {
@@ -323,8 +338,15 @@ namespace flopoco
     if(adhocCompression) {
       // Reconstruct the function
       int deltaOutSize = getSignalByName("D")->width();
-      // if all went well deltaOut should have fewer bits so we need to pad with zeroes
-      vhdl << tab << declare("F", wOut) << " <= ReLU - (" << zg(wOut - deltaOutSize) << " & D);" << endl;
+
+      if(af.fun == ELU) {
+        // Special case, when X is positive, then it is identical to the ReLU
+        vhdl << tab << declare("F", wOut) << " <= ReLU when X" << of(wIn - 1) << " = '0' else ReLU - (" << zg(wOut - deltaOutSize) << " & D);"
+             << endl;
+      } else {
+        // if all went well deltaOut should have fewer bits so we need to pad with zeroes
+        vhdl << tab << declare("F", wOut) << " <= ReLU - (" << zg(wOut - deltaOutSize) << " & D);" << endl;
+      }
     } else {
       // sanity check
       if(int w = op->getSignalByName("X")->width() != wIn) {
