@@ -289,12 +289,9 @@ namespace flopoco
       correctlyRounded = true;
       break;
     }
-    /* case MultiPartite: {
-        string paramString = "f=" + sollyaFunction + join(" lsbIn=", lsbIn) + join(" lsbOut=", lsbOut) + " signedIn=false";
-        OperatorPtr op = newInstance(methodOperator(method), functionName + "_Table", paramString, "X=>X", "Y=>TableOut");
-        vhdl << tab << "Y <= TableOut ;" << endl;
-        break;
-      } */
+    case MultiPartite: {
+      break;
+    }
     case Horner: {
       break;
     }
