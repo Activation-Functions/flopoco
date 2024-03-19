@@ -207,7 +207,7 @@ namespace flopoco
       lsbOut = -wOut + signedOutput;
       sollyaFunction = "(1-1b" + to_string(lsbOut) + ")*(" + sollyaFunction + ")";
       sollyaReLU = "(1-1b" + to_string(lsbOut) + ")*(" + sollyaReLU + ")";
-    } else if(af.reluVariant) {
+    } else if(af.reluVariant || fl == "relu") {
       lsbOut = -wOut + intlog2(inputScale);
     } else {
       throw(string("unable to set lsbOut"));
@@ -254,7 +254,7 @@ namespace flopoco
 
     bool correctlyRounded = false;  // default is faithful
 
-    f = new FixFunction(sollyaFunction, signedIn, lsbIn, lsbOut);
+    f = new FixFunction(sollyaFunction, true, lsbIn, lsbOut);
 
     ostringstream name;
     name << functionName << "_" << wIn << "_" << wOut << "_" << method;
@@ -311,11 +311,17 @@ namespace flopoco
       break;
     };
 
+    if(!signedIn) {
+      // Compute the absolute value of X
+      vhdl << tab << declare("AX", wIn) << " <= (not(X) + (" << zg(wIn - 1) << " & '1')) when X" << of(wIn - 1) << " = '1' else X;" << endl;
+      vhdl << tab << declare("DX", wIn - 1) << " <= AX" << range(wIn - 2, 0) << ";" << endl;
+    }
+
     OperatorPtr op = newInstance(methodOperator(method),
       functionName + (adhocCompression ? "_delta_SNAFU" : "_SNAFU"),
       paramString,
-      "X=>X",
-      adhocCompression ? "Y => D" : "Y=> F");
+      signedIn ? "X=>X" : "X => DX",
+      adhocCompression ? "Y => D" : "Y => F");
 
     if(adhocCompression) {
       // Reconstruct the function
