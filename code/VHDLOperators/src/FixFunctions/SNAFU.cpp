@@ -186,6 +186,7 @@ namespace flopoco
     int lsbIn = -(wIn - 1);  // -1 for the sign bit
     int lsbOut;              // will be set below, it depends on signedness and if the function is a relu variant
 
+    size_t in = 0;
 
     ///////// Ad-hoc compression consists, in the ReLU variants, to subtract ReLU
     if(1 == adhocCompression && !af.reluVariant) {  // the user asked to compress a function that is not ReLU-like
@@ -276,7 +277,7 @@ namespace flopoco
 
     setCopyrightString("Florent de Dinechin (2023)");
 
-    addInput("X", wIn);
+    addInput(input(in), wIn);
     addOutput("Y", wOut);
 
     if(af.fun == ReLU) {
@@ -324,14 +325,17 @@ namespace flopoco
 
     if(!signedIn) {
       // Compute the absolute value of X
-      vhdl << tab << declare("AX", wIn) << " <= (not(X) + (" << zg(wIn - 1) << " & '1')) when X" << of(wIn - 1) << " = '1' else X;" << endl;
-      vhdl << tab << declare("DX", wIn - 1) << " <= AX" << range(wIn - 2, 0) << ";" << endl;
+      in++;
+      vhdl << tab << declare(input(in), wIn) << " <= (not(" << input(in - 1) << ") + (" << zg(wIn - 1) << " & '1')) when " << input(in - 1)
+           << of(wIn - 1) << " = '1' else " << input(in - 1) << ";" << endl;
+      in++;
+      vhdl << tab << declare(input(in), wIn - 1) << " <= " << input(in - 1) << range(wIn - 2, 0) << ";" << endl;
     }
 
     OperatorPtr op = newInstance(methodOperator(method),
       af.stdShortName + (adhocCompression ? "_delta_SNAFU" : "_SNAFU"),
       paramString,
-      signedIn ? "X=>X" : "X => DX",
+      "X => " + input(in),
       adhocCompression ? "Y => D" : "Y => F");
 
     if(adhocCompression) {
