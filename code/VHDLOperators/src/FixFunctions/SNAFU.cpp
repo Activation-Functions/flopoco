@@ -18,6 +18,8 @@
 #include "flopoco/FixFunctions/FixFunctionEmulator.hpp"
 
 #include <iostream>
+#include <map>
+#include <string>
 
 using namespace std;
 
@@ -188,6 +190,9 @@ namespace flopoco
 
     size_t in = 0;
 
+    // Map of parameters
+    map<string, string> params = {};
+
     ///////// Ad-hoc compression consists, in the ReLU variants, to subtract ReLU
     if(1 == adhocCompression && !af.reluVariant) {  // the user asked to compress a function that is not ReLU-like
       REPORT(LogLevel::MESSAGE,
@@ -222,6 +227,8 @@ namespace flopoco
       throw(string("unable to set lsbOut"));
     }
 
+    params["lsbOut"] = to_string(lsbOut);
+
     bool signedIn = true;
 
     // Only then we may define the delta function
@@ -238,6 +245,8 @@ namespace flopoco
     } else {
       function = &sollyaFunction;
     }
+
+    params["signedIn"] = to_string(signedIn);
 
     // means "please choose for me"
     if(method == Auto) {
@@ -287,9 +296,6 @@ namespace flopoco
       return;
     }
 
-    // Base parameters
-    string paramString = join("f=", *function) + join(" lsbIn=", lsbIn) + join(" lsbOut=", lsbOut) + join(" signedIn=", signedIn);
-
     if(adhocCompression) {
       if(wIn != wOut) {
         throw(string("Too lazy so far to support wIn<>wOut in case of ad-hoc compression "));
@@ -308,20 +314,29 @@ namespace flopoco
       break;
     }
     case Horner: {
+      // When compressing, we only deal with the positive interval so we rescale to the whole interval
+      if(adhocCompression) {
+        *function = replaceX(*function, "((@+1)/2)");
+        lsbIn++;                   // The scaling means that we shift the fixed value
+        params["signedIn"] = "1";  // Force the input to be signed, it will be scaled accordingly
+      }
       break;
     }
     case PiecewiseHorner2: {
-      paramString += " d=2 approxErrorBudget=0.03125";
+      params["d"] = "2";
       break;
     }
     case PiecewiseHorner3: {
-      paramString += " d=3 approxErrorBudget=0.03125";
+      params["d"] = "3";
       break;
     }
     default:
       throw(string("Method: ") + methodIn + " currently unsupported");
       break;
     };
+
+    params["f"] = *function;
+    params["lsbIn"] = to_string(lsbIn);
 
     if(!signedIn) {
       // Compute the absolute value of X
@@ -330,6 +345,19 @@ namespace flopoco
            << of(wIn - 1) << " = '1' else " << input(in - 1) << ";" << endl;
       in++;
       vhdl << tab << declare(input(in), wIn - 1) << " <= " << input(in - 1) << range(wIn - 2, 0) << ";" << endl;
+
+      if(method == Horner) {
+        // We need to scale the input
+        in++;
+        vhdl << tab << declare(input(in), wIn - 1) << " <= not(" << input(in - 1) << of(wIn - 2) << ") & " << input(in - 1) << range(wIn - 3, 0)
+             << ";" << endl;
+      }
+    }
+
+    string paramString;
+
+    for(const auto& [key, value]: params) {
+      paramString += key + "=" + value + " ";
     }
 
     OperatorPtr op = newInstance(methodOperator(method),
