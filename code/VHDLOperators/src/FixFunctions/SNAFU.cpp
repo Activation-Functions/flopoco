@@ -166,8 +166,17 @@ namespace flopoco
 
   static const Method defaultMethod = PlainTable;
 
-  SNAFU::SNAFU(OperatorPtr parentOp_, Target* target_, string fIn, int wIn_, int wOut_, string methodIn, double inputScale_, int adhocCompression_)
-      : Operator(parentOp_, target_), wIn(wIn_), wOut(wOut_), inputScale(inputScale_), adhocCompression(adhocCompression_)
+  SNAFU::SNAFU(OperatorPtr parentOp_,
+    Target* target_,
+    string fIn,
+    int wIn_,
+    int wOut_,
+    string methodIn,
+    double inputScale_,
+    int adhocCompression_,
+    bool expensiveSymmetry_)
+      : Operator(parentOp_, target_), wIn(wIn_), wOut(wOut_), inputScale(inputScale_), adhocCompression(adhocCompression_),
+        expensiveSymmetry(expensiveSymmetry_)
   {
     if(inputScale <= 0) {
       throw(string("inputScale should be strictly positive"));
@@ -372,12 +381,24 @@ namespace flopoco
 
       if(af.fun == ELU) {
         // Special case, when X is positive, then it is identical to the ReLU
-        vhdl << tab << declare("F", wOut) << " <= ReLU when X" << of(wIn - 1) << " = '0' else ReLU - (" << zg(wOut - deltaOutSize) << " & D);"
+        vhdl << tab << declare("F0", wOut) << " <= ReLU when X" << of(wIn - 1) << " = '0' else ReLU - (" << zg(wOut - deltaOutSize) << " & D);"
              << endl;
       } else {
         // if all went well deltaOut should have fewer bits so we need to pad with zeroes
-        vhdl << tab << declare("F", wOut) << " <= ReLU - (" << zg(wOut - deltaOutSize) << " & D);" << endl;
+        vhdl << tab << declare("F0", wOut) << " <= ReLU - (" << zg(wOut - deltaOutSize) << " & D);" << endl;
       }
+
+      // We are running in symmetry mode
+      if(expensiveSymmetry) {
+        mpz_class rc, ru;
+        // TODO: fix for ELU
+        f->eval(mpz_class(1) << (wIn - 1), rc, ru, true);
+        vhdl << tab << declare("F", wOut) << " <= (" << getSignalByName("F0")->valueToVHDL(rc) << ") when (ieee.std_logic_misc.or_reduce(X"
+             << range(wIn - 2, 0) << ") = '0' and X" << of(wIn - 1) << " = '1') else F0;" << endl;
+      } else {
+        vhdl << tab << declare("F", wOut) << " <= F0;" << endl;
+      }
+
     } else {
       // sanity check
       if(int w = op->getSignalByName("X")->width() != wIn) {
@@ -408,13 +429,15 @@ namespace flopoco
     double inputScale;
     string fIn, methodIn;
     int adhocCompression;
+    bool expensiveSymmetry;
     ui.parseString(args, "f", &fIn);
     ui.parseInt(args, "wIn", &wIn);
     ui.parseInt(args, "wOut", &wOut);
     ui.parseString(args, "method", &methodIn);
     ui.parseFloat(args, "inputScale", &inputScale);
     ui.parseInt(args, "adhocCompression", &adhocCompression);
-    return new SNAFU(parentOp, target, fIn, wIn, wOut, methodIn, inputScale, adhocCompression);
+    ui.parseBoolean(args, "expensiveSymmetry", &expensiveSymmetry);
+    return new SNAFU(parentOp, target, fIn, wIn, wOut, methodIn, inputScale, adhocCompression, expensiveSymmetry);
   }
 
 
@@ -427,6 +450,7 @@ namespace flopoco
     "f(string): function of interest, among \"Tanh\", \"Sigmoid\", \"ReLU\", \"GELU\", \"ELU\", \"SiLU\" (case-insensitive);"
     "wIn(int): number of bits of the input ;"
     "wOut(int): number of bits of the output; "
+    "expensiveSymmetry(bool)=false: whether to add a special case for the input -1 when symmetry is used as 1 is not a representable fixed point;"
     "inputScale(real)=8.0: the input scaling factor: the 2^wIn input values are mapped on the interval[-inputScale, inputScale) ; "
     "method(string)=auto: approximation method, among \"PlainTable\",\"MultiPartite\", \"Horner\", \"PiecewiseHorner2\", \"PiecewiseHorner3\", "
     "\"auto\" ;"
