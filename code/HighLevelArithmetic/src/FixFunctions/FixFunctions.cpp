@@ -82,7 +82,8 @@ void	FixFunction::initialize()
 		mpfr_init2(tmp, 1000); // no big deal if we are not accurate here 
 
 		// TODO: Use a more intelligent method for this, using the zeroes of the derivative
-		if (wIn < 17) {
+
+		if ((wIn>0) && (wIn < 17)) {
 			// Compute exhaustively the values taken by the function
 			mpfr_t x, delta, r;
 			mpfr_inits2(wIn, x, delta, NULL);
@@ -105,9 +106,11 @@ void	FixFunction::initialize()
 
 				mpfr_add(x, x, delta, MPFR_RNDN);
 			}
+			mpfr_clears(x,delta,r, NULL);
 		} else {
-			std::cerr << "Warning: the input width is greater than 16, a less precise algorithm will be used to determine the minimal output width.\n";
-
+			if(wIn>0) {
+				std::cerr << "Warning: the minimal output width is evaluated by Sollya and may be overestimated.\n";
+			}
 			outIntervalS = sollya_lib_evaluate(fS,inputRangeS);
 			supS = sollya_lib_sup(outIntervalS);
 			infS = sollya_lib_inf(outIntervalS);
