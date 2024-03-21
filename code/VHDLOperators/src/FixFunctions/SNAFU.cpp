@@ -43,6 +43,17 @@ static inline string _replace(string s, const string x, const string r)
   return s;
 }
 
+// Replace X with r, assuming future Xs are symbolized by @ in r
+static inline string replaceX(string s, const string r)
+{
+  return _replace(_replace(s, "X", r), "@", "X");
+}
+
+static inline string input(size_t n)
+{
+  return n ? "X" + to_string(n) : "X";
+}
+
 namespace flopoco
 {
   enum activationFunction { Sigmoid, TanH, ReLU, SiLU, GeLU, ELU };
@@ -171,13 +182,11 @@ namespace flopoco
     string* function;  // Points to the function we need to approximate
 
     auto af = activationFunction.at(fl);
-    string sollyaFunction = af.sollyaString;
     string functionName = af.stdShortName;
     string functionDescription = af.fullDescription;
     bool signedOutput = af.signedOutput;
     bool needsSlightRescale = af.needsSlightRescale;  // for output range efficiency of functions that touch 1
 
-    string sollyaReLU = activationFunction.at("relu").sollyaString;
 
     //determine the LSB of the input and output
     int lsbIn = -(wIn - 1);  // -1 for the sign bit
@@ -200,15 +209,12 @@ namespace flopoco
 
     //////////////   Function preprocessing, for a good hardware match
 
-    // scale the function by replacing X with (inputScale*x)
+    // scale the function by replacing X with (inputScale*X)
     // string replacement of "x" is dangerous because it may appear in the name of functions, so use @
-    string replaceString = "(" + to_string(inputScale) + "*@)";
-    sollyaFunction = _replace(sollyaFunction, "X", replaceString);
-    sollyaFunction = _replace(sollyaFunction, "@", "X");
+    string scaleString = "(" + to_string(inputScale) + "*@)";
 
-    // do the same for the relu
-    sollyaReLU = _replace(sollyaReLU, "X", replaceString);
-    sollyaReLU = _replace(sollyaReLU, "@", "X");
+    string sollyaFunction = replaceX(af.sollyaString, scaleString);
+    string sollyaReLU = replaceX(activationFunction.at("relu").sollyaString, scaleString);
 
     // if necessary scale the output so the value 1 is never reached
     if(needsSlightRescale) {
@@ -229,8 +235,7 @@ namespace flopoco
 
       if(af.fun == ELU) {
         // We need to compute on the negative values only
-        sollyaDeltaFunction = _replace(sollyaDeltaFunction, "X", "-@");
-        sollyaDeltaFunction = _replace(sollyaDeltaFunction, "@", "X");
+        sollyaDeltaFunction = replaceX(sollyaDeltaFunction, "-@");
       }
 
       function = &sollyaDeltaFunction;
