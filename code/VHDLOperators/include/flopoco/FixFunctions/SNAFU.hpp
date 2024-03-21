@@ -37,7 +37,6 @@ namespace flopoco
     int wOut;
     double inputScale;
     int adhocCompression;
-    string fl, method;           // The lowercased versions of fIn and methodIn
     string sollyaDeltaFunction;  // when we use compression
     FixFunction* f;
     bool correctlyRounded;
