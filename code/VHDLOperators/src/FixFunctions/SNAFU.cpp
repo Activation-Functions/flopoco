@@ -171,7 +171,6 @@ namespace flopoco
       throw(string("inputScale should be strictly positive"));
     }
 
-    string fl = toLowerCase(fIn);
     Method method;
     try {
       method = methodMap.at(to_lowercase(methodIn));
@@ -181,12 +180,7 @@ namespace flopoco
 
     string* function;  // Points to the function we need to approximate
 
-    auto af = activationFunction.at(fl);
-    string functionName = af.stdShortName;
-    string functionDescription = af.fullDescription;
-    bool signedOutput = af.signedOutput;
-    bool needsSlightRescale = af.needsSlightRescale;  // for output range efficiency of functions that touch 1
-
+    ActivationFunctionData af = activationFunction.at(toLowerCase(fIn));
 
     //determine the LSB of the input and output
     int lsbIn = -(wIn - 1);  // -1 for the sign bit
@@ -197,7 +191,7 @@ namespace flopoco
     if(1 == adhocCompression && !af.reluVariant) {  // the user asked to compress a function that is not ReLU-like
       REPORT(LogLevel::MESSAGE,
         ""
-          << " ??????? You asked for the compression of " << functionDescription << " which is not a ReLU-like" << endl
+          << " ??????? You asked for the compression of " << af.fullDescription << " which is not a ReLU-like" << endl
           << " ??????? I will try but I am doubtful about the result." << endl
           << " Proceeeding nevertheless..." << lsbOut);
     }
@@ -217,11 +211,11 @@ namespace flopoco
     string sollyaReLU = replaceX(activationFunction.at("relu").sollyaString, scaleString);
 
     // if necessary scale the output so the value 1 is never reached
-    if(needsSlightRescale) {
-      lsbOut = -wOut + signedOutput;
+    if(af.needsSlightRescale) {
+      lsbOut = -wOut + af.signedOutput;
       sollyaFunction = "(1-1b" + to_string(lsbOut) + ")*(" + sollyaFunction + ")";
       sollyaReLU = "(1-1b" + to_string(lsbOut) + ")*(" + sollyaReLU + ")";
-    } else if(af.reluVariant || fl == "relu") {
+    } else if(af.reluVariant || af.fun == ReLU) {
       lsbOut = -wOut + intlog2(inputScale);
     } else {
       throw(string("unable to set lsbOut"));
@@ -251,7 +245,7 @@ namespace flopoco
     }
 
     REPORT(LogLevel::MESSAGE,
-      "Function after pre-processing: " << functionDescription << " evaluated on [-1,1)" << endl
+      "Function after pre-processing: " << af.fullDescription << " evaluated on [-1,1)" << endl
                                         << " wIn=" << wIn << " translates to lsbIn=" << lsbIn << endl
                                         << " wOut=" << wOut << " translates to lsbOut=" << lsbOut);
     REPORT(LogLevel::MESSAGE, "Method is " << methodIn);
@@ -277,7 +271,7 @@ namespace flopoco
     f = new FixFunction(sollyaFunction, true, lsbIn, lsbOut);
 
     ostringstream name;
-    name << functionName << "_" << wIn << "_" << wOut << "_" << method;
+    name << af.stdShortName << "_" << wIn << "_" << wOut << "_" << method;
     setNameWithFreqAndUID(name.str());
 
     setCopyrightString("Florent de Dinechin (2023)");
@@ -285,7 +279,7 @@ namespace flopoco
     addInput("X", wIn);
     addOutput("Y", wOut);
 
-    if(fl == "relu") {
+    if(af.fun == ReLU) {
       // Special case for ReLU
       // TODO: Take into account rounding if necessary
       vhdl << tab << "Y <= " << relu(wIn, wOut);
@@ -335,7 +329,7 @@ namespace flopoco
     }
 
     OperatorPtr op = newInstance(methodOperator(method),
-      functionName + (adhocCompression ? "_delta_SNAFU" : "_SNAFU"),
+      af.stdShortName + (adhocCompression ? "_delta_SNAFU" : "_SNAFU"),
       paramString,
       signedIn ? "X=>X" : "X => DX",
       adhocCompression ? "Y => D" : "Y => F");
