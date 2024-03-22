@@ -1133,6 +1133,15 @@ namespace flopoco {
     //Simple SCM with negative coefficient -7 computed from constant 0 (not optimal):
     graphsSigned.push_back("{{'A',[7],1,[1],0,3,[-1],0,0},{'A',[-7],2,[0],0,0,[-7],1,0},{'O',[-7],2,[-7],2,0}}");
 
+    //A simple MCM with same negative and positive coefficients at same stage
+    graphsSigned.push_back("{{'A',[7],1,[1],0,3,[-1],0,0},{'A',[-7],1,[-1],0,3,[1],0,0},{'O',[-7],1,[-7],1,0},{'O',[7],1,[7],1,0}}");
+
+    //A simple MCM with negative coefficients that require sign conversion on the fly
+    graphsSigned.push_back("{{'A',[-35],2,[-7],1,0,[-7],1,2},{'A',[-7],1,[-1],0,3,[1],0,0},{'O',[-7],1,[-7],1,0},{'O',[-35],2,[-35],2,0}}");
+
+    //A simple MCM with same negative and positive coefficients at same stage and depending adder node
+    graphsSigned.push_back("{{'A',[-35],2,[-7],1,0,[-7],1,2},{'A',[7],1,[1],0,3,[-1],0,0},{'A',[-7],1,[-1],0,3,[1],0,0},{'O',[-7],1,[-7],1,0},{'O',[7],1,[7],1,0},{'O',[-35],2,[-35],2,0}}");
+
     //Simple MCM with negative coefficients -5 and -7 computed from constant 0 (not optimal):
     graphsSigned.push_back("{{'A',[7],1,[1],0,3,[-1],0,0},{'A',[5],1,[1],0,0,[1],0,2},{'A',[-7],2,[0],0,0,[-7],1,0},{'A',[-5],2,[0],0,0,[-5],1,0},{'O',[-7],2,[-7],2,0},{'O',[-5],2,[-5],2,0}}");
 
@@ -1212,10 +1221,7 @@ namespace flopoco {
 
 #endif // RMCM_SUPPORT
 
-//  graphs.push_back(""); //
-//  graphs.push_back(""); //
-
-    if(testLevel >= TestLevel::QUICK)
+    if(testLevel == TestLevel::QUICK)
     {
       for(auto g : graphsUnsigned)
       {
