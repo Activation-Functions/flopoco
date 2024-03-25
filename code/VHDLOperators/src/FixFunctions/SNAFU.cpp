@@ -60,79 +60,77 @@ namespace flopoco
 {
   enum activationFunction { Sigmoid, TanH, ReLU, SiLU, GeLU, ELU };
 
-  struct ActivationFunctionData {
-    string stdShortName;
-    string fullDescription;
-    string sollyaString;
-    bool signedOutput;
-    bool needsSlightRescale;  // for output range efficiency of functions that touch 1
-    bool reluVariant;
-    activationFunction fun;
+  struct FunctionData {
+    string name;
+    string longName;
+    string formula;
+    ActivationFunction fun;
+    bool signedOut;
+    bool reluVariant = false;    // By default, not a ReLU variant
+    bool slightRescale = false;  // for output range efficiency of functions that touch 1
+    double scaleFactor = 0.0;    // The importancee of tne inputScale
   };
 
-  static const map<string, ActivationFunctionData> activationFunction = {
+  static const map<string, FunctionData> activationFunction = {
     // two annoyances below:
     // 1/ we are not allowed spaces because it would mess the argument parser. Silly
     // 2/ no if then else in sollya, so we emulate with the quasi-threshold function 1/(1+exp(-1b256*X))
     {"sigmoid",
-      {
-        "Sigmoid",
-        "Sigmoid",
-        "1/(1+exp(-X))",  //textbook
-        false,            // output unsigned
-        true,             // output touches 1 and needs to be slightly rescaled
-        false,            // not a ReLU variant
-        Sigmoid,          // enum
+      FunctionData{
+        .name = "Sigmoid",
+        .longName = "Sigmoid",
+        .formula = "1/(1+exp(-X))",  //textbook
+        .fun = Sigmoid,              // enum
+        .signedOut = false,          // output unsigned
+        .slightRescale = true,       // output touches 1 and needs to be slightly rescaled
       }},
     {"tanh",
-      {
-        "TanH",
-        "Hyperbolic Tangent",
-        "tanh(X)",  //textbook
-        true,       // output signed
-        true,       // output touches 1 and needs to be slightly rescaled
-        false,      // not a ReLU variant
-        TanH,       // enum
+      FunctionData{
+        .name = "TanH",
+        .longName = "Hyperbolic Tangent",
+        .formula = "tanh(X)",
+        .fun = TanH,            // enum
+        .signedOut = true,      // output signed
+        .slightRescale = true,  // output touches 1 and needs to be slightly rescaled
       }},
     {"relu",
-      {
-        "ReLU",
-        "Rectified Linear Unit",
-        "X/(1+exp(-1b256*X))",  // Here we use a quasi-threshold function
-        false,                  // output unsigned
-        false,                  // output does not need rescaling -- TODO if win>wout it probably does
-        false,                  // not a ReLU variant
-        ReLU,                   // enum
+      FunctionData{
+        .name = "ReLU",
+        .longName = "Rectified Linear Unit",
+        .formula = "X/(1+exp(-1b256*X))",  // Here we use a quasi-threshold function
+        .fun = ReLU,                       // enum
+        .signedOut = false,                // output unsigned
+        .scaleFactor = 1.0,                //
       }},
     {"elu",
-      {
-        "ELU",
-        "Exponential Linear Unit",
-        "X/(1+exp(-1b256*X))+expm1(X)*(1-1/(1+exp(-1b256*X)))",  // Here we use a quasi-threshold function
-        true,                                                    // output signed
-        false,                                                   // output does not need rescaling -- TODO CHECK
-        true,                                                    // ReLU variant
-        ELU,                                                     // enum
+      FunctionData{
+        .name = "ELU",
+        .longName = "Exponential Linear Unit",
+        .formula = "X/(1+exp(-1b256*X))+expm1(X)*(1-1/(1+exp(-1b256*X)))",  // Here we use a quasi-threshold function
+        .fun = ELU,                                                         // enum
+        .signedOut = true,                                                  // output signed
+        .reluVariant = true,                                                // ReLU variant
+        .scaleFactor = 1.0,                                                 //
       }},
     {"silu",
-      {
-        "SiLU",
-        "Sigmoid Linear Unit",
-        "X/(1+exp(-X))",  // textbook
-        true,             // output signed
-        false,            // output does not need rescaling -- TODO CHECK
-        true,             // ReLU variant
-        SiLU,             // enum
+      FunctionData{
+        .name = "SiLU",
+        .longName = "Sigmoid Linear Unit",
+        .formula = "X/(1+exp(-X))",  // textbook
+        .fun = SiLU,                 // enum
+        .signedOut = true,           // output signed
+        .reluVariant = true,         // ReLU variant
+        .scaleFactor = 1.0,          //
       }},
     {"gelu",
-      {
-        "GeLU",
-        "Gaussian Error Linear Unit",
-        "X/2*(1+erf(X/sqrt(2)))",  // textbook
-        true,                      // output signed
-        false,                     // output does not need rescaling -- TODO CHECK
-        true,                      // ReLU variant
-        GeLU,                      // enum
+      FunctionData{
+        .name = "GeLU",
+        .longName = "Gaussian Error Linear Unit",
+        .formula = "(X/2)*(1+erf(X/sqrt(2)))",  // textbook
+        .fun = GeLU,                            // enum
+        .signedOut = true,                      // output signed
+        .reluVariant = true,                    // ReLU variant
+        .scaleFactor = 1.0,                     //
       }},
   };
 
@@ -191,7 +189,7 @@ namespace flopoco
 
     string* function;  // Points to the function we need to approximate
 
-    ActivationFunctionData af = activationFunction.at(toLowerCase(fIn));
+    FunctionData af = activationFunction.at(toLowerCase(fIn));
 
     //determine the LSB of the input and output
     int lsbIn = -(wIn - 1);  // -1 for the sign bit
@@ -206,7 +204,7 @@ namespace flopoco
     if(1 == adhocCompression && !af.reluVariant) {  // the user asked to compress a function that is not ReLU-like
       REPORT(LogLevel::MESSAGE,
         ""
-          << " ??????? You asked for the compression of " << af.fullDescription << " which is not a ReLU-like" << endl
+          << " ??????? You asked for the compression of " << af.longName << " which is not a ReLU-like" << endl
           << " ??????? I will try but I am doubtful about the result." << endl
           << " Proceeeding nevertheless..." << lsbOut);
     }
@@ -222,8 +220,8 @@ namespace flopoco
     // string replacement of "x" is dangerous because it may appear in the name of functions, so use @
     string scaleString = "(" + to_string(inputScale) + "*@)";
 
-    string sollyaFunction = replaceX(af.sollyaString, scaleString);
-    string sollyaReLU = replaceX(activationFunction.at("relu").sollyaString, scaleString);
+    string sollyaFunction = replaceX(af.formula, scaleString);
+    string sollyaReLU = replaceX(activationFunction.at("relu").formula, scaleString);
 
     // if necessary scale the output so the value 1 is never reached
     if(af.needsSlightRescale) {
@@ -264,7 +262,7 @@ namespace flopoco
     }
 
     REPORT(LogLevel::MESSAGE,
-      "Function after pre-processing: " << af.fullDescription << " evaluated on [-1,1)" << endl
+      "Function after pre-processing: " << af.longName << " evaluated on [-1,1)" << endl
                                         << " wIn=" << wIn << " translates to lsbIn=" << lsbIn << endl
                                         << " wOut=" << wOut << " translates to lsbOut=" << lsbOut);
     REPORT(LogLevel::MESSAGE, "Method is " << methodIn);
@@ -290,7 +288,7 @@ namespace flopoco
     f = new FixFunction(sollyaFunction, true, lsbIn, lsbOut);
 
     ostringstream name;
-    name << af.stdShortName << "_" << wIn << "_" << wOut << "_" << method;
+    name << af.name << "_" << wIn << "_" << wOut << "_" << method;
     setNameWithFreqAndUID(name.str());
 
     setCopyrightString("Florent de Dinechin (2023)");
@@ -370,7 +368,7 @@ namespace flopoco
     }
 
     OperatorPtr op = newInstance(methodOperator(method),
-      af.stdShortName + (adhocCompression ? "_delta_SNAFU" : "_SNAFU"),
+      af.name + (adhocCompression ? "_delta_SNAFU" : "_SNAFU"),
       paramString,
       "X => " + input(in),
       adhocCompression ? "Y => D" : "Y => F");
