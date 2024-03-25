@@ -20,3 +20,29 @@ dd.parametername               { font-weight: bold;}
 code.parametertype               { color: red;}
 dd.operatordescription           { color: black;}
 span.optionalparam               {color: #555555;}
+
+.twocolumn {
+		  display:flex;
+  /*box-sizing: border-box;*/
+}
+/* Create two unequal columns that floats next to each other */
+.column {
+  float: left;
+  padding: 10px;
+}
+
+.left {
+  margin-right: 10px;
+}
+
+.right {
+		float: right;
+		 width: 300px;
+}
+
+/* Clear floats after the columns */
+.twocolumn:after {
+  content: "";
+  display: table;
+  clear: both;
+}

@@ -10,59 +10,67 @@
 	<body>
 		<h1>FloPoCo</h1>
 
-		<p style="text-align: center"> <img src="FloPoCoSmall.png"/>	</p>
+		<p style="text-align: center"> <img src="FloPoCoSmall.png"/></p>
 
  		<p style="text-align: center"><strong><em>Circuits computing just right</em></strong></p>
 
-		<div align="center" style="padding:10px;border:0px ;background-color:yellow;">
-
-			FloPoCo received the <b>Community Award</b> of <a href="https://www.fpl2017.org/">FPL 2017</a>, the 27th International Conference on Field-Programmable Logic and Applications!
-		</div>
 
 		<div align="center" style="padding:10px;background-color:lightcyan;">
 			<em>The best and most versatile free floating point unit out there is FloPoCo. (...) It outperforms even expensive professional solutions.</em>
 
 			<p align="right"><a href="http://embdev.net/topic/215370">http://embdev.net/topic/215370</a></p>
+			FloPoCo received the <b>Community Award</b> of <a href="https://www.fpl2017.org/">FPL 2017</a>, the 27th International Conference on Field-Programmable Logic and Applications.
 		</div>
 
 
 		<div align="center" style="padding:10px;border:2px solid blue;background-color:#E0FFE0;">
-
-<!--			
-			<p style="color: red;"><b>Try FloPoCo without installing it from our  <a href="http://flopoco.cs.hs-fulda.de"> experimental web interface. </a></b> </p>
---> 
+			
+			<div align="center" style="padding:10px;border:0px ;background-color:yellow;">
+				The book <a href="https://link.springer.com/book/10.1007/978-3-031-42808-1">Application-Specific Arithmetic</a> is out!.
+			</div>
 			Version 5.0 is taking shape in the <a href="https://gitlab.com/flopoco/flopoco">git</a>, version 4.1.2 is still the latest stable release.
+			<!--			
+								<p style="color: red;"><b>Try FloPoCo without installing it from our  <a href="http://flopoco.cs.hs-fulda.de"> experimental web interface. </a></b> </p>
+								--> 
 			<p><a href="flopoco_installation.html">Installation instruction</a>.</p>
+			
+			See the <a href="ReleaseNotes.txt">release notes</a>
 
-			 See the <a href="ReleaseNotes.txt">release notes</a>
-
-		<div align="center" style="padding:10px;border:0px ;background-color:yellow;">
-
-			New: build and tweak arbitrary complex FloPoCo pipeline using the <a href="DAGOperator/">DAGOperator</a> pipeline builder!
-		</div>
-
+			<div align="center" style="padding:10px;border:0px ;background-color:yellow;">
+				New: build and tweak arbitrary complex FloPoCo pipeline using the <a href="DAGOperator/">DAGOperator</a> pipeline builder!
+			</div>
+			
 		</div>
 
 
  		<h2>FPGA arithmetic the way it should be</h2>
 
-		<p>FloPoCo is a generator of arithmetic cores
+		<div class="twocolumn">
+			<div class="column left">
+ 		<p>FloPoCo is a generator of arithmetic cores
 			(<strong>Flo</strong>ating-<strong>Po</strong>int <strong>Co</strong>res, but not only) for FPGAs (but not only).
-			</p>
-
-		<p>The first motto of FloPoCo is that <strong>arithmetic on FPGAs should not  mimick processor arithmetic</strong>. 
-			By designing	radically new operators, one may obtain more accurate results with	less hardware in less time. 
-			This thesis was first detailed in <a href="https://hal.inria.fr/ensl-00174627/document">this document</a>.</p>
-
-		<p>The second motto of FloPoCo is to enable <strong>computing just right</strong>. 
-			All FloPoCo operators are 
-			<ol> 
-				<li>fully parameterized in precision, so that your application may use just the precision it needs, and</li>
-				<li>accurate to the last bit, so that your wires don't carry meaningless noise.</li>
-			</ol>
-			Internally, FloPoCo operators are carefully designed to ensure that no bit is computed that is not useful to the final result. 
 		</p>
+				<p>The first motto of FloPoCo is that <strong>arithmetic on FPGAs should not  mimick processor arithmetic</strong>. 
+					By designing	radically new operators, one may obtain more accurate results with	less hardware in less time. 
+					This thesis was first detailed in <a href="https://hal.inria.fr/ensl-00174627/document">this document</a>.</p>
 
+				<p>The second motto of FloPoCo is to enable <strong>computing just right</strong>. 
+					All FloPoCo operators are 
+					<ol> 
+						<li>fully parameterized in precision, so that your application may use just the precision it needs, and</li>
+						<li>accurate to the last bit, so that your wires don't carry meaningless noise.</li>
+					</ol>
+					Internally, FloPoCo operators are carefully designed to ensure that no bit is computed that is not useful to the final result. 
+				</p>
+
+				<p>All this is the subject of <a href="https://link.springer.com/book/10.1007/978-3-031-42808-1">our book</a>. Click on it for details.</p>
+			</div>
+			<div class="column right">
+				<a href="https://link.springer.com/book/10.1007/978-3-031-42808-1">
+					<img width="300px" src="ASA-book.png"/>
+				</a>
+			</div>
+		</div>
 
 		<p>FloPoCo is not a library of operators, but a generator of operators written in C++. 
 			It inputs operator specifications, and outputs synthesizable VHDL. 
@@ -70,6 +78,7 @@
 
 		<p><em>While waiting for the next release (we are working on it, honest) you may want to read the 2-page paper <a href="https://hal.inria.fr/hal-02161527v1">Reflections on 10 years of FloPoCo</a>.  </em>
 		</p>
+
 
 		
 
