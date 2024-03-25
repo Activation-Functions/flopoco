@@ -223,15 +223,18 @@ namespace flopoco
     string sollyaFunction = replaceX(af.formula, scaleString);
     string sollyaReLU = replaceX(activationFunction.at("relu").formula, scaleString);
 
-    // if necessary scale the output so the value 1 is never reached
-    if(af.needsSlightRescale) {
-      lsbOut = -wOut + af.signedOutput;
+    // Compute lsbOut from wOut and the constraints inferred by the function
+    lsbOut = -wOut;
+
+    if(af.scaleFactor != 0.0) {
+      lsbOut += intlog2(inputScale * af.scaleFactor);
+    } else {
+      lsbOut += af.signedOut;
+    }
+
+    if(af.slightRescale) {
       sollyaFunction = "(1-1b" + to_string(lsbOut) + ")*(" + sollyaFunction + ")";
       sollyaReLU = "(1-1b" + to_string(lsbOut) + ")*(" + sollyaReLU + ")";
-    } else if(af.reluVariant || af.fun == ReLU) {
-      lsbOut = -wOut + intlog2(inputScale);
-    } else {
-      throw(string("unable to set lsbOut"));
     }
 
     params["lsbOut"] = to_string(lsbOut);
