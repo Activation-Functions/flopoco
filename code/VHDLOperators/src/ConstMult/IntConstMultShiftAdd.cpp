@@ -395,7 +395,7 @@ namespace flopoco {
     }
 
     string signed_str = isSigned ? "signed" : "unsigned";
-    vhdl << tab << name << " <= std_logic_vector(" << signed_str << "(shift_left(resize(" << sign << signed_str << "(" << generateSignalName(node->input->output_factor,node->input->stage) << ")," << wOut << ")," << node->input_shift << ")));" << endl;
+    vhdl << tab << name << " <= std_logic_vector(" << signed_str << "(shift_left(" << sign << "resize(" << signed_str << "(" << generateSignalName(node->input->output_factor,node->input->stage) << ")," << wOut << ")," << node->input_shift << ")));" << endl;
   }
 
   void IntConstMultShiftAdd::generateRegisterNode(PAGSuite::register_node_t* node)
@@ -1118,6 +1118,9 @@ namespace flopoco {
     //adder graphs having negative outputs (can be only evaluated for signed):
 
 
+		//Simplest SCM that multiplies by -1, needs one output bit more:
+		graphsSigned.push_back("{{'O',[-1],0,[1],0,0}}");
+
     //Simple SCM with negative coefficient -7:
 		graphsSigned.push_back("{{'A',[-7],1,[-1],0,3,[1],0,0},{'O',[-7],1,[-7],1,0}}");
 
@@ -1147,6 +1150,9 @@ namespace flopoco {
 
     //Simple SCM with negative coefficient -7 by inversion (not optimal):
     graphsSigned.push_back("{{'A',[7],1,[1],0,3,[-1],0,0},{'O',[-7],1,[7],1,0}}");
+
+		//CMM with negative coefficients -1,-2,-5 which sum is -8 (a power of two), this needs one extra bit at the output, obtained from rpag --cmm 1,2,5 and then negated in the output node
+		graphsSigned.push_back("{{'A',[0,0,5],1,[0,0,1],0,0,[0,0,1],0,2},{'A',[1,2,0],1,[0,1,0],0,1,[1,0,0],0,0},{'A',[1,2,5],2,[0,0,5],1,0,[1,2,0],1,0},{'O',[-1,-2,-5],2,[1,2,5],2,0}}");
 
 		//CMM of 123*x1+321*x2 345*x1-543*x2, obtained from rpag --cmm 123,321 345,-543:
 		graphsSigned.push_back("{{'A',[0,5],1,[0,1],0,0,[0,1],0,2},{'A',[0,17],1,[0,1],0,0,[0,1],0,4},{'A',[5,0],1,[1,0],0,0,[1,0],0,2},{'A',[128,1],1,[0,1],0,0,[1,0],0,7},{'A',[257,0],1,[1,0],0,0,[1,0],0,8},{'R',[0,5],2,[0,5],1},{'A',[5,68],2,[0,17],1,2,[5,0],1,0},{'A',[123,1],2,[128,1],1,0,[-5,0],1,0},{'A',[385,1],2,[128,1],1,0,[257,0],1,0},{'A',[123,321],3,[0,5],2,6,[123,1],2,0},{'A',[345,-543],3,[385,1],2,0,[-5,-68],2,3},{'O',[123,321],3,[123,321],3,0},{'O',[345,-543],3,[345,-543],3,0}}");
