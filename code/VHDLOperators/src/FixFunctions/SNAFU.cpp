@@ -240,11 +240,11 @@ namespace flopoco
 
     // Only then we may define the delta function
     if(adhocCompression) {
-      sollyaDeltaFunction = "(" + sollyaReLU + ")-(" + sollyaFunction + ")";
-
       if(af.fun == ELU) {
         // We need to compute on the negative values only
-        sollyaDeltaFunction = replaceX(sollyaDeltaFunction, "-@");
+        sollyaDeltaFunction = "-(" + replaceX(sollyaFunction, "-@") + ")";
+      } else {
+        sollyaDeltaFunction = "(" + sollyaReLU + ")-(" + sollyaFunction + ")";
       }
 
       function = &sollyaDeltaFunction;
