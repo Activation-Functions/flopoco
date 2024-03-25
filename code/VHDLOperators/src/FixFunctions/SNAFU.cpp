@@ -58,7 +58,20 @@ static inline string input(size_t n)
 
 namespace flopoco
 {
-  enum activationFunction { Sigmoid, TanH, ReLU, SiLU, GeLU, ELU };
+  enum ActivationFunction {
+    Sigmoid,
+    Sigmoid_P,
+    TanH,
+    TanH_P,
+    ReLU,
+    ReLU_P,
+    SiLU,
+    SiLU_P,
+    GeLU,
+    GeLU_P,
+    ELU,
+    ELU_P,
+  };
 
   struct FunctionData {
     string name;
@@ -131,6 +144,64 @@ namespace flopoco
         .signedOut = true,                      // output signed
         .reluVariant = true,                    // ReLU variant
         .scaleFactor = 1.0,                     //
+      }},
+
+    // Derivatives
+    {"sigmoid_prime",
+      FunctionData{
+        .name = "Sigmoid'",
+        .longName = "Derivative Sigmoid",
+        .formula = "exp(-X)/(1+exp(-X))^2",  //textbook
+        .fun = Sigmoid_P,                    // enum
+        .signedOut = false,                  // output unsigned
+      }},
+    {"tanh_prime",
+      FunctionData{
+        .name = "TanH'",
+        .longName = "Derivative Hyperbolic Tangent",
+        .formula = "(1-tanh(X)^2)",  //textbook
+        .fun = TanH_P,               // enum
+        .signedOut = true,           // output signed
+        .slightRescale = true,       // output touches 1 and needs to be slightly rescaled
+        .scaleFactor = 1.0,          // Function is a derivative, so we need to take into account the inputScale
+      }},
+    {"relu_prime",
+      FunctionData{
+        .name = "ReLU'",
+        .longName = "Derivative Rectified Linear Unit",
+        .formula = "1/(1+exp(-1b256*X))",  // Here we use a quasi-threshold function
+        .fun = ReLU_P,                     // enum
+        .signedOut = false,                // output unsigned
+        .slightRescale = true,             // output touches 1 and needs to be slightly rescaled
+        .scaleFactor = 1.0,                // Function is a derivative, so we need to take into account the inputScale
+      }},
+    {"elu_prime",
+      FunctionData{
+        .name = "ELU'",
+        .longName = "Derivative Exponential Linear Unit",
+        .formula = "1/(1+exp(-1b256*X))+exp(X)*(1-1/(1+exp(-1b256*X)))",  // Here we use a quasi-threshold function
+        .fun = ELU_P,                                                     // enum
+        .signedOut = true,                                                // output signed
+        .slightRescale = true,                                            // output touches 1 and needs to be slightly rescaled
+        .scaleFactor = 1.0,                                               // Function is a derivative, so we need to take into account the inputScale
+      }},
+    {"silu_prime",
+      FunctionData{
+        .name = "SiLU",
+        .longName = "Sigmoid Linear Unit",
+        .formula = "(1+X*exp(-X)+exp(-X))/(1+exp(-X))^2",  // textbook
+        .fun = SiLU_P,                                     // enum
+        .signedOut = true,                                 // output signed
+        .scaleFactor = 1.125,                              // Function is a derivative, so we need to take into account the inputScale
+      }},
+    {"gelu_prime",
+      FunctionData{
+        .name = "GeLU",
+        .longName = "Gaussian Error Linear Unit",
+        .formula = "(X*exp(-(X^2)/2))/sqrt(2*pi)+(1+erf(X/sqrt(2)))/2",  // textbook
+        .fun = GeLU_P,                                                   // enum
+        .signedOut = true,                                               // output signed
+        .scaleFactor = 1.25,                                             // Function is a derivative, so we need to take into account the inputScale
       }},
   };
 
