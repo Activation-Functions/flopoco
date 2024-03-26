@@ -427,6 +427,8 @@ namespace flopoco{
 	{
 			ostringstream name; 
 
+  		if(n == 1) THROWERROR("sorry, multiplication by one is not supported!");
+
 			srcFileName="IntConstMultShiftAddPlain";
 			setCopyrightString("Florent de Dinechin, Antoine Martinet (2007-2013)");
 
