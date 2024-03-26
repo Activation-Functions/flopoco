@@ -152,7 +152,7 @@ namespace flopoco{
       ui.parsePositiveInt( args, "epsilon", &epsilon );
 
       string constListStr;
-      ui.parseString(args, "constant", &constListStr);
+      ui.parseString(args, "constants", &constListStr);
       string constStr="";
 
       bool isSigned;
@@ -198,7 +198,7 @@ namespace flopoco{
                             "ConstMultDiv", // category, from the list defined in UserInterface.cpp
                             "", //seeAlso
                             "wIn(int): Input word size; \
-                            constant(string): list of constants; \
+                            constants(string): list of constants; \
                             signed(bool)=true: signedness of input and output; \
                             epsilon(int)=0: Allowable error for truncated constant multipliers;",
 	"Nope."};
