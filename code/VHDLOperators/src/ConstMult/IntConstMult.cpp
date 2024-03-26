@@ -99,19 +99,24 @@ void IntConstMult::implementSCM()
   mpz_class const_mpz = coeffs[0][0];
   if(wOut == -1)
   {
-    int wCoeff;
     if(const_mpz > 0)
     {
-      wCoeff = intlog2(const_mpz);
+      wOut = intlog2(const_mpz * ((mpz_class(1)<<wIn)-1));
+//      wCoeff = intlog2(const_mpz-1);
     }
     else
     {
-      wCoeff = intlog2(const_mpz+1);
+//      wCoeff = intlog2(const_mpz);
+      wOut = intlog2(abs(const_mpz) * ((mpz_class(1)<<wIn)));
     }
-    wOut = wCoeff+wIn;
-    REPORT(LogLevel::DETAIL, "No output word size wOut was given, determining word size to be " << wOut << " bits (" << wIn << " input word size and " << wCoeff << " bit for the coefficient)");
+    REPORT(LogLevel::DETAIL, "No output word size wOut was given, determining word size to be " << wOut << " bits");
+  }
+  else
+  {
+    THROWERROR("sorry, truncated operators are currently not supported")
   }
 
+  int wCoeff = wOut - wIn;
 
   addInput("X", wIn);
   addOutput("R", wOut);
@@ -121,16 +126,28 @@ void IntConstMult::implementSCM()
   if(method == "auto")
   {
     REPORT(LogLevel::DETAIL, "Method 'auto' was given (default), determining best method from constants and target");
-    if(target->hasFastLogicTernaryAdders())
+
+    if(target->hasFastLogicTernaryAdders() && (wCoeff <= 22))
     {
-      REPORT(LogLevel::DETAIL, "As target supports ternary adders, we will use them (method=minAddTermary)");
+      REPORT(LogLevel::DETAIL, "As target supports ternary adders and word size is < 22 bit, we will use them (method=minAddTermary)");
       method = "minAddTermary";
+    }
+    else if(wCoeff <= 19)
+    {
+      REPORT(LogLevel::DETAIL, "As target does not support ternary adders and word size is < 19 bit, we will not use them (method=minAdd)");
+      method = "minAdd";
+    }
+    else if(wCoeff <= 32)
+    {
+      REPORT(LogLevel::DETAIL, "As word size is <32 bit, we will use RPAG (method=ShiftAddRPAG)");
+      method = "ShiftAddRPAG";
     }
     else
     {
-      REPORT(LogLevel::DETAIL, "As target does not support ternary adders, we will not use them (method=minAdd)");
-      method = "minAdd";
+      REPORT(LogLevel::DETAIL, "As coefficient word size is larger than 32 bits, we will use ShiftAddPlain (method=ShiftAddPlain)");
+      method = "ShiftAddPlain";
     }
+
   }
 
 
