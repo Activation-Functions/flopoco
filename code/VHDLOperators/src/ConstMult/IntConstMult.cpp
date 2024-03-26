@@ -121,7 +121,6 @@ void IntConstMult::implementSCM()
 
   declare("R_tmp",wOut);
 
-  cerr << "!!!! 1 " << endl;
   if(method == "auto")
   {
     REPORT(LogLevel::DETAIL, "Method 'auto' was given (default), determining best method from constants and target");
@@ -138,13 +137,10 @@ void IntConstMult::implementSCM()
   }
 
 
-  cerr << "!!!! 2 " << endl;
   if(method=="ShiftAddPlain")
   {
     if(isSigned)
       THROWERROR("Method " << method << " does not support signed operation");
-
-  cerr << "!!!! 3 " << endl;
 
     //The old FloPoCo operator, may be removed soon
     newInstance("IntConstMultShiftAddPlain",
@@ -152,8 +148,6 @@ void IntConstMult::implementSCM()
               "wIn=" + std::to_string(wIn) + " constant=" + constants,
               "X=>X",
               "R=>R_tmp");
-
-  cerr << "!!!! 4 " << endl;
 
   }
   else if(method=="ShiftAddRPAG")
