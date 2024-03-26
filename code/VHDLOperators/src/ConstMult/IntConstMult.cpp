@@ -16,9 +16,6 @@ IntConstMult::IntConstMult(OperatorPtr parentOp, Target* target, int wIn, string
   setNameWithFreqAndUID(name.str());
 
   //convert constants string
-
-  cerr << "!!! constants = " << constants << endl;
-
   vector<string> rows = explode(constants, ';');
 
   if(rows.size() == 1) //SCM or MCM problem?
@@ -137,7 +134,25 @@ void IntConstMult::implementSCM()
   }
 
 
-  if(method=="ShiftAddPlain")
+  if(method=="minAdd")
+  {
+    newInstance("IntConstMultShiftAddOpt",
+              "IntConstMultShiftAddOpt",
+              "wIn=" + std::to_string(wIn) + " constant=" + constants + " signed=" + to_string(isSigned),
+              "X0=>X",
+              "R"+ factorToString(coeffs[0],MCM)+"=>R_tmp");
+
+  }
+  else if(method=="minAddTernary")
+  {
+    newInstance("IntConstMultShiftAddOptTernary",
+              "IntConstMultShiftAddOptTernary",
+              "wIn=" + std::to_string(wIn) + " constant=" + constants + " signed=" + to_string(isSigned),
+              "X0=>X",
+              "R"+ factorToString(coeffs[0],MCM)+"=>R_tmp");
+
+  }
+  else if(method=="ShiftAddPlain")
   {
     if(isSigned)
       THROWERROR("Method " << method << " does not support signed operation");
@@ -218,6 +233,8 @@ string IntConstMult::factorToString(std::vector<mpz_class> &coeff, constMultClas
 
     std::list<std::string> methodsToTest;  // inner vector = weights for each input, outer vector = different outputs
 //    methodsToTest.push_back("auto");
+    methodsToTest.push_back("minAdd");
+    methodsToTest.push_back("minAddTernary");
     methodsToTest.push_back("ShiftAddPlain");
     methodsToTest.push_back("ShiftAddRPAG");
 

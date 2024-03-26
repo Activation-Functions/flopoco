@@ -40,7 +40,7 @@ using namespace PAGSuite;
 
 namespace flopoco{
 
-    IntConstMultShiftAddOptTernary::IntConstMultShiftAddOptTernary(Operator* parentOp, Target* target, int wIn, int coeff) : IntConstMultShiftAdd(parentOp, target, wIn, "")
+    IntConstMultShiftAddOptTernary::IntConstMultShiftAddOptTernary(Operator* parentOp, Target* target, int wIn, int coeff, bool isSigned, int epsilon) : IntConstMultShiftAdd(parentOp, target, wIn, "", isSigned, epsilon)
     {
 		int maxCoefficient = 4194303; //=2^22-1
 
@@ -90,12 +90,16 @@ namespace flopoco{
 	}
 
     OperatorPtr flopoco::IntConstMultShiftAddOptTernary::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
-        int wIn, constant;
+        int wIn, constant, epsilon;
+        bool isSigned;
+
 
         ui.parseInt( args, "wIn", &wIn );
         ui.parseInt( args, "constant", &constant );
+        ui.parseBoolean(args, "signed", &isSigned);
+		    ui.parseInt( args, "epsilon", &epsilon );
 
-        return new IntConstMultShiftAddOptTernary(parentOp, target, wIn, constant);
+        return new IntConstMultShiftAddOptTernary(parentOp, target, wIn, constant, isSigned, epsilon);
     }
 }
 
@@ -116,7 +120,9 @@ namespace flopoco {
 			    // UserInterface.cpp
 	    "",		    // seeAlso
 	    "wIn(int): Input word size; \
-                            constant(int): constant;",
+                  constant(int): constant; \
+                  signed(bool)=true: signedness of input and output; \
+                  epsilon(int)=0: Allowable error for truncated constant multipliers;",
 	    "Nope."};
 }
 
