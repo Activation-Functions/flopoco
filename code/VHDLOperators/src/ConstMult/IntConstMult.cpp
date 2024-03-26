@@ -105,11 +105,11 @@ void IntConstMult::implementSCM()
     int wCoeff;
     if(const_mpz > 0)
     {
-      wCoeff = intlog2(const_mpz+1);
+      wCoeff = intlog2(const_mpz);
     }
     else
     {
-      wCoeff = intlog2(const_mpz);
+      wCoeff = intlog2(const_mpz+1);
     }
     wOut = wCoeff+wIn;
     REPORT(LogLevel::DETAIL, "No output word size wOut was given, determining word size to be " << wOut << " bits (" << wIn << " input word size and " << wCoeff << " bit for the coefficient)");
@@ -121,6 +121,7 @@ void IntConstMult::implementSCM()
 
   declare("R_tmp",wOut);
 
+  cerr << "!!!! 1 " << endl;
   if(method == "auto")
   {
     REPORT(LogLevel::DETAIL, "Method 'auto' was given (default), determining best method from constants and target");
@@ -137,10 +138,13 @@ void IntConstMult::implementSCM()
   }
 
 
+  cerr << "!!!! 2 " << endl;
   if(method=="ShiftAddPlain")
   {
     if(isSigned)
       THROWERROR("Method " << method << " does not support signed operation");
+
+  cerr << "!!!! 3 " << endl;
 
     //The old FloPoCo operator, may be removed soon
     newInstance("IntConstMultShiftAddPlain",
@@ -148,14 +152,17 @@ void IntConstMult::implementSCM()
               "wIn=" + std::to_string(wIn) + " constant=" + constants,
               "X=>X",
               "R=>R_tmp");
+
+  cerr << "!!!! 4 " << endl;
+
   }
   else if(method=="ShiftAddRPAG")
   {
     newInstance("IntConstMultShiftAddRPAG",
               "IntConstMultShiftAddRPAG",
-              "wIn=" + std::to_string(wIn) + " constants=" + constants,
-              "X=>X",
-              "R=>R_tmp");
+              "wIn=" + std::to_string(wIn) + " constants=" + constants + " signed=" + to_string(isSigned),
+              "X0=>X",
+              "R"+ factorToString(coeffs[0],MCM)+"=>R_tmp");
   }
   else
   {
@@ -216,9 +223,9 @@ string IntConstMult::factorToString(std::vector<mpz_class> &coeff, constMultClas
     constantsToTest.push_back("73");
 
     std::list<std::string> methodsToTest;  // inner vector = weights for each input, outer vector = different outputs
-
 //    methodsToTest.push_back("auto");
     methodsToTest.push_back("ShiftAddPlain");
+    methodsToTest.push_back("ShiftAddRPAG");
 
     if(testLevel == TestLevel::QUICK)
     {
@@ -226,11 +233,22 @@ string IntConstMult::factorToString(std::vector<mpz_class> &coeff, constMultClas
       {
         for(auto c : constantsToTest)
         {
-
+          if(method == "ShiftAddPlain" && c=="1") continue; //ShiftAddPlain does not support multiplication by 1!
           paramList.push_back(make_pair("method", method));
           paramList.push_back(make_pair("wIn", "10"));
           paramList.push_back(make_pair("constant", c));
           paramList.push_back(make_pair("signed", "false"));
+          testStateList.push_back(paramList);
+          paramList.clear();
+        }
+        if(method == "ShiftAddPlain") continue; //ShiftAddPlain does not support signed!
+        for(auto c : constantsToTest)
+        {
+
+          paramList.push_back(make_pair("method", method));
+          paramList.push_back(make_pair("wIn", "10"));
+          paramList.push_back(make_pair("constant", c));
+          paramList.push_back(make_pair("signed", "true"));
           testStateList.push_back(paramList);
           paramList.clear();
         }
