@@ -32,7 +32,7 @@ namespace flopoco{
     class IntConstMultShiftAddOptTernary : public IntConstMultShiftAdd
 	{
 	public:
-    IntConstMultShiftAddOptTernary(Operator* parentOp, Target* target, int wIn, int coeff);
+    IntConstMultShiftAddOptTernary(Operator* parentOp, Target* target, int wIn, int coeff, bool isSigned, int epsilon);
     static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
     static TestList unitTest(int testLevel);
 
