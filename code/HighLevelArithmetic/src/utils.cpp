@@ -375,6 +375,7 @@ namespace flopoco{
 
 	int intlog2(mpz_class number)
 	{
+	  if(number == 1) return 0;
 		mpz_class po2 = 1;
 		int result = 0;
 		while (po2 <= number) {
