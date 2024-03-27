@@ -36,7 +36,38 @@ using namespace std;
 namespace flopoco {
 
 
-	// The constructor for a stand-alone operator
+
+	FixMultAdd::FixMultAdd(OperatorPtr parentOp_, Target* target_,
+												 bool signedXY_, int msbX_, int lsbX_,
+												 int msbY_, int lsbY_,
+												 bool signedA_, int msbA_, int lsbA_,
+												 int msbOut_, int lsbOut_)
+		: Operator (parentOp_, target_),
+			signedXY(signedXY_), msbX(msbX_), lsbX(lsbX_), msbY(msbY_), lsbY(lsbY_),
+			signedA(signedA_), msbA(msbA_), lsbA(lsbA_), msbOut(msbOut_), lsbOut(lsbOut_)
+		{
+			srcFileName="FixMultAdd";
+			setCopyrightString ( "Florent de Dinechin, Matei Istoan, 2012-2014, 2024" );
+			// Set up the VHDL library style
+			useNumericStd();
+
+			// compute the sizes
+			wX = msbX-lsbX+1;
+			wY = msbY-lsbY+1;
+			wA = msbA-lsbA+1;
+			wOut = msbOut-lsbOut+1;
+			// compute positions of the full product
+			msbP = msbX+msbY+1; // always true, even though for signed numbers the MSB is nonzero only for one value: (-2^msbX) * (-2^msbY)
+			lsbPfull = lsbX+lsbY; // this one is easy
+			if(msbP>msbOut) {
+				THROWERROR("msbP is "<< msbP <<
+									 " which is larger than the supplied msbOut " << msbOut <<
+									 ", we don't do MSB truncation yet, sorry.");
+			}
+		};
+
+	
+#if 0	// The old constructor for a stand-alone operator
 	FixMultAdd::FixMultAdd(OperatorPtr parentOp, Target* target, Signal* x_, Signal* y_, Signal* a_,
 												 int outMSB_, int outLSB_, bool enableSuperTiles_):
 		Operator (parentOp, target),
@@ -48,7 +79,7 @@ namespace flopoco {
 	{
 
 		srcFileName="FixMultAdd";
-		setCopyrightString ( "Florent de Dinechin, Matei Istoan, 2012-2014" );
+		setCopyrightString ( "Florent de Dinechin, Matei Istoan, 2012-2014, 2024" );
 
 		// Set up the VHDL library style
 		useNumericStd();
@@ -86,17 +117,17 @@ namespace flopoco {
 		rname="R";
 
 		// Determine the msb and lsb of the full product X*Y
-		pLSB = x->LSB() + y->LSB();
-		pMSB = pLSB + (wX + wY + (signedIO ? -1 : 0)) - 1;
+		lsbP = x->LSB() + y->LSB();
+		msbP = lsbP + (wX + wY + (signedIO ? -1 : 0)) - 1;
 
-		//use 1 guard bit as default when we need to truncate A (and when either pLSB>aLSB or aMSB>pMSB)
-		g = ((a->LSB()<outLSB && pLSB>a->LSB() && pLSB>outLSB)
-				|| (a->LSB()<outLSB && a->MSB()>pMSB && pMSB<outLSB)) ? 1 : 0;
+		//use 1 guard bit as default when we need to truncate A (and when either lsbP>aLSB or aMSB>msbP)
+		g = ((a->LSB()<outLSB && lsbP>a->LSB() && lsbP>outLSB)
+				|| (a->LSB()<outLSB && a->MSB()>msbP && msbP<outLSB)) ? 1 : 0;
 
 		// Determine the actual msb and lsb of the product,
 		// from the output's msb and lsb, and the (possible) number of guard bits
 		//lsb
-		if(((pLSB <= outLSB-g) && (g==1)) || ((pLSB < outLSB) && (g==0)))
+		if(((lsbP <= outLSB-g) && (g==1)) || ((lsbP < outLSB) && (g==0)))
 		{
 			//the result of the multiplication will be truncated
 			workPLSB = outLSB-g;
@@ -111,7 +142,7 @@ namespace flopoco {
 		else
 		{
 			//the result of the multiplication will not be truncated
-			workPLSB = pLSB;
+			workPLSB = lsbP;
 
 			possibleOutputs = 1; // No faithful rounding
 			REPORT(LogLevel::VERBOSE, "Exact architecture");
@@ -121,10 +152,10 @@ namespace flopoco {
 			REPORT(LogLevel::VERBOSE, dbgMsg.str());
 		}
 		//msb
-		if(pMSB <= outMSB)
+		if(msbP <= outMSB)
 		{
 			//all msbs of the product are used
-			workPMSB = pMSB;
+			workPMSB = msbP;
 		}
 		else
 		{
@@ -133,9 +164,9 @@ namespace flopoco {
 		}
 
 		//compute the needed guard bits and update the lsb
-		if(pMSB >= outLSB-g)
+		if(msbP >= outLSB-g)
 		{
-			//workPLSB += ((g==1 && !(workPLSB==workPMSB && pMSB==(outLSB-1))) ? 1 : 0);			//because of the default g=1 value
+			//workPLSB += ((g==1 && !(workPLSB==workPMSB && msbP==(outLSB-1))) ? 1 : 0);			//because of the default g=1 value
 			g = IntMultiplier::neededGuardBits(target, wX, wY, workPMSB-workPLSB+1);
 			workPLSB -= g;
 		}
@@ -148,9 +179,9 @@ namespace flopoco {
 			//truncate the addend
 			workALSB = (outLSB-g < a->LSB()) ? a->LSB() : outLSB-g;
 			//need to correct the LSB of A (the corner case when, because of truncating A, some extra bits of X*Y are required, which are needed only for the rounding)
-			if((a->LSB()<outLSB) && (a->MSB()>pMSB) && (pMSB<outLSB))
+			if((a->LSB()<outLSB) && (a->MSB()>msbP) && (msbP<outLSB))
 			{
-				workALSB += (pMSB==(outLSB-1) ? -1 : 0);
+				workALSB += (msbP==(outLSB-1) ? -1 : 0);
 			}
 		}
 		else
@@ -191,14 +222,14 @@ namespace flopoco {
 		//create the multiplier
 		//	this is a virtual operator, which uses the bit heap to do all its computations
 		//cerr << "Before " << getCurrentCycle() << endl;
-		if(pMSB >= outLSB-g)
+		if(msbP >= outLSB-g)
 		{
 			mult = new IntMultiplier(this,							//parent operator
 															 target,
 															 bitHeap,						//the bit heap that performs the compression
 															 getSignalByName(xname),		//first input to the multiplier (a signal)
 															 getSignalByName(yname),		//second input to the multiplier (a signal)
-															 pLSB-(outLSB-g),				//offset of the LSB of the multiplier in the bit heap
+															 lsbP-(outLSB-g),				//offset of the LSB of the multiplier in the bit heap
 															 false /*negate*/,				//whether to subtract the result of the multiplication from the bit heap
 															 signedIO);
 		}
@@ -215,7 +246,7 @@ namespace flopoco {
 		//needed to correct the value of g=1, when the multiplier s truncated as well
 		if((workALSB >= a->LSB()) && (g>1))
 		{
-			addendWeight += (pMSB==(outLSB-1) ? 1 : 0);
+			addendWeight += (msbP==(outLSB-1) ? 1 : 0);
 		}
 		//only add A to the bitheap if there is something to add
 		if((a->MSB() >= outLSB-g) && (workAMSB>=workALSB))
@@ -241,9 +272,9 @@ namespace flopoco {
 		}
 
 		//correct the number of guard bits, if needed, because of the corner cases
-		if((a->LSB()<outLSB) && (a->MSB()>pMSB) && (pMSB<outLSB))
+		if((a->LSB()<outLSB) && (a->MSB()>msbP) && (msbP<outLSB))
 		{
-			if(pMSB==(outLSB-1))
+			if(msbP==(outLSB-1))
 			{
 				g++;
 			}
@@ -262,7 +293,7 @@ namespace flopoco {
 
 	}
 
-
+#endif // Old constructor
 
 
 	FixMultAdd::~FixMultAdd()
@@ -331,6 +362,7 @@ namespace flopoco {
 		mpz_class twoToWR = (mpz_class(1) << (wOut));
 		mpz_class twoToWRm1 = (mpz_class(1) << (wOut-1));
 
+#if 0
 		if(!signedIO)
 		{
 			int outShift;
@@ -338,15 +370,15 @@ namespace flopoco {
 			svP = svX * svY;
 
 			//align the product and the addend
-			if(a->LSB() < pLSB)
+			if(a->LSB() < lsbP)
 			{
-				svP = svP << (pLSB-a->LSB());
+				svP = svP << (lsbP-a->LSB());
 				outShift = outLSB - a->LSB();
 			}
 			else
 			{
-				svA = svA << (a->LSB()-pLSB);
-				outShift = outLSB - pLSB;
+				svA = svA << (a->LSB()-lsbP);
+				outShift = outLSB - lsbP;
 			}
 
 			svR = svP + svA;
@@ -398,15 +430,15 @@ namespace flopoco {
 			svP = svX * svY; //signed
 
 			//align the product and the addend
-			if(a->LSB() < pLSB)
+			if(a->LSB() < lsbP)
 			{
-				svP = svP << (pLSB-a->LSB());
+				svP = svP << (lsbP-a->LSB());
 				outShift = outLSB - a->LSB();
 			}
 			else
 			{
-				svA = svA << (a->LSB()-pLSB);
-				outShift = outLSB - pLSB;
+				svA = svA << (a->LSB()-lsbP);
+				outShift = outLSB - lsbP;
 			}
 
 			svR = svP + svA;
@@ -438,6 +470,7 @@ namespace flopoco {
 				tc->addExpectedOutput("R", svR);
 			}
 		}
+		#endif
 	}
 
 
@@ -447,7 +480,44 @@ namespace flopoco {
 		//TODO
 	}
 
+	
+	OperatorPtr FixMultAdd::parseArguments(OperatorPtr parentOp, Target *target, std::vector<std::string> &args, UserInterface& ui) {
+		bool signedXY, signedA;
+		int msbX, lsbX, msbY, lsbY, msbA, lsbA, msbOut, lsbOut;
+		ui.parseBoolean(args, "signedXY", &signedXY);
+		ui.parseInt(args, "msbX", &msbX);
+		ui.parseInt(args, "lsbX", &lsbX);
+		ui.parseInt(args, "msbY", &msbY);
+		ui.parseInt(args, "lsbY", &lsbY);
+		ui.parseBoolean(args, "signedA", &signedA);
+		ui.parseInt(args, "msbA", &msbA);
+		ui.parseInt(args, "lsbA", &lsbA);
+		ui.parseInt(args, "msbOut", &msbOut);
+		ui.parseInt(args, "lsbOut", &lsbOut);
+		return new FixMultAdd(parentOp,target,
+													signedXY, msbX, lsbX,
+													msbY, lsbY,
+													signedA, msbA, lsbA,
+													msbOut, lsbOut);
+	}
 
+	template <>
+	const OperatorDescription<FixMultAdd> op_descriptor<FixMultAdd> {
+	    "FixMultAdd", // name
+	    "A generic fixed-point A+X*Y. With so many parameters, it is probably mostly for internal use.",
+	    "BasicInteger", // category
+	    "",		    // see also
+	    "signedXY(bool): signedness of multiplicands X and Y;\
+		   msbX(int): position of the MSB of multiplicand X;\
+		   lsbX(int): position of the LSB of multiplicand X;\
+		   msbY(int): position of the MSB of multiplicand Y;\
+		   lsbY(int): position of the LSB of multiplicand Y;\
+		   signedA(bool): signedness of addend A;\
+		   msbA(int): position of the MSB of addend A;\
+		   lsbA(int): position of the LSB of addend A;\
+       msbOut(int): position of the MSB of output;\
+		   lsbOut(int): position of the LSB of output", // This string will be parsed
+	    ""};
 
 
 }
