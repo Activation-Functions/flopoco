@@ -1,5 +1,4 @@
-#ifndef FixMultAdd_HPP
-#define FixMultAdd_HPP
+#pragma once
 #include <sstream>
 #include <vector>
 
@@ -23,13 +22,25 @@ namespace flopoco
 	 * Note on signed numbers:
 	 * The bit heap manages signed addition in any case, so whether the addend is signed or not is irrelevant
 	 * The product may be signed, or not.
-	*/
+	 */
 
 	class FixMultAdd : public Operator {
 
 	public:
 		/**
-		 * The FixMultAdd generic constructor computes x*y+a, faithful to outLSB.
+		 * The FixMultAdd generic constructor computes x*y+a, faithful to msbOut.
+		 **/
+		FixMultAdd(OperatorPtr parentOp, Target* target,
+							 bool signedXY, int msbX, int lsbX,
+							 int msbY, int lsbY,
+							 bool signedA, int msbA, int lsbA,
+							 int msbOut, int lsbOut);
+
+
+
+#if 0 // Old constructor
+		/**
+		 * The old FixMultAdd generic constructor computes x*y+a, faithful to outLSB.
 		 * @param[in] target            target device
 		 * @param[in] x                 Signal (should be of fixed-point type)
 		 * @param[in] y                 Signal (should be of fixed-point type)
@@ -42,7 +53,10 @@ namespace flopoco
 							 int outMSB, int outLSB,
 		           bool enableSuperTiles=true);
 
+#endif 
 
+
+		
 		/**
 		 *  Destructor
 		 */
@@ -71,6 +85,10 @@ namespace flopoco
 																							 );
 #endif
 
+
+		/** Factory method that parses arguments and calls the constructor */
+		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
+
 		
 		/**
 		 * The emulate function.
@@ -80,44 +98,36 @@ namespace flopoco
 
 		void buildStandardTestCases(TestCaseList* tcl);
 
-		Signal* x;
-		Signal* y;
-		Signal* a;
-
-		int wX;                     /**< X input width */
-		int wY;                     /**< Y input width */
-		int wA;                     /**< A input width */
-
-		int outMSB;                 /**< output MSB */
-		int outLSB;                 /**< output LSB */
-		int wOut;                   /**< size of the result */
-		int lsbPfull;               /**< equal to msbP - wX -wY */
-		int lsbA;                  	/**< weight of the LSB of A */
-
-		bool signedIO;              /**< if true, inputs and outputs are signed. */
-		bool enableSuperTiles;     	/**< if true, supertiles are built (fewer resources, longer latency */
-
-		string xname;              	/**< X input VHDL name */
-		string yname;              	/**< Y input VHDL name */
-		string aname;              	/**< A input VHDL name */
-		string rname;              	/**< R output VHDL name */
+	private:
+		bool signedXY; /**<  signedness of the multiplicands */
+		int msbX;     /**<  MSB position of the first multiplicand X */		
+		int lsbX;			/**<	LSB position of the first multiplicand X */		
+		int msbY;     /**<  MSB position of the second multiplicand Y */   
+		int lsbY;     /**<	LSB position of the second multiplicand Y */  
+		bool signedA; /**<  signedness of the addend A */
+		int msbA;     /**<  MSB position of the addend A*/ 
+		int lsbA;     /**<	LSB position of the addend A*/ 
+		int msbOut;   /**<  MSB position of the output signal */
+		int lsbOut;   /**<  LSB position of the output signal */
+		int wX;       /**< X input width */
+		int wY;				/**< Y input width */
+		int wA;				/**< A input width */
+		int wOut;			/**< size of the result */
+		int msbP;			/**< MSB of the product */
+		int lsbPfull;	/**< lsb of the exact product */
+		int wOutP;		/**< size of the product (not counting the guard bits) */
+		int lsbP;			/**< LSB of the product */
+		double maxError;     		/**< the max absolute value error of this multiplier, in ulps of the result. Should be 0 for untruncated, 1 or a bit less for truncated.*/
 
 		int g ;                    	/**< the number of guard bits if the product is truncated */
 		int maxWeight;             	/**< The max weight for the bit heap of this multiplier, wOut + g*/
-		int wOutP;                 	/**< size of the product (not counting the guard bits) */
-		double maxError;     		/**< the max absolute value error of this multiplier, in ulps of the result. Should be 0 for untruncated, 1 or a bit less for truncated.*/
-		double initialCP;     		/**< the initial delay, getMaxInputDelays ( inputDelays_ ).*/
 		int possibleOutputs;  		/**< 1 if the operator is exact, 2 if it is faithfully rounded */
 
 	private:
-		Operator* parentOp;  		/**< For a virtual multiplier, adding bits to some external BitHeap,
-		                        			this is a pointer to the Operator that will provide the actual vhdl stream etc. */
 		BitHeap* bitHeap;    		/**< The heap of weighted bits that will be used to do the additions */
 		IntMultiplier* mult; 		/**< the virtual multiplier */
 		Plotter* plotter;
 
-		int pMSB;					/**< MSB of the product */
-		int pLSB;					/**< LSB of the product */
 		int workPMSB;				/**< MSB of the product, aligned with the output precision */
 		int workPLSB;				/**< LSB of the product, aligned with the output precision */
 		int workAMSB;				/**< MSB of the addend, aligned with the output precision */
@@ -126,4 +136,3 @@ namespace flopoco
 	};
 
 } // namespace flopoco
-#endif
