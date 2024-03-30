@@ -77,13 +77,13 @@ namespace flopoco {
 			if(msbA>msbOut) {
 				THROWERROR("msbA is "<< msbA <<
 									 " which is larger than msbOut " << msbOut <<
-									 ", we don't do MSB truncation yet, sorry. Contact us if you have a use case.");
+									 ", we don't see in which situation it could make sense. Contact us if you have a use case.");
 			}
-			if(msbA>=msbOut-1) {
-				REPORT(LogLevel::MESSAGE, "Building a FixMultAdd that may overflow (msbA>=msbOut-1), we hope you manage it");
+			if(msbA==msbOut) {
+				REPORT(LogLevel::MESSAGE, "Building a FixMultAdd that may overflow (msbA=msbOut), we hope you manage it");
 			}
-			if(msbP>=msbOut-1) {
-				REPORT(LogLevel::MESSAGE, "Building a FixMultAdd that may overflow (msbP>=msbOut-1), we hope you manage it");
+			if(msbP==msbOut) {
+				REPORT(LogLevel::MESSAGE, "Building a FixMultAdd that may overflow (msbP=msbOut), we hope you manage it");
 			}
 
 			// Set the operator name
@@ -437,11 +437,10 @@ namespace flopoco {
 		// This is probably disputable
 
 		mpz_class twotowR = mpz_class(1) << wOut;
-		if(rdz > twotowR) {	rdz -= twotowR;  }
-		if (rdz < 0) {	rdz += twotowR; } 
-		if(ruz > twotowR) {	ruz -= twotowR;  }
-		if (ruz < 0) {	ruz += twotowR; } 
-			
+		while(rdz >= twotowR) {	rdz -= twotowR;  }
+		while (rdz < 0) {	rdz += twotowR; } 
+		while(ruz >= twotowR) {	ruz -= twotowR;  }
+		while(ruz < 0) {	ruz += twotowR; } 
 			 
 		tc->addExpectedOutput ("R", rdz);
 		tc->addExpectedOutput ("R", ruz);
