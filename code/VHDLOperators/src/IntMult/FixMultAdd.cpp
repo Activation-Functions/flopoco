@@ -14,6 +14,10 @@
 /* TODO before there is any hope that it works:
 	 - add to IntMultiplier the version that adds a multiplier to a bit heap
 	 - and then more
+
+	 a few command lines to test while developing:
+	 ./flopoco fixmultadd signedio=0 msbx=3 lsbx=0 msby=3 lsby=0 msba=10 lsba=0 msbout=10 lsbout=0 testbench n=100
+
 */
 
 #include <cmath>
@@ -38,13 +42,17 @@ namespace flopoco {
 
 
 	FixMultAdd::FixMultAdd(OperatorPtr parentOp_, Target* target_,
-												 bool signedXY_, int msbX_, int lsbX_,
+												 bool signedIO_,
+												 int msbX_, int lsbX_,
 												 int msbY_, int lsbY_,
-												 bool signedA_, int msbA_, int lsbA_,
+												 int msbA_, int lsbA_,
 												 int msbOut_, int lsbOut_)
 		: Operator (parentOp_, target_),
-			signedXY(signedXY_), msbX(msbX_), lsbX(lsbX_), msbY(msbY_), lsbY(lsbY_),
-			signedA(signedA_), msbA(msbA_), lsbA(lsbA_), msbOut(msbOut_), lsbOut(lsbOut_)
+			signedIO(signedIO_),
+			msbX(msbX_), lsbX(lsbX_),
+			msbY(msbY_), lsbY(lsbY_),
+			msbA(msbA_), lsbA(lsbA_),
+			msbOut(msbOut_), lsbOut(lsbOut_)
 		{
 			srcFileName="FixMultAdd";
 			setCopyrightString ( "Florent de Dinechin, Matei Istoan, 2012-2014, 2024" );
@@ -59,13 +67,46 @@ namespace flopoco {
 			// compute positions of the full product
 			msbP = msbX+msbY+1; // always true, even though for signed numbers the MSB is nonzero only for one value: (-2^msbX) * (-2^msbY)
 			lsbPfull = lsbX+lsbY; // this one is easy
+
+			// A bit of sanity check on the IO formats
 			if(msbP>msbOut) {
 				THROWERROR("msbP is "<< msbP <<
 									 " which is larger than the supplied msbOut " << msbOut <<
-									 ", we don't do MSB truncation yet, sorry.");
+									 ", we don't do MSB truncation yet, sorry. Contact us if you have a use case.");
 			}
+			if(msbA>msbOut) {
+				THROWERROR("msbA is "<< msbA <<
+									 " which is larger than msbOut " << msbOut <<
+									 ", we don't do MSB truncation yet, sorry. Contact us if you have a use case.");
+			}
+			if(msbA>=msbOut-1) {
+				REPORT(LogLevel::MESSAGE, "Building a FixMultAdd that may overflow (msbA>=msbOut-1), we hope you manage it");
+			}
+			if(msbP>=msbOut-1) {
+				REPORT(LogLevel::MESSAGE, "Building a FixMultAdd that may overflow (msbP>=msbOut-1), we hope you manage it");
+			}
+
+			// Set the operator name
+			ostringstream name;
+			name <<"FixMultAdd";
+			name << (signedIO?"_signed":"_unsigned");
+			name << "_x_" << vhdlize(msbX) << "_" << vhdlize(lsbX);
+			name << "_y_" << vhdlize(msbY) << "_" << vhdlize(lsbY);
+			name << "_a_" << vhdlize(msbA) << "_" << vhdlize(lsbA);
+			name << "_r_" << vhdlize(msbOut) << "_" << vhdlize(lsbOut);
+			name << Operator::getNewUId();
+			setNameWithFreqAndUID(name.str());
+			REPORT(LogLevel::DEBUG, "Building " << name.str());
+		
+
+			addInput ("X",  wX);
+			addInput ("Y",  wY);
+			addInput ("A",  wA);
+			addOutput("R",  wOut, 2); // TODO manage the exact case
+			vhdl << "R <= 0; -- TODO, obviously this is work in progress " << endl;
 		};
 
+	
 	
 #if 0	// The old constructor for a stand-alone operator
 	FixMultAdd::FixMultAdd(OperatorPtr parentOp, Target* target, Signal* x_, Signal* y_, Signal* a_,
@@ -97,17 +138,9 @@ namespace flopoco {
 								 << (y->isSigned()?"":"un")<<"signed. This case is currently not supported." );
 		}
 
-		// Set the operator name
-		{
-			ostringstream name;
-			name <<"FixMultAdd_";
-			name << wX << "x" << wY << "p" << wA << "r" << wOut << "" << (signedIO?"signed":"unsigned");
-			name << Operator::getNewUId();
-			setNameWithFreqAndUID(name.str());
-			REPORT(LogLevel::DEBUG, "Building " << name.str());
-		}
+		// THROWERROR("FixMultAdd needs more work");
+		
 
-		THROWERROR("FixMultAdd needs more work");
 #if 0
 		
 		// Set up the IO signals
@@ -347,130 +380,75 @@ namespace flopoco {
 
 
 
-
-
-	//FIXME: is this right? emulate function needs to be checked
-	//		 it makes no assumptions on the signals, except their relative alignments,
-	//		 so it should work for all combinations of the inputs
+	// New emulate function better than in version 4.1: 
+	// the inputs are fixed-point numbers, hence reals,
+	// we build the corresponding MPFR numbers and perform the computation on them
+	// This avoids replicating the logic of the VHDL as we had before.
 	void FixMultAdd::emulate ( TestCase* tc )
 	{
 		mpz_class svX = tc->getInputValue("X");
 		mpz_class svY = tc->getInputValue("Y");
 		mpz_class svA = tc->getInputValue("A");
-
-		mpz_class svP, svR, svRAux;
-		mpz_class twoToWR = (mpz_class(1) << (wOut));
-		mpz_class twoToWRm1 = (mpz_class(1) << (wOut-1));
-
-#if 0
-		if(!signedIO)
-		{
-			int outShift;
-
-			svP = svX * svY;
-
-			//align the product and the addend
-			if(a->LSB() < lsbP)
-			{
-				svP = svP << (lsbP-a->LSB());
-				outShift = outLSB - a->LSB();
-			}
-			else
-			{
-				svA = svA << (a->LSB()-lsbP);
-				outShift = outLSB - lsbP;
-			}
-
-			svR = svP + svA;
-
-			//align the multiply-and-add with the output format
-			if(outShift > 0)
-			{
-				svR = svR >> outShift;
-				possibleOutputs = 2;
-			}
-			else
-			{
-				svR = svR << (-outShift);
-				possibleOutputs = 1;
-			}
-
-			//add only the bits corresponding to the output format
-			svRAux = svR & (twoToWR -1);
-
-			tc->addExpectedOutput("R", svRAux);
-			if(possibleOutputs==2)
-			{
-				svR++;
-				svR &= (twoToWR -1);
-				tc->addExpectedOutput("R", svR);
-			}
+		// two's complement management)
+		if(signedIO) {
+			svX = bitVectorToSigned(svX, wX); 						// convert it to a signed mpz_class
+			svY = bitVectorToSigned(svY, wY); 						// convert it to a signed mpz_class
+			svA = bitVectorToSigned(svA, wA); 						// convert it to a signed mpz_class
 		}
-		else
-		{
-			int outShift;
+		
+		// now build the corresponding mpfr numbers
+		mpfr_t x, y, p, a, r,ru,rd;
 
-			// Manage signed digits
-			mpz_class twoToWX = (mpz_class(1) << (wX));
-			mpz_class twoToWXm1 = (mpz_class(1) << (wX-1));
-			mpz_class twoToWY = (mpz_class(1) << (wY));
-			mpz_class twoToWYm1 = (mpz_class(1) << (wY-1));
-			mpz_class twoToWA = (mpz_class(1) << (wA));
-			mpz_class twoToWAm1 = (mpz_class(1) << (wA-1));
+		mpfr_init2 (x, wX);
+		mpfr_set_z (x, svX.get_mpz_t(), MPFR_RNDD); 		// convert the integer svX to an MPFR; no rounding here
+		mpfr_mul_2si (x, x, lsbX, MPFR_RNDD); 						// multiply this integer by 2^lsbX to obtain a fixed-point value; also exact
 
-			if (svX >= twoToWXm1)
-				svX -= twoToWX;
+		mpfr_init2 (y, wY);
+		mpfr_set_z (y, svY.get_mpz_t(), MPFR_RNDD); 				// convert the integer svX to an MPFR; no rounding here
+		mpfr_mul_2si (y, y, lsbY, MPFR_RNDD); 						// multiply this integer by 2^lsbX to obtain a fixed-point value; also exact
 
-			if (svY >= twoToWYm1)
-				svY -= twoToWY;
+		mpfr_init2 (a, wA);
+		mpfr_set_z (a, svA.get_mpz_t(), MPFR_RNDD); 				// convert the integer svX to an MPFR; no rounding here
+		mpfr_mul_2si (a, a, lsbA, MPFR_RNDD); 						// multiply this integer by 2^lsbX to obtain a fixed-point value; also exact
 
-			if (svA >= twoToWAm1)
-				svA -= twoToWA;
+		mpfr_init2 (p, wX+wY); // enough bits for the exact product
+		mpfr_mul(p, x , y, MPFR_RNDD); // should be exact
 
-			svP = svX * svY; //signed
+		mpfr_init2 (r, wOut);
+		mpfr_init2 (rd, wOut); 
+		mpfr_init2 (ru, wOut); 
+		mpfr_add(r, a , p, MPFR_RNDN); // rounding here
+		mpfr_add(rd, a , p, MPFR_RNDD); // rounding here
+		mpfr_add(ru, a , p, MPFR_RNDU); // rounding here
+		//		cerr << "(remove this annoying message) Size estimated to " << size << endl; 
 
-			//align the product and the addend
-			if(a->LSB() < lsbP)
-			{
-				svP = svP << (lsbP-a->LSB());
-				outShift = outLSB - a->LSB();
-			}
-			else
-			{
-				svA = svA << (a->LSB()-lsbP);
-				outShift = outLSB - lsbP;
-			}
-
-			svR = svP + svA;
-
-			//align the multiply-and-add with the output format
-			if(outShift > 0)
-			{
-				svR = svR >> outShift;
-				possibleOutputs = 2;
-			}
-			else
-			{
-				svR = svR << (-outShift);
-				possibleOutputs = 1;
-			}
-
-			// manage two's complement at output
-			if(svR < 0)
-				svR += twoToWR;
-
-			//add only the bits corresponding to the output format
-			svRAux = svR & (twoToWR -1);
-
-			tc->addExpectedOutput("R", svRAux);
-			if(possibleOutputs == 2)
-			{
-				svR++;
-				svR &= (twoToWR -1);
-				tc->addExpectedOutput("R", svR);
-			}
+		mpfr_mul_2si (rd, rd, -lsbOut, GMP_RNDN); // conversion back to integer: no rounding here
+		mpfr_mul_2si (ru, ru, -lsbOut, GMP_RNDN); // conversion back to integer: no rounding here
+		mpz_class rdz, ruz;
+		mpfr_get_z (rdz.get_mpz_t(), rd, GMP_RNDD); 			// exact
+		mpfr_get_z (ruz.get_mpz_t(), ru, GMP_RNDD); 			// exact
+		if(signedIO) {
+			rdz = signedToBitVector(rdz, wOut);
+			ruz = signedToBitVector(ruz, wOut);
 		}
-		#endif
+
+		// There are valid use cases where a FixMultAdd may overflow on random tests but won't in its context.
+		// we manage this by emulating the two's complement overflow.
+		// This is probably disputable
+
+		mpz_class twotowR = mpz_class(1) << wOut;
+		if(rdz > twotowR) {	rdz -= twotowR;  }
+		if (rdz < 0) {	rdz += twotowR; } 
+		if(ruz > twotowR) {	ruz -= twotowR;  }
+		if (ruz < 0) {	ruz += twotowR; } 
+			
+			 
+		tc->addExpectedOutput ("R", rdz);
+		tc->addExpectedOutput ("R", ruz);
+
+		// free the memory
+		mpfr_clears (x, y, a, p, r,ru,rd, NULL);
+		
 	}
 
 
@@ -482,22 +460,22 @@ namespace flopoco {
 
 	
 	OperatorPtr FixMultAdd::parseArguments(OperatorPtr parentOp, Target *target, std::vector<std::string> &args, UserInterface& ui) {
-		bool signedXY, signedA;
+		bool signedIO;
 		int msbX, lsbX, msbY, lsbY, msbA, lsbA, msbOut, lsbOut;
-		ui.parseBoolean(args, "signedXY", &signedXY);
+		ui.parseBoolean(args, "signedIO", &signedIO);
 		ui.parseInt(args, "msbX", &msbX);
 		ui.parseInt(args, "lsbX", &lsbX);
 		ui.parseInt(args, "msbY", &msbY);
 		ui.parseInt(args, "lsbY", &lsbY);
-		ui.parseBoolean(args, "signedA", &signedA);
 		ui.parseInt(args, "msbA", &msbA);
 		ui.parseInt(args, "lsbA", &lsbA);
 		ui.parseInt(args, "msbOut", &msbOut);
 		ui.parseInt(args, "lsbOut", &lsbOut);
 		return new FixMultAdd(parentOp,target,
-													signedXY, msbX, lsbX,
+													signedIO,
+													msbX, lsbX,
 													msbY, lsbY,
-													signedA, msbA, lsbA,
+													msbA, lsbA,
 													msbOut, lsbOut);
 	}
 
@@ -507,12 +485,11 @@ namespace flopoco {
 	    "A generic fixed-point A+X*Y. With so many parameters, it is probably mostly for internal use.",
 	    "BasicInteger", // category
 	    "",		    // see also
-	    "signedXY(bool): signedness of multiplicands X and Y;\
+	    "signedIO(bool): signedness of multiplicands X and Y;\
 		   msbX(int): position of the MSB of multiplicand X;\
 		   lsbX(int): position of the LSB of multiplicand X;\
 		   msbY(int): position of the MSB of multiplicand Y;\
 		   lsbY(int): position of the LSB of multiplicand Y;\
-		   signedA(bool): signedness of addend A;\
 		   msbA(int): position of the MSB of addend A;\
 		   lsbA(int): position of the LSB of addend A;\
        msbOut(int): position of the MSB of output;\

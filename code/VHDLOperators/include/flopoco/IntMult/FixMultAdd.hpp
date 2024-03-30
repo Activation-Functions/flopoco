@@ -31,9 +31,10 @@ namespace flopoco
 		 * The FixMultAdd generic constructor computes x*y+a, faithful to msbOut.
 		 **/
 		FixMultAdd(OperatorPtr parentOp, Target* target,
-							 bool signedXY, int msbX, int lsbX,
+							 bool signedIO,
+							 int msbX, int lsbX,
 							 int msbY, int lsbY,
-							 bool signedA, int msbA, int lsbA,
+							 int msbA, int lsbA,
 							 int msbOut, int lsbOut);
 
 
@@ -99,12 +100,11 @@ namespace flopoco
 		void buildStandardTestCases(TestCaseList* tcl);
 
 	private:
-		bool signedXY; /**<  signedness of the multiplicands */
+		bool signedIO; /**<  signedness of the multiplicands */
 		int msbX;     /**<  MSB position of the first multiplicand X */		
 		int lsbX;			/**<	LSB position of the first multiplicand X */		
 		int msbY;     /**<  MSB position of the second multiplicand Y */   
 		int lsbY;     /**<	LSB position of the second multiplicand Y */  
-		bool signedA; /**<  signedness of the addend A */
 		int msbA;     /**<  MSB position of the addend A*/ 
 		int lsbA;     /**<	LSB position of the addend A*/ 
 		int msbOut;   /**<  MSB position of the output signal */
