@@ -147,7 +147,7 @@ namespace flopoco
       }},
 
     // Derivatives
-    {"sigmoid_prime",
+    {"sigmoid_p",
       FunctionData{
         .name = "Sigmoid'",
         .longName = "Derivative Sigmoid",
@@ -155,7 +155,7 @@ namespace flopoco
         .fun = Sigmoid_P,                    // enum
         .signedOut = false,                  // output unsigned
       }},
-    {"tanh_prime",
+    {"tanh_p",
       FunctionData{
         .name = "TanH'",
         .longName = "Derivative Hyperbolic Tangent",
@@ -165,7 +165,7 @@ namespace flopoco
         .slightRescale = true,       // output touches 1 and needs to be slightly rescaled
         .scaleFactor = 1.0,          // Function is a derivative, so we need to take into account the inputScale
       }},
-    {"relu_prime",
+    {"relu_p",
       FunctionData{
         .name = "ReLU'",
         .longName = "Derivative Rectified Linear Unit",
@@ -175,7 +175,7 @@ namespace flopoco
         .slightRescale = true,             // output touches 1 and needs to be slightly rescaled
         .scaleFactor = 1.0,                // Function is a derivative, so we need to take into account the inputScale
       }},
-    {"elu_prime",
+    {"elu_p",
       FunctionData{
         .name = "ELU'",
         .longName = "Derivative Exponential Linear Unit",
@@ -185,7 +185,7 @@ namespace flopoco
         .slightRescale = true,                                            // output touches 1 and needs to be slightly rescaled
         .scaleFactor = 1.0,                                               // Function is a derivative, so we need to take into account the inputScale
       }},
-    {"silu_prime",
+    {"silu_p",
       FunctionData{
         .name = "SiLU",
         .longName = "Sigmoid Linear Unit",
@@ -194,7 +194,7 @@ namespace flopoco
         .signedOut = true,                                 // output signed
         .scaleFactor = 1.125,                              // Function is a derivative, so we need to take into account the inputScale
       }},
-    {"gelu_prime",
+    {"gelu_p",
       FunctionData{
         .name = "GeLU",
         .longName = "Gaussian Error Linear Unit",
