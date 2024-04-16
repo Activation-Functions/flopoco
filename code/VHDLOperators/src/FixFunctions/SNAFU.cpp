@@ -166,7 +166,7 @@ namespace flopoco
         .longName = "Derivative Hyperbolic Tangent",
         .formula = "(1-tanh(X)^2)",  //textbook
         .fun = TanH_P,               // enum
-        .signedOut = true,           // output signed
+        .signedOut = false,          // output unsigned
         .slightRescale = true,       // output touches 1 and needs to be slightly rescaled
         .scaleFactor = 1.0,          // Function is a derivative, so we need to take into account the inputScale
         .derivative = true,
@@ -188,7 +188,7 @@ namespace flopoco
         .longName = "Derivative Exponential Linear Unit",
         .formula = "1/(1+exp(-1b256*X))+exp(X)*(1-1/(1+exp(-1b256*X)))",  // Here we use a quasi-threshold function
         .fun = ELU_P,                                                     // enum
-        .signedOut = true,                                                // output signed
+        .signedOut = false,                                               // output unsigned
         .slightRescale = true,                                            // output touches 1 and needs to be slightly rescaled
         .scaleFactor = 1.0,                                               // Function is a derivative, so we need to take into account the inputScale
         .derivative = true,
@@ -200,7 +200,7 @@ namespace flopoco
         .formula = "(1+X*exp(-X)+exp(-X))/(1+exp(-X))^2",  // textbook
         .fun = SiLU_P,                                     // enum
         .signedOut = true,                                 // output signed
-        .scaleFactor = 1.125,                              // Function is a derivative, so we need to take into account the inputScale
+        .scaleFactor = 0x1.198f14p0,                       // Function is a derivative, so we need to take into account the inputScale
         .derivative = true,
       }},
     {"gelu_p",
@@ -210,7 +210,7 @@ namespace flopoco
         .formula = "(X*exp(-(X^2)/2))/sqrt(2*pi)+(1+erf(X/sqrt(2)))/2",  // textbook
         .fun = GeLU_P,                                                   // enum
         .signedOut = true,                                               // output signed
-        .scaleFactor = 1.25,                                             // Function is a derivative, so we need to take into account the inputScale
+        .scaleFactor = 0x1.20fffp0,                                      // Function is a derivative, so we need to take into account the inputScale
         .derivative = true,
       }},
   };
