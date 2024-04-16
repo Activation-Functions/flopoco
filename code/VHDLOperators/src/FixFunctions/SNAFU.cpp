@@ -21,6 +21,7 @@
 #include <iostream>
 #include <map>
 #include <string>
+#include <unordered_set>
 
 using namespace std;
 
@@ -74,6 +75,35 @@ namespace flopoco
     ELU_P,
   };
 
+  enum Method { PlainTable, MultiPartite, Horner, PiecewiseHorner2, PiecewiseHorner3, Auto };
+  static const map<string, Method> methodMap = {
+    {"plaintable", PlainTable},
+    {"multipartite", MultiPartite},
+    {"horner", Horner},
+    {"piecewisehorner2", PiecewiseHorner2},
+    {"piecewisehorner3", PiecewiseHorner3},
+    {"auto", Auto},
+  };
+
+  static inline const string methodOperator(Method m)
+  {
+    switch(m) {
+    case PlainTable:
+      return "FixFunctionByTable";
+    case MultiPartite:
+      return "FixFunctionByMultipartiteTable";
+    case Horner:
+      return "FixFunctionBySimplePoly";
+    case PiecewiseHorner2:
+    case PiecewiseHorner3:
+      return "FixFunctionByPiecewisePoly";
+    default:
+      throw("Unsupported method.");
+    };
+  };
+
+  static const Method defaultMethod = PlainTable;
+
   struct FunctionData {
     string name;
     string longName;
@@ -84,6 +114,7 @@ namespace flopoco
     bool slightRescale = false;  // for output range efficiency of functions that touch 1
     double scaleFactor = 0.0;    // The importancee of tne inputScale
     bool derivative = false;     // Whether the function is a derivative, and we need to multiply the output by the inputScale
+    unordered_set<Method> incompatibleMethods = {};
   };
 
   static const map<string, FunctionData> activationFunction = {
@@ -104,9 +135,10 @@ namespace flopoco
         .name = "TanH",
         .longName = "Hyperbolic Tangent",
         .formula = "tanh(X)",
-        .fun = TanH,            // enum
-        .signedOut = true,      // output signed
-        .slightRescale = true,  // output touches 1 and needs to be slightly rescaled
+        .fun = TanH,                      // enum
+        .signedOut = true,                // output signed
+        .slightRescale = true,            // output touches 1 and needs to be slightly rescaled
+        .incompatibleMethods = {Horner},  // Simple Horner will not work
       }},
     {"relu",
       FunctionData{
@@ -216,35 +248,6 @@ namespace flopoco
   };
 
 
-  enum Method { PlainTable, MultiPartite, Horner, PiecewiseHorner2, PiecewiseHorner3, Auto };
-  static const map<string, Method> methodMap = {
-    {"plaintable", PlainTable},
-    {"multipartite", MultiPartite},
-    {"horner", Horner},
-    {"piecewisehorner2", PiecewiseHorner2},
-    {"piecewisehorner3", PiecewiseHorner3},
-    {"auto", Auto},
-  };
-
-  static inline const string methodOperator(Method m)
-  {
-    switch(m) {
-    case PlainTable:
-      return "FixFunctionByTable";
-    case MultiPartite:
-      return "FixFunctionByMultipartiteTable";
-    case Horner:
-      return "FixFunctionBySimplePoly";
-    case PiecewiseHorner2:
-    case PiecewiseHorner3:
-      return "FixFunctionByPiecewisePoly";
-    default:
-      throw("Unsupported method.");
-    };
-  };
-
-  static const Method defaultMethod = PlainTable;
-
   SNAFU::SNAFU(OperatorPtr parentOp_,
     Target* target_,
     string fIn,
@@ -274,7 +277,24 @@ namespace flopoco
 
     //determine the LSB of the input and output
     int lsbIn = -(wIn - 1);  // -1 for the sign bit
-    int lsbOut;              // will be set below, it depends on signedness and if the function is a relu variant
+
+    // Compute lsbOut from wOut and the constraints inferred by the function
+    int lsbOut = -wOut + af.signedOut;
+
+    if(af.scaleFactor != 0.0) {
+      int e;
+
+      // Recover the exponent and fraction
+      double fr = frexp(inputScale * af.scaleFactor, &e);
+
+      // No output should touch exactly one,
+      // so 2^n only needs n bits to be reprensented
+      if(fr == 0.5) e--;
+
+      // We only reduce precision when the output can get bigger than 1
+      if(e > 0) lsbOut += e;
+    }
+
 
     size_t in = 0;
 
@@ -284,10 +304,14 @@ namespace flopoco
     ///////// Ad-hoc compression consists, in the ReLU variants, to subtract ReLU
     if(1 == adhocCompression && !af.reluVariant) {  // the user asked to compress a function that is not ReLU-like
       REPORT(LogLevel::MESSAGE,
-        ""
-          << " ??????? You asked for the compression of " << af.longName << " which is not a ReLU-like" << endl
-          << " ??????? I will try but I am doubtful about the result." << endl
-          << " Proceeeding nevertheless..." << lsbOut);
+        " ??????? You asked for the compression of " << af.longName << " which is not a ReLU-like" << endl
+                                                     << " ??????? I will try but I am doubtful about the result." << endl
+                                                     << " Proceeeding nevertheless..." << lsbOut);
+    }
+
+    if(af.incompatibleMethods.find(method) != af.incompatibleMethods.end()) {
+      REPORT(
+        LogLevel::MESSAGE, "The requested method is not very compatible with the function selected, the computation might take a long time or fail.")
     }
 
     if(-1 == adhocCompression) {  // means "automatic" and it is the default
@@ -303,23 +327,6 @@ namespace flopoco
 
     string sollyaFunction = replaceX(af.formula, scaleString);
     string sollyaReLU = replaceX(activationFunction.at("relu").formula, scaleString);
-
-    // Compute lsbOut from wOut and the constraints inferred by the function
-    lsbOut = -wOut + af.signedOut;
-
-    if(af.scaleFactor != 0.0) {
-      int e;
-
-      // Recover the exponent and fraction
-      double fr = frexp(inputScale * af.scaleFactor, &e);
-
-      // No output should touch exactly one,
-      // so 2^n only needs n bits to be reprensented
-      if(fr == 0.5) e--;
-
-      // We only reduce precision when the output can get bigger than 1
-      if(e > 0) lsbOut += e;
-    }
 
     if(af.slightRescale) {
       sollyaFunction = "(1-1b" + to_string(lsbOut) + ")*(" + sollyaFunction + ")";
