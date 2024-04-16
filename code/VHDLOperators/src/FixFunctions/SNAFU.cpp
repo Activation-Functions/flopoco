@@ -17,6 +17,7 @@
 #include "flopoco/FixFunctions/FixFunction.hpp"
 #include "flopoco/FixFunctions/FixFunctionEmulator.hpp"
 
+#include <cmath>
 #include <iostream>
 #include <map>
 #include <string>
@@ -82,6 +83,7 @@ namespace flopoco
     bool reluVariant = false;    // By default, not a ReLU variant
     bool slightRescale = false;  // for output range efficiency of functions that touch 1
     double scaleFactor = 0.0;    // The importancee of tne inputScale
+    bool derivative = false;     // Whether the function is a derivative, and we need to multiply the output by the inputScale
   };
 
   static const map<string, FunctionData> activationFunction = {
@@ -149,59 +151,67 @@ namespace flopoco
     // Derivatives
     {"sigmoid_p",
       FunctionData{
-        .name = "Sigmoid'",
+        .name = "Sigmoid_P",
         .longName = "Derivative Sigmoid",
         .formula = "exp(-X)/(1+exp(-X))^2",  //textbook
         .fun = Sigmoid_P,                    // enum
         .signedOut = false,                  // output unsigned
+        .slightRescale = true,
+        .scaleFactor = 0.25,
+        .derivative = true,
       }},
     {"tanh_p",
       FunctionData{
-        .name = "TanH'",
+        .name = "TanH_P",
         .longName = "Derivative Hyperbolic Tangent",
         .formula = "(1-tanh(X)^2)",  //textbook
         .fun = TanH_P,               // enum
         .signedOut = true,           // output signed
         .slightRescale = true,       // output touches 1 and needs to be slightly rescaled
         .scaleFactor = 1.0,          // Function is a derivative, so we need to take into account the inputScale
+        .derivative = true,
       }},
     {"relu_p",
       FunctionData{
-        .name = "ReLU'",
+        .name = "ReLU_P",
         .longName = "Derivative Rectified Linear Unit",
         .formula = "1/(1+exp(-1b256*X))",  // Here we use a quasi-threshold function
         .fun = ReLU_P,                     // enum
         .signedOut = false,                // output unsigned
         .slightRescale = true,             // output touches 1 and needs to be slightly rescaled
         .scaleFactor = 1.0,                // Function is a derivative, so we need to take into account the inputScale
+        .derivative = true,
       }},
     {"elu_p",
       FunctionData{
-        .name = "ELU'",
+        .name = "ELU_P",
         .longName = "Derivative Exponential Linear Unit",
         .formula = "1/(1+exp(-1b256*X))+exp(X)*(1-1/(1+exp(-1b256*X)))",  // Here we use a quasi-threshold function
         .fun = ELU_P,                                                     // enum
         .signedOut = true,                                                // output signed
         .slightRescale = true,                                            // output touches 1 and needs to be slightly rescaled
         .scaleFactor = 1.0,                                               // Function is a derivative, so we need to take into account the inputScale
+        .derivative = true,
       }},
     {"silu_p",
       FunctionData{
-        .name = "SiLU",
+        .name = "SiLU_P",
         .longName = "Sigmoid Linear Unit",
         .formula = "(1+X*exp(-X)+exp(-X))/(1+exp(-X))^2",  // textbook
         .fun = SiLU_P,                                     // enum
         .signedOut = true,                                 // output signed
         .scaleFactor = 1.125,                              // Function is a derivative, so we need to take into account the inputScale
+        .derivative = true,
       }},
     {"gelu_p",
       FunctionData{
-        .name = "GeLU",
+        .name = "GeLU_P",
         .longName = "Gaussian Error Linear Unit",
         .formula = "(X*exp(-(X^2)/2))/sqrt(2*pi)+(1+erf(X/sqrt(2)))/2",  // textbook
         .fun = GeLU_P,                                                   // enum
         .signedOut = true,                                               // output signed
         .scaleFactor = 1.25,                                             // Function is a derivative, so we need to take into account the inputScale
+        .derivative = true,
       }},
   };
 
@@ -295,17 +305,30 @@ namespace flopoco
     string sollyaReLU = replaceX(activationFunction.at("relu").formula, scaleString);
 
     // Compute lsbOut from wOut and the constraints inferred by the function
-    lsbOut = -wOut;
+    lsbOut = -wOut + af.signedOut;
 
     if(af.scaleFactor != 0.0) {
-      lsbOut += intlog2(inputScale * af.scaleFactor);
-    } else {
-      lsbOut += af.signedOut;
+      int e;
+
+      // Recover the exponent and fraction
+      double fr = frexp(inputScale * af.scaleFactor, &e);
+
+      // No output should touch exactly one,
+      // so 2^n only needs n bits to be reprensented
+      if(fr == 0.5) e--;
+
+      // We only reduce precision when the output can get bigger than 1
+      if(e > 0) lsbOut += e;
     }
 
     if(af.slightRescale) {
       sollyaFunction = "(1-1b" + to_string(lsbOut) + ")*(" + sollyaFunction + ")";
       sollyaReLU = "(1-1b" + to_string(lsbOut) + ")*(" + sollyaReLU + ")";
+    }
+
+    if(af.derivative) {
+      sollyaFunction = to_string(inputScale) + "*(" + sollyaFunction + ")";
+      // No derivative is a ReLU variant, so no need to modify the string
     }
 
     params["lsbOut"] = to_string(lsbOut);
