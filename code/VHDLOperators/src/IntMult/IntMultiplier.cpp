@@ -12,6 +12,9 @@
   All rights reserved.
 */
 
+
+
+
 #include <cassert>
 #include <cmath>
 #include <cstdlib>
@@ -42,7 +45,7 @@ using namespace std;
 namespace flopoco {
 
 
-	IntMultiplier::IntMultiplier (Operator *parentOp, Target* target_, int wX_, int wY_, int wOut_, bool signedIO_, float dspOccupationThreshold, int maxDSP, bool superTiles, bool use2xk, bool useirregular, bool useLUT, bool useDSP, bool useKaratsuba, bool useGenLUT, bool useBooth, int beamRange, bool optiTrunc, bool minStages, bool squarer):
+	IntMultiplier::IntMultiplier (Operator *parentOp, Target* target_, int wX_, int wY_, int wOut_, bool signedIO_, float dspOccupationThreshold, int maxDSP, bool superTiles, bool use2xk, bool useirregular, bool useLUT, bool useDSP, bool useKaratsuba, bool useGenLUT, bool useBooth, int beamRange, bool optiTrunc, bool minStages, bool squarer, BitHeap* externalBitheapPtr, int  exactProductLSBPosition):
 		Operator ( parentOp, target_ ),wX(wX_), wY(wY_), wOut(wOut_),signedIO(signedIO_), dspOccupationThreshold(dspOccupationThreshold), squarer(squarer) {
         srcFileName = "IntMultiplier";
         setCopyrightString("Martin Kumm, Florent de Dinechin, Kinga Illyes, Bogdan Popa, Bogdan Pasca, 2012-");
@@ -91,10 +94,19 @@ namespace flopoco {
 
 			return;
 		}
-
-		BitHeap bitHeap(this, wFullP);
+		
+		BitHeap* bitHeap;
+		
+		if(externalBitheapPtr == nullptr) {
+			bitHeap = new BitHeap(this, wFullP);
+		}
+		else			{
+			bitHeap=externalBitheapPtr;
+		}
 		//BitHeap bitHeap(this, wOut + guardBits);
 		unsigned bitHeapLSBWeight = 0;
+		// This is the LSB weight from the point of view of an integer multiplier.
+		// If we truncate it will be set to a positive value
 		
 		REPORT(LogLevel::DETAIL, "Creating BaseMultiplierCollection");
 		BaseMultiplierCollection baseMultiplierCollection(getTarget());
@@ -206,7 +218,7 @@ namespace flopoco {
 					dspOccupationThreshold,
 					maxDSP,
 					multiplierTileCollection,
-					&bitHeap,
+					bitHeap,
 					guardBits,
 					keepBits,
 					errorBudget,
@@ -265,15 +277,20 @@ namespace flopoco {
 			//    bitHeap.resizeBitheap(wFullP-bitHeapLSBWeight, 1);  //resize BitHeap for down to size required by truncation to simplify compression
 			
 			//this is the rounding bit for a faithfully rounded truncated multiplier
-			bitHeap.addConstantOneBit(static_cast<int>(guardBits) - 1);
+			bitHeap->addConstantOneBit(static_cast<int>(guardBits) - 1 + exactProductLSBPosition);
 			//these are the constant bits to recenter the average error around 0 and allow for more truncation error
 			mpz_class colweight, bitstate;
 			int i = wFullP - wOut - guardBits ;
 			do{
-				mpz_pow_ui(colweight.get_mpz_t(), mpz_class(2).get_mpz_t(), i);
-				mpz_and(bitstate.get_mpz_t(), colweight.get_mpz_t(), centerErrConstant.get_mpz_t());
+				colweight = mpz_class(1) << i;   
+				bitstate = colweight & centerErrConstant ;
+				/* was:
+					 mpz_pow_ui(colweight.get_mpz_t(), mpz_class(2).get_mpz_t(), i);
+					 mpz_and(bitstate.get_mpz_t(), colweight.get_mpz_t(), centerErrConstant.get_mpz_t());
+					 */
+				
 				if (bitstate) {
-					bitHeap.addConstantOneBit(i - (wFullP - wOut - guardBits));
+					bitHeap->addConstantOneBit(i - (wFullP - wOut - guardBits) + exactProductLSBPosition);
 					REPORT(LogLevel::DEBUG,  "Adding constant bit with weight=" << i << " BitHeap col=" << i - (wFullP - wOut - guardBits) << "to recenter the truncation error at 0");
 					//cout << "height at pos " << i - (wFullP - wOut - guardBits) << ": " << bitHeap.getColumnHeight( i - (wFullP - wOut - guardBits)) << endl;
 				}
@@ -281,21 +298,23 @@ namespace flopoco {
 			} while(colweight <= centerErrConstant);
 		}
 
-		branchToBitheap(&bitHeap, solution, bitHeapLSBWeight);
+		fillBitheap(bitHeap, solution, bitHeapLSBWeight + exactProductLSBPosition);
 
+		bitHeap ->  printBitHeapStatus();
 		schedule(); // This schedule up to the compressor tree
 		//		THROWERROR("stop here");
 
-		
-		if (dynamic_cast<CompressionStrategy*>(tilingStrategy)) {
+		// Perform the bit heap compression only if this is a standalone operator
+		if(externalBitheapPtr == nullptr) {
+			if (dynamic_cast<CompressionStrategy*>(tilingStrategy)) {
 		    REPORT(LogLevel::DEBUG,  "Class is derived from CompressionStrategy, passing result for compressor tree.");
-			bitHeap.startCompression(dynamic_cast<CompressionStrategy*>(tilingStrategy));
-		} else {
-			bitHeap.startCompression();
+				bitHeap->startCompression(dynamic_cast<CompressionStrategy*>(tilingStrategy));
+			} else {
+				bitHeap->startCompression();
+			}
+			vhdl << tab << "R" << " <= " << bitHeap->getSumName() << range(wOut-1 + guardBits, guardBits) << ";" << endl;
+			delete bitHeap;
 		}
-
-		vhdl << tab << "R" << " <= " << bitHeap.getSumName() << range(wOut-1 + guardBits, guardBits) << ";" << endl;
-
 		delete tilingStrategy;
 	}
 
@@ -511,7 +530,7 @@ namespace flopoco {
 		return s.str();
 	}
 
-	void IntMultiplier::branchToBitheap(BitHeap* bitheap, list<TilingStrategy::mult_tile_t> &solution, unsigned int bitheapLSBWeight)
+	void IntMultiplier::fillBitheap(BitHeap* bitheap, list<TilingStrategy::mult_tile_t> &solution, unsigned int bitheapLSBWeight)
 	{
 		size_t i = 0;
 		stringstream oname, ofname;
@@ -939,12 +958,10 @@ namespace flopoco {
 		 useKaratsuba(bool)=false: if true, attempts to use rectangular Karatsuba for tiling;\
 		 superTile(bool)=false: if true, attempts to use the DSP adders to chain sub-multipliers. This may entail lower logic consumption, but higher latency.;\
 		 dspThreshold(real)=0.0: threshold of relative occupation ratio of a DSP multiplier to be used or not;\
-		 optiTrunc(bool)=true: if true, considers the Truncation error dynamicly, instead of defining a hard border for tiling, like in th ARITH paper;\
+		 optiTrunc(bool)=true: if true, considers the Truncation error dynamicly, instead of defining a hard border for tiling, like in the ARITH paper;\
 		 minStages(bool)=true: if true, minimizes stages in combined opt. of tiling an comp., otherwise try to find a sol. with less LUTs and more stages;\
 		 beamRange(int)=3: range for beam search;\
-         squarer(bool)=false: generate squarer", // This string
-								// will be
-								// parsed
+     squarer(bool)=false: generate squarer", // This string will be parsed
 		""};
 
 	TestList IntMultiplier::unitTest(int testLevel)
