@@ -362,7 +362,7 @@ namespace flopoco {
 	void IntMultiplier::computeTruncMultParamsMPZ(unsigned wX, unsigned wY, unsigned wFull, unsigned wOut, bool signedIO, unsigned &g, unsigned &k, mpz_class &errorBudget, mpz_class &constant) {
         unsigned l_P = wFull - wOut, l_ext = 0, t = 0;
         mpz_class colweight = 2, deltan = 0, deltap = 0, wlext = 1, wlextpe = 2, tbits = 0;
-        mpz_pow_ui(errorBudget.get_mpz_t(), mpz_class(2).get_mpz_t(), l_P-1); //tiling error budget
+				errorBudget = mpz_class(1) << (l_P-1); // was mpz_pow_ui(errorBudget.get_mpz_t(), mpz_class(2).get_mpz_t(), l_P-1); //tiling error budget
         if(l_P == 0) return;
         mpz_class delta_n_new = deltan + additionalError_n(wX, wY, l_ext, t + 1, wFull, signedIO) * wlext;
         mpz_class delta_p_new = deltap + additionalError_p(wX, wY, l_ext, t + 1, wFull, signedIO) * wlext;
@@ -377,7 +377,7 @@ namespace flopoco {
             if(widthOfDiagonalOfRect(wX, wY, l_ext+1, wFull) <= t){
                 t = 0, l_ext++;
                 wlext = wlextpe;
-                mpz_pow_ui(wlextpe.get_mpz_t(), mpz_class(2).get_mpz_t(), l_ext+1);
+                wlextpe = mpz_class(1) << (l_ext+1) ; // was mpz_pow_ui(wlextpe.get_mpz_t(), mpz_class(2).get_mpz_t(), l_ext+1);
             }
             delta_n_new = deltan + additionalError_n(wX, wY, l_ext, t + 1, wFull, signedIO) * wlext;
             delta_p_new = deltap + additionalError_p(wX, wY, l_ext, t + 1, wFull, signedIO) * wlext;
@@ -420,15 +420,17 @@ namespace flopoco {
     void IntMultiplier::computeTruncMultParamsMPZunsigned(unsigned wX, unsigned wY, unsigned wFull, unsigned wOut, unsigned &g, unsigned &k, mpz_class &errorBudget, mpz_class &constant) {
         unsigned l_P = wFull - wOut, l_ext = 0, t = 0;
         mpz_class colweight = 2, dlow = 0, wlext = 1, wlextpe = 2, wlp;
-        mpz_pow_ui(errorBudget.get_mpz_t(), mpz_class(2).get_mpz_t(), l_P-1); //tiling error budget
-        mpz_pow_ui(wlp.get_mpz_t(), mpz_class(2).get_mpz_t(), l_P); //2^l_P
+        errorBudget = mpz_class(1) << (l_P-1); //tiling error budget
+				// was mpz_pow_ui(errorBudget.get_mpz_t(), mpz_class(2).get_mpz_t(), l_P-1); //tiling error budget
+        wlp = mpz_class(1) << l_P; // was mpz_pow_ui(wlp.get_mpz_t(), mpz_class(2).get_mpz_t(), l_P); //2^l_P
         if(l_P == 0) return;
         //Try to remove whole diagonals without violating the error bound.
         while( (t+1)*wlextpe + (dlow + widthOfDiagonalOfRect(wX,wY,l_ext+1,wFull)*wlext ) < wlp ){
             dlow += widthOfDiagonalOfRect(wX,wY,l_ext+1,wFull) * wlext;
             l_ext++;
             wlext = wlextpe;
-            mpz_pow_ui(wlextpe.get_mpz_t(), mpz_class(2).get_mpz_t(), l_ext+1);
+						
+						wlextpe= mpz_class(1) << (l_ext+1); // was mpz_pow_ui(wlextpe.get_mpz_t(), mpz_class(2).get_mpz_t(), l_ext+1);
             //printf("l_ext=%2i, dlow=%i, wlext=%i, wlextpe=%i, C=%i\n", l_ext, dlow.get_ui(), wlext.get_ui(), wlextpe.get_ui(), constant.get_ui());
         }
 
