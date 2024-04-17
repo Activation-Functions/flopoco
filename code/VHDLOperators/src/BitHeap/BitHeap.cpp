@@ -90,9 +90,6 @@ namespace flopoco {
 		//initialize the constant bits
 		constantBits = mpz_class(0);
 
-		//initialize the VHDL code buffer
-		vhdlCode.str("");
-
 		//create a compression strategy
 		compressionStrategy = nullptr;
 		isCompressed = false;
@@ -932,10 +929,10 @@ namespace flopoco {
 
 	void BitHeap::printBitHeapStatus()
 	{
-		REPORT(LogLevel::DEBUG, "Bitheap status:");
+		REPORT(LogLevel::DETAIL, "Bitheap status:");
 		for(unsigned w=0; w<bits.size(); w++)
 		{
-			REPORT(LogLevel::DEBUG, "Column position=" << w+lsb << ":\t height=" << bits[w].size());
+			REPORT(LogLevel::DETAIL, "Column position=" << w+lsb << ":\t height=" << bits[w].size());
 			printColumnInfo(w+lsb);
 		}
 	}

@@ -411,7 +411,7 @@ enum BitType : unsigned;
         int getNumberOfStages();
 
 	private:
-		Operator* op;
+		Operator* op;          /**< This is where the VHDL will go for instance */
 
 		vector<vector<Bit*> > bits;                 /**< The bits currently contained in the bitheap, ordered into columns by position in the bitheap,
 														 and by arrival time of the bits, i.e. lexicographic order on (cycle, cp), inside each column. */
@@ -419,8 +419,6 @@ enum BitType : unsigned;
 		mpz_class constantBits;						          /**< The sum of all the constant bits that need to be added to the bit heap
 												   (constants added to the bitheap, for rounding, two's complement etc)
 												   It is stored as an integer, whose LSB corresponds to the position lsb of the bitheap */
-
-		ostringstream vhdlCode;                     /**< The VHDL code buffer */
 
 		CompressionStrategy* compressionStrategy;   /**< The compression strategy used to compress the bitheap */
 		bool isCompressed;                          /**< Has the bitheap already been compressed, or not */

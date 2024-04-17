@@ -16,6 +16,58 @@
 #include "flopoco/Tables/Table.hpp"
 #include "flopoco/utils.hpp"
 
+/* TODO get rid of most of
+	 float dspOccupationThreshold=0.0, int maxDSP=-1, bool superTiles=false, bool use2xk=false, bool useirregular=false, bool useLUT=true, bool useDSP=true, bool useKaratsuba=false, bool useGenLUT=false, bool useBooth=false, int beamRange=0, bool optiTrunc=true, bool minStages=true */
+
+
+/* TODO: re-enable virtual multipliers as they were working in 4.1.2
+
+		Two use cases among many others:
+		   FixComplexMult computes a*b+c*d in a single bit heap
+			 FixMultAdd computes a+b*c in a single bit heap.
+		In both cases the result of the multiplication is provided as unevaluated bit in a bit heap.
+		
+		About rounding, guard bits, etc: this is the responsibility of the coarser operator (e.g. FixComplexMult).
+		The virtual IntMultiplier just inputs an error bound and must make sure that the error of the multiplier is within this bound.
+		It should also report the actual error achieved, sometimes it will be lower than the error bound.
+
+		The virtual multiplier inputs two signal names, a BitHeap, and a position where to place the product in this BitHeap.
+		This BitHeap object itself includes a pointer to an Operator which is the coarser op.
+		For instance, it will generate code in bitheap->getOp()->vhdl.
+
+		One thing that will make life simpler (and simpler than in 4.1.2) is to accept to construct a bit heap with empty columns.
+		For instance for a faithful FixComplexMult, let us create a bit heap large enough for the exact products,
+		even if we know they will be truncated.
+		The two virtual instances of IntMultiplier will leave empty LSB columns and that's OK.
+		
+		A last technicality is that IntMultiplier is written with a LSB of 0, so there is some shifting to do.
+		Here the simplest idea is probably to define this shift as exactProductLSBPosition, the position of the exact product LSB
+		(which has position 0 in IntMultiplier).
+
+		In summary, Workflows for the stand-alone and virtual multipliers
+		* STAND-ALONE *: more or less what we have
+			inputs wOut, computes g out of it, computes lsbWeightInBitHeap, creates a tiling, instantiates a bit heap, and throws bits in it.
+			In case of truncation, adds a constant centering constant and a round bit
+
+		* VIRTUAL *
+			inputs signal names for X and Y, externalBitHeapPtr, and externalBitHeapPos.
+			checks the BH is large enough, creates a tiling, throws bits in it with the corresponding VHDL in bitheap->getOp()->vhdl.
+			adds the constant centering in case of truncation, but not the rounding bit: this is the responsibility of  bitheap->getOp()
+		
+		Corner cases that one has to understand and support:
+			related to g, so stand-alone only: in general, g>0 when wOut<wX+wY.
+			However, one situation where g=0 and wOut!=wX+wY is the tabulation of a correctly rounded small multiplier.
+
+
+		As a consequence, attributes of IntMultiplier:
+			- there should be no global attribute g, because it is used only in the stand-alone case.
+			- there should be no global attribute wOut, because it is used only in the stand-alone case.
+  			Actually there is a global attribute wOut, but to be used only by emulate() which is only used for the standalone case
+			- fillBitHeap and the other methods should not refer to g or wOut
+
+ */
+
+
 namespace flopoco {
 	class IntMultiplier : public Operator {
 
@@ -28,10 +80,14 @@ namespace flopoco {
 		 * @param[in] wY             Y multiplier size (including sign bit if any)
 		 * @param[in] wOut           wOut size for a truncated multiplier (0 means full multiplier)
 		 * @param[in] signedIO       false=unsigned, true=signed
-		 * @param[in] texOutput      true=generate a tek file with the found tiling solution
+		 * @param[in] texOutput      true=generate a tex file with the found tiling solution
+		 * @param[in] externalBitheapPtr     if true, throw the multiplier bits in the provided bit heap
+		 * @param[in] externalBitheapPos if externalBitheapPtr true, this is the position of the LSB of the exact product
 		 **/
-		IntMultiplier(Operator *parentOp, Target* target, int wX, int wY, int wOut=0, bool signedIO = false, float dspOccupationThreshold=0.0, int maxDSP=-1, bool superTiles=false, bool use2xk=false, bool useirregular=false, bool useLUT=true, bool useDSP=true, bool useKaratsuba=false, bool useGenLUT=false, bool useBooth=false, int beamRange=0, bool optiTrunc=true, bool minStages=true, bool squarer=false);
+		IntMultiplier(Operator *parentOp, Target* target, int wX, int wY, int wOut=0, bool signedIO = false, float dspOccupationThreshold=0.0, int maxDSP=-1, bool superTiles=false, bool use2xk=false, bool useirregular=false, bool useLUT=true, bool useDSP=true, bool useKaratsuba=false, bool useGenLUT=false, bool useBooth=false, int beamRange=0, bool optiTrunc=true, bool minStages=true, bool squarer=false, BitHeap* externalBitheapPtr=nullptr, int exactProductLSBPosition=0 );
 
+
+		
 		/**
 		 * The emulate function.
 		 * @param[in] tc               a test-case
@@ -195,7 +251,7 @@ namespace flopoco {
          * @param bitheapLSBWeight weight (2^bitheapLSBWeight) of the LSB that should be compressed on BH. It is supposed to be 0 for regular multipliers, but can be higher for truncated multipliers.
          * @return none
          */
-		void branchToBitheap(BitHeap* bh, list<TilingStrategy::mult_tile_t> &solution , unsigned int bitheapLSBWeight);
+		void fillBitheap(BitHeap* bh, list<TilingStrategy::mult_tile_t> &solution, unsigned int bitheapLSBWeight);
 
         static unsigned additionalError_n(unsigned int wX, unsigned int wY, unsigned int col, unsigned int t, unsigned int wFull, bool signedIO);
 
