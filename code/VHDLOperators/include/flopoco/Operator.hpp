@@ -1243,9 +1243,10 @@ namespace flopoco {
 		int getuid();
 
 
-
+		/**  Sign extension of a signal to a (hopefully larger) size w */ 
 		string signExtend(string name, int w);
 
+		/**  Zero extension of a signal to a (hopefully larger) size w */ 
 		string zeroExtend(string name, int w);
 
 		int level; //printing issues

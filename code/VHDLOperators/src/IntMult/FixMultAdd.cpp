@@ -86,26 +86,62 @@ namespace flopoco {
 				REPORT(LogLevel::MESSAGE, "Building a FixMultAdd that may overflow (msbP=msbOut), we hope you manage it");
 			}
 
+			string typecast=signedIO?"signed":"unsigned";
 			// Set the operator name
 			ostringstream name;
 			name <<"FixMultAdd";
-			name << (signedIO?"_signed":"_unsigned");
+			name << "_" << typecast;
 			name << "_x_" << vhdlize(msbX) << "_" << vhdlize(lsbX);
 			name << "_y_" << vhdlize(msbY) << "_" << vhdlize(lsbY);
 			name << "_a_" << vhdlize(msbA) << "_" << vhdlize(lsbA);
 			name << "_r_" << vhdlize(msbOut) << "_" << vhdlize(lsbOut);
 			name << Operator::getNewUId();
 			setNameWithFreqAndUID(name.str());
-			REPORT(LogLevel::DEBUG, "Building " << name.str());
+			REPORT(LogLevel::DEBUG, "Building " << name.str() << endl 
+						 << "     X is " << (signedIO?"s":"u") << "fix(" << msbX <<    ", " << lsbX << ")" <<endl 
+						 << "     Y is " << (signedIO?"s":"u") << "fix(" << msbY <<    ", " << lsbY << ")" <<endl 
+						 << " Pfull is " << (signedIO?"s":"u") << "fix(" << msbP <<    ", " << lsbPfull << ")" <<endl 
+						 << "     A is " << (signedIO?"s":"u") << "fix(" << msbA <<    ", " << lsbA << ")" <<endl 
+						 << "     R is " << (signedIO?"s":"u") << "fix(" << msbOut <<    ", " << lsbOut << ")" <<endl 
+						 );
 		
-
+			
 			addInput ("X",  wX);
 			addInput ("Y",  wY);
 			addInput ("A",  wA);
-			addOutput("R",  wOut, 2); // TODO manage the exact case
-			vhdl << "R <= 0; -- TODO, obviously this is work in progress " << endl;
-		};
+			if(lsbPfull >= lsbOut) 			// Easy case when the multiplier needs no truncation
+				{
+					addOutput("R",  wOut);
+					isExact=true;
+					isCorrectlyRounded=true; // no rounding will ever happen
+					isFaithfullyRounded=true;// no rounding will ever happen
+					
+					// let's do this one first to get the virtual bit heap etc right.
+					if(getTarget()->plainVHDL()) { // mostly to debug emulate() and interface
+						vhdl << declareFixPoint("P", signedIO, msbP, lsbPfull) << " <= " << typecast << "(X)*" << typecast << "(Y);" << endl;
+						int newSizeP=msbOut -lsbPfull+1;
+						vhdl << declareFixPoint("RP", signedIO, msbOut, lsbOut) << " <= " << (signedIO ? signExtend("P",  newSizeP) : zeroExtend("P", newSizeP))<< ";" << endl;
+						//						cerr << "??? " << wA + msbOut-msbA << " " << signExtend("A", wA + msbOut-msbA) << " " << zeroExtend("A", wA+msbOut-msbA) << endl; 
+						int newSizeA=msbOut -lsbA+1;
+						vhdl << declareFixPoint("RA", signedIO, msbOut, lsbOut) << " <= " << typecast << "(" << (signedIO ? signExtend("A", newSizeA) : zeroExtend("A", newSizeA))<< ");" << endl;
+						
+						vhdl << declareFixPoint("RR", signedIO, msbOut, lsbOut) << " <= RA+RP;" << endl;
+						
+					}
+				}
+			else	{ /////////////////// lsbPfull < lsbOut so we build a truncated multiplier
+				isExact=false;
+				isCorrectlyRounded=false; //
+				isFaithfullyRounded=true;// 
+				// TODO a constructor argument for a correctly rounded mult?
+				addOutput("R",  wOut, 2); 
 
+			vhdl << "R <=0 -- This result is often wrong but it is computed quickly;  " << endl;
+			}
+			vhdl << "R <= std_logic_vector(RR);  " << endl;
+
+		};
+	
 	
 	
 #if 0	// The old constructor for a stand-alone operator
@@ -413,40 +449,66 @@ namespace flopoco {
 
 		mpfr_init2 (p, wX+wY); // enough bits for the exact product
 		mpfr_mul(p, x , y, MPFR_RNDD); // should be exact
+		int precForExact=max(msbOut, max(msbP, msbA)) - min(lsbOut, min(lsbPfull, lsbA)) + 2; 
+		mpfr_init2 (rd, precForExact); 
+		mpfr_init2 (ru, precForExact); 
+		mpfr_init2 (r, precForExact);
 
-		mpfr_init2 (r, wOut);
-		mpfr_init2 (rd, wOut); 
-		mpfr_init2 (ru, wOut); 
-		mpfr_add(r, a , p, MPFR_RNDN); // rounding here
-		mpfr_add(rd, a , p, MPFR_RNDD); // rounding here
-		mpfr_add(ru, a , p, MPFR_RNDU); // rounding here
-		//		cerr << "(remove this annoying message) Size estimated to " << size << endl; 
+		if(isCorrectlyRounded){
+			mpfr_add(r, a , p, MPFR_RNDN); // still no rounding here
+			mpfr_mul_2si (r, r, -lsbOut, GMP_RNDN); // scaling back to integer: no rounding here
+			mpz_class rz;
+			mpfr_get_z (rz.get_mpz_t(), r, GMP_RNDN); 			// this is where rounding happens
+			if(signedIO) {
+				rz = signedToBitVector(rz, wOut);
+			}
+			// There are valid use cases where a FixMultAdd may overflow on random tests but won't in its context.
+			// we manage this by emulating the two's complement overflow.
+			// This is probably disputable
+			
+			mpz_class twotowR = mpz_class(1) << wOut;
+			while(rz >= twotowR) {
+				cerr << " A=" << svA << " X=" << svX << " Y=" << svY << " A=" << mpfr_get_d(a,MPFR_RNDD) << " P=" << mpfr_get_d(p,MPFR_RNDD) << endl;
+				
+				cerr << endl << endl << "rz before " << rz;
+				rz -= twotowR;
+				cerr <<  "  rz after "  << rz<< endl;
+			}
+			while (rz < 0) {	rz += twotowR; } 
+			tc->addExpectedOutput ("R", rz);
 
-		mpfr_mul_2si (rd, rd, -lsbOut, GMP_RNDN); // conversion back to integer: no rounding here
-		mpfr_mul_2si (ru, ru, -lsbOut, GMP_RNDN); // conversion back to integer: no rounding here
-		mpz_class rdz, ruz;
-		mpfr_get_z (rdz.get_mpz_t(), rd, GMP_RNDD); 			// exact
-		mpfr_get_z (ruz.get_mpz_t(), ru, GMP_RNDD); 			// exact
-		if(signedIO) {
-			rdz = signedToBitVector(rdz, wOut);
-			ruz = signedToBitVector(ruz, wOut);
+		}
+		else{  // FAITHFUL ROUNDING
+			mpfr_add(rd, a , p, MPFR_RNDN); // no rounding here
+			mpfr_add(ru, a , p, MPFR_RNDN); // no rounding here
+			//		cerr << "(remove this annoying message) Size estimated to " << size << endl; 
+
+			mpfr_mul_2si (rd, rd, -lsbOut, GMP_RNDN); // conversion back to integer: no rounding here
+			mpfr_mul_2si (ru, ru, -lsbOut, GMP_RNDN); // conversion back to integer: no rounding here
+			mpz_class rdz, ruz;
+			mpfr_get_z (rdz.get_mpz_t(), rd, GMP_RNDD); 			// This is where rounding happens
+			mpfr_get_z (ruz.get_mpz_t(), ru, GMP_RNDU); 			// This is where rounding happens
+			if(signedIO) {
+				rdz = signedToBitVector(rdz, wOut);
+				ruz = signedToBitVector(ruz, wOut);
+			}
+
+			// There are valid use cases where a FixMultAdd may overflow on random tests but won't in its context.
+			// we manage this by emulating the two's complement overflow.
+			// This is probably disputable
+			
+			mpz_class twotowR = mpz_class(1) << wOut;
+			while(rdz >= twotowR) {	rdz -= twotowR;  }
+			while (rdz < 0) {	rdz += twotowR; } 
+			while(ruz >= twotowR) {	ruz -= twotowR;  }
+			while(ruz < 0) {	ruz += twotowR; } 
+			
+			tc->addExpectedOutput ("R", rdz);
+			tc->addExpectedOutput ("R", ruz);
 		}
 
-		// There are valid use cases where a FixMultAdd may overflow on random tests but won't in its context.
-		// we manage this by emulating the two's complement overflow.
-		// This is probably disputable
-
-		mpz_class twotowR = mpz_class(1) << wOut;
-		while(rdz >= twotowR) {	rdz -= twotowR;  }
-		while (rdz < 0) {	rdz += twotowR; } 
-		while(ruz >= twotowR) {	ruz -= twotowR;  }
-		while(ruz < 0) {	ruz += twotowR; } 
-			 
-		tc->addExpectedOutput ("R", rdz);
-		tc->addExpectedOutput ("R", ruz);
-
 		// free the memory
-		mpfr_clears (x, y, a, p, r,ru,rd, NULL);
+		mpfr_clears (x, y, a, p, r, ru, rd, NULL);
 		
 	}
 
