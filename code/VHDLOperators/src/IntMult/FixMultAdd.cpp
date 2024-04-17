@@ -454,28 +454,27 @@ namespace flopoco {
 		mpfr_init2 (ru, precForExact); 
 		mpfr_init2 (r, precForExact);
 
+		// There are valid use cases where a FixMultAdd may overflow on random tests but won't in its context.
+		// we manage this by emulating the overflow (which depends on the signedness). 
+		// This is probably disputable... anyway the following variables help for this. 
+		mpz_class twotowR = mpz_class(1) << wOut;
+		mpz_class minval = signedIO? (-(mpz_class(1)<<(wOut-1))) : mpz_class(0);
+		mpz_class maxval = signedIO? ((mpz_class(1)<<(wOut-1))-1) : ((mpz_class(1)<<wOut)-1);
+
 		if(isCorrectlyRounded){
 			mpfr_add(r, a , p, MPFR_RNDN); // still no rounding here
 			mpfr_mul_2si (r, r, -lsbOut, GMP_RNDN); // scaling back to integer: no rounding here
 			mpz_class rz;
 			mpfr_get_z (rz.get_mpz_t(), r, GMP_RNDN); 			// this is where rounding happens
+			// emulate over/underflow
+			while(rz >maxval) {	rz -= twotowR;	}
+			while (rz < minval) {	rz += twotowR; } 
+
 			if(signedIO) {
 				rz = signedToBitVector(rz, wOut);
 			}
-			// There are valid use cases where a FixMultAdd may overflow on random tests but won't in its context.
-			// we manage this by emulating the two's complement overflow.
-			// This is probably disputable
-			
-			mpz_class twotowR = mpz_class(1) << wOut;
-			while(rz >= twotowR) {
-				cerr << " A=" << svA << " X=" << svX << " Y=" << svY << " A=" << mpfr_get_d(a,MPFR_RNDD) << " P=" << mpfr_get_d(p,MPFR_RNDD) << endl;
-				
-				cerr << endl << endl << "rz before " << rz;
-				rz -= twotowR;
-				cerr <<  "  rz after "  << rz<< endl;
-			}
-			while (rz < 0) {	rz += twotowR; } 
 			tc->addExpectedOutput ("R", rz);
+
 
 		}
 		else{  // FAITHFUL ROUNDING
@@ -488,21 +487,17 @@ namespace flopoco {
 			mpz_class rdz, ruz;
 			mpfr_get_z (rdz.get_mpz_t(), rd, GMP_RNDD); 			// This is where rounding happens
 			mpfr_get_z (ruz.get_mpz_t(), ru, GMP_RNDU); 			// This is where rounding happens
+			// emulate overflow
+			while(rdz > maxval) {	rdz -= twotowR;  }
+			while(rdz < minval) {	rdz += twotowR; } 
+			while(ruz > maxval) {	ruz -= twotowR;  }
+			while(ruz < minval) {	ruz += twotowR; } 
+
 			if(signedIO) {
 				rdz = signedToBitVector(rdz, wOut);
 				ruz = signedToBitVector(ruz, wOut);
 			}
 
-			// There are valid use cases where a FixMultAdd may overflow on random tests but won't in its context.
-			// we manage this by emulating the two's complement overflow.
-			// This is probably disputable
-			
-			mpz_class twotowR = mpz_class(1) << wOut;
-			while(rdz >= twotowR) {	rdz -= twotowR;  }
-			while (rdz < 0) {	rdz += twotowR; } 
-			while(ruz >= twotowR) {	ruz -= twotowR;  }
-			while(ruz < 0) {	ruz += twotowR; } 
-			
 			tc->addExpectedOutput ("R", rdz);
 			tc->addExpectedOutput ("R", ruz);
 		}
@@ -540,6 +535,65 @@ namespace flopoco {
 													msbOut, lsbOut);
 	}
 
+
+
+
+	TestList FixMultAdd::unitTest(int testLevel)
+	{
+		// the static list of mandatory tests
+		TestList testStateList;
+		vector<pair<string,string>> paramList;
+
+    list<vector<int>> params; // order: msbx lsbx msby lsby msba lsba msbout lsbout
+		// (they will all be tested in 4 combinations of plainVHDL and signedIO)
+    if(testLevel == TestLevel::QUICK)
+    { // The quick tests
+      params = {
+				{3,0, 3,0, 10,0, 11,0}, // exact integer without overflow
+				{3,0, 3,0, 10,0, 10,0}, // exact integer with overflow
+			};
+    }
+    else if(testLevel == TestLevel::SUBSTANTIAL)
+    { // The substantial unit tests
+    }
+    else if(testLevel >= TestLevel::EXHAUSTIVE)
+    { // The substantial unit tests
+    }
+
+    for (auto param : params)
+    {
+      int msbx = param[0];
+      int lsbx = param[1];
+      int msby = param[2];
+      int lsby = param[3];
+      int msba = param[4];
+      int lsba = param[5];
+      int msbout = param[6];
+      int lsbout = param[7];
+      for(int plainvhdl=1; plainvhdl < 2; plainvhdl ++) // TODO update to test the bitheap version
+				{
+					for(int signedio=0; signedio < 2; signedio++)
+						{
+							paramList.push_back(make_pair("plainVHDL", plainvhdl ? "true" : "false"));
+							paramList.push_back(make_pair("signedIO",   signedio ? "true" : "false"));
+							paramList.push_back(make_pair("msbX", to_string(msbx)));
+							paramList.push_back(make_pair("lsbX", to_string(lsbx)));
+							paramList.push_back(make_pair("msbY", to_string(msby)));
+							paramList.push_back(make_pair("lsbY", to_string(lsby)));
+							paramList.push_back(make_pair("msbA", to_string(msba)));
+							paramList.push_back(make_pair("lsbA", to_string(lsba)));
+							paramList.push_back(make_pair("msbOut", to_string(msbout)));
+							paramList.push_back(make_pair("lsbOut", to_string(lsbout)));
+							testStateList.push_back(paramList);
+							paramList.clear();
+						}
+				}
+    }
+		return testStateList;
+	}
+
+
+	
 	template <>
 	const OperatorDescription<FixMultAdd> op_descriptor<FixMultAdd> {
 	    "FixMultAdd", // name

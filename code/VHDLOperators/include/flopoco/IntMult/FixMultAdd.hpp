@@ -87,17 +87,20 @@ namespace flopoco
 #endif
 
 
+		/**  Overloading Operator */
+		void emulate ( TestCase* tc );
+
+		/**  Overloading Operator */
+		void buildStandardTestCases(TestCaseList* tcl);
+
+		/**  Overloading Operator */
+		static TestList unitTest(int index);
+		
 		/** Factory method that parses arguments and calls the constructor */
 		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
 
 		
-		/**
-		 * The emulate function.
-		 * @param[in] tc               a test-case
-		 */
-		void emulate ( TestCase* tc );
 
-		void buildStandardTestCases(TestCaseList* tcl);
 
 	private:
 		bool signedIO; /**<  signedness of the multiplicands */
