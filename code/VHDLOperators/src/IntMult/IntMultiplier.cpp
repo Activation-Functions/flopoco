@@ -298,19 +298,12 @@ namespace flopoco {
 			//if (dynamic_cast<CompressionStrategy*>(tilingStrategy) == nullptr)  //The combined optimization always considers the full product size for a BitHeap
 			//    bitHeap.resizeBitheap(wFullP-bitHeapLSBWeight, 1);  //resize BitHeap for down to size required by truncation to simplify compression
 			
-			//this is the rounding bit for a faithfully rounded truncated multiplier
-			bh->addConstantOneBit(static_cast<int>(guardBits) - 1 + exactProductLSBPosition);
 			//these are the constant bits to recenter the average error around 0 and allow for more truncation error
 			mpz_class colweight, bitstate;
 			int i = wFullP - wOut - guardBits ;
 			do{
 				colweight = mpz_class(1) << i;   
 				bitstate = colweight & centerErrConstant ;
-				/* was:
-					 mpz_pow_ui(colweight.get_mpz_t(), mpz_class(2).get_mpz_t(), i);
-					 mpz_and(bitstate.get_mpz_t(), colweight.get_mpz_t(), centerErrConstant.get_mpz_t());
-					 */
-				
 				if (bitstate) {
 					bh->addConstantOneBit(i - (wFullP - wOut - guardBits) + exactProductLSBPosition);
 					REPORT(LogLevel::DEBUG,  "Adding constant bit with weight=" << i << " BitHeap col=" << i - (wFullP - wOut - guardBits) << "to recenter the truncation error at 0");
@@ -392,8 +385,13 @@ namespace flopoco {
 			errorBudget = mpz_class(1) << (lsbOut-1);
 		}
 		
-		auto tilingStrategy = addToExistingBitHeap(bitHeap,  xname,  yname, errorBudget , 0);
+		auto tilingStrategy = addToExistingBitHeap(bitHeap,  xname,  yname, errorBudget, 0);
 
+		// Rounding bit for a faithfully rounded truncated multiplier  
+		if (guardBits > 0) {
+			bitHeap->addConstantOneBit(static_cast<int>(guardBits) - 1);
+			//these are the constant bits to recenter the average error around 0 and allow for more truncation error
+		}
 		if (dynamic_cast<CompressionStrategy*>(tilingStrategy)) {
 			REPORT(LogLevel::DEBUG,  "Class is derived from CompressionStrategy, passing result for compressor tree.");
 			bitHeap->startCompression(dynamic_cast<CompressionStrategy*>(tilingStrategy));
@@ -591,9 +589,6 @@ namespace flopoco {
 			//if (dynamic_cast<CompressionStrategy*>(tilingStrategy) == nullptr)  //The combined optimization always considers the full product size for a BitHeap
 			//    bitHeap.resizeBitheap(wFullP-bitHeapLSBWeight, 1);  //resize BitHeap for down to size required by truncation to simplify compression
 			
-			//this is the rounding bit for a faithfully rounded truncated multiplier
-			bitHeap->addConstantOneBit(static_cast<int>(guardBits) - 1);
-			//these are the constant bits to recenter the average error around 0 and allow for more truncation error
 			mpz_class colweight, bitstate;
 			int i = wFullP - wOut - guardBits ;
 			do{
@@ -602,8 +597,7 @@ namespace flopoco {
 				/* was:
 					 mpz_pow_ui(colweight.get_mpz_t(), mpz_class(2).get_mpz_t(), i);
 					 mpz_and(bitstate.get_mpz_t(), colweight.get_mpz_t(), centerErrConstant.get_mpz_t());
-					 */
-				
+					 */				
 				if (bitstate) {
 					bitHeap->addConstantOneBit(i - (wFullP - wOut - guardBits));
 					REPORT(LogLevel::DEBUG,  "Adding constant bit with weight=" << i << " BitHeap col=" << i - (wFullP - wOut - guardBits) << "to recenter the truncation error at 0");
@@ -615,6 +609,12 @@ namespace flopoco {
 
 		fillBitheap(bitHeap, solution, bitHeapLSBWeight, wX, wY, squarer);
 
+		
+		// Rounding bit for a faithfully rounded truncated multiplier  
+		if (guardBits > 0) {
+			bitHeap->addConstantOneBit(static_cast<int>(guardBits) - 1);
+			//these are the constant bits to recenter the average error around 0 and allow for more truncation error
+		}
 		bitHeap ->  printBitHeapStatus();
 		schedule(); // This schedule up to the compressor tree
 		//		THROWERROR("stop here");
