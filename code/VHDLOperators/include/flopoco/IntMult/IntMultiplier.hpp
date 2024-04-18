@@ -17,7 +17,7 @@
 #include "flopoco/utils.hpp"
 
 /* TODO get rid of most of
-	 float dspOccupationThreshold=0.0, int maxDSP=-1, bool superTiles=false, bool use2xk=false, bool useirregular=false, bool useLUT=true, bool useDSP=true, bool useKaratsuba=false, bool useGenLUT=false, bool useBooth=false, int beamRange=0, bool optiTrunc=true, bool minStages=true */
+	  int maxDSP=-1, bool superTiles=false, bool use2xk=false, bool useirregular=false, bool useLUT=true,  bool useKaratsuba=false, bool useGenLUT=false, bool useBooth=false, int beamRange=0, bool optiTrunc=true, bool minStages=true */
 
 
 /* TODO: re-enable virtual multipliers as they were working in 4.1.2
@@ -84,7 +84,7 @@ namespace flopoco {
 		 * @param[in] externalBitheapPtr     if true, throw the multiplier bits in the provided bit heap
 		 * @param[in] externalBitheapPos if externalBitheapPtr true, this is the position of the LSB of the exact product
 		 **/
-		IntMultiplier(Operator *parentOp, Target* target, int wX, int wY, int wOut=0, bool signedIO = false, float dspOccupationThreshold=0.0, int maxDSP=-1, bool superTiles=false, bool use2xk=false, bool useirregular=false, bool useLUT=true, bool useDSP=true, bool useKaratsuba=false, bool useGenLUT=false, bool useBooth=false, int beamRange=0, bool optiTrunc=true, bool minStages=true, bool squarer=false, BitHeap* externalBitheapPtr=nullptr, int exactProductLSBPosition=0 );
+		IntMultiplier(Operator *parentOp, Target* target, int wX, int wY, int wOut=0, bool signedIO = false, int maxDSP=-1, bool superTiles=false, bool use2xk=false, bool useirregular=false, bool useLUT=true, bool useKaratsuba=false, bool useGenLUT=false, bool useBooth=false, int beamRange=0, bool optiTrunc=true, bool minStages=true, bool squarer=false, BitHeap* externalBitheapPtr=nullptr, int exactProductLSBPosition=0 );
 
 
 		/** A virtual operator that adds to an existing BitHeap belonging to another Operator.

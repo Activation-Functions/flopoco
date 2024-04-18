@@ -73,12 +73,15 @@ namespace flopoco {
 		computeTruncMultParams(12, 12, 25, actualLSB, k, constant);
 	}
 
-	IntMultiplier::IntMultiplier (Operator *parentOp, Target* target_, int wX_, int wY_, int wOut_, bool signedIO_, float dspOccupationThreshold, int maxDSP, bool superTiles, bool use2xk, bool useirregular, bool useLUT, bool useDSP, bool useKaratsuba, bool useGenLUT, bool useBooth, int beamRange, bool optiTrunc, bool minStages, bool squarer, BitHeap* externalBitheapPtr, int  exactProductLSBPosition):
-		Operator ( parentOp, target_ ),wX(wX_), wY(wY_), wOut(wOut_),signedIO(signedIO_), dspOccupationThreshold(dspOccupationThreshold), squarer(squarer) {
+	IntMultiplier::IntMultiplier (Operator *parentOp, Target* target_, int wX_, int wY_, int wOut_, bool signedIO_, int maxDSP, bool superTiles, bool use2xk, bool useirregular, bool useLUT, bool useKaratsuba, bool useGenLUT, bool useBooth, int beamRange, bool optiTrunc, bool minStages, bool squarer, BitHeap* externalBitheapPtr, int  exactProductLSBPosition):
+		Operator ( parentOp, target_ ),wX(wX_), wY(wY_), wOut(wOut_),signedIO(signedIO_),  squarer(squarer) {
         srcFileName = "IntMultiplier";
         setCopyrightString("Martin Kumm, Florent de Dinechin, Kinga Illyes, Bogdan Popa, Bogdan Pasca, 2012-");
 
+				dspOccupationThreshold = target_->unusedHardMultThreshold();
+				bool useDSP = target_->useHardMultipliers();
 
+				
         wFullP = prodsize(wX, wY, signedIO_, signedIO_);
         if (wOut == 0 || wFullP < wOut)
             wOut = wFullP;
@@ -949,8 +952,7 @@ namespace flopoco {
 
 	OperatorPtr IntMultiplier::parseArguments(OperatorPtr parentOp, Target *target, std::vector<std::string> &args, UserInterface& ui) {
 		int wX,wY, wOut, maxDSP;
-		bool signedIO,superTile, use2xk, useirregular, useLUT, useDSP, useKaratsuba, optiTrunc, minStages, squarer, useGenLUT, useBooth;
-		double dspOccupationThreshold=0.0;
+		bool signedIO,superTile, use2xk, useirregular, useLUT, useKaratsuba, optiTrunc, minStages, squarer, useGenLUT, useBooth;
 		int beamRange = 0;
 
 		ui.parseStrictlyPositiveInt(args, "wX", &wX);
@@ -961,18 +963,16 @@ namespace flopoco {
 		ui.parseBoolean(args, "use2xk", &use2xk);
 		ui.parseBoolean(args, "useirregular", &useirregular);
 		ui.parseBoolean(args, "useLUT", &useLUT);
-		ui.parseBoolean(args, "useDSP", &useDSP);
 		ui.parseBoolean(args, "useKaratsuba", &useKaratsuba);
 		ui.parseBoolean(args, "useGenLUT", &useGenLUT);
 		ui.parseBoolean(args, "useBooth", &useBooth);
-		ui.parseFloat(args, "dspThreshold", &dspOccupationThreshold);
 		ui.parseInt(args, "maxDSP", &maxDSP);
         ui.parseBoolean(args, "optiTrunc", &optiTrunc);
         ui.parseBoolean(args, "minStages", &minStages);
 		ui.parsePositiveInt(args, "beamRange", &beamRange);
 		ui.parseBoolean(args, "squarer", &squarer);
 
-		return new IntMultiplier(parentOp, target, wX, wY, wOut, signedIO, dspOccupationThreshold, maxDSP, superTile, use2xk, useirregular, useLUT, useDSP, useKaratsuba, useGenLUT, useBooth, beamRange, optiTrunc, minStages, squarer);
+		return new IntMultiplier(parentOp, target, wX, wY, wOut, signedIO, maxDSP, superTile, use2xk, useirregular, useLUT, useKaratsuba, useGenLUT, useBooth, beamRange, optiTrunc, minStages, squarer);
 	}
 
 	template <>
@@ -991,10 +991,8 @@ namespace flopoco {
 		 useLUT(bool)=true: if true, attempts to use the LUT-Multipliers for tiling;\
 		 useGenLUT(bool)=false: if true, attempts to use the generalized LUT Multipliers, as defined by multiplier_shapes.tiledef;\
 		 useBooth(bool)=false: if true, attempts to use LUT-based Booth Arrays;\
-		 useDSP(bool)=true: if true, attempts to use the DSP-Multipliers for tiling;\
 		 useKaratsuba(bool)=false: if true, attempts to use rectangular Karatsuba for tiling;\
 		 superTile(bool)=false: if true, attempts to use the DSP adders to chain sub-multipliers. This may entail lower logic consumption, but higher latency.;\
-		 dspThreshold(real)=0.0: threshold of relative occupation ratio of a DSP multiplier to be used or not;\
 		 optiTrunc(bool)=true: if true, considers the Truncation error dynamicly, instead of defining a hard border for tiling, like in the ARITH paper;\
 		 minStages(bool)=true: if true, minimizes stages in combined opt. of tiling an comp., otherwise try to find a sol. with less LUTs and more stages;\
 		 beamRange(int)=3: range for beam search;\
