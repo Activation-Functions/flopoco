@@ -128,6 +128,10 @@ namespace flopoco {
 						vhdl << declareFixPoint("RR", signedIO, msbOut, lsbOut) << " <= RA+RP;" << endl;
 						
 					}
+					else { // This is the bitheap-based version
+						BitHeap bh(this, wOut); // rather random
+						IntMultiplier::addToExistingBitHeap(&bh,  "X", "Y", 0);
+					}
 				}
 			else	{ /////////////////// lsbPfull < lsbOut so we build a truncated multiplier
 				isExact=false;
