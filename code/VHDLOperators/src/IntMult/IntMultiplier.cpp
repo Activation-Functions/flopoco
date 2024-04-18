@@ -73,6 +73,7 @@ namespace flopoco {
 		mpz_class centerErrConstant; // recentering constant to add to the bit heap
 
 		computeTruncMultParams(wX, wY, errorBudget, actualLSB, lastColumnKeepBits, centerErrConstant);
+		REPORT(LogLevel::DETAIL, "errorBudget=" << errorBudget << " actualLSB=" << actualLSB << "  lastColumnKeepBits=" << lastColumnKeepBits << "  centerErrConstant=" << centerErrConstant);
 		
 		// Sanity check: is the bit heap large enough? (another option would be to silently enlarge it)
 		if(bh->lsb > lsbPfull + actualLSB) {
@@ -279,7 +280,7 @@ namespace flopoco {
 			}
 		tilingStrategy->printSolution();
 		auto solLen = solution.size();
-		// REPORT(LogLevel::VERBOSE, "Found solution has " << solLen << " tiles");
+		REPORT(LogLevel::VERBOSE, "Found solution has " << solLen << " tiles");
 
 #if 0 // to resurrect, it has to be made static: TODO 
 		if (op->getTarget()->generateFigures())
@@ -350,7 +351,7 @@ namespace flopoco {
 		
 		multiplierUid = parentOp->getNewUId();
 
-				string xname="X";
+		string xname="X";
 		string yname="Y";
 
 		// Set up the IO signals
@@ -377,13 +378,17 @@ namespace flopoco {
 
 
 		
-#if 0
+#if 0 // This is the way it should be, with the part common to the normal and virtual multipliers factored out in addToExistingBitHeap
+		// Current status is: exact multipliers work.
+		// TODO compute the error correction constant and understand what truncated tiling does.
 
+		
 		// error budget is one half-ulp, and there is also one half-ulp for final rounding
-		int lsbOut=wOut-wFullP;
+		int lsbOut = wFullP - wOut;
 		if(wOut<wFullP) {
 			errorBudget = mpz_class(1) << (lsbOut-1);
 		}
+		REPORT(LogLevel::DEBUG,  " errorBudget=" << errorBudget);
 		
 		auto tilingStrategy = addToExistingBitHeap(bitHeap,  xname,  yname, errorBudget, 0);
 
