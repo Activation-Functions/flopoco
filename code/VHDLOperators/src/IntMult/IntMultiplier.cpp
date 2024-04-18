@@ -44,6 +44,34 @@ using namespace std;
 
 namespace flopoco {
 
+	void IntMultiplier::addToExistingBitHeap(BitHeap* externalBitheapPtr, string xname, string yname, int lsbOut, int exactProductLSBPosition)
+	{
+		OperatorPtr op=externalBitheapPtr->getOp();
+		Signal* x = op -> getSignalByName(xname);
+		Signal* y = op -> getSignalByName(yname);
+		// let's get over with the fixed-point stuff
+		int msbX = x->MSB();
+		int msbY = y->MSB();
+		int lsbX = x->LSB();
+		int lsbY = y->LSB();
+		int wX = x->width();
+		int wY = y->width();
+		int signedX = x->isSigned();
+		int signedY = y->isSigned();
+		if (signedX!=signedY) {
+			ostringstream e;
+			e << "Product of two signals " << xname << " and " << yname << " with different signednesses is not supported in IntMultiplier::addToExistingBitHeap";
+			throw(e.str());
+		}
+		
+		int lsbPfull = lsbX+lsbY; // This is the anchor for exactProductLSBPosition
+
+		// from now on we switch to the integer-oriented point of view of the Fulda code
+		int wFullP = prodsize(wX, wY, signedX, signedY);
+		unsigned actualLSB, k;
+		mpz_class constant;
+		computeTruncMultParams(12, 12, 25, actualLSB, k, constant);
+	}
 
 	IntMultiplier::IntMultiplier (Operator *parentOp, Target* target_, int wX_, int wY_, int wOut_, bool signedIO_, float dspOccupationThreshold, int maxDSP, bool superTiles, bool use2xk, bool useirregular, bool useLUT, bool useDSP, bool useKaratsuba, bool useGenLUT, bool useBooth, int beamRange, bool optiTrunc, bool minStages, bool squarer, BitHeap* externalBitheapPtr, int  exactProductLSBPosition):
 		Operator ( parentOp, target_ ),wX(wX_), wY(wY_), wOut(wOut_),signedIO(signedIO_), dspOccupationThreshold(dspOccupationThreshold), squarer(squarer) {
@@ -359,6 +387,9 @@ namespace flopoco {
 		return nbDontCare - nbUnneeded;
 	}
 
+
+
+	// This function is being deprecated as its essence is split over the two following functions. 
 	void IntMultiplier::computeTruncMultParamsMPZ(unsigned wX, unsigned wY, unsigned wFull, unsigned wOut, bool signedIO, unsigned &g, unsigned &k, mpz_class &errorBudget, mpz_class &constant) {
         unsigned l_P = wFull - wOut, l_ext = 0, t = 0;
         mpz_class colweight = 2, deltan = 0, deltap = 0, wlext = 1, wlextpe = 2, tbits = 0;
@@ -392,6 +423,40 @@ namespace flopoco {
         //cout << "errorBudget=" << errorBudget << ", C=" << constant << endl;
     }
 
+
+
+	void IntMultiplier::computeTruncMultParams(unsigned wX, unsigned wY, mpz_class errorBudget, unsigned &col, unsigned &k, mpz_class &constant){
+		//
+		k=0;
+		constant=0;
+		mpz_class error=0;
+		col = 0;
+		mpz_class fullColError = 1; // error of truncating the rightmost column which contains one bit
+
+		cerr << "Error budget: " << errorBudget << endl;
+
+		// This loop exits as soon as the truncation error of a full triangle exceeds the error budget
+		while (error + fullColError < errorBudget) { //
+			error += fullColError;
+			cerr << "first loop: col=" << col << " error=" << error << endl;
+			col++;
+			fullColError = (col+1) * (mpz_class(1) << col);
+		}
+		// now try to remove bits from the last column
+		col--;
+		k=0;
+		mpz_class oneBitError=(mpz_class(1) << col);
+		while (error + oneBitError < errorBudget) { //
+			cerr << "second loop: col=" << col << " k=" << k << " error=" << error << endl;			
+			error += oneBitError;
+			k++;
+		}
+		cerr << "Finally col=" << col << " k=" << k << " error=" << error << endl;			
+		return;
+	}
+
+
+	
     mpz_class IntMultiplier::calcErcConst(mpz_class &errorBudget, mpz_class &wlext, mpz_class &deltap, mpz_class constant){
         if(constant == 0) return 0;
         constant = errorBudget - wlext;                                         //2^(l_P-1) - 2^(l_ext+1)
@@ -417,36 +482,6 @@ namespace flopoco {
         return 0;
     }
 
-    void IntMultiplier::computeTruncMultParamsMPZunsigned(unsigned wX, unsigned wY, unsigned wFull, unsigned wOut, unsigned &g, unsigned &k, mpz_class &errorBudget, mpz_class &constant) {
-        unsigned l_P = wFull - wOut, l_ext = 0, t = 0;
-        mpz_class colweight = 2, dlow = 0, wlext = 1, wlextpe = 2, wlp;
-        errorBudget = mpz_class(1) << (l_P-1); //tiling error budget
-				// was mpz_pow_ui(errorBudget.get_mpz_t(), mpz_class(2).get_mpz_t(), l_P-1); //tiling error budget
-        wlp = mpz_class(1) << l_P; // was mpz_pow_ui(wlp.get_mpz_t(), mpz_class(2).get_mpz_t(), l_P); //2^l_P
-        if(l_P == 0) return;
-        //Try to remove whole diagonals without violating the error bound.
-        while( (t+1)*wlextpe + (dlow + widthOfDiagonalOfRect(wX,wY,l_ext+1,wFull)*wlext ) < wlp ){
-            dlow += widthOfDiagonalOfRect(wX,wY,l_ext+1,wFull) * wlext;
-            l_ext++;
-            wlext = wlextpe;
-						
-						wlextpe= mpz_class(1) << (l_ext+1); // was mpz_pow_ui(wlextpe.get_mpz_t(), mpz_class(2).get_mpz_t(), l_ext+1);
-            //printf("l_ext=%2i, dlow=%i, wlext=%i, wlextpe=%i, C=%i\n", l_ext, dlow.get_ui(), wlext.get_ui(), wlextpe.get_ui(), constant.get_ui());
-        }
-
-        //printf("l_ext=%2i, dlow=%i, wlext=%i, wlextpe=%i, C=%i, \n ", l_ext, dlow.get_ui(), wlext.get_ui(), wlextpe.get_ui(), constant.get_ui());
-
-        //Try to remove partial products from the next diagonal, until it would violate the error bound.
-        while( (t+2)*wlext + dlow < wlp && t < widthOfDiagonalOfRect(wX,wY,l_ext+1,wFull)){
-            t += 1;
-        }
-
-        constant = errorBudget - wlext;                                         //2^(l_P-1) - 2^(l_ext+1)
-        g = l_P - l_ext;
-        k = widthOfDiagonalOfRect(wX,wY,l_ext+1,wFull) - t;
-        //printf("w=%2i, l_ext=%i, t=%i, g=%i, k=%i, ", wX, l_ext, t, g, k);
-        //cout << "errorBudget=" << errorBudget << ", C=" << constant << endl;
-    }
 
     unsigned int IntMultiplier::widthOfDiagonalOfRect(unsigned wX, unsigned wY, unsigned col, unsigned wFull, bool signedIO){
         if(signedIO){ wX--; wY--; wFull = prodsize(wX, wY, signedIO, signedIO);}

@@ -87,6 +87,15 @@ namespace flopoco {
 		IntMultiplier(Operator *parentOp, Target* target, int wX, int wY, int wOut=0, bool signedIO = false, float dspOccupationThreshold=0.0, int maxDSP=-1, bool superTiles=false, bool use2xk=false, bool useirregular=false, bool useLUT=true, bool useDSP=true, bool useKaratsuba=false, bool useGenLUT=false, bool useBooth=false, int beamRange=0, bool optiTrunc=true, bool minStages=true, bool squarer=false, BitHeap* externalBitheapPtr=nullptr, int exactProductLSBPosition=0 );
 
 
+		/** A virtual operator that adds to an existing BitHeap belonging to another Operator.
+		 Also fixed-point oriented:
+		   the formats of the inputs are read from the signals named xname and yname;
+			 the multiplier should be faithful to lsbOut
+		*/
+		static void addToExistingBitHeap(BitHeap* externalBitheapPtr, string xname, string yname, int lsbOut, int exactProductLSBPosition=0 );
+
+
+
 		
 		/**
 		 * The emulate function.
@@ -134,8 +143,8 @@ namespace flopoco {
          */
 		static unsigned int widthOfDiagonalOfRect(unsigned int wX, unsigned int wY, unsigned int col, unsigned wFull, bool signedIO=false);
 
-		/**
-        * @brief Compute several parameters for a faithfully rounding truncated multiplier, supports the singed case
+		/** TODO Deprecate once it has been properly split in two 
+        * @brief Compute several parameters for a faithfully rounding truncated multiplier, supports the signed case
         * @details Compute guard-bits, keep-bits, the error re-centering constant and the error budget. The parameters are estimated by sucessivly removing partial products (as they would apperar in an and array, although the actual multiplier might use larger tiles) as long as the error bounds are met. The function considers the dynamic calculation of the error recentering constant to extend the permissible error to allow more truncated bits and hence a lower cost. In contrast to the algorithm published in the truncation paper mentioned below, this variant also considers that the singed case, where the partial products at the left and bottom edge |_ of the tiled area cause a positive when omitted (as they count negative in the result). The function has quadratic complexity.
         * @param wX width of the rectangle
         * @param wY height of the rectangle
@@ -150,20 +159,23 @@ namespace flopoco {
         */
         static void computeTruncMultParamsMPZ(unsigned wX, unsigned wY, unsigned wFull, unsigned wOut, bool signedIO, unsigned &g, unsigned &k, mpz_class &errorBudget, mpz_class &constant);
 
-        /**
-         * @brief Compute several parameters for a faithfully rounding truncated multiplier
-         * @details Compute guard-bits, keep-bits, the error re-centering constant and the error budget as shown in A. Boettcher, M. Kumm, F. de Dinechin "Resource optimal truncated multipliers for FPGAs" This function has a linear complexity.
-         * @param wX width of the rectangle
-         * @param wY height of the rectangle
-         * @param wFull width of result of a non-truncated multiplier with the same input widths
-         * @param wOut requested output width of the result vector of the truncated multiplier
-         * @param g the number of bits below the output LSB that we need to keep in the summation
-         * @param k number of bits to keep in in the column with weight w-g
-         * @param errorBudget maximal permissible weight of the sum of the omitted partial products (as they would appear in an array multiplier)
-         * @param constant to recenter the truncation error around 0 since it can otherwise only be negative, since there are only partial products left out. This allows a larger error, so more products can be omitted
-         * @return none
-         */
-		static void computeTruncMultParamsMPZunsigned(unsigned wX, unsigned wY, unsigned wFull, unsigned wOut, unsigned &g, unsigned &k, mpz_class &errorBudget, mpz_class &constant);
+		
+		/** 
+        * @brief Compute the guard bits, keep bits, and the error-centering constant for a faithfully rounding truncated multiplier
+        * @details See 7.2.4.2 of Application Specific Arithmetic 2024.
+				In addition to the algorithm there, this variant takes into account the negative sign of the partial products at the left and bottom edge |_ in signed multipliers.
+				This should never be useful in a multiplier computing just right (see 8.1.4), but the world conspires to prove my intuitions wrong.
+				This function is assuming an integer multiplier (lsbX=lsbY=0), so the error budget and the constant are integers
+				This function has quadratic complexity.
+        * @param wX size in bits of input X 
+        * @param wY size in bits of input Y
+        * @param errorBudget strict upper bound on the allowed error after truncation 
+        * @param actualLSB the rightmost position where we need to keep bits
+        * @param k number of bits to keep in the rightmost position
+        * @param constant to recenter the truncation error around 0 since it can otherwise only be negative, since there are only partial products left out. This allows a larger error, so more products can be omitted. 
+        * @return none
+        */
+		static void computeTruncMultParams(unsigned wX, unsigned wY, mpz_class errorBudget, unsigned &actualLSB, unsigned &k, mpz_class &constant);
 
 		/**
          * @brief Calculate the LSB of the BitHeap required to maintain faithfulness, so that unnecessary LSBs to meet the error budget of multiplier tiles can be omitted from compression
@@ -253,6 +265,7 @@ namespace flopoco {
          */
 		void fillBitheap(BitHeap* bh, list<TilingStrategy::mult_tile_t> &solution, unsigned int bitheapLSBWeight);
 
+		// TODO remove all the following
         static unsigned additionalError_n(unsigned int wX, unsigned int wY, unsigned int col, unsigned int t, unsigned int wFull, bool signedIO);
 
         static unsigned additionalError_p(unsigned int wX, unsigned int wY, unsigned int col, unsigned int t, unsigned int wFull, bool signedIO);
