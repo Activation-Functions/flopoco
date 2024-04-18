@@ -25,15 +25,16 @@
 		Two use cases among many others:
 		   FixComplexMult computes a*b+c*d in a single bit heap
 			 FixMultAdd computes a+b*c in a single bit heap.
-		In both cases the result of the multiplication is provided as unevaluated bit in a bit heap.
+		In both cases the result of the multiplication is provided as unevaluated bits in a bit heap.
 		
 		About rounding, guard bits, etc: this is the responsibility of the coarser operator (e.g. FixComplexMult).
-		The virtual IntMultiplier just inputs an error bound and must make sure that the error of the multiplier is within this bound.
-		It should also report the actual error achieved, sometimes it will be lower than the error bound.
+		The virtual IntMultiplier just inputs an error bound and must make sure that the error of the multiplier is within this bound,
+		using the least possible bitheap columns.
+		It should also report its LSB and the actual error achieved, sometimes it will be lower than the error bound.
 
-		The virtual multiplier inputs two signal names, a BitHeap, and a position where to place the product in this BitHeap.
+		So the virtual multiplier inputs two signal names, a BitHeap, an error budget, and a position where to place the product in this BitHeap.
 		This BitHeap object itself includes a pointer to an Operator which is the coarser op.
-		For instance, it will generate code in bitheap->getOp()->vhdl.
+		For nstance, it will generate code in bitheap->getOp()->vhdl.
 
 		One thing that will make life simpler (and simpler than in 4.1.2) is to accept to construct a bit heap with empty columns.
 		For instance for a faithful FixComplexMult, let us create a bit heap large enough for the exact products,
@@ -73,6 +74,17 @@ namespace flopoco {
 
 	public:
 
+
+		/** A virtual operator that adds to an existing BitHeap belonging to another Operator.
+		 Also fixed-point oriented:
+		   the formats of the inputs are read from the signals named xname and yname;
+			 the error is given as an mpz_class and is an error in ulps of the exact product
+			 TODO Frankly I don't know what is a tilingStrategy and why it should be returned... 
+		*/
+		static TilingStrategy* addToExistingBitHeap(BitHeap* externalBitheapPtr, string xname, string yname, mpz_class errorBudget, int exactProductLSBPosition=0 );
+
+
+		
 		/**
 		 * The IntMultiplier constructor
 		 * @param[in] target           the target device
@@ -84,15 +96,8 @@ namespace flopoco {
 		 * @param[in] externalBitheapPtr     if true, throw the multiplier bits in the provided bit heap
 		 * @param[in] externalBitheapPos if externalBitheapPtr true, this is the position of the LSB of the exact product
 		 **/
-		IntMultiplier(Operator *parentOp, Target* target, int wX, int wY, int wOut=0, bool signedIO = false, int maxDSP=-1, bool superTiles=false, bool use2xk=false, bool useirregular=false, bool useLUT=true, bool useKaratsuba=false, bool useGenLUT=false, bool useBooth=false, int beamRange=0, bool optiTrunc=true, bool minStages=true, bool squarer=false, BitHeap* externalBitheapPtr=nullptr, int exactProductLSBPosition=0 );
+		IntMultiplier(Operator *parentOp, Target* target, int wX, int wY, int wOut=0, bool signedIO = false, int maxDSP=-1, bool superTiles=false, bool use2xk=false, bool useirregular=false, bool useLUT=true, bool useKaratsuba=false, bool useGenLUT=false, bool useBooth=false, int beamRange=0, bool optiTrunc=true, bool minStages=true, bool squarer=false);
 
-
-		/** A virtual operator that adds to an existing BitHeap belonging to another Operator.
-		 Also fixed-point oriented:
-		   the formats of the inputs are read from the signals named xname and yname;
-			 the multiplier should be faithful to lsbOut
-		*/
-		static void addToExistingBitHeap(BitHeap* externalBitheapPtr, string xname, string yname, int lsbOut, int exactProductLSBPosition=0 );
 
 
 
@@ -214,11 +219,13 @@ namespace flopoco {
 		 * @param idx: the tile identifier for unique name
 		 * @param output_name: the name to which the output of this tile should be mapped
 		 */
-		Operator* realiseTile(
-				TilingStrategy::mult_tile_t & tile,
-				size_t idx,
-				string output_name
-			);
+		static Operator* realiseTile(OperatorPtr op,
+																 TilingStrategy::mult_tile_t & tile,
+																 size_t idx,
+																 string output_name,
+																 int wX, int wY,
+																 bool squarer
+																 );
 
 		/** returns the amount of consecutive bits, which are not constantly zero
 		 * @param bm:                          current BaseMultiplier
@@ -263,8 +270,11 @@ namespace flopoco {
          * @param bitheapLSBWeight weight (2^bitheapLSBWeight) of the LSB that should be compressed on BH. It is supposed to be 0 for regular multipliers, but can be higher for truncated multipliers.
          * @return none
          */
-		void fillBitheap(BitHeap* bh, list<TilingStrategy::mult_tile_t> &solution, unsigned int bitheapLSBWeight);
+		static void fillBitheap(BitHeap* bh, list<TilingStrategy::mult_tile_t> &solution, unsigned int bitheapLSBWeight, int wX, int wY, bool squarer);
 
+		// TODO make static so that it can be used in the virtual operator
+	  void createFigures(TilingStrategy *tilingStrategy) const;
+ 
 		// TODO remove all the following
         static unsigned additionalError_n(unsigned int wX, unsigned int wY, unsigned int col, unsigned int t, unsigned int wFull, bool signedIO);
 
@@ -272,7 +282,6 @@ namespace flopoco {
 
         static mpz_class calcErcConst(mpz_class &errorBudget, mpz_class &wlext, mpz_class &deltap, mpz_class constant=1);
 
-        void createFigures(TilingStrategy *tilingStrategy) const;
     };
 
 }
