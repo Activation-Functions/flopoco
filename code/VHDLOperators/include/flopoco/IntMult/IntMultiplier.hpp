@@ -272,8 +272,7 @@ namespace flopoco {
          */
 		static void fillBitheap(BitHeap* bh, list<TilingStrategy::mult_tile_t> &solution, unsigned int bitheapLSBWeight, int wX, int wY, bool squarer);
 
-		// TODO make static so that it can be used in the virtual operator
-	  void createFigures(TilingStrategy *tilingStrategy) const;
+		static void createFigures(TilingStrategy *tilingStrategy);
  
 		// TODO remove all the following
         static unsigned additionalError_n(unsigned int wX, unsigned int wY, unsigned int col, unsigned int t, unsigned int wFull, bool signedIO);
