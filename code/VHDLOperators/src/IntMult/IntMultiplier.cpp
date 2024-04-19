@@ -282,10 +282,8 @@ namespace flopoco {
 		auto solLen = solution.size();
 		REPORT(LogLevel::VERBOSE, "Found solution has " << solLen << " tiles");
 
-#if 0 // to resurrect, it has to be made static: TODO 
 		if (op->getTarget()->generateFigures())
 			createFigures(tilingStrategy);
-#endif
 		
 		op -> schedule(); // This schedules up to the inputs of the multiplier
 
@@ -1434,14 +1432,15 @@ namespace flopoco {
         return col;
     }
 
-    void IntMultiplier::createFigures(TilingStrategy *tilingStrategy) const {
+    void IntMultiplier::createFigures(TilingStrategy *tilingStrategy) {
 	    ofstream texfile;
+			int wTrunc=0; // TODO obviously wrong, the parameter is called wTrunc but was called below with the IntMultiplier attribute wOut
 	    texfile.open("multiplier_tiling.tex");
 	    if ((texfile.rdstate() & ofstream::failbit) != 0) {
 	        cerr << "Error when opening multiplier_tiling.tex file for output. Will not print tiling configuration."
 	        << endl;
 	    } else {
-	        tilingStrategy->printSolutionTeX(texfile, wOut, false);
+				tilingStrategy->printSolutionTeX(texfile, false); // was wOut
 	        texfile.close();
 	    }
 
@@ -1450,7 +1449,7 @@ namespace flopoco {
 	        cerr << "Error when opening multiplier_tiling.svg file for output. Will not print tiling configuration."
 	        << endl;
 	    } else {
-	        tilingStrategy->printSolutionSVG(texfile, wOut, false);
+	        tilingStrategy->printSolutionSVG(texfile, false);// was wOut
 	        texfile.close();
 	    }
 
@@ -1459,7 +1458,7 @@ namespace flopoco {
 	        cerr << "Error when opening multiplier_shape.tex file for output. Will not print tiling configuration."
 	        << endl;
 	    } else {
-	        tilingStrategy->printSolutionTeX(texfile, wOut, true);
+	        tilingStrategy->printSolutionTeX(texfile, true);// was wOut
 	        texfile.close();
 	    }
 

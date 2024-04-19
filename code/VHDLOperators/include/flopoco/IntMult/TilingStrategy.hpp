@@ -19,8 +19,8 @@ namespace flopoco {
 
 		virtual void solve() = 0;
 		void printSolution();
-		void printSolutionTeX(ofstream &outstream, int wTrunc = 0, bool triangularStyle=false);
-		void printSolutionSVG(ofstream &outstream, int wTrunc = 0, bool triangularStyle=false);
+		void printSolutionTeX(ofstream &outstream, bool triangularStyle=false);
+		void printSolutionSVG(ofstream &outstream, bool triangularStyle=false);
 
 		list<mult_tile_t>& getSolution()
 		{
