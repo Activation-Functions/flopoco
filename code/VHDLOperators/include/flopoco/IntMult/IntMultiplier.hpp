@@ -22,49 +22,65 @@
 
 /* TODO: re-enable virtual multipliers as they were working in 4.1.2
 
-		Two use cases among many others:
+	 Some use cases among many others that the current IntMultiplier cannot address :
 		   FixComplexMult computes a*b+c*d in a single bit heap
 			 FixMultAdd computes a+b*c in a single bit heap.
-		In both cases the result of the multiplication is provided as unevaluated bits in a bit heap.
-		
-		About rounding, guard bits, etc: this is the responsibility of the coarser operator (e.g. FixComplexMult).
-		The virtual IntMultiplier just inputs an error bound and must make sure that the error of the multiplier is within this bound,
-		using the least possible bitheap columns.
-		It should also report its LSB and the actual error achieved, sometimes it will be lower than the error bound.
+			 FixSumOfProducts compute the faithful sum of N products.
+	 In all these cases, we want a BitHeap shared by several IntMultipliers.
+	 The simplest solution is to have a IntMultiplier method that throws VHDL into an existing Operator and the bits in an existing BitHeap.
+	 Since a BitHeap is associated to an Operator, we just need to pass the BitHeap and we can recover the Operator from it. 
 
-		So the virtual multiplier inputs two signal names, a BitHeap, an error budget, and a position where to place the product in this BitHeap.
-		This BitHeap object itself includes a pointer to an Operator which is the coarser op.
-		For nstance, it will generate code in bitheap->getOp()->vhdl.
-
-		One thing that will make life simpler (and simpler than in 4.1.2) is to accept to construct a bit heap with empty columns.
-		For instance for a faithful FixComplexMult, let us create a bit heap large enough for the exact products,
-		even if we know they will be truncated.
-		The two virtual instances of IntMultiplier will leave empty LSB columns and that's OK.
-		
-		A last technicality is that IntMultiplier is written with a LSB of 0, so there is some shifting to do.
-		Here the simplest idea is probably to define this shift as exactProductLSBPosition, the position of the exact product LSB
-		(which has position 0 in IntMultiplier).
-
-		In summary, Workflows for the stand-alone and virtual multipliers
+	 In summary, we should have two ways to instantiate an IntMultiplier:
 		* STAND-ALONE *: more or less what we have
 			inputs wOut, computes g out of it, computes lsbWeightInBitHeap, creates a tiling, instantiates a bit heap, and throws bits in it.
 			In case of truncation, adds a constant centering constant and a round bit
 
 		* VIRTUAL *
-			inputs signal names for X and Y, externalBitHeapPtr, and externalBitHeapPos.
-			checks the BH is large enough, creates a tiling, throws bits in it with the corresponding VHDL in bitheap->getOp()->vhdl.
-			adds the constant centering in case of truncation, but not the rounding bit: this is the responsibility of  bitheap->getOp()
+		In such cases the result of the multiplication is provided as unevaluated bits in a bit heap.
+		It is a static IntMultiplier method that inputs
+		  signal names for X and Y, absoluteError, externalBitHeapPtr, and externalBitHeapPos.
+		It checks the BH is large enough, creates a tiling, throws bits in it (with the corresponding VHDL going to bitheap->getOp()->vhdl)
+			then adds the centering  constant in case of truncation, but not the rounding bit: this is the responsibility of the parent bitheap->getOp()
+		
+		The coarser operator (e.g. FixComplexMult or FixSumOfProducts) implements an error analysis, 
+	   and defines an error budget for each IntMultiplier.
+		The virtual IntMultiplier just inputs this errorBudget and must make sure that the error of the multiplier is within this bound,
+		  using the least possible bitheap columns.
+		It should also report its LSB and the actual error achieved, sometimes it will be lower than the error bound.
+
+
+		The problem with current code is that wOut for instance is an attribute of the IntMultiplier class (which is OK: we need it for emulate())
+     that is used all over the place in the tilings etc. Sometimes messed with guardBits, etc.
+		All the tiling algorithms should become error-centered (some already are)
+		
+		One thing that will make life simpler (and simpler than in 4.1.2) is to accept to construct a bit heap with empty columns.
+		For instance for a faithful FixComplexMult, let us create a bit heap large enough for the exact products,
+		even if we know they will be truncated.
+		The two virtual instances of IntMultiplier will leave empty LSB columns and that's OK. I think.
+		
+		IntMultiplier is written with a LSB of 0, which is generally a good idea. But to use it in a fixed-point context there is some shifting to do.
+		Here the simplest idea is probably to define this shift as exactProductLSBPosition, the position of the ulp of the exact product.
+		(position 0 in an integer multiplier). This will be easy
+
+		An intermediate objective is to refactor IntMultiplier so that the stand-alone operator invokes the virtual one (to avoid code duplication)
+		Current state of the refactoring:
+		  most of the "staticization" is OK
+			the refactored version works for exact (full) multipliers (and the default beam search)
+			It still doesn't work for truncated ones.
+			
+		One bad design choice is to think/write the code in terms of wOut and wOut+g (because the msb is tricky, see prodsize())
+		Better use LSBs internally
 		
 		Corner cases that one has to understand and support:
 			related to g, so stand-alone only: in general, g>0 when wOut<wX+wY.
 			However, one situation where g=0 and wOut!=wX+wY is the tabulation of a correctly rounded small multiplier.
 
 
-		As a consequence, attributes of IntMultiplier:
+		About attributes of IntMultiplier:
 			- there should be no global attribute g, because it is used only in the stand-alone case.
 			- there should be no global attribute wOut, because it is used only in the stand-alone case.
   			Actually there is a global attribute wOut, but to be used only by emulate() which is only used for the standalone case
-			- fillBitHeap and the other methods should not refer to g or wOut
+			- fillBitHeap and the other methods should not refer to the attribg or wOut
 
  */
 
