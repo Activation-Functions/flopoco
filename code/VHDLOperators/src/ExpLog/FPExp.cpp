@@ -48,6 +48,8 @@ Clean up poly eval and bitheapize it
 All the tables could be FixFunctionByTable...
 */
 
+#define USE_FIX_FUNCTION_BY_TABLE
+
 #define LARGE_PREC 1000 // 1000 bits should be enough for everybody
 
 namespace flopoco{
@@ -305,7 +307,7 @@ namespace flopoco{
 			sizeZ = wF+g-k;
 			sizeExpZm1 = sizeZ+1; //
 			sizeMultIn = sizeZ; // sacrificing accuracy where it costs
-			if (sizeZ<=k) {
+			if (sizeZ<=k+1) { // Used to be k. k+1 prevents issue with table ExpZmZm1 being empty
 				REPORT(LogLevel::VERBOSE, "Z is small, simpler table tabulating e^Z-1");
 				useTableExpZm1=true;
 			}
@@ -554,14 +556,13 @@ namespace flopoco{
 
 		if(expYTabulated) {
 
-#if 0 // both work, not sure which is the simplest to read
-			// tabulate e^Y with Y in sfix(-1, -wF-g) ie in -0.5, 0.5.
+#ifdef USE_FIX_FUNCTION_BY_TABLE // both work, not sure which is the simplest to read
+			// tabulate e^Y with Y in sfix(-1, -wF-g-2) ie in -0.5, 0.5.
 			newInstance("FixFunctionByTable",
 									"ExpYTable",
-									"f=exp(2*x) signedIn=true lsbIn=" + to_string(-wF-g) + " lsbOut="+to_string(-wF-g),
+									"f=exp(x*1b" + to_string(-1) + ") signedIn=true lsbIn=" + to_string(-wF-g - (-1)) + " lsbOut="+to_string(-wF-g-2), // -2 because sizeExpY has a "free" +2
 									"X=>Y",
 									"Y=>expY");
-
 #else
 			vector<mpz_class> expYTableContent = ExpATable(sizeY, sizeExpY);
 			TableOperator::newUniqueInstance(this, "Y", "expY",
@@ -575,6 +576,18 @@ namespace flopoco{
 			vhdl << tab << declare("A", k) << " <= Y" << range(sizeY-1, sizeY-k) << ";\n";
 			vhdl << tab << declare("Z", sizeZ) << " <= Y" << range(sizeZ-1, 0) << ";\n";
 
+#ifdef USE_FIX_FUNCTION_BY_TABLE
+			// tabulate e^Y with Y in sfix(-1, -wF-g) ie in -0.5, 0.5.
+			// using compression
+			bool compression = getTarget()->tableCompression();
+			getTarget()->setTableCompression(true);
+			newInstance("FixFunctionByTable",
+									"ExpATable",
+									"f=exp(x*1b" + to_string(-1) + ") signedIn=true lsbIn=" + to_string(-k - (-1)) + " lsbOut="+to_string(-wF-g), // no -2 because sizeExpA does not have a "free" +2
+									"X=>A",
+									"Y=>expA");
+			getTarget()->setTableCompression(compression);
+#else
 			vector<mpz_class> expYTableContent = ExpATable(k, sizeExpA); // e^A-1 has MSB weight 1
 			if(getTarget()->tableCompression() == false) {
 				TableOperator::newUniqueInstance(this, "A", "expA",
@@ -594,29 +607,51 @@ namespace flopoco{
 				op_ptr->report_compression_gain();
 				// TODO get rid of this
 			}
-
-
+#endif
 
 				//should be				int p = -wF-g+k-1; as in the ASA book  TODO investigate
 				int p = -wF-g+k; // ASA book notation
 
 				if(useTableExpZm1){
+#ifdef USE_FIX_FUNCTION_BY_TABLE 
+					// tabulate e^Z-1 with Z in sfix(-k-1, -wF-g)
+					// TODO MSB not computed correctly, check this always works
+					newInstance("FixFunctionByTable",
+											"ExpZm1Table",
+											"f=(exp(x*1b" + to_string(-k-1) + ")-1) signedIn=true lsbIn=" + to_string(-wF-g -(-k-1)) + " lsbOut="+to_string(-wF-g),
+											"X=>Z",
+											"Y=>expZm1_p");
+					// test size of sortie
+					vhdl << declare(0., "expZm1", sizeZ+1) << " <= \"0\" & expZm1_p;" << endl;
+#else
 					vector<mpz_class> expZm1TableContent = tableExpZm1(k, -wF-g);
 					TableOperator::newUniqueInstance(this, "Z", "expZm1",
 																	 expZm1TableContent,
 																	 "ExpZm1Table",
 																	 sizeZ,
-																	 sizeZ+1);
+																	 sizeZ+1);		
+#endif
 				}
 
 				else if (useTableExpZmZm1)  {
 					vhdl << tab << declare("Ztrunc", sizeZtrunc) << " <= Z" << range(sizeZ-1, sizeZ-sizeZtrunc) << ";\n";
+#ifdef USE_FIX_FUNCTION_BY_TABLE 
+					// tabulate e^Z-1-Z with Z in ufix(-k, p)
+					// TODO understand why in the book it is ufix(-k-1, p) and here it isn't
+					newInstance("FixFunctionByTable",
+											"ExpZmZm1Table",
+											"f=exp(x*1b" + to_string(-k) + ")-1-x*1b" + to_string(-k) + " signedIn=false lsbIn=" + to_string(p-(-k)) + " lsbOut="+to_string(-wF-g),
+											"X=>Ztrunc",
+											"Y=>expZmZm1");
+
+#else
 					vector<mpz_class> expYTableContent = tableExpZmZm1(k, p, -wF-g);
 					TableOperator::newUniqueInstance(this, "Ztrunc", "expZmZm1",
 																	 expYTableContent,
 																	 "ExpZmZm1Table",
 																	 -k-p,
 																	 -2*k+wF+g);
+#endif
 				}
 
 
@@ -726,7 +761,6 @@ namespace flopoco{
 			<< " & lowerProduct" << range(sizeProd-1, 0) << ");" << endl;
 
 #endif
-
 
 			vhdl << tab << "-- Final addition -- the product MSB bit weight is -k+2 = "<< -k+2 << endl;
 			// remember that sizeExpA==sizeExpY
