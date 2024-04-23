@@ -28,7 +28,6 @@ using namespace std;
 
 #define LARGE_PREC 1000  // 1000 bits should be enough for everybody
 
-
 // Mux definition for the ReLU
 static inline const string relu(int wIn, int wOut)
 {
@@ -60,194 +59,6 @@ static inline string input(size_t n)
 
 namespace flopoco
 {
-  enum ActivationFunction {
-    Sigmoid,
-    Sigmoid_P,
-    TanH,
-    TanH_P,
-    ReLU,
-    ReLU_P,
-    SiLU,
-    SiLU_P,
-    GeLU,
-    GeLU_P,
-    ELU,
-    ELU_P,
-  };
-
-  enum Method { PlainTable, MultiPartite, Horner, PiecewiseHorner2, PiecewiseHorner3, Auto };
-  static const map<string, Method> methodMap = {
-    {"plaintable", PlainTable},
-    {"multipartite", MultiPartite},
-    {"horner", Horner},
-    {"piecewisehorner2", PiecewiseHorner2},
-    {"piecewisehorner3", PiecewiseHorner3},
-    {"auto", Auto},
-  };
-
-  static inline const string methodOperator(Method m)
-  {
-    switch(m) {
-    case PlainTable:
-      return "FixFunctionByTable";
-    case MultiPartite:
-      return "FixFunctionByMultipartiteTable";
-    case Horner:
-      return "FixFunctionBySimplePoly";
-    case PiecewiseHorner2:
-    case PiecewiseHorner3:
-      return "FixFunctionByPiecewisePoly";
-    default:
-      throw("Unsupported method.");
-    };
-  };
-
-  static const Method defaultMethod = PlainTable;
-
-  struct FunctionData {
-    string name;
-    string longName;
-    string formula;
-    ActivationFunction fun;
-    bool signedOut;
-    bool reluVariant = false;    // By default, not a ReLU variant
-    bool slightRescale = false;  // for output range efficiency of functions that touch 1
-    double scaleFactor = 0.0;    // The importancee of tne inputScale
-    bool derivative = false;     // Whether the function is a derivative, and we need to multiply the output by the inputScale
-    unordered_set<Method> incompatibleMethods = {};
-  };
-
-  static const map<string, FunctionData> activationFunction = {
-    // two annoyances below:
-    // 1/ we are not allowed spaces because it would mess the argument parser. Silly
-    // 2/ no if then else in sollya, so we emulate with the quasi-threshold function 1/(1+exp(-1b256*X))
-    {"sigmoid",
-      FunctionData{
-        .name = "Sigmoid",
-        .longName = "Sigmoid",
-        .formula = "1/(1+exp(-X))",  //textbook
-        .fun = Sigmoid,              // enum
-        .signedOut = false,          // output unsigned
-        .slightRescale = true,       // output touches 1 and needs to be slightly rescaled
-      }},
-    {"tanh",
-      FunctionData{
-        .name = "TanH",
-        .longName = "Hyperbolic Tangent",
-        .formula = "tanh(X)",
-        .fun = TanH,                      // enum
-        .signedOut = true,                // output signed
-        .slightRescale = true,            // output touches 1 and needs to be slightly rescaled
-        .incompatibleMethods = {Horner},  // Simple Horner will not work
-      }},
-    {"relu",
-      FunctionData{
-        .name = "ReLU",
-        .longName = "Rectified Linear Unit",
-        .formula = "X/(1+exp(-1b256*X))",  // Here we use a quasi-threshold function
-        .fun = ReLU,                       // enum
-        .signedOut = false,                // output unsigned
-        .scaleFactor = 1.0,                //
-      }},
-    {"elu",
-      FunctionData{
-        .name = "ELU",
-        .longName = "Exponential Linear Unit",
-        .formula = "X/(1+exp(-1b256*X))+expm1(X)*(1-1/(1+exp(-1b256*X)))",  // Here we use a quasi-threshold function
-        .fun = ELU,                                                         // enum
-        .signedOut = true,                                                  // output signed
-        .reluVariant = true,                                                // ReLU variant
-        .scaleFactor = 1.0,                                                 //
-      }},
-    {"silu",
-      FunctionData{
-        .name = "SiLU",
-        .longName = "Sigmoid Linear Unit",
-        .formula = "X/(1+exp(-X))",  // textbook
-        .fun = SiLU,                 // enum
-        .signedOut = true,           // output signed
-        .reluVariant = true,         // ReLU variant
-        .scaleFactor = 1.0,          //
-      }},
-    {"gelu",
-      FunctionData{
-        .name = "GeLU",
-        .longName = "Gaussian Error Linear Unit",
-        .formula = "(X/2)*(1+erf(X/sqrt(2)))",  // textbook
-        .fun = GeLU,                            // enum
-        .signedOut = true,                      // output signed
-        .reluVariant = true,                    // ReLU variant
-        .scaleFactor = 1.0,                     //
-      }},
-
-    // Derivatives
-    {"sigmoid_p",
-      FunctionData{
-        .name = "Sigmoid_P",
-        .longName = "Derivative Sigmoid",
-        .formula = "exp(-X)/(1+exp(-X))^2",  //textbook
-        .fun = Sigmoid_P,                    // enum
-        .signedOut = false,                  // output unsigned
-        .slightRescale = true,
-        .scaleFactor = 0.25,
-        .derivative = true,
-      }},
-    {"tanh_p",
-      FunctionData{
-        .name = "TanH_P",
-        .longName = "Derivative Hyperbolic Tangent",
-        .formula = "(1-tanh(X)^2)",  //textbook
-        .fun = TanH_P,               // enum
-        .signedOut = false,          // output unsigned
-        .slightRescale = true,       // output touches 1 and needs to be slightly rescaled
-        .scaleFactor = 1.0,          // Function is a derivative, so we need to take into account the inputScale
-        .derivative = true,
-      }},
-    {"relu_p",
-      FunctionData{
-        .name = "ReLU_P",
-        .longName = "Derivative Rectified Linear Unit",
-        .formula = "1/(1+exp(-1b256*X))",  // Here we use a quasi-threshold function
-        .fun = ReLU_P,                     // enum
-        .signedOut = false,                // output unsigned
-        .slightRescale = true,             // output touches 1 and needs to be slightly rescaled
-        .scaleFactor = 1.0,                // Function is a derivative, so we need to take into account the inputScale
-        .derivative = true,
-      }},
-    {"elu_p",
-      FunctionData{
-        .name = "ELU_P",
-        .longName = "Derivative Exponential Linear Unit",
-        .formula = "1/(1+exp(-1b256*X))+exp(X)*(1-1/(1+exp(-1b256*X)))",  // Here we use a quasi-threshold function
-        .fun = ELU_P,                                                     // enum
-        .signedOut = false,                                               // output unsigned
-        .slightRescale = true,                                            // output touches 1 and needs to be slightly rescaled
-        .scaleFactor = 1.0,                                               // Function is a derivative, so we need to take into account the inputScale
-        .derivative = true,
-      }},
-    {"silu_p",
-      FunctionData{
-        .name = "SiLU_P",
-        .longName = "Sigmoid Linear Unit",
-        .formula = "(1+X*exp(-X)+exp(-X))/(1+exp(-X))^2",  // textbook
-        .fun = SiLU_P,                                     // enum
-        .signedOut = true,                                 // output signed
-        .scaleFactor = 0x1.198f14p0,                       // Function is a derivative, so we need to take into account the inputScale
-        .derivative = true,
-      }},
-    {"gelu_p",
-      FunctionData{
-        .name = "GeLU_P",
-        .longName = "Gaussian Error Linear Unit",
-        .formula = "(X*exp(-(X^2)/2))/sqrt(2*pi)+(1+erf(X/sqrt(2)))/2",  // textbook
-        .fun = GeLU_P,                                                   // enum
-        .signedOut = true,                                               // output signed
-        .scaleFactor = 0x1.20fffp0,                                      // Function is a derivative, so we need to take into account the inputScale
-        .derivative = true,
-      }},
-  };
-
-
   SNAFU::SNAFU(OperatorPtr parentOp_,
     Target* target_,
     string fIn,
@@ -257,9 +68,10 @@ namespace flopoco
     double inputScale_,
     int adhocCompression_,
     bool expensiveSymmetry_)
-      : Operator(parentOp_, target_), wIn(wIn_), wOut(wOut_), inputScale(inputScale_), adhocCompression(adhocCompression_),
+      : Operator(parentOp_, target_), wIn(wIn_), wOut(wOut_), inputScale(inputScale_), adhocCompression(static_cast<Compression>(adhocCompression_)),
         expensiveSymmetry(expensiveSymmetry_)
   {
+    // Check sanity of inputs
     if(inputScale <= 0) {
       throw(string("inputScale should be strictly positive"));
     }
@@ -271,38 +83,31 @@ namespace flopoco
       throw("the method '" + methodIn + "' is unknown");
     }
 
-    string* function;  // Points to the function we need to approximate
+    string* function;                 // Points to the function we need to approximate
+    map<string, string> params = {};  // Map of parameters
+    size_t in = 0;                    // Number the inputs to have a variable chain
 
     FunctionData af = activationFunction.at(toLowerCase(fIn));
 
-    //determine the LSB of the input and output
-    int lsbIn = -(wIn - 1);  // -1 for the sign bit
+    int lsbIn = -wIn + 1;               // The input is always signed, we need to account for it
+    int lsbOut = -wOut + af.signedOut;  // The output sign bit depends on the exact function
 
-    // Compute lsbOut from wOut and the constraints inferred by the function
-    int lsbOut = -wOut + af.signedOut;
-
+    // The input might be scaled according to the input scaling
     if(af.scaleFactor != 0.0) {
       int e;
 
-      // Recover the exponent and fraction
-      double fr = frexp(inputScale * af.scaleFactor, &e);
+      double fr = frexp(inputScale * af.scaleFactor, &e);  // Recover the exponent and fraction
 
       // No output should touch exactly one,
-      // so 2^n only needs n bits to be reprensented
+      // so 2^n only needs n bits to be written
       if(fr == 0.5) e--;
 
-      // We only reduce precision when the output can get bigger than 1
-      if(e > 0) lsbOut += e;
+      if(e > 0) lsbOut += e;  // We only reduce precision when the output can get bigger than 1
     }
 
 
-    size_t in = 0;
-
-    // Map of parameters
-    map<string, string> params = {};
-
     ///////// Ad-hoc compression consists, in the ReLU variants, to subtract ReLU
-    if(1 == adhocCompression && !af.reluVariant) {  // the user asked to compress a function that is not ReLU-like
+    if((adhocCompression == Compression::Enabled) && !af.reluVariant) {  // the user asked to compress a function that is not ReLU-like
       REPORT(LogLevel::MESSAGE,
         " ??????? You asked for the compression of " << af.longName << " which is not a ReLU-like" << endl
                                                      << " ??????? I will try but I am doubtful about the result." << endl
@@ -314,9 +119,9 @@ namespace flopoco
         LogLevel::MESSAGE, "The requested method is not very compatible with the function selected, the computation might take a long time or fail.")
     }
 
-    if(-1 == adhocCompression) {  // means "automatic" and it is the default
-      adhocCompression = af.reluVariant;
-    }                             // otherwise respect it.
+    if(adhocCompression == Compression::Auto) {  // means "automatic" and it is the default
+      adhocCompression = static_cast<Compression>(af.reluVariant);
+    }
 
 
     //////////////   Function preprocessing, for a good hardware match
@@ -338,12 +143,10 @@ namespace flopoco
       // No derivative is a ReLU variant, so no need to modify the string
     }
 
-    params["lsbOut"] = to_string(lsbOut);
-
     bool signedIn = true;
 
     // Only then we may define the delta function
-    if(adhocCompression) {
+    if(adhocCompression == Compression::Enabled) {
       if(af.fun == ELU) {
         // We need to compute on the negative values only
         sollyaDeltaFunction = "-(" + replaceX(sollyaFunction, "-@") + ")";
@@ -358,11 +161,13 @@ namespace flopoco
     }
 
     params["signedIn"] = to_string(signedIn);
+    params["lsbOut"] = to_string(lsbOut);
+
 
     // means "please choose for me"
-    if(method == Auto) {
+    if(method == Method::Auto) {
       // TODO a complex sequence of if then else once the experiments are done
-      method = PlainTable;
+      method = Method::PlainTable;
     }
 
     REPORT(LogLevel::MESSAGE,
@@ -371,7 +176,7 @@ namespace flopoco
                                         << " wOut=" << wOut << " translates to lsbOut=" << lsbOut);
     REPORT(LogLevel::MESSAGE, "Method is " << methodIn);
 
-    if(adhocCompression) {
+    if(adhocCompression == Compression::Enabled) {
       REPORT(LogLevel::MESSAGE,
         "To plot the function with its delta function, copy-paste the following lines in Sollya" << endl
                                                                                                  << "  f = " << sollyaFunction << ";" << endl
@@ -392,7 +197,7 @@ namespace flopoco
     f = new FixFunction(sollyaFunction, true, lsbIn, lsbOut);
 
     ostringstream name;
-    name << af.name << "_" << wIn << "_" << wOut << "_" << method;
+    name << af.name << "_" << wIn << "_" << wOut << "_" << methodIn;
     setNameWithFreqAndUID(name.str());
 
     setCopyrightString("Florent de Dinechin (2023)");
@@ -407,7 +212,7 @@ namespace flopoco
       return;
     }
 
-    if(adhocCompression) {
+    if(adhocCompression == Compression::Enabled) {
       if(wIn != wOut) {
         throw(string("Too lazy so far to support wIn<>wOut in case of ad-hoc compression "));
       };
@@ -416,28 +221,28 @@ namespace flopoco
     }
 
     switch(method) {
-    case PlainTable: {
+    case Method::PlainTable: {
       addComment("This function is correctly rounded");
       correctlyRounded = true;
       break;
     }
-    case MultiPartite: {
+    case Method::MultiPartite: {
       break;
     }
-    case Horner: {
+    case Method::Horner: {
       // When compressing, we only deal with the positive interval so we rescale to the whole interval
-      if(adhocCompression) {
+      if(adhocCompression == Compression::Enabled) {
         *function = replaceX(*function, "((@+1)/2)");
         lsbIn++;                   // The scaling means that we shift the fixed value
         params["signedIn"] = "1";  // Force the input to be signed, it will be scaled accordingly
       }
       break;
     }
-    case PiecewiseHorner2: {
+    case Method::PiecewiseHorner2: {
       params["d"] = "2";
       break;
     }
-    case PiecewiseHorner3: {
+    case Method::PiecewiseHorner3: {
       params["d"] = "3";
       break;
     }
@@ -457,7 +262,7 @@ namespace flopoco
       in++;
       vhdl << tab << declare(input(in), wIn - 1) << " <= " << input(in - 1) << range(wIn - 2, 0) << ";" << endl;
 
-      if(method == Horner) {
+      if(method == Method::Horner) {
         // We need to scale the input
         in++;
         vhdl << tab << declare(input(in), wIn - 1) << " <= not(" << input(in - 1) << of(wIn - 2) << ") & " << input(in - 1) << range(wIn - 3, 0)
@@ -472,12 +277,12 @@ namespace flopoco
     }
 
     OperatorPtr op = newInstance(methodOperator(method),
-      af.name + (adhocCompression ? "_delta_SNAFU" : "_SNAFU"),
+      af.name + (adhocCompression == Compression::Enabled ? "_delta_SNAFU" : "_SNAFU"),
       paramString,
       "X => " + input(in),
-      adhocCompression ? "Y => D" : "Y => F");
+      adhocCompression == Compression::Enabled ? "Y => D" : "Y => F");
 
-    if(adhocCompression) {
+    if(adhocCompression == Compression::Enabled) {
       // Reconstruct the function
       int deltaOutSize = getSignalByName("D")->width();
 
@@ -520,6 +325,7 @@ namespace flopoco
   }
 
 
+  // Boilerplate and arguments
   void SNAFU::emulate(TestCase* tc)
   {
     emulate_fixfunction(*f, tc, correctlyRounded);
