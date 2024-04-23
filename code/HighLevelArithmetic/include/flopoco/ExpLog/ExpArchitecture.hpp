@@ -13,7 +13,7 @@
 
 */
 #ifndef __EXPARCH_HPP
-#define __EXPARCHI_HPP
+#define __EXPARCH_HPP
 #include <sstream>
 #include <vector>
 

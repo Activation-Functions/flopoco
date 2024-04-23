@@ -265,6 +265,10 @@ namespace flopoco{
 		int sizeExpZmZm1 = myExp->getSizeExpZmZm1();
 		int sizeExpZm1 = myExp->getSizeExpZm1();
 		int sizeMultIn = myExp->getSizeMultIn();
+		int MSB = myExp->getMSB();
+		int LSB = myExp->getLSB();
+
+		// TODO add possibility to change MSB and LSB
 
 		// nY is in [-1/2, 1/2]
 
@@ -274,38 +278,18 @@ namespace flopoco{
 		else
 			wFIn=wF;
 
-		addFPInput("X", wE, wFIn);
+		addInput("ufixX_i", MSB-LSB+1);
+		addInput("resultWillBeOne");
+		addInput("overflow0");
+		addInput("XSign");
+		addInput("Xexn", 2);
+
+		//addFPInput("X", wE, wFIn);
 		addFPOutput("R", wE, wF);
 
+		vhdl << declareFixPoint("ufixX", false, wE-2, -wF-g) << " <= unsigned(ufixX_i);" << endl;
 
-		//********* Building a few MPFR constants, useful or obsolete *********
-		mpz_class mpzLog2, mpzInvLog2;
 
-		mpfr_t mp2, mp1, mplog2, mpinvlog2;
-
-		mpfr_inits(mp1, mp2, NULL);
-		mpfr_set_si(mp1, 1, GMP_RNDN);
-		mpfr_set_si(mp2, 2, GMP_RNDN);
-
-		// 1/log2 ~ 1.44, truncated, on sizeFirstKCM bits
-		int sizeFirstKCM=wE+4;
-
-		// All this mostly useless now that we have FixReal KCM
-		mpfr_init2(mplog2, 3*(wE+wF+g));	// way too much precision
-		mpfr_log(mplog2, mp2, GMP_RNDN);
-		mpfr_init2(mpinvlog2, sizeFirstKCM);
-		mpfr_div(mpinvlog2, mp1, mplog2, GMP_RNDN);
-		mpfr_mul_2si(mpinvlog2, mpinvlog2, sizeFirstKCM-1, GMP_RNDN); //Exact
-		mpfr_get_z(mpzInvLog2.get_mpz_t(), mpinvlog2, GMP_RNDN);
-		mpfr_clear(mplog2);
-
-		//Computing log2 ~ 0.69 on wE+wF+g bits, rounded down, too
-		mpfr_init2(mplog2, wE+wF+g);
-		mpfr_log(mplog2, mp2, GMP_RNDN);
-		mpfr_mul_2si(mplog2, mplog2, wE+wF+g, GMP_RNDN); //Exact
-		mpfr_get_z(mpzLog2.get_mpz_t(), mplog2, GMP_RNDN);
-
-		mpfr_clears(mp1, mp2, mplog2, mpinvlog2, NULL);
 
 		addConstant("wE", "positive", wE);
 		addConstant("wF", "positive", wF);
@@ -321,46 +305,6 @@ namespace flopoco{
 			throw e.str();
 		}
 
-
-
-		//******** Input unpacking and shifting to fixed-point ********
-
-		vhdl << tab  << declare("Xexn", 2) << " <= X(wE+wFIn+2 downto wE+wFIn+1);" << endl;
-		vhdl << tab  << declare("XSign") << " <= X(wE+wFIn);" << endl;
-		vhdl << tab  << declare("XexpField", wE) << " <= X(wE+wFIn-1 downto wFIn);" << endl;
-		vhdl << tab  << declareFixPoint("Xfrac", false, -1,-wFIn) << " <= unsigned(X(wFIn-1 downto 0));" << endl;
-
-		int e0 = bias - (wF+g);
-		vhdl << tab  << declare("e0", wE+2) << " <= conv_std_logic_vector(" << e0 << ", wE+2);  -- bias - (wF+g)" << endl;
-		vhdl << tab  << declare(getTarget()->adderDelay(wE+2), "shiftVal", wE+2) << " <= (\"00\" & XexpField) - e0; -- for a left shift" << endl;
-
-		vhdl << tab  << "-- underflow when input is shifted to zero (shiftval<0), in which case exp = 1" << endl;
-		vhdl << tab  << declare("resultWillBeOne") << " <= shiftVal(wE+1);" << endl;
-
-		// As we don't have a signed shifter, shift first, complement next. TODO? replace with a signed shifter
-		vhdl << tab << "--  mantissa with implicit bit" << endl;
-		vhdl << tab  << declareFixPoint("mXu", false, 0,-wFIn) << " <= \"1\" & Xfrac;" << endl;
-
-		// left shift
-		vhdl << tab  << "-- Partial overflow detection" << endl;
-		int maxshift = wE-2+ wF+g; // maxX < 2^(wE-1);
-		vhdl << tab  << declare("maxShift", wE+1) << " <= conv_std_logic_vector(" << maxshift << ", wE+1);  -- wE-2 + wF+g" << endl;
-		vhdl << tab  << declare(getTarget()->adderDelay(wE+1),"overflow0") << " <= not shiftVal(wE+1) when shiftVal(wE downto 0) > maxShift else '0';" << endl;
-
-		int shiftInSize = intlog2(maxshift);
-		vhdl << tab  << declare("shiftValIn", shiftInSize) << " <= shiftVal" << range(shiftInSize-1, 0) << ";" << endl;
-		newInstance("Shifter",
-								"mantissa_shift",
-								"wX=" + to_string(wFIn+1) + " maxShift=" + to_string(maxshift) + " dir=0",
-								"X=>mXu,S=>shiftValIn",
-								"R=>fixX0");
-
-		int sizeShiftOut=maxshift + wFIn+1;
-		int sizeXfix = wE-2 +wF+g +1; // still unsigned; msb=wE-1; lsb = -wF-g
-
-		vhdl << tab << declareFixPoint("ufixX", false, wE-2, -wF-g) << " <= " << " unsigned(fixX0" <<
-			range(sizeShiftOut -1, sizeShiftOut- sizeXfix) <<
-			") when resultWillBeOne='0' else " << zg(sizeXfix) <<  ";" << endl;
 #if 0
 		// TODO here it doesn't match exactly the error analysis in the ASA Book, but it works
 		int lsbXforFirstMult=-3;

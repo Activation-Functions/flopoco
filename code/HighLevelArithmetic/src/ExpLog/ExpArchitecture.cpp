@@ -160,7 +160,7 @@ namespace flopoco{
 		}
 
 
-		MSB = wE-1;
+		MSB = wE-2;
 		LSB = -wF-g;
 
 	}
