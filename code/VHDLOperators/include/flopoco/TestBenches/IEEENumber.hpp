@@ -90,8 +90,9 @@ namespace flopoco{
 		 * imports a MPFR value into an IEEENumber
 		 * @param[in] m the value
 		 * @param  ternaryRoundInfo a ternary rounding value rememberin the rounding history, see mpfr documenation 
+		 * @param  round the rounding mode to use, needed for subnormals 
 		 */
-		void setMPFR(mpfr_t m, int ternaryRoundInfo);
+		void setMPFR(mpfr_t m, int ternaryRoundInfo, mpfr_rnd_t round=MPFR_RNDU);
 
 
 		/**
@@ -134,6 +135,16 @@ namespace flopoco{
 		 */
 		void getPrecision(int &wE, int &wF);
 
+		/**
+		 * Returns flags.
+		 * @param[out] overflow flag 
+		 * @param[out] underflow flag 
+		 * @param[out] inexact flag 
+		 * @param[out] invalid flag 
+		 */
+		void getFlags(int &overflow, int &underflow, int &inexact, int &invalid);
+
+
 
 
 	private:
@@ -143,6 +154,18 @@ namespace flopoco{
 		/** The width of the significand fraction */
 		int wF;
 
+		/** The value of the overflow flag */
+		int flag_overflow;
+
+		/** The value of the underflow flag */
+		int flag_underflow;
+
+		/** The value of the inexact flag */
+		int flag_inexact;
+
+		/** The value of the invalid flag */
+		int flag_invalid;
+		
 		/** The value of the sign field */
 		mpz_class sign;
 
