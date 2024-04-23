@@ -5,6 +5,7 @@ add_hileco_src(
     utils.cpp
 )
 
+add_subdirectory(ExpLog)
 add_subdirectory(FixFunctions)
 add_subdirectory(IntMult)
 add_subdirectory(SortingNetworks)

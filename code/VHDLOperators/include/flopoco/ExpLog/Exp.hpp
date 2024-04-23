@@ -21,6 +21,7 @@
 #include "flopoco/Operator.hpp"
 #include "flopoco/Tables/DualTable.hpp"
 #include "flopoco/Tables/Table.hpp"
+#include "flopoco/ExpLog/ExpArchitecture.hpp"
 
 class Fragment;
 
