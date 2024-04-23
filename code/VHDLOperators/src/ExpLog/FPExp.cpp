@@ -169,17 +169,55 @@ namespace flopoco{
 		param << " g=" << g;
 
 		inmap << "ufixX_i=>ufixX,";
-		inmap << "resultWillBeOne=>resultWillBeOne,";
-		inmap << "overflow0=>overflow0,";
-		inmap << "XSign=>XSign,";
-		inmap << "Xexn=>Xexn";
+		inmap << "XSign=>XSign";
 
-		outmap << "R=>R";
-	
+		outmap << "expY=>expY,";
+		outmap << "K=>K";
+
+
 		cout << param.str() <<endl;
 
 		newInstance("Exp", "exp_helper", param.str(), inmap.str(), outmap.str());
 
+		// The following is generic normalization/rounding code if we have in expY an approx of exp(y) of size 	sizeExpY
+		// with MSB of weight 2^1
+
+		vhdl << tab << declare("needNoNorm") << " <= expY(" << sizeExpY-1 << ");" << endl;
+		vhdl << tab << "-- Rounding: all this should consume one row of LUTs" << endl;
+		vhdl << tab << declare(getTarget()->logicDelay(), "preRoundBiasSig", wE+wF+2)
+		<< " <= conv_std_logic_vector(" << bias << ", wE+2)  & expY" << range(sizeExpY-2, sizeExpY-2-wF+1) << " when needNoNorm = '1'" << endl
+		<< tab << tab << "else conv_std_logic_vector(" << bias-1 << ", wE+2)  & expY" << range(sizeExpY-3, sizeExpY-3-wF+1) << " ;" << endl;
+
+		vhdl << tab << declare("roundBit") << " <= expY(" << sizeExpY-2-wF << ")  when needNoNorm = '1'    else expY(" <<  sizeExpY-3-wF << ") ;" << endl;
+		vhdl << tab << declare("roundNormAddend", wE+wF+2) << " <= K(" << wE << ") & K & "<< rangeAssign(wF-1, 1, "'0'") << " & roundBit;" << endl;
+
+
+		newInstance("IntAdder",
+								"roundedExpSigOperandAdder",
+								"wIn=" + to_string(wE+wF+2),
+								"X=>preRoundBiasSig,Y=>roundNormAddend",
+								"R=>roundedExpSigRes",
+								"Cin=>'0'");
+		vhdl << tab << declare(getTarget()->logicDelay(), "roundedExpSig", wE+wF+2) << " <= roundedExpSigRes when Xexn=\"01\" else "
+		<< " \"000\" & (wE-2 downto 0 => '1') & (wF-1 downto 0 => '0');" << endl;
+
+		vhdl << tab << declare(getTarget()->logicDelay(), "ofl1") << " <= not XSign and overflow0 and (not Xexn(1) and Xexn(0)); -- input positive, normal,  very large" << endl;
+		vhdl << tab << declare("ofl2") << " <= not XSign and (roundedExpSig(wE+wF) and not roundedExpSig(wE+wF+1)) and (not Xexn(1) and Xexn(0)); -- input positive, normal, overflowed" << endl;
+		vhdl << tab << declare("ofl3") << " <= not XSign and Xexn(1) and not Xexn(0);  -- input was -infty" << endl;
+		vhdl << tab << declare("ofl") << " <= ofl1 or ofl2 or ofl3;" << endl;
+
+		vhdl << tab << declare("ufl1") << " <= (roundedExpSig(wE+wF) and roundedExpSig(wE+wF+1))  and (not Xexn(1) and Xexn(0)); -- input normal" << endl;
+		vhdl << tab << declare("ufl2") << " <= XSign and Xexn(1) and not Xexn(0);  -- input was -infty" << endl;
+		vhdl << tab << declare("ufl3") << " <= XSign and overflow0  and (not Xexn(1) and Xexn(0)); -- input negative, normal,  very large" << endl;
+
+		vhdl << tab << declare("ufl") << " <= ufl1 or ufl2 or ufl3;" << endl;
+
+		vhdl << tab << declare("Rexn", 2) << " <= \"11\" when Xexn = \"11\"" << endl
+		<< tab << tab << "else \"10\" when ofl='1'" << endl
+		<< tab << tab << "else \"00\" when ufl='1'" << endl
+		<< tab << tab << "else \"01\";" << endl;
+
+		vhdl << tab << "R <= Rexn & '0' & roundedExpSig" << range(wE+wF-1, 0) << ";" << endl;
 
 	}
 
