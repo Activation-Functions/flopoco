@@ -12,8 +12,8 @@
   All rights reserved.
 
 */
-#ifndef __FPEXP_HPP
-#define __FPEXP_HPP
+#ifndef __EXP_HPP
+#define __EXP_HPP
 #include <sstream>
 #include <vector>
 
@@ -28,7 +28,7 @@ class Fragment;
 namespace flopoco{
 
 
-	class FPExp : public Operator
+	class Exp : public Operator
 	{
 	public:
 		/** @brief The magic dual table, that holds either (e^A, e^Z-1) or (e^A, e^Z-Z-1)
@@ -53,7 +53,7 @@ namespace flopoco{
 		*                  so that  input shift doesn't padd it with 0s (useful
 		*                  for FPPow)
 		*/
-		FPExp(
+		Exp(
 					OperatorPtr parentOp,
 					Target* target,
 					int wE,
@@ -63,7 +63,7 @@ namespace flopoco{
 					int guardBits=-1,
 					bool fullInput=false);
 
-		~FPExp();
+		~Exp();
 
 		// Overloading the virtual functions of Operator
 		// void outputVHDL(std::ostream& o, std::string name);
