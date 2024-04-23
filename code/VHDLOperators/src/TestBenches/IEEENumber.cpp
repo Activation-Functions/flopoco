@@ -117,7 +117,7 @@ namespace flopoco{
 		operator=(z);
 	}
 
-	void IEEENumber::setMPFR(mpfr_t mp_, int ternaryRoundInfo){
+	void IEEENumber::setMPFR(mpfr_t mp_, int ternaryRoundInfo, mpfr_rnd_t round){
 		mpfr_t mp; // will hold a rounded copy of the number
 #if 0
 		if (1+wF < mpfr_get_prec(mp_))
@@ -127,8 +127,16 @@ namespace flopoco{
 		MPFRSetExp set_exp = MPFRSetExp::setupIEEE(wE, wF);
 
 		mpfr_init2(mp, 1+wF);
-		mpfr_set(mp, mp_, MPFR_RNDN);
-		mpfr_subnormalize (mp, ternaryRoundInfo, MPFR_RNDN);
+		// Use given rounding
+		// no subnormalise if exp is smaller than set_exp ?
+		ternaryRoundInfo =  mpfr_set(mp, mp_, round);
+		if (mpfr_get_exp(mp_) >= -(1<<(wE-1)) - wF + 3) {
+			mpfr_subnormalize (mp, ternaryRoundInfo, round);
+		}
+		flag_underflow = (mpfr_underflow_p()==0) ? 0 : 1;
+    flag_inexact = (mpfr_inexflag_p()==0) ? 0 : 1;
+		flag_overflow = (mpfr_overflow_p()==0) ? 0 : 1;
+    flag_invalid = (mpfr_nanflag_p()==0) ? 0 : 1;
 		/* NaN */
 		if (mpfr_nan_p(mp))	{
 				sign = 0;
@@ -167,7 +175,7 @@ namespace flopoco{
 						// TODO manage double rounding to subnormals
 						exponent=0;
 						/* Extract fraction */
-						mpfr_mul_2si(mp, mp, wF-1+((1<<(wE-1))-1), MPFR_RNDN);
+						mpfr_mul_2si(mp, mp, wF-1+((1<<(wE-1))-1), MPFR_RNDN); // TODO exact ? check subnormalise
 						mpfr_get_z(fraction.get_mpz_t(), mp,  MPFR_RNDN);
 						//cout << "subnormal! " << wF + (exp + ((1<<(wE-1))-1)) << " fraction=" << fraction << endl;						
 					}
@@ -196,11 +204,18 @@ namespace flopoco{
 						exponent = exp + ((1<<(wE-1))-1);
 						
 						/* Handle overflow */
-						if (exponent >= (1<<wE))
-							{
+						if (exponent >= (1<<wE)-1){ // max normal exponent is (1<<wE)-2
+							flag_overflow = 1;
+							// If RZ or RU and negative or RD and positive, return omega instead of inf
+							if ((round == MPFR_RNDZ) || (round == MPFR_RNDU && sign == 1) || (round == MPFR_RNDD && sign==0)) {
+								exponent = (1<<wE) -2;
+								fraction = (1<<wF) -1;
+							}
+							else {
 								exponent = (1<<wE) -1;
 								fraction = 0;
 							}
+						}
 					}
 				}
 			}
@@ -292,6 +307,15 @@ namespace flopoco{
 	{
 		wE = this->wE;
 		wF = this->wF;
+	}
+
+	void IEEENumber::getFlags(int &overflow, int &underflow, int &inexact, int &invalid)
+	{
+		overflow = this->flag_overflow;
+		underflow = this->flag_underflow;
+		inexact = this->flag_inexact;
+		invalid = this->flag_invalid;
+		
 	}
 
 
