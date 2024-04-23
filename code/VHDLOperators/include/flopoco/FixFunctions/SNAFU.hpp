@@ -16,14 +16,229 @@
 #include "flopoco/FixFunctions/FixFunction.hpp"
 #include "flopoco/Operator.hpp"
 
+#include <unordered_set>
 #include <vector>
+
+enum ActivationFunction {
+  Sigmoid,
+  Sigmoid_P,
+  TanH,
+  TanH_P,
+  ReLU,
+  ReLU_P,
+  SiLU,
+  SiLU_P,
+  GeLU,
+  GeLU_P,
+  ELU,
+  ELU_P,
+};
+
+enum class Method {
+  Auto,
+  PlainTable,
+  MultiPartite,
+  Horner,
+  PiecewiseHorner2,
+  PiecewiseHorner3,
+};
+static const map<string, Method> methodMap = {
+  {"plaintable", Method::PlainTable},
+  {"multipartite", Method::MultiPartite},
+  {"horner", Method::Horner},
+  {"piecewisehorner2", Method::PiecewiseHorner2},
+  {"piecewisehorner3", Method::PiecewiseHorner3},
+  {"auto", Method::Auto},
+};
+
+static inline const string methodOperator(Method m)
+{
+  switch(m) {
+  case Method::PlainTable:
+    return "FixFunctionByTable";
+  case Method::MultiPartite:
+    return "FixFunctionByMultipartiteTable";
+  case Method::Horner:
+    return "FixFunctionBySimplePoly";
+  case Method::PiecewiseHorner2:
+  case Method::PiecewiseHorner3:
+    return "FixFunctionByPiecewisePoly";
+  default:
+    throw("Unsupported method.");
+  };
+};
+
+static const Method defaultMethod = Method::PlainTable;
+
+enum class Compression : int {
+  Auto = -1,
+  Disabled = 0,
+  Enabled = 1,
+};
+
+enum class Parity {
+  None,
+  Odd,
+  Even,
+};
+
+enum class Delta {
+  None,
+  ReLU,
+  ReLU_P,
+};
+
+struct FunctionData {
+  string name;
+  string longName;
+  string formula;
+  ActivationFunction fun;
+  bool signedOut;
+  bool reluVariant = false;           // By default, not a ReLU variant
+  Parity parity = Parity::None;       // No assumption is made on the parity
+  Delta deltaFunction = Delta::None;  // The function to substract for compression
+  double offset = FPNumber::NaN;      // The offset
+  bool slightRescale = false;         // for output range efficiency of functions that touch 1
+  double scaleFactor = 0.0;           // The importancee of tne inputScale
+  bool derivative = false;            // Whether the function is a derivative, and we need to multiply the output by the inputScale
+  unordered_set<Method> incompatibleMethods = {};
+};
+
+static const map<string, FunctionData> activationFunction = {
+  // two annoyances below:
+  // 1/ we are not allowed spaces because it would mess the argument parser. Silly
+  // 2/ no if then else in sollya, so we emulate with the quasi-threshold function 1/(1+exp(-1b256*X))
+  {"sigmoid",
+    FunctionData{
+      .name = "Sigmoid",
+      .longName = "Sigmoid",
+      .formula = "1/(1+exp(-X))",  //textbook
+      .fun = Sigmoid,              // enum
+      .signedOut = false,          // output unsigned
+      .slightRescale = true,       // output touches 1 and needs to be slightly rescaled
+    }},
+  {"tanh",
+    FunctionData{
+      .name = "TanH",
+      .longName = "Hyperbolic Tangent",
+      .formula = "tanh(X)",
+      .fun = TanH,                              // enum
+      .signedOut = true,                        // output signed
+      .slightRescale = true,                    // output touches 1 and needs to be slightly rescaled
+      .incompatibleMethods = {Method::Horner},  // Simple Horner will not work
+    }},
+  {"relu",
+    FunctionData{
+      .name = "ReLU",
+      .longName = "Rectified Linear Unit",
+      .formula = "X/(1+exp(-1b256*X))",  // Here we use a quasi-threshold function
+      .fun = ReLU,                       // enum
+      .signedOut = false,                // output unsigned
+      .scaleFactor = 1.0,                //
+    }},
+  {"elu",
+    FunctionData{
+      .name = "ELU",
+      .longName = "Exponential Linear Unit",
+      .formula = "X/(1+exp(-1b256*X))+expm1(X)*(1-1/(1+exp(-1b256*X)))",  // Here we use a quasi-threshold function
+      .fun = ELU,                                                         // enum
+      .signedOut = true,                                                  // output signed
+      .reluVariant = true,                                                // ReLU variant
+      .scaleFactor = 1.0,                                                 //
+    }},
+  {"silu",
+    FunctionData{
+      .name = "SiLU",
+      .longName = "Sigmoid Linear Unit",
+      .formula = "X/(1+exp(-X))",  // textbook
+      .fun = SiLU,                 // enum
+      .signedOut = true,           // output signed
+      .reluVariant = true,         // ReLU variant
+      .scaleFactor = 1.0,          //
+    }},
+  {"gelu",
+    FunctionData{
+      .name = "GeLU",
+      .longName = "Gaussian Error Linear Unit",
+      .formula = "(X/2)*(1+erf(X/sqrt(2)))",  // textbook
+      .fun = GeLU,                            // enum
+      .signedOut = true,                      // output signed
+      .reluVariant = true,                    // ReLU variant
+      .scaleFactor = 1.0,                     //
+    }},
+
+  // Derivatives
+  {"sigmoid_p",
+    FunctionData{
+      .name = "Sigmoid_P",
+      .longName = "Derivative Sigmoid",
+      .formula = "exp(-X)/(1+exp(-X))^2",  //textbook
+      .fun = Sigmoid_P,                    // enum
+      .signedOut = false,                  // output unsigned
+      .slightRescale = true,
+      .scaleFactor = 0.25,
+      .derivative = true,
+    }},
+  {"tanh_p",
+    FunctionData{
+      .name = "TanH_P",
+      .longName = "Derivative Hyperbolic Tangent",
+      .formula = "(1-tanh(X)^2)",  //textbook
+      .fun = TanH_P,               // enum
+      .signedOut = false,          // output unsigned
+      .slightRescale = true,       // output touches 1 and needs to be slightly rescaled
+      .scaleFactor = 1.0,          // Function is a derivative, so we need to take into account the inputScale
+      .derivative = true,
+    }},
+  {"relu_p",
+    FunctionData{
+      .name = "ReLU_P",
+      .longName = "Derivative Rectified Linear Unit",
+      .formula = "1/(1+exp(-1b256*X))",  // Here we use a quasi-threshold function
+      .fun = ReLU_P,                     // enum
+      .signedOut = false,                // output unsigned
+      .slightRescale = true,             // output touches 1 and needs to be slightly rescaled
+      .scaleFactor = 1.0,                // Function is a derivative, so we need to take into account the inputScale
+      .derivative = true,
+    }},
+  {"elu_p",
+    FunctionData{
+      .name = "ELU_P",
+      .longName = "Derivative Exponential Linear Unit",
+      .formula = "1/(1+exp(-1b256*X))+exp(X)*(1-1/(1+exp(-1b256*X)))",  // Here we use a quasi-threshold function
+      .fun = ELU_P,                                                     // enum
+      .signedOut = false,                                               // output unsigned
+      .slightRescale = true,                                            // output touches 1 and needs to be slightly rescaled
+      .scaleFactor = 1.0,                                               // Function is a derivative, so we need to take into account the inputScale
+      .derivative = true,
+    }},
+  {"silu_p",
+    FunctionData{
+      .name = "SiLU_P",
+      .longName = "Sigmoid Linear Unit",
+      .formula = "(1+X*exp(-X)+exp(-X))/(1+exp(-X))^2",  // textbook
+      .fun = SiLU_P,                                     // enum
+      .signedOut = true,                                 // output signed
+      .scaleFactor = 0x1.198f14p0,                       // Function is a derivative, so we need to take into account the inputScale
+      .derivative = true,
+    }},
+  {"gelu_p",
+    FunctionData{
+      .name = "GeLU_P",
+      .longName = "Gaussian Error Linear Unit",
+      .formula = "(X*exp(-(X^2)/2))/sqrt(2*pi)+(1+erf(X/sqrt(2)))/2",  // textbook
+      .fun = GeLU_P,                                                   // enum
+      .signedOut = true,                                               // output signed
+      .scaleFactor = 0x1.20fffp0,                                      // Function is a derivative, so we need to take into account the inputScale
+      .derivative = true,
+    }},
+};
 
 namespace flopoco
 {
-
-  /** A generator of Simple Neural Actication Function Units (SNAFU)
-			without reinventing the wheel
-	*/
+  /**
+   * A generator of Simple Neural Actication Function Units (SNAFU) without reinventing the wheel
+	 */
 
   class SNAFU : public Operator {
     public:
@@ -44,7 +259,7 @@ namespace flopoco
     int wIn;
     int wOut;
     double inputScale;
-    int adhocCompression;
+    Compression adhocCompression;
     bool expensiveSymmetry;
     string sollyaDeltaFunction;  // when we use compression
     FixFunction* f;
