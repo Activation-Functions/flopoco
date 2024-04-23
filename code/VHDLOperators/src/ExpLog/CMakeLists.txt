@@ -1,5 +1,5 @@
 add_flopocolib_src(
-	FPExp.cpp
+	Exp.cpp
 	FPLog.cpp
 	FPLogIterative.cpp
 	FPPow.cpp

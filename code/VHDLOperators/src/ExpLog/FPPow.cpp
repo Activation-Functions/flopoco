@@ -17,7 +17,7 @@
 #include <fstream>
 #include <sstream>
 
-#include "flopoco/ExpLog/FPExp.hpp"
+#include "flopoco/ExpLog/Exp.hpp"
 #include "flopoco/ExpLog/FPLog.hpp"
 #include "flopoco/ExpLog/FPPow.hpp"
 #include "flopoco/FPMultSquare/FPMult.hpp"

@@ -18,7 +18,7 @@
 #include <sstream>
 
 #include "flopoco/ConstMult/FixRealKCM.hpp"
-#include "flopoco/ExpLog/FPExp.hpp"
+#include "flopoco/ExpLog/Exp.hpp"
 #include "flopoco/FixFunctions/FixFunctionByPiecewisePoly.hpp"
 #include "flopoco/FixFunctions/FixFunctionByTable.hpp"
 #include "flopoco/IntAddSubCmp/IntAdder.hpp"
@@ -34,7 +34,7 @@ using namespace std;
 
 
 /* TODOs
-Obtaining 400MHz in FPExp 8 23 depends on the version of ISE. Test with recent one.
+Obtaining 400MHz in Exp 8 23 depends on the version of ISE. Test with recent one.
 remove the nextCycle after the multiplier
 
 check the multiplier in the case 8 27: logic only, why?
@@ -55,7 +55,7 @@ All the tables could be FixFunctionByTable...
 namespace flopoco{
 
 	//Obsolete ?
-	vector<mpz_class>	FPExp::magicTable(int sizeExpA, int sizeExpZPart, bool storeExpZmZm1)
+	vector<mpz_class>	Exp::magicTable(int sizeExpA, int sizeExpZPart, bool storeExpZmZm1)
 		//	DualTable(target, 9, sizeExpA_+sizeExpZPart_, 0, 511),
 	{
 		vector<mpz_class> result;
@@ -193,7 +193,7 @@ namespace flopoco{
 
 
 
-	vector<mpz_class>	FPExp::ExpATable(int wIn, int wOut)	{
+	vector<mpz_class>	Exp::ExpATable(int wIn, int wOut)	{
 		vector<mpz_class> result;
 		for(int x=0; x<(1<<wIn); x++){
 			mpz_class h;
@@ -229,7 +229,7 @@ namespace flopoco{
 
 
 
-	FPExp::FPExp(
+	Exp::Exp(
 							 OperatorPtr parentOp, Target* target,
 							 int wE_, int wF_,
 							 int k_, int d_, int guardBits, bool fullInput
@@ -244,11 +244,11 @@ namespace flopoco{
 		// Paperwork
 
 		ostringstream name;
-		name << "FPExp_" << wE << "_" << wF ;
+		name << "Exp_" << wE << "_" << wF ;
 		setNameWithFreqAndUID(name.str());
 
 		setCopyrightString("F. de Dinechin, Bogdan Pasca (2008-2021)");
-		srcFileName="FPExp";
+		srcFileName="Exp";
 
 
 		/*  We have the following cases.
@@ -435,9 +435,9 @@ namespace flopoco{
 		int bias = (1<<(wE-1))-1;
 		if(bias < wF+g){
 			ostringstream e;
-			e << "ERROR in FPExp, unable to build architecture if wF+g > 2^(wE-1)-1." <<endl;
+			e << "ERROR in Exp, unable to build architecture if wF+g > 2^(wE-1)-1." <<endl;
 			e << "      Try increasing wE." << endl;
-			e << "      If you really need FPExp to work with such values, please report this as a bug :)" << endl;
+			e << "      If you really need Exp to work with such values, please report this as a bug :)" << endl;
 			throw e.str();
 		}
 
@@ -818,13 +818,13 @@ namespace flopoco{
 
 	}
 
-	FPExp::~FPExp()
+	Exp::~Exp()
 	{
 	}
 
 
 
-	void FPExp::emulate(TestCase * tc)
+	void Exp::emulate(TestCase * tc)
 	{
 		/* Get I/O values */
 		mpz_class svX = tc->getInputValue("X");
@@ -850,7 +850,7 @@ namespace flopoco{
 
 
 
-	void FPExp::buildStandardTestCases(TestCaseList* tcl){
+	void Exp::buildStandardTestCases(TestCaseList* tcl){
 		TestCase *tc;
 
 		mpfr_t x, y;
@@ -975,7 +975,7 @@ namespace flopoco{
 	// All the remaining ones test numbers with exponents between -wF-3 and wE-2,
 	// For numbers outside this range, exp over/underflows or flushes to 1.
 
-	TestCase* FPExp::buildRandomTestCase(int i){
+	TestCase* Exp::buildRandomTestCase(int i){
 		TestCase *tc;
 		tc = new TestCase(this);
 		mpz_class x;
@@ -1002,7 +1002,7 @@ namespace flopoco{
 
 
 
-		OperatorPtr FPExp::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
+		OperatorPtr Exp::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 			int wE, wF, k, d, g;
 			bool fullInput;
 			ui.parseStrictlyPositiveInt(args, "wE", &wE);
@@ -1011,12 +1011,12 @@ namespace flopoco{
 			ui.parsePositiveInt(args, "d", &d);
 			ui.parseInt(args, "g", &g);
 			ui.parseBoolean(args, "fullInput", &fullInput);
-			return new FPExp(parentOp, target, wE, wF, k, d, g, fullInput);
+			return new Exp(parentOp, target, wE, wF, k, d, g, fullInput);
 		}
 
 
 
-		TestList FPExp::unitTest(int testLevel)
+		TestList Exp::unitTest(int testLevel)
 		{
 		// the static list of mandatory tests
 			TestList testStateList;
@@ -1077,8 +1077,8 @@ namespace flopoco{
 	}
 
 	template <>
-	const OperatorDescription<FPExp> op_descriptor<FPExp> {
-	    "FPExp", // name
+	const OperatorDescription<Exp> op_descriptor<Exp> {
+	    "Exp", // name
 	    "A faithful floating-point exponential function.",
 	    "ElementaryFunctions",
 	    "", // seeAlso
