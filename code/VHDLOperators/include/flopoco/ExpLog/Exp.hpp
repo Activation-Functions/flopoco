@@ -68,14 +68,10 @@ namespace flopoco{
 
 		// Overloading the virtual functions of Operator
 		// void outputVHDL(std::ostream& o, std::string name);
-		void emulate(TestCase * tc);
-		void buildStandardTestCases(TestCaseList* tcl);
-		TestCase* buildRandomTestCase(int i);
-
+		//void emulate(TestCase * tc);
+		
 		/** Factory method that parses arguments and calls the constructor */
 		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
-
-		static TestList unitTest(int testLevel);
 
 	private:
 		int wE; /**< Exponent size */

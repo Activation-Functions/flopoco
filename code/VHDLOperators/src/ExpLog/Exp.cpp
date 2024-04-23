@@ -279,17 +279,15 @@ namespace flopoco{
 			wFIn=wF;
 
 		addInput("ufixX_i", MSB-LSB+1);
-		addInput("resultWillBeOne");
-		addInput("overflow0");
 		addInput("XSign");
-		addInput("Xexn", 2);
+
+		addOutput("expY",sizeExpY);
+		addOutput("K",wE+1);
 
 		//addFPInput("X", wE, wFIn);
-		addFPOutput("R", wE, wF);
+		//addFPOutput("R", wE, wF);
 
 		vhdl << declareFixPoint("ufixX", false, wE-2, -wF-g) << " <= unsigned(ufixX_i);" << endl;
-
-
 
 		addConstant("wE", "positive", wE);
 		addConstant("wF", "positive", wF);
@@ -339,7 +337,8 @@ namespace flopoco{
 		vhdl << tab << declare(getTarget()->adderDelay(wE+1),
 													 "minusAbsK",wE+1) << " <= " << rangeAssign(wE, 0, "'0'")<< " - ('0' & absK);"<<endl;
 		// The synthesizer should be able to merge the addition and this mux,
-		vhdl << tab << declare("K",wE+1) << " <= minusAbsK when  XSign='1'   else ('0' & absK);"<<endl;
+		//vhdl << tab << declare("K",wE+1) << " <= minusAbsK when  XSign='1'   else ('0' & absK);"<<endl;
+		vhdl << tab << "K <= minusAbsK when  XSign='1'   else ('0' & absK);"<<endl;
 
 
 		// TODO here! We do not need to compute the leading WE bits, as they will be cancelled out by the subtraction anyway.
@@ -597,48 +596,8 @@ namespace flopoco{
 
 		} // end if(expYTabulated)
 
-
-		// The following is generic normalization/rounding code if we have in expY an approx of exp(y) of size 	sizeExpY
-		// with MSB of weight 2^1
-		// We start a cycle here
-//		nextCycle();
-
-		vhdl << tab << declare("needNoNorm") << " <= expY(" << sizeExpY-1 << ");" << endl;
-		vhdl << tab << "-- Rounding: all this should consume one row of LUTs" << endl;
-		vhdl << tab << declare(getTarget()->logicDelay(), "preRoundBiasSig", wE+wF+2)
-		<< " <= conv_std_logic_vector(" << bias << ", wE+2)  & expY" << range(sizeExpY-2, sizeExpY-2-wF+1) << " when needNoNorm = '1'" << endl
-		<< tab << tab << "else conv_std_logic_vector(" << bias-1 << ", wE+2)  & expY" << range(sizeExpY-3, sizeExpY-3-wF+1) << " ;" << endl;
-
-		vhdl << tab << declare("roundBit") << " <= expY(" << sizeExpY-2-wF << ")  when needNoNorm = '1'    else expY(" <<  sizeExpY-3-wF << ") ;" << endl;
-		vhdl << tab << declare("roundNormAddend", wE+wF+2) << " <= K(" << wE << ") & K & "<< rangeAssign(wF-1, 1, "'0'") << " & roundBit;" << endl;
-
-
-		newInstance("IntAdder",
-								"roundedExpSigOperandAdder",
-								"wIn=" + to_string(wE+wF+2),
-								"X=>preRoundBiasSig,Y=>roundNormAddend",
-								"R=>roundedExpSigRes",
-								"Cin=>'0'");
-		vhdl << tab << declare(getTarget()->logicDelay(), "roundedExpSig", wE+wF+2) << " <= roundedExpSigRes when Xexn=\"01\" else "
-		<< " \"000\" & (wE-2 downto 0 => '1') & (wF-1 downto 0 => '0');" << endl;
-
-		vhdl << tab << declare(getTarget()->logicDelay(), "ofl1") << " <= not XSign and overflow0 and (not Xexn(1) and Xexn(0)); -- input positive, normal,  very large" << endl;
-		vhdl << tab << declare("ofl2") << " <= not XSign and (roundedExpSig(wE+wF) and not roundedExpSig(wE+wF+1)) and (not Xexn(1) and Xexn(0)); -- input positive, normal, overflowed" << endl;
-		vhdl << tab << declare("ofl3") << " <= not XSign and Xexn(1) and not Xexn(0);  -- input was -infty" << endl;
-		vhdl << tab << declare("ofl") << " <= ofl1 or ofl2 or ofl3;" << endl;
-
-		vhdl << tab << declare("ufl1") << " <= (roundedExpSig(wE+wF) and roundedExpSig(wE+wF+1))  and (not Xexn(1) and Xexn(0)); -- input normal" << endl;
-		vhdl << tab << declare("ufl2") << " <= XSign and Xexn(1) and not Xexn(0);  -- input was -infty" << endl;
-		vhdl << tab << declare("ufl3") << " <= XSign and overflow0  and (not Xexn(1) and Xexn(0)); -- input negative, normal,  very large" << endl;
-
-		vhdl << tab << declare("ufl") << " <= ufl1 or ufl2 or ufl3;" << endl;
-
-		vhdl << tab << declare("Rexn", 2) << " <= \"11\" when Xexn = \"11\"" << endl
-		<< tab << tab << "else \"10\" when ofl='1'" << endl
-		<< tab << tab << "else \"00\" when ufl='1'" << endl
-		<< tab << tab << "else \"01\";" << endl;
-
-		vhdl << tab << "R <= Rexn & '0' & roundedExpSig" << range(wE+wF-1, 0) << ";" << endl;
+		//outputs are expY and K
+		
 
 	}
 
@@ -647,13 +606,14 @@ namespace flopoco{
 	}
 
 
-
+/* TODO should this exp helper be emulated ? not sure
 	void Exp::emulate(TestCase * tc)
 	{
-		/* Get I/O values */
+		
+		// Get I/O values 
 		mpz_class svX = tc->getInputValue("X");
 
-		/* Compute correct value */
+		// Compute correct value
 		FPNumber fpx(wE, wF, svX);
 
 		mpfr_t x, ru,rd;
@@ -670,161 +630,9 @@ namespace flopoco{
 		tc->addExpectedOutput("R", svRD);
 		tc->addExpectedOutput("R", svRU);
 		mpfr_clears(x, ru, rd, NULL);
+		
 	}
-
-
-
-	void Exp::buildStandardTestCases(TestCaseList* tcl){
-		TestCase *tc;
-
-		mpfr_t x, y;
-		FPNumber *fx, *fy;
-		// double d;
-
-		mpfr_init2(x, 1+wF);
-		mpfr_init2(y, 1+wF);
-
-
-
-		tc = new TestCase(this);
-		tc->addFPInput("X", log(2));
-		emulate(tc);
-		tcl->add(tc);
-
-		tc = new TestCase(this);
-		tc->addFPInput("X", FPNumber::plusDirtyZero);
-		emulate(tc);
-		tcl->add(tc);
-
-		tc = new TestCase(this);
-		tc->addFPInput("X", FPNumber::minusDirtyZero);
-		emulate(tc);
-		tcl->add(tc);
-
-
-
-		tc = new TestCase(this);
-		tc->addFPInput("X", 1.0);
-		emulate(tc);
-		tcl->add(tc);
-
-		tc = new TestCase(this);
-		tc->addFPInput("X", 2.0);
-		emulate(tc);
-		tcl->add(tc);
-
-		tc = new TestCase(this);
-		tc->addFPInput("X", 1.5);
-		emulate(tc);
-		tcl->add(tc);
-
-		tc = new TestCase(this);
-		tc->addFPInput("X", -1.0);
-		emulate(tc);
-		tcl->add(tc);
-
-		tc = new TestCase(this);
-		tc->addFPInput("X", -2.0);
-		emulate(tc);
-		tcl->add(tc);
-
-		tc = new TestCase(this);
-		tc->addFPInput("X", -3.0);
-		emulate(tc);
-		tcl->add(tc);
-
-		tc = new TestCase(this);
-		tc->addComment("The largest number whose exp is finite");
-		fx = new FPNumber(wE, wF, FPNumber::largestPositive);
-		fx->getMPFR(x);
-		mpfr_log(y, x, GMP_RNDN);
-		//		cout << "A " << fx->getSignalValue() << endl;
-		//		 d = mpfr_get_d(x, GMP_RNDN);
-		// cout << d << endl;
-		// d = mpfr_get_d(y, GMP_RNDN);
-		// cout << d << endl;
-		fy = new FPNumber(wE, wF, y);
-		tc->addFPInput("X", fy);
-		emulate(tc);
-		tcl->add(tc);
-		delete(fx);
-
-		tc = new TestCase(this);
-		tc->addComment("The first number whose exp is infinite");
-		mpfr_nextabove(y);
-		fy = new FPNumber(wE, wF, y);
-		tc->addFPInput("X", fy);
-		emulate(tc);
-		tcl->add(tc);
-		delete(fy);
-
-
-
-
-		tc = new TestCase(this);
-		tc->addComment("The last number whose exp is nonzero");
-		fx = new FPNumber(wE, wF, FPNumber::smallestPositive);
-		fx->getMPFR(x);
-		mpfr_log(y, x, GMP_RNDU);
-
-		// cout << "A " << fx->getSignalValue() << endl;
-		// d = mpfr_get_d(x, GMP_RNDN);
-		// cout << d << endl;
-		// d = mpfr_get_d(y, GMP_RNDN);
-		// cout << d << endl;
-
-		fy = new FPNumber(wE, wF, y);
-		tc->addFPInput("X", fy);
-		emulate(tc);
-		tcl->add(tc);
-		delete(fx);
-
-		tc = new TestCase(this);
-		tc->addComment("The first number whose exp flushes to zero");
-		mpfr_nextbelow(y);
-		fy = new FPNumber(wE, wF, y);
-		tc->addFPInput("X", fy);
-		emulate(tc);
-		tcl->add(tc);
-		delete(fy);
-
-		mpfr_clears(x, y, NULL);
-	}
-
-
-
-
-
-	// One test out of 8 fully random (tests NaNs etc)
-	// All the remaining ones test numbers with exponents between -wF-3 and wE-2,
-	// For numbers outside this range, exp over/underflows or flushes to 1.
-
-	TestCase* Exp::buildRandomTestCase(int i){
-		TestCase *tc;
-		tc = new TestCase(this);
-		mpz_class x;
-		mpz_class normalExn = mpz_class(1)<<(wE+wF+1);
-		mpz_class bias = ((1<<(wE-1))-1);
-		/* Fill inputs */
-		if ((i & 7) == 0) { //fully random
-			x = getLargeRandom(wE+wF+3);
-		}
-		else
-		{
-				mpz_class e = (getLargeRandom(wE+wF) % (wE+wF+2) ) -wF-3; // Should be between -wF-3 and wE-2
-				//cout << e << endl;
-				e = bias + e;
-				mpz_class sign = getLargeRandom(1);
-				x  = getLargeRandom(wF) + (e << wF) + (sign<<(wE+wF)) + normalExn;
-			}
-			tc->addInput("X", x);
-		/* Get correct outputs */
-			emulate(tc);
-			return tc;
-		}
-
-
-
+	*/
 
 		OperatorPtr Exp::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 			int wE, wF, k, d, g;
@@ -838,72 +646,10 @@ namespace flopoco{
 			return new Exp(parentOp, target, wE, wF, k, d, g, fullInput);
 		}
 
-
-
-		TestList Exp::unitTest(int testLevel)
-		{
-		// the static list of mandatory tests
-			TestList testStateList;
-			vector<pair<string,string>> paramList;
-            std::vector<std::array<int, 6>> paramValues;
-
-            paramValues = { // testing the default value on the most standard cases
-                {5,  10, 0, 0, -1, 0},
-                {8,  23, 0, 0, -1, 0},
-                {11, 52, 0, 0, -1, 0}
-            };
-            if (testLevel == TestLevel::QUICK) {
-                // just test paramValues
-            }
-
-        if (testLevel >= TestLevel::SUBSTANTIAL) {
-            // The substantial unit tests
-            // First test with plainVHDL, then with cool multipliers
-        for (int wF=5; wF<53; wF+=1) {
-            // test various input widths
-            int nbByteWE = 6+(wF/10);
-            while(nbByteWE>wF){
-                nbByteWE -= 2;
-            }
-            paramList.push_back(make_pair("wF",to_string(wF)));
-            paramList.push_back(make_pair("wE",to_string(nbByteWE)));
-            paramList.push_back(make_pair("plainVHDL","true"));
-            testStateList.push_back(paramList);
-            paramList.clear();
-        }
-        for (int wF=5; wF<53; wF+=1) {
-            // test various input widths
-            int nbByteWE = 6+(wF/10);
-            while(nbByteWE>wF){
-                nbByteWE -= 2;
-            }
-            paramList.push_back(make_pair("wF",to_string(wF)));
-            paramList.push_back(make_pair("wE",to_string(nbByteWE)));
-            testStateList.push_back(paramList);
-            paramList.clear();
-        }
-        }
-      else
-      {
-          // finite number of random test computed out of testLevel
-      }
-        for (auto const params: paramValues) {
-             paramList.push_back(make_pair("wE", to_string(params[0])));
-             paramList.push_back(make_pair("wF", to_string(params[1])));
-             paramList.push_back(make_pair("d", to_string(params[2])));
-             paramList.push_back(make_pair("k", to_string(params[3])));
-             paramList.push_back(make_pair("g", to_string(params[4])));
-             paramList.push_back(make_pair("fullInput", to_string(params[5])));
-             testStateList.push_back(paramList);
-             paramList.clear();
-        }
-  		return testStateList;
-	}
-
 	template <>
 	const OperatorDescription<Exp> op_descriptor<Exp> {
 	    "Exp", // name
-	    "A faithful floating-point exponential function.",
+	    "A helper operator for the faithful floating-point exponential function.",
 	    "ElementaryFunctions",
 	    "", // seeAlso
 	    "wE(int): exponent size in bits; \
