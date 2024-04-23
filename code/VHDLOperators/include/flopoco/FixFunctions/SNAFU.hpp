@@ -34,6 +34,36 @@ enum ActivationFunction {
   ELU_P,
 };
 
+static const map<string, ActivationFunction> functionMap = {
+  {"sigmoid", Sigmoid},
+  {"sigmoid_p", Sigmoid_P},
+  {"tanh", TanH},
+  {"tanh_p", TanH_P},
+  {"relu", ReLU},
+  {"relu_p", ReLU_P},
+  {"gelu", GeLU},
+  {"gelu_p", GeLU_P},
+  {"elu", ELU},
+  {"elu_p", ELU_P},
+  {"silu", SiLU},
+  {"silu_p", SiLU_P},
+};
+
+static inline const ActivationFunction functionFromString(const string s)
+{
+  try {
+    return functionMap.at(toLowerCase(s));
+  } catch(const std::out_of_range&) {
+    string e = "Unknown function: " + s + "\nPossible values are: ";
+
+    for(const auto [v, _]: functionMap) {
+      e += v + " ";
+    }
+
+    throw(e);
+  }
+}
+
 enum class Method {
   Auto,
   PlainTable,
@@ -42,6 +72,7 @@ enum class Method {
   PiecewiseHorner2,
   PiecewiseHorner3,
 };
+
 static const map<string, Method> methodMap = {
   {"plaintable", Method::PlainTable},
   {"multipartite", Method::MultiPartite},
@@ -50,6 +81,21 @@ static const map<string, Method> methodMap = {
   {"piecewisehorner3", Method::PiecewiseHorner3},
   {"auto", Method::Auto},
 };
+
+static inline const Method methodFromString(const string s)
+{
+  try {
+    return methodMap.at(toLowerCase(s));
+  } catch(const std::out_of_range&) {
+    string e = "Unknown method: " + s + "\nPossible values are: ";
+
+    for(const auto [v, _]: methodMap) {
+      e += v + " ";
+    }
+
+    throw(e);
+  }
+}
 
 static inline const string methodOperator(Method m)
 {
@@ -92,7 +138,6 @@ struct FunctionData {
   string name;
   string longName;
   string formula;
-  ActivationFunction fun;
   bool signedOut;
   bool reluVariant = false;           // By default, not a ReLU variant
   Parity parity = Parity::None;       // No assumption is made on the parity
@@ -104,130 +149,118 @@ struct FunctionData {
   unordered_set<Method> incompatibleMethods = {};
 };
 
-static const map<string, FunctionData> activationFunction = {
+static const map<ActivationFunction, FunctionData> activationFunction = {
   // two annoyances below:
   // 1/ we are not allowed spaces because it would mess the argument parser. Silly
   // 2/ no if then else in sollya, so we emulate with the quasi-threshold function 1/(1+exp(-1b256*X))
-  {"sigmoid",
+  {Sigmoid,
     FunctionData{
       .name = "Sigmoid",
       .longName = "Sigmoid",
       .formula = "1/(1+exp(-X))",  //textbook
-      .fun = Sigmoid,              // enum
       .signedOut = false,          // output unsigned
       .slightRescale = true,       // output touches 1 and needs to be slightly rescaled
     }},
-  {"tanh",
+  {TanH,
     FunctionData{
       .name = "TanH",
       .longName = "Hyperbolic Tangent",
       .formula = "tanh(X)",
-      .fun = TanH,                              // enum
       .signedOut = true,                        // output signed
       .slightRescale = true,                    // output touches 1 and needs to be slightly rescaled
       .incompatibleMethods = {Method::Horner},  // Simple Horner will not work
     }},
-  {"relu",
+  {ReLU,
     FunctionData{
       .name = "ReLU",
       .longName = "Rectified Linear Unit",
       .formula = "X/(1+exp(-1b256*X))",  // Here we use a quasi-threshold function
-      .fun = ReLU,                       // enum
       .signedOut = false,                // output unsigned
       .scaleFactor = 1.0,                //
     }},
-  {"elu",
+  {ELU,
     FunctionData{
       .name = "ELU",
       .longName = "Exponential Linear Unit",
       .formula = "X/(1+exp(-1b256*X))+expm1(X)*(1-1/(1+exp(-1b256*X)))",  // Here we use a quasi-threshold function
-      .fun = ELU,                                                         // enum
       .signedOut = true,                                                  // output signed
       .reluVariant = true,                                                // ReLU variant
       .scaleFactor = 1.0,                                                 //
     }},
-  {"silu",
+  {SiLU,
     FunctionData{
       .name = "SiLU",
       .longName = "Sigmoid Linear Unit",
       .formula = "X/(1+exp(-X))",  // textbook
-      .fun = SiLU,                 // enum
       .signedOut = true,           // output signed
       .reluVariant = true,         // ReLU variant
       .scaleFactor = 1.0,          //
     }},
-  {"gelu",
+  {GeLU,
     FunctionData{
       .name = "GeLU",
       .longName = "Gaussian Error Linear Unit",
       .formula = "(X/2)*(1+erf(X/sqrt(2)))",  // textbook
-      .fun = GeLU,                            // enum
       .signedOut = true,                      // output signed
       .reluVariant = true,                    // ReLU variant
       .scaleFactor = 1.0,                     //
     }},
 
   // Derivatives
-  {"sigmoid_p",
+  {Sigmoid_P,
     FunctionData{
       .name = "Sigmoid_P",
       .longName = "Derivative Sigmoid",
       .formula = "exp(-X)/(1+exp(-X))^2",  //textbook
-      .fun = Sigmoid_P,                    // enum
       .signedOut = false,                  // output unsigned
       .slightRescale = true,
       .scaleFactor = 0.25,
       .derivative = true,
     }},
-  {"tanh_p",
+  {TanH_P,
     FunctionData{
       .name = "TanH_P",
       .longName = "Derivative Hyperbolic Tangent",
       .formula = "(1-tanh(X)^2)",  //textbook
-      .fun = TanH_P,               // enum
       .signedOut = false,          // output unsigned
       .slightRescale = true,       // output touches 1 and needs to be slightly rescaled
       .scaleFactor = 1.0,          // Function is a derivative, so we need to take into account the inputScale
       .derivative = true,
     }},
-  {"relu_p",
+  {ReLU_P,
     FunctionData{
       .name = "ReLU_P",
       .longName = "Derivative Rectified Linear Unit",
       .formula = "1/(1+exp(-1b256*X))",  // Here we use a quasi-threshold function
-      .fun = ReLU_P,                     // enum
       .signedOut = false,                // output unsigned
       .slightRescale = true,             // output touches 1 and needs to be slightly rescaled
       .scaleFactor = 1.0,                // Function is a derivative, so we need to take into account the inputScale
       .derivative = true,
     }},
-  {"elu_p",
+  {ELU_P,
     FunctionData{
       .name = "ELU_P",
       .longName = "Derivative Exponential Linear Unit",
       .formula = "1/(1+exp(-1b256*X))+exp(X)*(1-1/(1+exp(-1b256*X)))",  // Here we use a quasi-threshold function
-      .fun = ELU_P,                                                     // enum
       .signedOut = false,                                               // output unsigned
       .slightRescale = true,                                            // output touches 1 and needs to be slightly rescaled
       .scaleFactor = 1.0,                                               // Function is a derivative, so we need to take into account the inputScale
       .derivative = true,
     }},
-  {"silu_p",
+  {SiLU_P,
     FunctionData{
       .name = "SiLU_P",
       .longName = "Sigmoid Linear Unit",
       .formula = "(1+X*exp(-X)+exp(-X))/(1+exp(-X))^2",  // textbook
-      .fun = SiLU_P,                                     // enum
       .signedOut = true,                                 // output signed
       .scaleFactor = 0x1.198f14p0,                       // Function is a derivative, so we need to take into account the inputScale
       .derivative = true,
     }},
-  {"gelu_p",
+  {GeLU_P,
     FunctionData{
       .name = "GeLU_P",
       .longName = "Gaussian Error Linear Unit",
       .formula = "(X*exp(-(X^2)/2))/sqrt(2*pi)+(1+erf(X/sqrt(2)))/2",  // textbook
-      .fun = GeLU_P,                                                   // enum
       .signedOut = true,                                               // output signed
       .scaleFactor = 0x1.20fffp0,                                      // Function is a derivative, so we need to take into account the inputScale
       .derivative = true,

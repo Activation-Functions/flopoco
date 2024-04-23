@@ -76,27 +76,23 @@ namespace flopoco
       throw(string("inputScale should be strictly positive"));
     }
 
-    Method method;
-    try {
-      method = methodMap.at(to_lowercase(methodIn));
-    } catch(const std::out_of_range&) {
-      throw("the method '" + methodIn + "' is unknown");
-    }
+    Method method = methodFromString(methodIn);
+    ActivationFunction af = functionFromString(fIn);
 
     string* function;                 // Points to the function we need to approximate
     map<string, string> params = {};  // Map of parameters
     size_t in = 0;                    // Number the inputs to have a variable chain
 
-    FunctionData af = activationFunction.at(toLowerCase(fIn));
+    FunctionData fd = activationFunction.at(af);
 
     int lsbIn = -wIn + 1;               // The input is always signed, we need to account for it
-    int lsbOut = -wOut + af.signedOut;  // The output sign bit depends on the exact function
+    int lsbOut = -wOut + fd.signedOut;  // The output sign bit depends on the exact function
 
     // The input might be scaled according to the input scaling
-    if(af.scaleFactor != 0.0) {
+    if(fd.scaleFactor != 0.0) {
       int e;
 
-      double fr = frexp(inputScale * af.scaleFactor, &e);  // Recover the exponent and fraction
+      double fr = frexp(inputScale * fd.scaleFactor, &e);  // Recover the exponent and fraction
 
       // No output should touch exactly one,
       // so 2^n only needs n bits to be written
@@ -105,22 +101,21 @@ namespace flopoco
       if(e > 0) lsbOut += e;  // We only reduce precision when the output can get bigger than 1
     }
 
-
     ///////// Ad-hoc compression consists, in the ReLU variants, to subtract ReLU
-    if((adhocCompression == Compression::Enabled) && !af.reluVariant) {  // the user asked to compress a function that is not ReLU-like
+    if((adhocCompression == Compression::Enabled) && !fd.reluVariant) {  // the user asked to compress a function that is not ReLU-like
       REPORT(LogLevel::MESSAGE,
-        " ??????? You asked for the compression of " << af.longName << " which is not a ReLU-like" << endl
+        " ??????? You asked for the compression of " << fd.longName << " which is not a ReLU-like" << endl
                                                      << " ??????? I will try but I am doubtful about the result." << endl
                                                      << " Proceeeding nevertheless..." << lsbOut);
     }
 
-    if(af.incompatibleMethods.find(method) != af.incompatibleMethods.end()) {
+    if(fd.incompatibleMethods.find(method) != fd.incompatibleMethods.end()) {
       REPORT(
         LogLevel::MESSAGE, "The requested method is not very compatible with the function selected, the computation might take a long time or fail.")
     }
 
     if(adhocCompression == Compression::Auto) {  // means "automatic" and it is the default
-      adhocCompression = static_cast<Compression>(af.reluVariant);
+      adhocCompression = static_cast<Compression>(fd.reluVariant);
     }
 
 
@@ -130,15 +125,15 @@ namespace flopoco
     // string replacement of "x" is dangerous because it may appear in the name of functions, so use @
     string scaleString = "(" + to_string(inputScale) + "*@)";
 
-    string sollyaFunction = replaceX(af.formula, scaleString);
-    string sollyaReLU = replaceX(activationFunction.at("relu").formula, scaleString);
+    string sollyaFunction = replaceX(fd.formula, scaleString);
+    string sollyaReLU = replaceX(activationFunction.at(ReLU).formula, scaleString);
 
-    if(af.slightRescale) {
+    if(fd.slightRescale) {
       sollyaFunction = "(1-1b" + to_string(lsbOut) + ")*(" + sollyaFunction + ")";
       sollyaReLU = "(1-1b" + to_string(lsbOut) + ")*(" + sollyaReLU + ")";
     }
 
-    if(af.derivative) {
+    if(fd.derivative) {
       sollyaFunction = to_string(inputScale) + "*(" + sollyaFunction + ")";
       // No derivative is a ReLU variant, so no need to modify the string
     }
@@ -147,7 +142,7 @@ namespace flopoco
 
     // Only then we may define the delta function
     if(adhocCompression == Compression::Enabled) {
-      if(af.fun == ELU) {
+      if(af == ELU) {
         // We need to compute on the negative values only
         sollyaDeltaFunction = "-(" + replaceX(sollyaFunction, "-@") + ")";
       } else {
@@ -160,10 +155,6 @@ namespace flopoco
       function = &sollyaFunction;
     }
 
-    params["signedIn"] = to_string(signedIn);
-    params["lsbOut"] = to_string(lsbOut);
-
-
     // means "please choose for me"
     if(method == Method::Auto) {
       // TODO a complex sequence of if then else once the experiments are done
@@ -171,7 +162,7 @@ namespace flopoco
     }
 
     REPORT(LogLevel::MESSAGE,
-      "Function after pre-processing: " << af.longName << " evaluated on [-1,1)" << endl
+      "Function after pre-processing: " << fd.longName << " evaluated on [-1,1)" << endl
                                         << " wIn=" << wIn << " translates to lsbIn=" << lsbIn << endl
                                         << " wOut=" << wOut << " translates to lsbOut=" << lsbOut);
     REPORT(LogLevel::MESSAGE, "Method is " << methodIn);
@@ -197,7 +188,7 @@ namespace flopoco
     f = new FixFunction(sollyaFunction, true, lsbIn, lsbOut);
 
     ostringstream name;
-    name << af.name << "_" << wIn << "_" << wOut << "_" << methodIn;
+    name << fd.name << "_" << wIn << "_" << wOut << "_" << methodIn;
     setNameWithFreqAndUID(name.str());
 
     setCopyrightString("Florent de Dinechin (2023)");
@@ -205,7 +196,10 @@ namespace flopoco
     addInput(input(in), wIn);
     addOutput("Y", wOut);
 
-    if(af.fun == ReLU) {
+    params["signedIn"] = to_string(signedIn);
+    params["lsbOut"] = to_string(lsbOut);
+
+    if(af == ReLU) {
       // Special case for ReLU
       // TODO: Take into account rounding if necessary
       vhdl << tab << "Y <= " << relu(wIn, wOut);
@@ -240,10 +234,12 @@ namespace flopoco
     }
     case Method::PiecewiseHorner2: {
       params["d"] = "2";
+      signedIn = false;
       break;
     }
     case Method::PiecewiseHorner3: {
       params["d"] = "3";
+      signedIn = false;
       break;
     }
     default:
@@ -277,7 +273,7 @@ namespace flopoco
     }
 
     OperatorPtr op = newInstance(methodOperator(method),
-      af.name + (adhocCompression == Compression::Enabled ? "_delta_SNAFU" : "_SNAFU"),
+      fd.name + (adhocCompression == Compression::Enabled ? "_delta_SNAFU" : "_SNAFU"),
       paramString,
       "X => " + input(in),
       adhocCompression == Compression::Enabled ? "Y => D" : "Y => F");
@@ -286,7 +282,7 @@ namespace flopoco
       // Reconstruct the function
       int deltaOutSize = getSignalByName("D")->width();
 
-      if(af.fun == ELU) {
+      if(af == ELU) {
         // Special case, when X is positive, then it is identical to the ReLU
         vhdl << tab << declare("F0", wOut) << " <= ReLU when X" << of(wIn - 1) << " = '0' else ReLU - (" << zg(wOut - deltaOutSize) << " & D);"
              << endl;
