@@ -27,12 +27,12 @@ namespace flopoco{
 			throw std::string("IEEENumber::IEEENumber: Exponents larger than 30 bits are not supported.");
 	}
 
-	IEEENumber::IEEENumber(int wE, int wF, mpfr_t mp_, int ternaryRoundInfo)
+	IEEENumber::IEEENumber(int wE, int wF, mpfr_t mp_, int ternaryRoundInfo, mpfr_rnd_t round)
 		: wE(wE), wF(wF)
 	{
 		if (wE > 30)
 			throw std::string("IEEENumber::IEEENumber: Exponents larger than 30 bits are not supported.");
-		setMPFR( mp_, ternaryRoundInfo);
+		setMPFR( mp_, ternaryRoundInfo, round);
 	}
 
 	IEEENumber::IEEENumber(int wE, int wF, double x)
