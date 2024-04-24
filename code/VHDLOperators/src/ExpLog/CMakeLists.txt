@@ -4,4 +4,5 @@ add_flopocolib_src(
 	FPLog.cpp
 	FPLogIterative.cpp
 	FPPow.cpp
+	IEEEExp.cpp
 )
