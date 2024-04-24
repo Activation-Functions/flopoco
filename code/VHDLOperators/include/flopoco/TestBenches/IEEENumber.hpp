@@ -52,8 +52,9 @@ namespace flopoco{
 		 * @param wF the width of the significant
 		 * @param m the initial value.
 		 * @param ternaryRoundingInfo used to avoid double rounding.
+		 * @param round rounding mode used for subnormals.
 		 */
-		IEEENumber(int wE, int wF, mpfr_t m,  int ternaryRoundInfo=0);
+		IEEENumber(int wE, int wF, mpfr_t mp_, int ternaryRoundInfo=0, mpfr_rnd_t round=MPFR_RNDN);
 		
 		/**
 		 * Constructs a new initialised IEEENumber.
