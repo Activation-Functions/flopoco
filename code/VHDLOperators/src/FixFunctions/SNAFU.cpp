@@ -108,12 +108,16 @@ namespace flopoco
       if(e > 0) lsbOut += e;  // We only reduce precision when the output can get bigger than 1
     }
 
-    ///////// Ad-hoc compression consists, in the ReLU variants, to subtract ReLU
-    if((adhocCompression == Compression::Enabled) && !fd.reluVariant) {  // the user asked to compress a function that is not ReLU-like
-      REPORT(LogLevel::MESSAGE,
-        " ??????? You asked for the compression of " << fd.longName << " which is not a ReLU-like" << endl
-                                                     << " ??????? I will try but I am doubtful about the result." << endl
-                                                     << " Proceeeding nevertheless..." << lsbOut);
+    // adhocCompression is to use the difference to a known function to obtain smaller output values
+    if((adhocCompression == Compression::Enabled) && (fd.deltaFunction == Delta::None)) {
+      // the user asked to compress a function that is not compressible
+      REPORT(LogLevel::MESSAGE, fd.longName << " has no simple delta to a fast function (ReLU or ReLU')." << endl);
+      adhocCompression = Compression::Disabled;
+    }
+
+    if(adhocCompression == Compression::Auto) {
+      // The compression is only enabled for functions that have a delta
+      adhocCompression = static_cast<Compression>(fd.deltaFunction != Delta::None);
     }
 
     if(fd.incompatibleMethods.find(method) != fd.incompatibleMethods.end()) {
@@ -121,9 +125,6 @@ namespace flopoco
         LogLevel::MESSAGE, "The requested method is not very compatible with the function selected, the computation might take a long time or fail.")
     }
 
-    if(adhocCompression == Compression::Auto) {  // means "automatic" and it is the default
-      adhocCompression = static_cast<Compression>(fd.reluVariant);
-    }
     // Process the function definition based on what we know
     const string scaleString = "(" + to_string(inputScale) + "*@)";
 
