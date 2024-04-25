@@ -206,6 +206,12 @@ namespace flopoco
       return;
     }
 
+    if(af == ReLU_P) {
+      // TODO: Use a multiplication by a constant ?
+      vhdl << tab << "Y <= " << relu(wIn, wOut, true);
+      return;
+    }
+
     if(adhocCompression == Compression::Enabled) {
       if(wIn != wOut) {
         throw(string("Too lazy so far to support wIn<>wOut in case of ad-hoc compression "));
