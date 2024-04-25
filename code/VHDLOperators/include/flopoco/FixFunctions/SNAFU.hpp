@@ -139,10 +139,11 @@ struct FunctionData {
   string longName;
   string formula;
   bool signedOut;
-  bool reluVariant = false;           // By default, not a ReLU variant
-  Parity parity = Parity::None;       // No assumption is made on the parity
+  Parity parity = Parity::None;       // No assumption is made on the parity, when a deltaFunction is given,
+                                      // the parity is considered after teh difference to this function
+
   Delta deltaFunction = Delta::None;  // The function to substract for compression
-  double offset = FPNumber::NaN;      // The offset
+  double offset = 0.0;                // The offset
   bool slightRescale = false;         // for output range efficiency of functions that touch 1
   double scaleFactor = 0.0;           // The importancee of tne inputScale
   bool derivative = false;            // Whether the function is a derivative, and we need to multiply the output by the inputScale
@@ -159,6 +160,8 @@ static const map<ActivationFunction, FunctionData> activationFunction = {
       .longName = "Sigmoid",
       .formula = "1/(1+exp(-X))",  //textbook
       .signedOut = false,          // output unsigned
+      .parity = Parity::Odd,
+      .offset = 0.5,
       .slightRescale = true,       // output touches 1 and needs to be slightly rescaled
     }},
   {TanH,
@@ -167,6 +170,7 @@ static const map<ActivationFunction, FunctionData> activationFunction = {
       .longName = "Hyperbolic Tangent",
       .formula = "tanh(X)",
       .signedOut = true,                        // output signed
+      .parity = Parity::Odd,
       .slightRescale = true,                    // output touches 1 and needs to be slightly rescaled
       .incompatibleMethods = {Method::Horner},  // Simple Horner will not work
     }},
@@ -184,7 +188,7 @@ static const map<ActivationFunction, FunctionData> activationFunction = {
       .longName = "Exponential Linear Unit",
       .formula = "X/(1+exp(-1b256*X))+expm1(X)*(1-1/(1+exp(-1b256*X)))",  // Here we use a quasi-threshold function
       .signedOut = true,                                                  // output signed
-      .reluVariant = true,                                                // ReLU variant
+      .deltaFunction = Delta::ReLU,
       .scaleFactor = 1.0,                                                 //
     }},
   {SiLU,
@@ -193,7 +197,8 @@ static const map<ActivationFunction, FunctionData> activationFunction = {
       .longName = "Sigmoid Linear Unit",
       .formula = "X/(1+exp(-X))",  // textbook
       .signedOut = true,           // output signed
-      .reluVariant = true,         // ReLU variant
+      .parity = Parity::Even,
+      .deltaFunction = Delta::ReLU,
       .scaleFactor = 1.0,          //
     }},
   {GeLU,
@@ -202,7 +207,8 @@ static const map<ActivationFunction, FunctionData> activationFunction = {
       .longName = "Gaussian Error Linear Unit",
       .formula = "(X/2)*(1+erf(X/sqrt(2)))",  // textbook
       .signedOut = true,                      // output signed
-      .reluVariant = true,                    // ReLU variant
+      .parity = Parity::Even,
+      .deltaFunction = Delta::ReLU,
       .scaleFactor = 1.0,                     //
     }},
 
@@ -213,6 +219,7 @@ static const map<ActivationFunction, FunctionData> activationFunction = {
       .longName = "Derivative Sigmoid",
       .formula = "exp(-X)/(1+exp(-X))^2",  //textbook
       .signedOut = false,                  // output unsigned
+      .parity = Parity::Even,
       .slightRescale = true,
       .scaleFactor = 0.25,
       .derivative = true,
@@ -223,6 +230,7 @@ static const map<ActivationFunction, FunctionData> activationFunction = {
       .longName = "Derivative Hyperbolic Tangent",
       .formula = "(1-tanh(X)^2)",  //textbook
       .signedOut = false,          // output unsigned
+      .parity = Parity::Even,
       .slightRescale = true,       // output touches 1 and needs to be slightly rescaled
       .scaleFactor = 1.0,          // Function is a derivative, so we need to take into account the inputScale
       .derivative = true,
@@ -253,6 +261,8 @@ static const map<ActivationFunction, FunctionData> activationFunction = {
       .longName = "Sigmoid Linear Unit",
       .formula = "(1+X*exp(-X)+exp(-X))/(1+exp(-X))^2",  // textbook
       .signedOut = true,                                 // output signed
+      .parity = Parity::Odd,
+      .deltaFunction = Delta::ReLU_P,
       .scaleFactor = 0x1.198f14p0,                       // Function is a derivative, so we need to take into account the inputScale
       .derivative = true,
     }},
@@ -262,6 +272,8 @@ static const map<ActivationFunction, FunctionData> activationFunction = {
       .longName = "Gaussian Error Linear Unit",
       .formula = "(X*exp(-(X^2)/2))/sqrt(2*pi)+(1+erf(X/sqrt(2)))/2",  // textbook
       .signedOut = true,                                               // output signed
+      .parity = Parity::Odd,
+      .deltaFunction = Delta::ReLU_P,
       .scaleFactor = 0x1.20fffp0,                                      // Function is a derivative, so we need to take into account the inputScale
       .derivative = true,
     }},
