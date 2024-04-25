@@ -29,10 +29,16 @@ using namespace std;
 #define LARGE_PREC 1000  // 1000 bits should be enough for everybody
 
 // Mux definition for the ReLU
-static inline const string relu(int wIn, int wOut)
+static inline const string relu(int wIn, int wOut, bool derivative = false)
 {
   std::ostringstream s;
-  s << zg(wOut) << " when X" << of(wIn - 1) << "='1'   else '0' & X" << range(wIn - 2, 0) << ";" << endl;
+  s << zg(wOut) << " when X" << of(wIn - 1) << " = '1' else '0' & ";
+
+  if(derivative) {
+    s << og(wIn - 1);
+  } else {
+    s << "X" << range(wIn - 2, 0) << ";" << endl;
+  }
 
   return s.str();
 }
@@ -217,7 +223,9 @@ namespace flopoco
         throw(string("Too lazy so far to support wIn<>wOut in case of ad-hoc compression "));
       };
 
-      vhdl << tab << declare("ReLU", wOut) << " <= " << relu(wIn, wOut);
+      // Declare the ReLU signal, when the function is a derivative, we use ReLU_P instead
+      // TODO: verify that it really works with different inputScales
+      vhdl << tab << declare("ReLU", wOut) << " <= " << relu(wIn, wOut, fd.deltaFunction == Delta::ReLU_P);
     }
 
     switch(method) {
