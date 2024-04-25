@@ -93,6 +93,7 @@ namespace flopoco
 
     int lsbIn = -wIn + 1;               // The input is always signed, we need to account for it
     int lsbOut = -wOut + fd.signedOut;  // The output sign bit depends on the exact function
+    bool signedIn = true;               // The input is always signed, i.e. in [-1,1)
 
     // The input might be scaled according to the input scaling
     if(fd.scaleFactor != 0.0) {
@@ -123,43 +124,53 @@ namespace flopoco
     if(adhocCompression == Compression::Auto) {  // means "automatic" and it is the default
       adhocCompression = static_cast<Compression>(fd.reluVariant);
     }
+    // Process the function definition based on what we know
+    const string scaleString = "(" + to_string(inputScale) + "*@)";
 
+    string base, deltaTo, delta;  // The standard formula, and the delta function associated to it
 
-    //////////////   Function preprocessing, for a good hardware match
+    base = fd.formula;
 
-    // scale the function by replacing X with (inputScale*X)
-    // string replacement of "x" is dangerous because it may appear in the name of functions, so use @
-    string scaleString = "(" + to_string(inputScale) + "*@)";
+    switch(fd.deltaFunction) {
+    case Delta::ReLU:
+      deltaTo = activationFunction.at(ReLU).formula;
+    case Delta::ReLU_P:
+      deltaTo = activationFunction.at(ReLU_P).formula;
+    case Delta::None:
+      break;
+    }
 
-    string sollyaFunction = replaceX(fd.formula, scaleString);
-    string sollyaReLU = replaceX(activationFunction.at(ReLU).formula, scaleString);
+    // Scale the input accordingly
+    base = replaceX(base, scaleString);
+    deltaTo = replaceX(deltaTo, scaleString);
 
+    // Rescale if necessary to avoid touching the limit
     if(fd.slightRescale) {
-      sollyaFunction = "(1-1b" + to_string(lsbOut) + ")*(" + sollyaFunction + ")";
-      sollyaReLU = "(1-1b" + to_string(lsbOut) + ")*(" + sollyaReLU + ")";
+      base = "(1-1b" + to_string(lsbOut) + ")*(" + base + ")";
+      deltaTo = "(1-1b" + to_string(lsbOut) + ")*(" + deltaTo + ")";
     }
 
+    // Add the contribution of the derivative if necessary
     if(fd.derivative) {
-      sollyaFunction = to_string(inputScale) + "*(" + sollyaFunction + ")";
-      // No derivative is a ReLU variant, so no need to modify the string
+      base = to_string(inputScale) + "*(" + base + ")";
+      deltaTo = to_string(inputScale) + "*(" + deltaTo + ")";
     }
 
-    bool signedIn = true;
-
-    // Only then we may define the delta function
-    if(adhocCompression == Compression::Enabled) {
-      if(af == ELU) {
-        // We need to compute on the negative values only
-        sollyaDeltaFunction = "-(" + replaceX(sollyaFunction, "-@") + ")";
-      } else {
-        sollyaDeltaFunction = "(" + sollyaReLU + ")-(" + sollyaFunction + ")";
-      }
-
-      function = &sollyaDeltaFunction;
-      signedIn = false;  // We can exploit symetry on all the delta functions
+    if(af == ELU) {                               // ELU is a special case, the only complicated part is on the negative values
+      delta = "-(" + replaceX(base, "-@") + ")";  // Thus, we need to flip ths function, to go to [0,1)
     } else {
-      function = &sollyaFunction;
+      delta = "(" + deltaTo + ")-(" + base + ")";
     }
+
+    // Underlying function definition, used to generate test cases
+    f = new FixFunction(base, true, lsbIn, lsbOut);
+    correctlyRounded = false;  // default is faithful
+
+    // Cheat on the signedIn value, by exploiting symmetry to the max
+    signedIn = false;  // We can exploit symetry on all the delta functions
+
+    // When compression is enabled, compute the approximation of the delta function
+    function = adhocCompression == Compression::Enabled ? &delta : &base;
 
     // means "please choose for me"
     if(method == Method::Auto) {
