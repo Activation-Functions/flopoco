@@ -1,7 +1,7 @@
 /*
   An integer multiplier for FloPoCo
 
-  Authors:  Martin Kumm with parts of previous IntMultiplier of Bogdan Pasca, F de Dinechin, Matei Istoan, Kinga Illyes and Bogdan Popa spent
+  Authors:  Martin Kumm with parts of previous IntMultiplier of Bogdan Pasca, F de Dinechin, Matei Istoan, Kinga Illyes and Bogdan Popa
 
   This file is part of the FloPoCo project
   developed by the Arenaire team at Ecole Normale Superieure de Lyon
@@ -141,13 +141,8 @@ namespace flopoco {
 		// }
 		TilingStrategy* tilingStrategy;
 		// Message to Andreas:
-		// Florent commented out all these methods for you to revive them
-		// A tilingStrategy should not input wOut nor guardBits,
-		// it should only input an errorBudget (expressed in ulps of the exact product as an mpz)
-		// Then various tilings will add bits in the bit heap in various positions.
-		// I don't think it is important to report the LSB actually used:
-		// let's assume the bit heap extends at least to the LSB of the exact product,
-		// we may have empty columns and the BitHeap framework will manage them just fine.
+		// Florent commented out all these methods for you to revive them someday once I have converged on the proper interface.
+		// (still TODO)
 		
 		 if(tilingMethod.compare("heuristicBasicTiling") == 0) {
 			tilingStrategy = new TilingStrategyBasicTiling(
