@@ -82,6 +82,15 @@
   			Actually there is a global attribute wOut, but to be used only by emulate() which is only used for the standalone case
 			- fillBitHeap and the other methods should not refer to the attribg or wOut
 
+		About tiling:
+			- A tilingStrategy should only input wX, wY, and an errorBudget (expressed in ulps of the exact product as an mpz)
+			  (plus all sorts of optional optimization flags if you want)
+			- it should report
+			     the error actually achieved,
+					 an LSB to which all the tiles should be truncated (for the fillBitHeap method of IntMultiplier) 
+			
+
+			
  */
 
 
