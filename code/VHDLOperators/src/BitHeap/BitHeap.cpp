@@ -157,7 +157,7 @@ namespace flopoco {
 
 	bool BitHeap::lexicographicOrdering(const Bit* bit1, const Bit* bit2){
 		if( (bit1->signal->getCycle() < bit2->signal->getCycle()) ||
-				( (bit1->signal->getCycle() < bit2->signal->getCycle()) &&
+				( (bit1->signal->getCycle() == bit2->signal->getCycle()) &&
 					(bit1->signal->getCriticalPath() < bit2->signal->getCriticalPath()) )  ){
 			return true;
 		}
