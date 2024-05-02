@@ -37,8 +37,10 @@ static inline const string relu(int wIn, int wOut, bool derivative = false)
   if(derivative) {
     s << og(wIn - 1);
   } else {
-    s << "X" << range(wIn - 2, 0) << ";" << endl;
+    s << "X" << range(wIn - 2, 0);
   }
+
+  s << ";" << endl;
 
   return s.str();
 }
@@ -60,7 +62,12 @@ static inline string replaceX(string s, const string r)
 
 static inline string input(size_t n)
 {
-  return n ? "X" + to_string(n) : "X";
+  return "X" + to_string(n);
+}
+
+static inline string output(size_t n)
+{
+  return "Y" + to_string(n);
 }
 
 namespace flopoco
@@ -87,7 +94,8 @@ namespace flopoco
 
     string* function;                 // Points to the function we need to approximate
     map<string, string> params = {};  // Map of parameters
-    size_t in = 0;                    // Number the inputs to have a variable chain
+
+    size_t in = 0, out = 0;           // Number the inputs and outputs to have a variable chain
 
     FunctionData fd = activationFunction.at(af);
 
