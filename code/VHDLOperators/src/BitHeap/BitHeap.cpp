@@ -178,8 +178,8 @@ namespace flopoco {
 			return;
 		}
 
-		//insert the bit in the column
-		//  in the lexicographic order of the timing
+		//insert the bit in the column in the lexicographic order of the timing
+		// Note that when called from addBit with bits that are not yet scheduled, the following is useless
 		while(it != bits[columnNumber].end())
 		{
 			if((bit->signal->getCycle() < (*it)->signal->getCycle())
