@@ -16,6 +16,7 @@
 
 #include "flopoco/FixFunctions/FixFunction.hpp"
 #include "flopoco/FixFunctions/FixFunctionEmulator.hpp"
+#include "flopoco/utils.hpp"
 
 #include <cmath>
 #include <iostream>
@@ -103,6 +104,8 @@ namespace flopoco
     int lsbOut = -wOut + fd.signedOut;  // The output sign bit depends on the exact function
     bool signedIn = true;               // The input is always signed, i.e. in [-1,1)
 
+    bool forceRescale = false;          // When the internal operator only works on [0,1), e.g. Horner & PieceWiseHorner
+
     // The input might be scaled according to the input scaling
     if(fd.scaleFactor != 0.0) {
       int e;
@@ -143,8 +146,10 @@ namespace flopoco
     switch(fd.deltaFunction) {
     case Delta::ReLU:
       deltaTo = activationFunction.at(ReLU).formula;
+      break;
     case Delta::ReLU_P:
       deltaTo = activationFunction.at(ReLU_P).formula;
+      break;
     case Delta::None:
       break;
     }
@@ -205,24 +210,21 @@ namespace flopoco
     } else {
       REPORT(LogLevel::MESSAGE,
         "To plot the function being implemented, copy-paste the following two lines in Sollya" << endl
-                                                                                               << "  f = " << sollyaFunction << ";" << endl
+                                                                                               << "  f = " << base << ";" << endl
                                                                                                << "  plot(f, [-1;1]); ");
     }
 
-    correctlyRounded = false;  // default is faithful
-
-    f = new FixFunction(sollyaFunction, true, lsbIn, lsbOut);
-
     ostringstream name;
     name << fd.name << "_" << wIn << "_" << wOut << "_" << methodIn;
+
     setNameWithFreqAndUID(name.str());
+    setCopyrightString("Tom Hubrecht, Florent de Dinechin (2024)");
 
-    setCopyrightString("Florent de Dinechin (2023)");
-
-    addInput(input(in), wIn);
+    addInput("X", wIn);
     addOutput("Y", wOut);
 
-    params["signedIn"] = to_string(signedIn);
+    vhdl << declare(input(0), wIn) << " <= X;" << endl;
+
     params["lsbOut"] = to_string(lsbOut);
 
     if(af == ReLU) {
@@ -248,58 +250,78 @@ namespace flopoco
       vhdl << tab << declare("ReLU", wOut) << " <= " << relu(wIn, wOut, fd.deltaFunction == Delta::ReLU_P);
     }
 
+    // Tackle symmetry, the symmetry is considered after reducing the function all the way, i.e. after delta and offset manipulations
+    bool cond = fd.offset != 0.0 || fd.deltaFunction != Delta::None;
+    bool enableSymmetry = fd.parity != Parity::None && (!cond || adhocCompression == Compression::Enabled);
+
     switch(method) {
     case Method::PlainTable: {
-      addComment("This function is correctly rounded");
-      correctlyRounded = true;
+      // addComment("This function is correctly rounded");
+      correctlyRounded = adhocCompression == Compression::Enabled;
       break;
     }
     case Method::MultiPartite: {
       break;
     }
     case Method::Horner: {
-      // When compressing, we only deal with the positive interval so we rescale to the whole interval
-      if(adhocCompression == Compression::Enabled) {
-        *function = replaceX(*function, "((@+1)/2)");
-        lsbIn++;                   // The scaling means that we shift the fixed value
-        params["signedIn"] = "1";  // Force the input to be signed, it will be scaled accordingly
-      }
+      forceRescale = true;
       break;
     }
     case Method::PiecewiseHorner2: {
       params["d"] = "2";
-      signedIn = false;
+      forceRescale = true;
       break;
     }
     case Method::PiecewiseHorner3: {
       params["d"] = "3";
-      signedIn = false;
+      forceRescale = true;
       break;
     }
     default:
-      throw(string("Method: ") + methodIn + " currently unsupported");
+      throw("Method: " + methodIn + " currently unsupported");
       break;
     };
 
     params["f"] = *function;
-    params["lsbIn"] = to_string(lsbIn);
 
-    if(!signedIn) {
+    // If we inted on using symmetry, only send the absolute value (modulo -1) in the operator
+    if(enableSymmetry) {
       // Compute the absolute value of X
-      in++;
-      vhdl << tab << declare(input(in), wIn) << " <= (not(" << input(in - 1) << ") + (" << zg(wIn - 1) << " & '1')) when " << input(in - 1)
-           << of(wIn - 1) << " = '1' else " << input(in - 1) << ";" << endl;
-      in++;
-      vhdl << tab << declare(input(in), wIn - 1) << " <= " << input(in - 1) << range(wIn - 2, 0) << ";" << endl;
+      size_t x = in;
+      size_t a = ++in;
 
-      if(method == Method::Horner) {
-        // We need to scale the input
-        in++;
-        vhdl << tab << declare(input(in), wIn - 1) << " <= not(" << input(in - 1) << of(wIn - 2) << ") & " << input(in - 1) << range(wIn - 3, 0)
-             << ";" << endl;
-      }
+      vhdl << tab << declare(input(a), wIn) << " <= (not(" << input(x) << ") + " << getSignalByName(input(x))->valueToVHDL(1) << ") when " << input(x)
+           << of(wIn - 1) << " = '1' else " << input(x) << ";" << endl;
+
+      vhdl << tab << declare(input(++in), wIn - 1) << " <= " << input(a) << range(wIn - 2, 0) << ";" << endl;
+    } else if(forceRescale) {  // This is incompatible with the exploitation of symmetry
+      // The original input is in [-1,1) but for technical reasons, we need to set it in [0,1)
+
+      *function = replaceX(*function, "((@+1)/2)");  // Mathematical rescaling of the function
+      lsbIn--;                                       // lsbIn needs to be updated as we shift everything 1 bit
+      signedIn = false;
+
+      const size_t x = in;
+      const size_t s = ++in;
+      auto X = getSignalByName(input(x));
+      int w = X->width();
+
+      vhdl << tab << declare(input(s), w) << " <= not(" << input(x) << of(w - 1) << ") & (" << input(x) << range(w - 2, 0) << " when " << input(x)
+           << of(w - 1) << " = '0' else (not(" << input(x) << range(w - 2, 0) << ") + " << X->valueToVHDL(1) << ");" << endl;
     }
 
+    // if(!signedIn) {
+    //   // TODO use forceRescale
+    //   if(method == Method::Horner) {
+    //     // We need to scale the input
+    //     in++;
+    //     vhdl << tab << declare(input(in), wIn - 1) << " <= not(" << input(in - 1) << of(wIn - 2) << ") & " << input(in - 1) << range(wIn - 3, 0)
+    //          << ";" << endl;
+    //   }
+    // }
+
+    params["signedIn"] = to_string(signedIn);
+    params["lsbIn"] = to_string(lsbIn);
     string paramString;
 
     for(const auto& [key, value]: params) {
@@ -310,48 +332,64 @@ namespace flopoco
       fd.name + (adhocCompression == Compression::Enabled ? "_delta_SNAFU" : "_SNAFU"),
       paramString,
       "X => " + input(in),
-      adhocCompression == Compression::Enabled ? "Y => D" : "Y => F");
+      "Y => " + output(out));
+
+    if(enableSymmetry && fd.parity == Parity::Odd) {
+      // Reconstruct the function based on the required symmetry, this is only required for odd functions
+      const size_t a = out;
+      const size_t f = ++out;
+      auto A = getSignalByName(output(a));
+
+      vhdl << tab << declare(output(f), A->width()) << " <= " << output(a) << " when X" << of(wIn - 1) << " = '0' else (not(" << output(a) << ") + "
+           << A->valueToVHDL(1) << ");" << endl;
+    }
+
+    if(fd.offset != 0.0) {
+      // TODO: Take into account potential offsets
+    }
 
     if(adhocCompression == Compression::Enabled) {
       // Reconstruct the function
-      int deltaOutSize = getSignalByName("D")->width();
+      size_t d = out;
+      size_t f = ++out;
+
+      auto D = getSignalByName(output(d));
+
+      // Create the signed extension of the delta result
+      addComment("Create the sign extension");
+      vhdl << tab << declare("E", wOut - D->width());
+      auto E = getSignalByName("E");
+
+      if(fd.signedDelta) {
+        vhdl << " <= " << E->valueToVHDL(0) << " when " << output(d) << of(D->width() - 1) << " = '0' else " << E->valueToVHDL(-1) << ";" << endl;
+      } else {
+        vhdl << " <= " << E->valueToVHDL(0) << ";" << endl;
+      }
 
       if(af == ELU) {
         // Special case, when X is positive, then it is identical to the ReLU
-        vhdl << tab << declare("F0", wOut) << " <= ReLU when X" << of(wIn - 1) << " = '0' else ReLU - (" << zg(wOut - deltaOutSize) << " & D);"
-             << endl;
+        vhdl << tab << declare(output(f), wOut) << " <= ReLU when X" << of(wIn - 1) << " = '0' else ReLU - (E & " + output(d) + ");" << endl;
       } else {
         // if all went well deltaOut should have fewer bits so we need to pad with zeroes
-        vhdl << tab << declare("F0", wOut) << " <= ReLU - (" << zg(wOut - deltaOutSize) << " & D);" << endl;
-      }
-
-      // We are running in symmetry mode
-      if(expensiveSymmetry) {
-        mpz_class rc, ru;
-        // TODO: fix for ELU
-        f->eval(mpz_class(1) << (wIn - 1), rc, ru, true);
-        vhdl << tab << declare("F", wOut) << " <= (" << getSignalByName("F0")->valueToVHDL(rc) << ") when (ieee.std_logic_misc.or_reduce(X"
-             << range(wIn - 2, 0) << ") = '0' and X" << of(wIn - 1) << " = '1') else F0;" << endl;
-      } else {
-        vhdl << tab << declare("F", wOut) << " <= F0;" << endl;
-      }
-
-    } else {
-      // sanity check
-      if(int w = op->getSignalByName("X")->width() != wIn) {
-        REPORT(LogLevel::MESSAGE,
-          "Something went wrong, operator input size is  " << w << " instead of the requested wIn=" << wIn << endl
-                                                           << "Attempting to proceed nevertheless.");
-      }
-
-      if(int w = op->getSignalByName("Y")->width() != wOut) {
-        REPORT(LogLevel::MESSAGE,
-          "Something went wrong, operator output size is  " << w << " instead of the requested wOut=" << wOut << endl
-                                                            << "Attempting to proceed nevertheless.");
+        vhdl << tab << declare(output(f), wOut) << " <= ReLU - (E & " + output(d) + ");" << endl;
       }
     }
 
-    vhdl << tab << "Y <= F;" << endl;
+    // We are running in symmetry mode
+    if(expensiveSymmetry && enableSymmetry) {
+      mpz_class rc, ru;
+      // TODO: fix for ELU ???
+      f->eval(mpz_class(1) << (wIn - 1), rc, ru, true);  // Compute f(-1), which is '10...0' in 2's complement
+
+      size_t f = out;
+      size_t y = ++out;
+
+      addComment("Expensive reconstruction for -1");
+      vhdl << tab << declare(output(y), wOut) << " <= " << getSignalByName(output(f))->valueToVHDL(rc)
+           << " when X = " << getSignalByName("X")->valueToVHDL(mpz_class(1) << wIn - 1) << " else " << output(f) << ";" << endl;
+    }
+
+    vhdl << tab << "Y <= " + output(out) + ";" << endl;
   }
 
 
