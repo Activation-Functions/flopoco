@@ -192,21 +192,24 @@ namespace flopoco
       method = Method::PlainTable;
     }
 
-    REPORT(LogLevel::MESSAGE,
-      "Function after pre-processing: " << fd.longName << " evaluated on [-1,1)" << endl
-                                        << " wIn=" << wIn << " translates to lsbIn=" << lsbIn << endl
-                                        << " wOut=" << wOut << " translates to lsbOut=" << lsbOut);
+    // Print a summary
+    REPORT(LogLevel::MESSAGE, "Function after pre-processing: " << fd.longName << " evaluated on [-1,1)");
+    REPORT(LogLevel::MESSAGE, "\twIn=" << wIn << " translates to lsbIn=" << lsbIn);
+    REPORT(LogLevel::MESSAGE, "\twOut=" << wOut << " translates to lsbOut=" << lsbOut);
+
     REPORT(LogLevel::MESSAGE, "Method is " << methodIn);
 
+    REPORT(LogLevel::MESSAGE, "To plot the function with its delta function, copy-paste the following lines in Sollya:");
+    REPORT(LogLevel::MESSAGE, "\tf = " << base << ";");
+
     if(adhocCompression == Compression::Enabled) {
+      REPORT(LogLevel::MESSAGE, "\tdeltaf = " << delta << ";");
       REPORT(LogLevel::MESSAGE,
-        "To plot the function with its delta function, copy-paste the following lines in Sollya" << endl
-                                                                                                 << "  f = " << sollyaFunction << ";" << endl
-                                                                                                 << "  deltaf = " << sollyaDeltaFunction << ";"
-                                                                                                 << endl
-                                                                                                 << "  relu = " << sollyaReLU << ";" << endl
-                                                                                                 << "  plot(deltaf, [-1;1]); " << endl
-                                                                                                 << "  plot(f,relu,-deltaf, [-1;1]); ");
+        "\trelu = "
+          << ""
+          << ";" << endl
+          << "  plot(deltaf, [-1;1]); " << endl
+          << "  plot(f,relu,-deltaf, [-1;1]); ");
     } else {
       REPORT(LogLevel::MESSAGE,
         "To plot the function being implemented, copy-paste the following two lines in Sollya" << endl
@@ -282,8 +285,6 @@ namespace flopoco
       break;
     };
 
-    params["f"] = *function;
-
     // If we inted on using symmetry, only send the absolute value (modulo -1) in the operator
     if(enableSymmetry) {
       // Compute the absolute value of X
@@ -320,6 +321,7 @@ namespace flopoco
     //   }
     // }
 
+    params["f"] = *function;
     params["signedIn"] = to_string(signedIn);
     params["lsbIn"] = to_string(lsbIn);
     string paramString;
@@ -327,6 +329,8 @@ namespace flopoco
     for(const auto& [key, value]: params) {
       paramString += key + "=" + value + " ";
     }
+
+    REPORT(LogLevel::MESSAGE, paramString);
 
     OperatorPtr op = newInstance(methodOperator(method),
       fd.name + (adhocCompression == Compression::Enabled ? "_delta_SNAFU" : "_SNAFU"),

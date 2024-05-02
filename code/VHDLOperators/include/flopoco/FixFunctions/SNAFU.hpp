@@ -143,6 +143,7 @@ struct FunctionData {
                                       // the parity is considered after teh difference to this function
 
   Delta deltaFunction = Delta::None;  // The function to substract for compression
+  bool signedDelta = false;           // Wether the delta-reduced function has a signed output
   double offset = 0.0;                // The offset
   bool slightRescale = false;         // for output range efficiency of functions that touch 1
   double scaleFactor = 0.0;           // The importancee of tne inputScale
@@ -263,7 +264,8 @@ static const map<ActivationFunction, FunctionData> activationFunction = {
       .signedOut = true,                                 // output signed
       .parity = Parity::Odd,
       .deltaFunction = Delta::ReLU_P,
-      .scaleFactor = 0x1.198f14p0,                       // Function is a derivative, so we need to take into account the inputScale
+      .signedDelta = true,
+      .scaleFactor = 0x1.198f14p0,  // Function is a derivative, so we need to take into account the inputScale
       .derivative = true,
     }},
   {GeLU_P,
@@ -274,7 +276,8 @@ static const map<ActivationFunction, FunctionData> activationFunction = {
       .signedOut = true,                                               // output signed
       .parity = Parity::Odd,
       .deltaFunction = Delta::ReLU_P,
-      .scaleFactor = 0x1.20fffp0,                                      // Function is a derivative, so we need to take into account the inputScale
+      .signedDelta = true,
+      .scaleFactor = 0x1.20fffp0,  // Function is a derivative, so we need to take into account the inputScale
       .derivative = true,
     }},
 };
