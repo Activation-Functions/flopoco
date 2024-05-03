@@ -127,7 +127,7 @@ void IntConstMult::implementSCM()
   {
     REPORT(LogLevel::DETAIL, "Method 'auto' was given (default), determining best method from constants and target");
 
-    if(target->useTargetOptimizations() && target->hasFastLogicTernaryAdders() && (wCoeff <= 22))
+    if(target->useTargetOpt() && target->hasFastLogicTernaryAdders() && (wCoeff <= 22))
     {
       REPORT(LogLevel::DETAIL, "As target supports ternary adders and word size is < 22 bit, we will use them (method=minAddTermary)");
       method = "minAddTermary";

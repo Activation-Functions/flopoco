@@ -1260,7 +1260,7 @@ namespace flopoco{
 			//newCompressor->setShared();
 			possibleCompressors.push_back(newCompressor);
 		}
-		if(bitheap->getOp()->getTarget()->useTargetOptimizations() && (bitheap->getOp()->getTarget()->getVendor() == "Xilinx"))
+		if(bitheap->getOp()->getTarget()->useTargetOpt() && (bitheap->getOp()->getTarget()->getVendor() == "Xilinx"))
 		{
 			REPORT(LogLevel::DEBUG,"Adding target optimized GPCs for Xilinx FPGAs");
 

@@ -161,10 +161,10 @@ namespace flopoco{
 		void setGenerateFigures(bool b);
 
 		/** should target specific optimizations be performed */
-		bool  useTargetOptimizations();
+		bool  useTargetOpt();
 
 		/** should target specific optimizations be performed */
-		void  setUseTargetOptimizations(bool b);
+		void  setUseTargetOpt(bool b);
 
 		/** returns the compression method used for the BitHeap */
 		std::string  getCompressionMethod();
@@ -464,7 +464,7 @@ namespace flopoco{
 		bool   registerLargeTables_;     /**< if true, a register is forced on the output of a Table objects that is larger than the blockRAM size, otherwise BlockRAM will not be used. Defaults to true, but sometimes you want to force a large table into LUTs. */
 		bool   tableCompression_;     /**< if true, Hsiao table compression will be used. Should default to true, the flag is there for experiments measuring how useful it is */
 		bool   generateFigures_;  /**< If true, some operators will generate figures which will clutter your directory  */
-        bool   useTargetOptimizations_; /**< If true, target specific optimizations using primitives are performed. Vendor specific libraries are necessary for simulation. */
+    bool   useTargetOpt_; /**< If true, target specific optimizations using primitives are performed. Vendor specific libraries are necessary for simulation. */
 
 		std::string compression_; /**< Defines the BitHeap compression method*/
 		std::string tiling_; /**< Defines the multiplier tiling method*/

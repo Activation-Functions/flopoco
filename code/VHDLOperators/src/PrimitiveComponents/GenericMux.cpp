@@ -23,9 +23,9 @@ namespace flopoco {
         addInput(getSelectName(), intlog2( inputCount-1 ) );
         addOutput(getOutputName(),wIn);
 
-        if( target->useTargetOptimizations() && target->getVendor() == "Xilinx" )
+        if(target->useTargetOpt() && target->getVendor() == "Xilinx" )
             buildXilinx(parentOp, target,wIn,inputCount);
-        else if( target->useTargetOptimizations() && target->getVendor()=="Altera" )
+        else if(target->useTargetOpt() && target->getVendor() == "Altera" )
             buildAltera(parentOp, target,wIn,inputCount);
         else
             buildCommon(target,wIn,inputCount);

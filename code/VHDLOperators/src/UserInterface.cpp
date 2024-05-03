@@ -64,7 +64,7 @@ namespace flopoco
 
 		depGraphDrawing = "no";
 		generateFigures = false;
-		showHiddenOperators = false;
+    showHidden = false;
 		pipelineActive_ = true;
 		
 	}
@@ -138,7 +138,7 @@ namespace flopoco
 				v.push_back(option_t("useHardMults", values));
 				v.push_back(option_t("registerLargeTables", values));
 				v.push_back(option_t("tableCompression", values));
-				v.push_back(option_t("useTargetOptimizations", values));
+				v.push_back(option_t("useTargetOpt", values));
 				v.push_back(option_t("ilpSolver", values));
 				v.push_back(option_t("ilpTimeout", values));
 				v.push_back(option_t("compression", values));
@@ -225,9 +225,9 @@ namespace flopoco
 		parseBoolean(args, "useHardMult", &useHardMult, true);
 		parseBoolean(args, "registerLargeTables", &registerLargeTables, true);
 		parseBoolean(args, "tableCompression", &tableCompression, true);
-		parseBoolean(args, "showHiddenOperators", &showHiddenOperators, true);
+		parseBoolean(args, "showHidden", &showHidden, true);
 		parseBoolean(args, "generateFigures", &generateFigures, true);
-		parseBoolean(args, "useTargetOptimizations", &useTargetOptimizations, true);
+		parseBoolean(args, "useTargetOpt", &useTargetOpt, true);
 		parseString(args, "ilpSolver", &ilpSolver, true); // sticky option
 		parsePositiveInt(args, "ilpTimeout", &ilpTimeout, true); // sticky option
 		parseString(args, "compression", &compression, true);
@@ -465,7 +465,7 @@ namespace flopoco
 				target->setTableCompression(tableCompression);
 				target->setPlainVHDL(plainVHDL);
 				target->setGenerateFigures(generateFigures);
-				target->setUseTargetOptimizations(useTargetOptimizations);
+        target->setUseTargetOpt(useTargetOpt);
 				target->setCompressionMethod(compression);
 				target->setILPSolver(ilpSolver);
 				target->setILPTimeout(ilpTimeout);
@@ -769,7 +769,7 @@ namespace flopoco
 
 		s <<  COLOR_BOLD << "List of operators with command-line interface"<< COLOR_NORMAL << " (a few more are hidden inside FloPoCo)" <<endl;
 		auto cats = UserInterface::categories;
-		if(showHiddenOperators) { // this way the hidden operators come last
+		if(showHidden) { // this way the hidden operators come last
 			cats.push_back(make_pair("Hidden", "Hidden operator, either because they are for internal use or because they are not ready"));
 		}
 		// The following is an inefficient double loop to avoid duplicating the data structure: nobody needs efficiency here
@@ -812,7 +812,7 @@ namespace flopoco
 						for (auto & i : table_cost_models) { s << std::get<0>(i) << ", "; }
 						s << ">: cost model for table storage" << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
 		s << "  " << COLOR_BOLD << "registerLargeTables" << COLOR_NORMAL << "=<0|1>:    force registering of large ROMs to force the use of blockRAMs (default false)" << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
-		s << "  " << COLOR_BOLD << "useTargetOptimizations" << COLOR_NORMAL << "=<0|1>: use target specific optimizations (e.g., using primitives) " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
+		s << "  " << COLOR_BOLD << "useTargetOpt" << COLOR_NORMAL << "=<0|1>: use target specific optimizations (e.g., using primitives) " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
 		s << "  " << COLOR_BOLD << "allRegistersWithAsyncReset" << COLOR_NORMAL << "=<0|1>: if set, all the pipeline registers have an asynchronous reset signal" << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
 		s << "  " << COLOR_BOLD << "ilpSolver" << COLOR_NORMAL << "=<string>:           override ILP solver for operators optimized by ILP, has to match a solver name known by the ScaLP library" << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
 		s << "  " << COLOR_BOLD << "ilpTimeout" << COLOR_NORMAL << "=<int>:             sets the timeout in seconds for the ILP solver for operators optimized by ILP (default=3600)" << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
@@ -823,7 +823,7 @@ namespace flopoco
 		s << "  " << COLOR_BOLD << "dependencyGraph" << COLOR_NORMAL << "=<no|compact|full>: generate data dependence drawing of the Operator (default no) " << COLOR_RED_NORMAL << COLOR_NORMAL<<endl;
 		s << "  " << COLOR_BOLD << "nameSignalByCycle" << COLOR_NORMAL << "=<0|1>:when pipelining, names the delayed signals by their cycle name instead of their delay. This helps with clock enable and declaring group path for synthesis (default off) " << endl;
 		s << "  " << COLOR_BOLD << "clockEnable" << COLOR_NORMAL << "=<0|1>:when pipelining, adds clock enable signals that enables the different pipeline stages to progress. In testbenches, these pipelining operations are not tested (default off) " << endl;
-		s << "  " << COLOR_BOLD << "showHiddenOperators" << COLOR_NORMAL << "=<0|1>: show operators that are for internal use and normally hidden from the command line (default=0)" <<endl;
+		s << "  " << COLOR_BOLD << "showHidden" << COLOR_NORMAL << "=<0|1>: show operators and operator arguments that are for internal use and normally hidden from the command line (default=0)" <<endl;
 		
 		return s.str();
 	}
@@ -1248,8 +1248,8 @@ namespace flopoco
 
 	bool OperatorFactory::isHidden() const {
 		auto ui= UserInterface::getUserInterface();
-		return (m_category=="Hidden") && !ui.showHiddenOperators; 
-	//getCategory().find("Hidden") && !UserInterface::getUserInterface().showHiddenOperators
+		return (m_category=="Hidden") && !ui.showHidden;
+	//getCategory().find("Hidden") && !UserInterface::getUserInterface().showHidden
 	}
 
 
@@ -1263,7 +1263,7 @@ namespace flopoco
 		for (unsigned i=0; i<m_paramNames.size(); i++) {
 			string const pname = m_paramNames[i];
 			bool isHidden = m_paramHidden.at(pname);
-			if(!isHidden || ui.showHiddenOperators)
+			if(!isHidden || ui.showHidden)
       {
         s << "  " << (isHidden?COLOR_BOLD_RED_NORMAL:("" != m_paramDefault.at(pname)?COLOR_BOLD_BLUE_NORMAL:COLOR_BOLD)) << pname <<COLOR_NORMAL<< " (" << m_paramType.at(pname) << "): " << m_paramDoc.at(pname) << "  ";
         if("" != m_paramDefault.at(pname))
