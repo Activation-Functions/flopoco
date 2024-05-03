@@ -185,6 +185,7 @@ namespace flopoco
 		std::map<std::string,std::string> m_paramType;  /**< type of parameters listed in m_paramNames */
 		std::map<std::string,std::string> m_paramDoc;  /**< description of parameters listed in m_paramNames */
 		std::map<std::string,std::string> m_paramDefault; /* If equal to "", this parameter is mandatory (no default). Otherwise, default value (as a std::string, to be parsed) */
+		std::map<std::string,bool> m_paramHidden;  /**< when true, parameter is an experimental parameter hidden from regular user interface (only shown when showHiddenOperators is true) */
 		std::string m_extraHTMLDoc;
 		parser_func_t m_parser;
 		unitTest_func_t m_unitTest;
