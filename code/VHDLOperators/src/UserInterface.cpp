@@ -1255,14 +1255,21 @@ namespace flopoco
 
 
 	string OperatorFactory::getFullDoc() const{
+
 		ostringstream s;
 		s <<COLOR_BOLD_RED_NORMAL << name() << COLOR_NORMAL <<": " << m_description << endl;
+    auto ui= UserInterface::getUserInterface();
+
 		for (unsigned i=0; i<m_paramNames.size(); i++) {
 			string const pname = m_paramNames[i];
-			s << "  " << ("" != m_paramDefault.at(pname)?COLOR_BOLD_BLUE_NORMAL:COLOR_BOLD) << pname <<COLOR_NORMAL<< " (" << m_paramType.at(pname) << "): " << m_paramDoc.at(pname) << "  ";
-			if("" != m_paramDefault.at(pname))
-				s << COLOR_RED_NORMAL << "  (optional, default value is " << m_paramDefault.at(pname) <<")"<< COLOR_NORMAL;
-			s<< endl;
+			bool isHidden = m_paramHidden.at(pname);
+			if(!isHidden || ui.showHiddenOperators)
+      {
+        s << "  " << (isHidden?COLOR_BOLD_RED_NORMAL:("" != m_paramDefault.at(pname)?COLOR_BOLD_BLUE_NORMAL:COLOR_BOLD)) << pname <<COLOR_NORMAL<< " (" << m_paramType.at(pname) << "): " << m_paramDoc.at(pname) << "  ";
+        if("" != m_paramDefault.at(pname))
+          s << COLOR_RED_NORMAL << "  (optional, default value is " << m_paramDefault.at(pname) <<")"<< COLOR_NORMAL;
+        s<< endl;
+      }
 		}
 		return s.str();
 	}
@@ -1421,12 +1428,25 @@ namespace flopoco
 			if(part.size()!=0) {
 				int nameEnd = part.find('(', 0);
 				string name=part.substr(0, nameEnd);
-				// cout << "Found parameter: {" << name<<"}";
+//				cout << "Found parameter: {" << name<<"}";
+
+				int hiddenpos = name.find("[hidden]", 0);
+				if(hiddenpos != string::npos)
+        {
+          //parameter is a hidden parameter, remove the hidden string
+				  name=name.substr(0, hiddenpos);
+				  m_paramHidden[name] = true;
+        }
+        else
+        {
+				  m_paramHidden[name] = false;
+        }
 				m_paramNames.push_back(name);
 
 				int typeEnd = part.find(')', 0);
 				string type=part.substr(nameEnd+1, typeEnd-nameEnd-1);
-				//cout << " of type  {" << type <<"}";
+
+//				cout << " (filtered: " << name << ") " << " of type  {" << type <<"}";
 				if(type=="bool" || type=="int" || type=="real" || type=="string" || type=="intlist")
 					m_paramType[name] = type;
 				else {

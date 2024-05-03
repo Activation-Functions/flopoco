@@ -942,7 +942,7 @@ namespace flopoco {
 		 optiTrunc(bool)=true: if true, considers the Truncation error dynamicly, instead of defining a hard border for tiling, like in th ARITH paper;\
 		 minStages(bool)=true: if true, minimizes stages in combined opt. of tiling an comp., otherwise try to find a sol. with less LUTs and more stages;\
 		 beamRange(int)=3: range for beam search;\
-         squarer(bool)=false: generate squarer", // This string
+     squarer[hidden](bool)=false: generate squarer", // This string
 								// will be
 								// parsed
 		""};
