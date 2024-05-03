@@ -126,7 +126,7 @@ namespace flopoco
 
 		/** Build flopoco bash autocompletion file **/
 		void buildAutocomplete();
-		bool   showHiddenOperators;
+		bool   showHidden;  //if true, hidden operators and hidden arguments are shown that are only for R&D
 	public:
 		std::vector<OperatorPtr>  globalOpList;  /**< Level-0 operators. Each of these can have sub-operators */
 		std::vector<std::vector<OperatorPtr>>  globalOpListStack;  /**< a stack on which to save globalOpList when you don't want to mess with it */
@@ -150,7 +150,7 @@ namespace flopoco
 		bool   tableCompression;
 		bool   generateFigures;
 		double unusedHardMultThreshold;
-		bool   useTargetOptimizations;
+		bool   useTargetOpt;
 		std::string compression;
 		std::string tiling;
 		std::string ilpSolver;
@@ -185,7 +185,7 @@ namespace flopoco
 		std::map<std::string,std::string> m_paramType;  /**< type of parameters listed in m_paramNames */
 		std::map<std::string,std::string> m_paramDoc;  /**< description of parameters listed in m_paramNames */
 		std::map<std::string,std::string> m_paramDefault; /* If equal to "", this parameter is mandatory (no default). Otherwise, default value (as a std::string, to be parsed) */
-		std::map<std::string,bool> m_paramHidden;  /**< when true, parameter is an experimental parameter hidden from regular user interface (only shown when showHiddenOperators is true) */
+		std::map<std::string,bool> m_paramHidden;  /**< when true, parameter is an experimental parameter hidden from regular user interface (only shown when showHidden is true) */
 		std::string m_extraHTMLDoc;
 		parser_func_t m_parser;
 		unitTest_func_t m_unitTest;
@@ -213,7 +213,7 @@ namespace flopoco
 		virtual const std::string &name() const // You can see in this prototype that it was not written by Florent
 		{ return m_name; }
 
-		/** is this Operator hidden ? This method always answers true if the CLI parameter "showHiddenOperators" is true */
+		/** is this Operator hidden ? This method always answers true if the CLI parameter "showHidden" is true */
 		bool isHidden() const;
 		/** get the full documentation. */
 		std::string getFullDoc() const;

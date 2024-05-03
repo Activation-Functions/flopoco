@@ -47,7 +47,7 @@ namespace flopoco
     wOut = wIn + (isTernary ? 2 : 1);
     addOutput("R", wOut);
 
-    if (target->useTargetOptimizations() && target->getVendor() == "Xilinx")
+    if (target->useTargetOpt() && target->getVendor() == "Xilinx")
       buildXilinxIntAddSub(target, wIn);
     else
       buildCommon(target, wIn);
@@ -359,11 +359,11 @@ namespace flopoco
       paramList.clear();
 
       paramList.push_back(make_pair("wIn", "10"));
-      paramList.push_back(make_pair("useTargetOptimizations", "true"));
+      paramList.push_back(make_pair("useTargetOpt", "true"));
       testStateList.push_back(paramList);
       paramList.clear();
 
-      paramList.push_back(make_pair("useTargetOptimizations", "true"));
+      paramList.push_back(make_pair("useTargetOpt", "true"));
       paramList.push_back(make_pair("wIn", "10"));
       paramList.push_back(make_pair("isSigned", "true"));
       paramList.push_back(make_pair("isTernary", "true"));
@@ -376,7 +376,7 @@ namespace flopoco
       testStateList.push_back(paramList);
       paramList.clear();
 
-      paramList.push_back(make_pair("useTargetOptimizations", "true"));
+      paramList.push_back(make_pair("useTargetOpt", "true"));
       paramList.push_back(make_pair("wIn", "10"));
       paramList.push_back(make_pair("isSigned", "true"));
       paramList.push_back(make_pair("isTernary", "false"));
@@ -392,7 +392,7 @@ namespace flopoco
     else if(testLevel >= TestLevel::SUBSTANTIAL)
     { // The substantial unit tests
 
-      for(int useTargetOptimizations=0; useTargetOptimizations <= 1; useTargetOptimizations++)
+      for(int useTargetOpt=0; useTargetOpt <= 1; useTargetOpt++)
       {
         for(int isSigned=0; isSigned <= 1; isSigned++)
         {
@@ -413,7 +413,7 @@ namespace flopoco
                         if((zNegative && !isTernary) || (zConfigurable && !isTernary)) continue; //invalid parameter combination
                         if((xNegative || yNegative || zNegative || xConfigurable || yConfigurable || zConfigurable) && !isSigned) continue; //invalid parameter combination
 
-                        paramList.push_back(make_pair("useTargetOptimizations", useTargetOptimizations ? "true" : "false"));
+                        paramList.push_back(make_pair("useTargetOpt", useTargetOpt ? "true" : "false"));
                         paramList.push_back(make_pair("wIn", "10"));
                         paramList.push_back(make_pair("isSigned", isSigned ? "true" : "false"));
                         paramList.push_back(make_pair("isTernary", isTernary ? "true" : "false"));

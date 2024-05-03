@@ -46,7 +46,7 @@ BaseMultiplierCollection::BaseMultiplierCollection(Target* target) : target(targ
 		}
 	}
 
-	if(target->useTargetOptimizations())
+	if(target->useTargetOpt())
 	{
 		for (BaseMultiplierCategory* t : TargetSpecificBaseMultiplier(target)) {
 		    t->setTarget(target);

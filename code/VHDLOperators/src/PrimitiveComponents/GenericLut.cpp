@@ -61,7 +61,7 @@ namespace flopoco {
         }
 
         ////////Build Lut////////
-        if( target->useTargetOptimizations() ) {
+        if(target->useTargetOpt() ) {
             //build_lut
             throw std::runtime_error( "Target specific optimizations for GenericLut not implemented yet." );
         } else {
@@ -230,7 +230,7 @@ namespace flopoco {
     }
 
     void GenericLut::build() {
-        if( getTarget()->useTargetOptimizations() ) {
+        if(getTarget()->useTargetOpt() ) {
             //build_lut
             throw std::runtime_error( "Target specific optimizations for GenericLut not implemented yet." );
         } else {

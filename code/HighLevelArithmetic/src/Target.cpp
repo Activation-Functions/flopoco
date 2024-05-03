@@ -25,7 +25,7 @@ namespace flopoco{
 	extern int verbose;
 
 	Target::Target()   {
-            useTargetOptimizations_=true;
+    useTargetOpt_=true;
 			lutInputs_         = 4;
 			hasHardMultipliers_= true;
 			hasFastLogicTernaryAdders_ = false;
@@ -145,15 +145,15 @@ namespace flopoco{
       tableCompression_ = b;
     }
 
-    bool  Target::useTargetOptimizations()
+    bool  Target::useTargetOpt()
     {
-      return useTargetOptimizations_;
+      return useTargetOpt_;
     }
 
 
-    void Target::setUseTargetOptimizations(bool b)
+    void Target::setUseTargetOpt(bool b)
     {
-      useTargetOptimizations_ = b;
+      useTargetOpt_ = b;
     }
 
 	void Target::setCompressionMethod(string compression)
