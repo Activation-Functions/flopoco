@@ -147,6 +147,11 @@ void	FixFunction::initialize()
  		mpfr_clears(supMP,infMP,tmp, NULL);
 
 		wOut=msbOut-lsbOut+1;
+#if 0 // TODO: this sanity test breaks half of the autotest of FPExp, why ?
+		if(wOut<=0) {
+			throw(std::string("FixFunction determined that wOut=") + std::to_string(wOut) + std::string(" which makes no sense"));
+		}
+#endif
 	}
 
 	FixFunction::~FixFunction()

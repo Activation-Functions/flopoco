@@ -16,11 +16,100 @@
 #include "flopoco/Tables/Table.hpp"
 #include "flopoco/utils.hpp"
 
+/* TODO get rid of most of
+	  int maxDSP=-1, bool superTiles=false, bool use2xk=false, bool useirregular=false, bool useLUT=true,  bool useKaratsuba=false, bool useGenLUT=false, bool useBooth=false, int beamRange=0, bool optiTrunc=true, bool minStages=true */
+
+
+/* TODO: re-enable virtual multipliers as they were working in 4.1.2
+
+	 Some use cases among many others that the current IntMultiplier cannot address :
+		   FixComplexMult computes a*b+c*d in a single bit heap
+			 FixMultAdd computes a+b*c in a single bit heap.
+			 FixSumOfProducts compute the faithful sum of N products.
+	 In all these cases, we want a BitHeap shared by several IntMultipliers.
+	 The simplest solution is to have a IntMultiplier method that throws VHDL into an existing Operator and the bits in an existing BitHeap.
+	 Since a BitHeap is associated to an Operator, we just need to pass the BitHeap and we can recover the Operator from it. 
+
+	 In summary, we should have two ways to instantiate an IntMultiplier:
+		* STAND-ALONE *: more or less what we have
+			inputs wOut, computes g out of it, computes lsbWeightInBitHeap, creates a tiling, instantiates a bit heap, and throws bits in it.
+			In case of truncation, adds a constant centering constant and a round bit
+
+		* VIRTUAL *
+		In such cases the result of the multiplication is provided as unevaluated bits in a bit heap.
+		It is a static IntMultiplier method that inputs
+		  signal names for X and Y, absoluteError, externalBitHeapPtr, and externalBitHeapPos.
+		It checks the BH is large enough, creates a tiling, throws bits in it (with the corresponding VHDL going to bitheap->getOp()->vhdl)
+			then adds the centering  constant in case of truncation, but not the rounding bit: this is the responsibility of the parent bitheap->getOp()
+		
+		The coarser operator (e.g. FixComplexMult or FixSumOfProducts) implements an error analysis, 
+	   and defines an error budget for each IntMultiplier.
+		The virtual IntMultiplier just inputs this errorBudget and must make sure that the error of the multiplier is within this bound,
+		  using the least possible bitheap columns.
+		It should also report its LSB and the actual error achieved, sometimes it will be lower than the error bound.
+
+
+		The problem with current code is that wOut for instance is an attribute of the IntMultiplier class (which is OK: we need it for emulate())
+     that is used all over the place in the tilings etc. Sometimes messed with guardBits, etc.
+		All the tiling algorithms should become error-centered (some already are)
+		
+		One thing that will make life simpler (and simpler than in 4.1.2) is to accept to construct a bit heap with empty columns.
+		For instance for a faithful FixComplexMult, let us create a bit heap large enough for the exact products,
+		even if we know they will be truncated.
+		The two virtual instances of IntMultiplier will leave empty LSB columns and that's OK. I think.
+		
+		IntMultiplier is written with a LSB of 0, which is generally a good idea. But to use it in a fixed-point context there is some shifting to do.
+		Here the simplest idea is probably to define this shift as exactProductLSBPosition, the position of the ulp of the exact product.
+		(position 0 in an integer multiplier). This will be easy
+
+		An intermediate objective is to refactor IntMultiplier so that the stand-alone operator invokes the virtual one (to avoid code duplication)
+		Current state of the refactoring:
+		  most of the "staticization" is OK
+			the refactored version works for exact (full) multipliers (and the default beam search)
+			It still doesn't work for truncated ones.
+			
+		One bad design choice is to think/write the code in terms of wOut and wOut+g (because the msb is tricky, see prodsize())
+		Better use LSBs internally
+		
+		Corner cases that one has to understand and support:
+			related to g, so stand-alone only: in general, g>0 when wOut<wX+wY.
+			However, one situation where g=0 and wOut!=wX+wY is the tabulation of a correctly rounded small multiplier.
+
+
+		About attributes of IntMultiplier:
+			- there should be no global attribute g, because it is used only in the stand-alone case.
+			- there should be no global attribute wOut, because it is used only in the stand-alone case.
+  			Actually there is a global attribute wOut, but to be used only by emulate() which is only used for the standalone case
+			- fillBitHeap and the other methods should not refer to the attribg or wOut
+
+		About tiling:
+			- A tilingStrategy should only input wX, wY, and an errorBudget (expressed in ulps of the exact product as an mpz)
+			  (plus all sorts of optional optimization flags if you want)
+			- it should report
+			     the error actually achieved,
+					 an LSB to which all the tiles should be truncated (for the fillBitHeap method of IntMultiplier) 
+			
+
+			
+ */
+
+
 namespace flopoco {
 	class IntMultiplier : public Operator {
 
 	public:
 
+
+		/** A virtual operator that adds to an existing BitHeap belonging to another Operator.
+		 Also fixed-point oriented:
+		   the formats of the inputs are read from the signals named xname and yname;
+			 the error is given as an mpz_class and is an error in ulps of the exact product
+			 TODO Frankly I don't know what is a tilingStrategy and why it should be returned... 
+		*/
+		static TilingStrategy* addToExistingBitHeap(BitHeap* externalBitheapPtr, string xname, string yname, mpz_class errorBudget, int exactProductLSBPosition=0 );
+
+
+		
 		/**
 		 * The IntMultiplier constructor
 		 * @param[in] target           the target device
@@ -28,10 +117,16 @@ namespace flopoco {
 		 * @param[in] wY             Y multiplier size (including sign bit if any)
 		 * @param[in] wOut           wOut size for a truncated multiplier (0 means full multiplier)
 		 * @param[in] signedIO       false=unsigned, true=signed
-		 * @param[in] texOutput      true=generate a tek file with the found tiling solution
+		 * @param[in] texOutput      true=generate a tex file with the found tiling solution
+		 * @param[in] externalBitheapPtr     if true, throw the multiplier bits in the provided bit heap
+		 * @param[in] externalBitheapPos if externalBitheapPtr true, this is the position of the LSB of the exact product
 		 **/
-		IntMultiplier(Operator *parentOp, Target* target, int wX, int wY, int wOut=0, bool signedIO = false, float dspOccupationThreshold=0.0, int maxDSP=-1, bool superTiles=false, bool use2xk=false, bool useirregular=false, bool useLUT=true, bool useDSP=true, bool useKaratsuba=false, bool useGenLUT=false, bool useBooth=false, int beamRange=0, bool optiTrunc=true, bool minStages=true, bool squarer=false);
+		IntMultiplier(Operator *parentOp, Target* target, int wX, int wY, int wOut=0, bool signedIO = false, int maxDSP=-1, bool superTiles=false, bool use2xk=false, bool useirregular=false, bool useLUT=true, bool useKaratsuba=false, bool useGenLUT=false, bool useBooth=false, int beamRange=0, bool optiTrunc=true, bool minStages=true, bool squarer=false);
 
+
+
+
+		
 		/**
 		 * The emulate function.
 		 * @param[in] tc               a test-case
@@ -78,8 +173,8 @@ namespace flopoco {
          */
 		static unsigned int widthOfDiagonalOfRect(unsigned int wX, unsigned int wY, unsigned int col, unsigned wFull, bool signedIO=false);
 
-		/**
-        * @brief Compute several parameters for a faithfully rounding truncated multiplier, supports the singed case
+		/** TODO Deprecate once it has been properly split in two 
+        * @brief Compute several parameters for a faithfully rounding truncated multiplier, supports the signed case
         * @details Compute guard-bits, keep-bits, the error re-centering constant and the error budget. The parameters are estimated by sucessivly removing partial products (as they would apperar in an and array, although the actual multiplier might use larger tiles) as long as the error bounds are met. The function considers the dynamic calculation of the error recentering constant to extend the permissible error to allow more truncated bits and hence a lower cost. In contrast to the algorithm published in the truncation paper mentioned below, this variant also considers that the singed case, where the partial products at the left and bottom edge |_ of the tiled area cause a positive when omitted (as they count negative in the result). The function has quadratic complexity.
         * @param wX width of the rectangle
         * @param wY height of the rectangle
@@ -94,20 +189,23 @@ namespace flopoco {
         */
         static void computeTruncMultParamsMPZ(unsigned wX, unsigned wY, unsigned wFull, unsigned wOut, bool signedIO, unsigned &g, unsigned &k, mpz_class &errorBudget, mpz_class &constant);
 
-        /**
-         * @brief Compute several parameters for a faithfully rounding truncated multiplier
-         * @details Compute guard-bits, keep-bits, the error re-centering constant and the error budget as shown in A. Boettcher, M. Kumm, F. de Dinechin "Resource optimal truncated multipliers for FPGAs" This function has a linear complexity.
-         * @param wX width of the rectangle
-         * @param wY height of the rectangle
-         * @param wFull width of result of a non-truncated multiplier with the same input widths
-         * @param wOut requested output width of the result vector of the truncated multiplier
-         * @param g the number of bits below the output LSB that we need to keep in the summation
-         * @param k number of bits to keep in in the column with weight w-g
-         * @param errorBudget maximal permissible weight of the sum of the omitted partial products (as they would appear in an array multiplier)
-         * @param constant to recenter the truncation error around 0 since it can otherwise only be negative, since there are only partial products left out. This allows a larger error, so more products can be omitted
-         * @return none
-         */
-		static void computeTruncMultParamsMPZunsigned(unsigned wX, unsigned wY, unsigned wFull, unsigned wOut, unsigned &g, unsigned &k, mpz_class &errorBudget, mpz_class &constant);
+		
+		/** 
+        * @brief Compute the guard bits, keep bits, and the error-centering constant for a faithfully rounding truncated multiplier
+        * @details See 7.2.4.2 of Application Specific Arithmetic 2024.
+				In addition to the algorithm there, this variant takes into account the negative sign of the partial products at the left and bottom edge |_ in signed multipliers.
+				This should never be useful in a multiplier computing just right (see 8.1.4), but the world conspires to prove my intuitions wrong.
+				This function is assuming an integer multiplier (lsbX=lsbY=0), so the error budget and the constant are integers
+				This function has quadratic complexity.
+        * @param wX size in bits of input X 
+        * @param wY size in bits of input Y
+        * @param errorBudget strict upper bound on the allowed error after truncation 
+        * @param actualLSB the rightmost position where we need to keep bits
+        * @param k number of bits to keep in the rightmost position
+        * @param constant to recenter the truncation error around 0 since it can otherwise only be negative, since there are only partial products left out. This allows a larger error, so more products can be omitted. 
+        * @return none
+        */
+		static void computeTruncMultParams(unsigned wX, unsigned wY, mpz_class errorBudget, unsigned &actualLSB, unsigned &k, mpz_class &constant);
 
 		/**
          * @brief Calculate the LSB of the BitHeap required to maintain faithfulness, so that unnecessary LSBs to meet the error budget of multiplier tiles can be omitted from compression
@@ -146,11 +244,13 @@ namespace flopoco {
 		 * @param idx: the tile identifier for unique name
 		 * @param output_name: the name to which the output of this tile should be mapped
 		 */
-		Operator* realiseTile(
-				TilingStrategy::mult_tile_t & tile,
-				size_t idx,
-				string output_name
-			);
+		static Operator* realiseTile(OperatorPtr op,
+																 TilingStrategy::mult_tile_t & tile,
+																 size_t idx,
+																 string output_name,
+																 int wX, int wY,
+																 bool squarer
+																 );
 
 		/** returns the amount of consecutive bits, which are not constantly zero
 		 * @param bm:                          current BaseMultiplier
@@ -195,15 +295,17 @@ namespace flopoco {
          * @param bitheapLSBWeight weight (2^bitheapLSBWeight) of the LSB that should be compressed on BH. It is supposed to be 0 for regular multipliers, but can be higher for truncated multipliers.
          * @return none
          */
-		void branchToBitheap(BitHeap* bh, list<TilingStrategy::mult_tile_t> &solution , unsigned int bitheapLSBWeight);
+		static void fillBitheap(BitHeap* bh, list<TilingStrategy::mult_tile_t> &solution, unsigned int bitheapLSBWeight, int wX, int wY, bool squarer);
 
+		static void createFigures(TilingStrategy *tilingStrategy);
+ 
+		// TODO remove all the following
         static unsigned additionalError_n(unsigned int wX, unsigned int wY, unsigned int col, unsigned int t, unsigned int wFull, bool signedIO);
 
         static unsigned additionalError_p(unsigned int wX, unsigned int wY, unsigned int col, unsigned int t, unsigned int wFull, bool signedIO);
 
         static mpz_class calcErcConst(mpz_class &errorBudget, mpz_class &wlext, mpz_class &deltap, mpz_class constant=1);
 
-        void createFigures(TilingStrategy *tilingStrategy) const;
     };
 
 }

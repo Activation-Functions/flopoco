@@ -1,7 +1,7 @@
 /*
   An integer multiplier for FloPoCo
 
-  Authors:  Martin Kumm with parts of previous IntMultiplier of Bogdan Pasca, F de Dinechin, Matei Istoan, Kinga Illyes and Bogdan Popa spent
+  Authors:  Martin Kumm with parts of previous IntMultiplier of Bogdan Pasca, F de Dinechin, Matei Istoan, Kinga Illyes and Bogdan Popa
 
   This file is part of the FloPoCo project
   developed by the Arenaire team at Ecole Normale Superieure de Lyon
@@ -11,6 +11,12 @@
   2008-2017.
   All rights reserved.
 */
+
+
+// This is the switch to move to the version that doesn't work yet...
+#define USE_REFACTORED 0
+
+
 
 #include <cassert>
 #include <cmath>
@@ -41,35 +47,318 @@ using namespace std;
 
 namespace flopoco {
 
+	TilingStrategy*	IntMultiplier::addToExistingBitHeap(BitHeap* bh, string xname, string yname, mpz_class errorBudget, int exactProductLSBPosition)
+	{
+		OperatorPtr op=bh->getOp();
+		Signal* x = op -> getSignalByName(xname);
+		Signal* y = op -> getSignalByName(yname);
+		// let's get over with the fixed-point stuff
+		int msbX = x->MSB();
+		int msbY = y->MSB();
+		int lsbX = x->LSB();
+		int lsbY = y->LSB();
+		int wX = x->width();
+		int wY = y->width();
+		int signedX = x->isSigned();
+		int signedY = y->isSigned();
+		if (signedX!=signedY) {
+			ostringstream e;
+			e << "Product of two signals " << xname << " and " << yname << " with different signednesses is not supported in IntMultiplier::addToExistingBitHeap";
+			throw(e.str());
+		}
+		
+		int lsbPfull = lsbX+lsbY; // This is the anchor for exactProductLSBPosition
 
-	IntMultiplier::IntMultiplier (Operator *parentOp, Target* target_, int wX_, int wY_, int wOut_, bool signedIO_, float dspOccupationThreshold, int maxDSP, bool superTiles, bool use2xk, bool useirregular, bool useLUT, bool useDSP, bool useKaratsuba, bool useGenLUT, bool useBooth, int beamRange, bool optiTrunc, bool minStages, bool squarer):
-		Operator ( parentOp, target_ ),wX(wX_), wY(wY_), wOut(wOut_),signedIO(signedIO_), dspOccupationThreshold(dspOccupationThreshold), squarer(squarer) {
-        srcFileName = "IntMultiplier";
-        setCopyrightString("Martin Kumm, Florent de Dinechin, Kinga Illyes, Bogdan Popa, Bogdan Pasca, 2012-");
+		// from now on we switch to the integer-multiplier point of view of the Fulda code
+		int wFullP = prodsize(wX, wY, signedX, signedY);
+		unsigned actualLSB; // the position of the last column on which we have bits
+		unsigned lastColumnKeepBits; // the number of bits to keep on the last column
+		mpz_class centerErrConstant; // recentering constant to add to the bit heap
+
+		computeTruncMultParams(wX, wY, errorBudget, actualLSB, lastColumnKeepBits, centerErrConstant);
+		REPORT(LogLevel::MESSAGE, "errorBudget=" << errorBudget << " actualLSB=" << actualLSB << "  lastColumnKeepBits=" << lastColumnKeepBits << "  centerErrConstant=" << centerErrConstant);
+		
+		// Sanity check: is the bit heap large enough? (another option would be to silently enlarge it)
+		if(bh->lsb > lsbPfull + actualLSB) {
+			ostringstream e;
+			e << "In IntMultiplier::addToExistingBitHeap, we need a bit heap up to LSB=" << lsbPfull + actualLSB << " but provided bit heap only extends to LSB=" << bh->lsb;
+			throw(e.str());
+		}
+		
+		if(bh->msb < lsbPfull+wFullP-1) {
+			ostringstream e;
+			e << "In IntMultiplier::addToExistingBitHeap, we need a bit heap up to MSB=" << lsbPfull+wFullP-1 << " but provided bit heap only extends to MSB=" << bh->msb;
+			throw(e.str());
+		}
+		unsigned wOutPlusGuardBits = wFullP - actualLSB;
+		
+		// Generate a tiling
+
+		// Useless noise that I have to live with because Fulda didn't clean it up
+		int maxDSP=-1;
+		bool superTiles=false;
+		bool use2xk=false;
+		bool useirregular=false;
+		bool useLUT=true;
+		bool useKaratsuba=false;
+		bool useGenLUT=false;
+		bool useBooth=false;
+		int beamRange=0;
+		bool optiTrunc=true;
+		bool minStages=true;
+		bool squarer=false;
+		float dspOccupationThreshold = op->getTarget()->unusedHardMultThreshold();
+		bool useDSP = op->getTarget()->useHardMultipliers();
+
+		REPORT(LogLevel::DETAIL, "Creating BaseMultiplierCollection");
+		BaseMultiplierCollection baseMultiplierCollection(op->getTarget());
+		//		baseMultiplierCollection.print();
+
+		MultiplierTileCollection multiplierTileCollection(op->getTarget(), &baseMultiplierCollection, wX, wY, superTiles, use2xk, useirregular, useLUT, useDSP, useKaratsuba, useGenLUT, useBooth, squarer);
+
+		string tilingMethod = op->getTarget()->getTilingMethod();
+
+		REPORT(LogLevel::DETAIL, "Creating TilingStrategy using tiling method " << tilingMethod);
+
+		// // TODO HERE I have to invent a wOut and a guardBits for this to compile,
+		// // but I shouldn't have to
+		// int wOut, guardBits;
+		// if(errorBudget==0)  {
+		// 	wOut=wFullP;
+		// 	guardBits=0;
+		// }
+		// else { // what should I do here?
+		// 	int lsbOut=0;
+		// 	int wOut=wFullP;
+		// 	mpz_class error=1;
+		// 	while(error<errorBudget) {
+		// 		lsbOut++;
+		// 		wOut--;
+		// 		error = error<<1;
+		// 	} // This was an intlog2
+		// 	int guardBits=0;
+		// 	// let's assume that the inconsistent interface could be compressed into  wOut+guardBits
+		// }
+		TilingStrategy* tilingStrategy;
+		// Message to Andreas:
+		// Florent commented out all these methods for you to revive them someday once I have converged on the proper interface.
+		// (still TODO)
+		
+		 if(tilingMethod.compare("heuristicBasicTiling") == 0) {
+			tilingStrategy = new TilingStrategyBasicTiling(
+					wX,
+					wY,
+					wOutPlusGuardBits, 
+					signedX,
+					&baseMultiplierCollection,
+					baseMultiplierCollection.getPreferedMultiplier(),
+					dspOccupationThreshold,
+					((maxDSP<0)?(unsigned)INT_MAX:(unsigned)((useDSP)?maxDSP:0))	);
+		 }
+		// else if(tilingMethod.compare("heuristicGreedyTiling") == 0) { 
+		// 	tilingStrategy = new TilingStrategyGreedy(
+		// 			wX,
+		// 			wY,
+		// 			wOut,
+		// 			signedX,
+		// 			&baseMultiplierCollection,
+		// 			baseMultiplierCollection.getPreferedMultiplier(),
+		// 			dspOccupationThreshold,
+		// 			maxDSP,
+		// 			useirregular,
+		// 			use2xk,
+		// 			superTiles,
+		// 			useKaratsuba,
+		// 			multiplierTileCollection,
+		// 			guardBits,
+		// 			lastColumnKeepBits );
+		// }
+		// else if(tilingMethod.compare("heuristicXGreedyTiling") == 0) {
+		// 	tilingStrategy = new TilingStrategyXGreedy(
+		// 			wX,
+		// 			wY,
+		// 			wOut,
+		// 			signedX,
+		// 			&baseMultiplierCollection,
+		// 			baseMultiplierCollection.getPreferedMultiplier(),
+		// 			dspOccupationThreshold,
+		// 			maxDSP,
+		// 			useirregular,
+		// 			use2xk,
+		// 			superTiles,
+		// 			useKaratsuba,
+		// 			multiplierTileCollection,
+		// 			guardBits,
+		// 			lastColumnKeepBits );
+		// }
+	  else
+		if(tilingMethod.compare("heuristicBeamSearchTiling") == 0) {
+			tilingStrategy = new TilingStrategyBeamSearch(
+																										wX,
+																										wY,
+																										wOutPlusGuardBits, // was wOut
+																										signedX,
+																										&baseMultiplierCollection,
+																										baseMultiplierCollection.getPreferedMultiplier(),
+																										dspOccupationThreshold,
+																										maxDSP,
+																										useirregular,
+																										use2xk,
+																										superTiles,
+																										useKaratsuba,
+																										multiplierTileCollection,
+																										beamRange,
+																										0, // wasguardBits,
+																										lastColumnKeepBits	);
+		}
+		// 	else if(tilingMethod.compare("optimal") == 0){
+		// 	tilingStrategy = new TilingStrategyOptimalILP(
+		// 			wX,
+		// 			wY,
+		// 			wOut,
+		// 			signedX,
+		// 			&baseMultiplierCollection,
+		// 			baseMultiplierCollection.getPreferedMultiplier(),
+		// 			dspOccupationThreshold,
+		// 			maxDSP,
+		// 			multiplierTileCollection,
+		// 			guardBits,
+		// 			lastColumnKeepBits,
+		// 			errorBudget,
+		// 			centerErrConstant,
+		// 			optiTrunc,
+		// 			squarer );
+		// }
+		// 	else if(tilingMethod.compare("optimalTilingAndCompression") == 0){
+		// 	tilingStrategy = new TilingAndCompressionOptILP(
+		// 			wX,
+		// 			wY,
+		// 			wOut,
+		// 			signedX,
+		// 			&baseMultiplierCollection,
+		// 			baseMultiplierCollection.getPreferedMultiplier(),
+		// 			dspOccupationThreshold,
+		// 			maxDSP,
+		// 			multiplierTileCollection,
+		// 			bh,
+		// 			guardBits,
+		// 			lastColumnKeepBits,
+		// 			errorBudget,
+		// 			centerErrConstant,
+		// 			optiTrunc,
+		// 			minStages
+		// 	);
+
+		// }
+		else if(tilingMethod.compare("csv") == 0) {
+			tilingStrategy = new TilingStrategyCSV(
+																						 wX,
+																						 wY,
+																						 wOutPlusGuardBits, //was wOut
+																						 signedX,
+																						 &baseMultiplierCollection,
+																						 baseMultiplierCollection.getPreferedMultiplier(),
+																						 dspOccupationThreshold,
+																						 maxDSP,
+																						 useirregular,
+																						 use2xk,
+																						 superTiles,
+																						 useKaratsuba,
+																						 multiplierTileCollection,
+																						 0,// was guardBits,
+																						 lastColumnKeepBits );
+		}
+		else {
+			ostringstream e;
+			e << "Tiling strategy " << tilingMethod << " unknown";
+			throw(e.str());
+		}
+			
+		REPORT(LogLevel::DETAIL, "Solving tiling problem");
+		tilingStrategy->solve();
+
+		list<TilingStrategy::mult_tile_t> &solution = tilingStrategy->getSolution();
+		if(signedX)
+			for(auto & tile : solution) {
+				//resize DSPs to be aligned with left and bottom border of the tiled area to allow the correct handling of the sign
+				tile.first = tile.first.shrinkFitDSP(tile.second.first,tile.second.second, wX, wY);
+				//Set signedness of individual tiles according to their position
+				tile.first = tile.first.setSignStatus(tile.second.first,tile.second.second, wX, wY, signedX);
+			}
+		tilingStrategy->printSolution();
+		auto solLen = solution.size();
+		REPORT(LogLevel::VERBOSE, "Found solution has " << solLen << " tiles");
+
+		if (op->getTarget()->generateFigures())
+			createFigures(tilingStrategy);
+		
+		op -> schedule(); // This schedules up to the inputs of the multiplier
+
+#if 0 // temporarily commented because not static, plus it seems some tilingStrategy recompute the center error constant etc.
+		if (guardBits > 0) {
+			//Check truncated solution
+			mpz_class actualTruncError = checkTruncationError(solution, guardBits, errorBudget, centerErrConstant, wX, wY, signedX);
+			// cout << "calc min req weight is=" << prodsize(wX, wY, signedX, signedX) - (wOut + guardBits) << endl;
+			bitHeapLSBWeight = (dynamic_cast<CompressionStrategy*>(tilingStrategy))?0:calcBitHeapLSB(solution, guardBits, errorBudget, centerErrConstant, actualTruncError, wX, wY);
+			guardBits = wFullP - wOut - bitHeapLSBWeight; //To select result bits, because the dynamic ilp does not consider guardBits
+			//if (dynamic_cast<CompressionStrategy*>(tilingStrategy) == nullptr)  //The combined optimization always considers the full product size for a BitHeap
+			//    bitHeap.resizeBitheap(wFullP-bitHeapLSBWeight, 1);  //resize BitHeap for down to size required by truncation to simplify compression
+			
+			//these are the constant bits to recenter the average error around 0 and allow for more truncation error
+			mpz_class colweight, bitstate;
+			int i = wFullP - wOut - guardBits ;
+			do{
+				colweight = mpz_class(1) << i;   
+				bitstate = colweight & centerErrConstant ;
+				if (bitstate) {
+					bh->addConstantOneBit(i - (wFullP - wOut - guardBits) + exactProductLSBPosition);
+					REPORT(LogLevel::DEBUG,  "Adding constant bit with weight=" << i << " BitHeap col=" << i - (wFullP - wOut - guardBits) << "to recenter the truncation error at 0");
+					//cout << "height at pos " << i - (wFullP - wOut - guardBits) << ": " << bitHeap.getColumnHeight( i - (wFullP - wOut - guardBits)) << endl;
+				}
+				i++;
+			} while(colweight <= centerErrConstant);
+		}
+#else
+	  int bitHeapLSBWeight = actualLSB; // TODO then one of these variables should be renamed
+		// And here we should add the recentering constant to the bit heap
+#endif
+
+		fillBitheap(bh, solution, bitHeapLSBWeight + exactProductLSBPosition, wX, wY, squarer);
+
+		bh -> printBitHeapStatus();
+		op -> schedule(); // This schedule up to the compressor tree
+		return tilingStrategy;
+	}
 
 
-        wFullP = prodsize(wX, wY, signedIO_, signedIO_);
-        if (wOut == 0 || wFullP < wOut)
-            wOut = wFullP;
-        ostringstream name, trunc_info;
-        name << "IntMultiplier_"<< wX << "x" << wY<< "_"<< wOut;
-        setNameWithFreqAndUID(name.str());
-				
-        // the addition operators need the ieee_std_signed/unsigned libraries
-        useNumericStd();
 
-        multiplierUid = parentOp->getNewUId();
 
-        unsigned int guardBits = 0, keepBits = 0;
-        mpz_class errorBudget = 0, centerErrConstant = 0;
-        if(wOut < wFullP){  //check if multiplier is truncated
-            computeTruncMultParamsMPZ(wX, wY, wFullP, wOut, signedIO, guardBits, keepBits, errorBudget, centerErrConstant);
-            trunc_info << " faithfully rounded to wOut=" << wOut << " bits. Will use " << guardBits << " guard and " << keepBits <<
-                        " keep bits. The error budget is " << errorBudget << " and the error re-centering constant " << centerErrConstant;
-        }
 
-        REPORT(LogLevel::DETAIL, "IntMultiplier(): Constructing a multiplier of size " <<
-        wX << "x" << wY << ((wOut < wFullP)?trunc_info.str():"") << ", using a DSP threshold of " << dspOccupationThreshold << ".")
+	
+
+	
+	IntMultiplier::IntMultiplier (Operator *parentOp, Target* target_, int wX_, int wY_, int wOut_, bool signedIO_, int maxDSP, bool superTiles, bool use2xk, bool useirregular, bool useLUT, bool useKaratsuba, bool useGenLUT, bool useBooth, int beamRange, bool optiTrunc, bool minStages, bool squarer):
+		Operator ( parentOp, target_ ),wX(wX_), wY(wY_), wOut(wOut_),signedIO(signedIO_),  squarer(squarer)
+	{
+		srcFileName = "IntMultiplier";
+		setCopyrightString("Martin Kumm, Florent de Dinechin, Kinga Illyes, Bogdan Popa, Bogdan Pasca, 2012-");
+		
+		dspOccupationThreshold = target_->unusedHardMultThreshold();
+		bool useDSP = target_->useHardMultipliers();
+		
+		
+		wFullP = prodsize(wX, wY, signedIO_, signedIO_);
+		if (wOut == 0 || wFullP < wOut) {
+			wOut = wFullP;
+		}
+		ostringstream name, trunc_info;
+		name << "IntMultiplier_"<< wX << "x" << wY<< "_"<< wOut;
+		setNameWithFreqAndUID(name.str());
+		
+		// the addition operators need the ieee_std_signed/unsigned libraries
+		useNumericStd();
+		
+		multiplierUid = parentOp->getNewUId();
 
 		string xname="X";
 		string yname="Y";
@@ -91,10 +380,58 @@ namespace flopoco {
 
 			return;
 		}
+		
+		BitHeap* bitHeap = new BitHeap(this, wFullP);
+		unsigned int guardBits = 0, keepBits = 0;
+		mpz_class errorBudget = 0, centerErrConstant = 0;
 
-		BitHeap bitHeap(this, wFullP);
+
+		
+#if USE_REFACTORED // This is the way it should be, with the part common to the normal and virtual multipliers factored out in addToExistingBitHeap
+		// Current status is: exact multipliers work.
+		// TODO compute the error correction constant and understand what truncated tiling does.
+
+		
+		// error budget is one half-ulp, and there is also one half-ulp for final rounding
+		int lsbOut = wFullP - wOut;
+		if(wOut<wFullP) {
+			errorBudget = mpz_class(1) << (lsbOut-1);
+		}
+		REPORT(LogLevel::DEBUG,  " errorBudget=" << errorBudget);
+		
+		auto tilingStrategy = addToExistingBitHeap(bitHeap,  xname,  yname, errorBudget, 0);
+
+		// Rounding bit for a faithfully rounded truncated multiplier  
+		if (guardBits > 0) {
+			bitHeap->addConstantOneBit(static_cast<int>(guardBits) - 1);
+			//these are the constant bits to recenter the average error around 0 and allow for more truncation error
+		}
+		if (dynamic_cast<CompressionStrategy*>(tilingStrategy)) {
+			REPORT(LogLevel::DEBUG,  "Class is derived from CompressionStrategy, passing result for compressor tree.");
+			bitHeap->startCompression(dynamic_cast<CompressionStrategy*>(tilingStrategy));
+		} else {
+			bitHeap->startCompression();
+		}
+		vhdl << tab << "R" << " <= " << bitHeap->getSumName() << range(wOut-1 + guardBits, guardBits) << ";" << endl;
+		delete bitHeap;	
+		delete tilingStrategy;
+
+#else 
+		if(wOut < wFullP){  //check if multiplier is truncated
+			computeTruncMultParamsMPZ(wX, wY, wFullP, wOut, signedIO, guardBits, keepBits, errorBudget, centerErrConstant);
+		}
+		trunc_info << " faithfully rounded to wOut=" << wOut << " bits. Will use " << guardBits << " guard and " << keepBits <<
+				" keep bits. The error budget is " << errorBudget << " and the error re-centering constant " << centerErrConstant;
+		REPORT(LogLevel::DETAIL, trunc_info.str());
+		
+		REPORT(LogLevel::DETAIL, "IntMultiplier(): Constructing a multiplier of size " <<
+					 wX << "x" << wY << ((wOut < wFullP)?trunc_info.str():"") << ", using a DSP threshold of " << dspOccupationThreshold << ".");
+
+
 		//BitHeap bitHeap(this, wOut + guardBits);
 		unsigned bitHeapLSBWeight = 0;
+		// This is the LSB weight from the point of view of an integer multiplier.
+		// If we truncate it will be set to a positive value
 		
 		REPORT(LogLevel::DETAIL, "Creating BaseMultiplierCollection");
 		BaseMultiplierCollection baseMultiplierCollection(getTarget());
@@ -104,8 +441,10 @@ namespace flopoco {
 
 		string tilingMethod = getTarget()->getTilingMethod();
 
-		REPORT(LogLevel::DETAIL, "Creating TilingStrategy using tiling method " << tilingMethod);
+		REPORT(LogLevel::MESSAGE, "Creating TilingStrategy using tiling method " << tilingMethod); // TODO DETAIL
 
+		
+		
 		TilingStrategy* tilingStrategy;
 		if(tilingMethod.compare("heuristicBasicTiling") == 0) {
 			tilingStrategy = new TilingStrategyBasicTiling(
@@ -157,7 +496,8 @@ namespace flopoco {
 					keepBits
 																								 );
 		}
-		else if(tilingMethod.compare("heuristicBeamSearchTiling") == 0) {
+		else
+			if(tilingMethod.compare("heuristicBeamSearchTiling") == 0) {
 			tilingStrategy = new TilingStrategyBeamSearch(
 					wX,
 					wY,
@@ -206,7 +546,7 @@ namespace flopoco {
 					dspOccupationThreshold,
 					maxDSP,
 					multiplierTileCollection,
-					&bitHeap,
+					bitHeap,
 					guardBits,
 					keepBits,
 					errorBudget,
@@ -264,16 +604,17 @@ namespace flopoco {
 			//if (dynamic_cast<CompressionStrategy*>(tilingStrategy) == nullptr)  //The combined optimization always considers the full product size for a BitHeap
 			//    bitHeap.resizeBitheap(wFullP-bitHeapLSBWeight, 1);  //resize BitHeap for down to size required by truncation to simplify compression
 			
-			//this is the rounding bit for a faithfully rounded truncated multiplier
-			bitHeap.addConstantOneBit(static_cast<int>(guardBits) - 1);
-			//these are the constant bits to recenter the average error around 0 and allow for more truncation error
 			mpz_class colweight, bitstate;
 			int i = wFullP - wOut - guardBits ;
 			do{
-				mpz_pow_ui(colweight.get_mpz_t(), mpz_class(2).get_mpz_t(), i);
-				mpz_and(bitstate.get_mpz_t(), colweight.get_mpz_t(), centerErrConstant.get_mpz_t());
+				colweight = mpz_class(1) << i;   
+				bitstate = colweight & centerErrConstant ;
+				/* was:
+					 mpz_pow_ui(colweight.get_mpz_t(), mpz_class(2).get_mpz_t(), i);
+					 mpz_and(bitstate.get_mpz_t(), colweight.get_mpz_t(), centerErrConstant.get_mpz_t());
+					 */				
 				if (bitstate) {
-					bitHeap.addConstantOneBit(i - (wFullP - wOut - guardBits));
+					bitHeap->addConstantOneBit(i - (wFullP - wOut - guardBits));
 					REPORT(LogLevel::DEBUG,  "Adding constant bit with weight=" << i << " BitHeap col=" << i - (wFullP - wOut - guardBits) << "to recenter the truncation error at 0");
 					//cout << "height at pos " << i - (wFullP - wOut - guardBits) << ": " << bitHeap.getColumnHeight( i - (wFullP - wOut - guardBits)) << endl;
 				}
@@ -281,22 +622,29 @@ namespace flopoco {
 			} while(colweight <= centerErrConstant);
 		}
 
-		branchToBitheap(&bitHeap, solution, bitHeapLSBWeight);
-
-		schedule(); // This schedule up to the compressor tree
-		//		THROWERROR("stop here");
+		fillBitheap(bitHeap, solution, bitHeapLSBWeight, wX, wY, squarer);
 
 		
-		if (dynamic_cast<CompressionStrategy*>(tilingStrategy)) {
-		    REPORT(LogLevel::DEBUG,  "Class is derived from CompressionStrategy, passing result for compressor tree.");
-			bitHeap.startCompression(dynamic_cast<CompressionStrategy*>(tilingStrategy));
-		} else {
-			bitHeap.startCompression();
+		// Rounding bit for a faithfully rounded truncated multiplier  
+		if (guardBits > 0) {
+			bitHeap->addConstantOneBit(static_cast<int>(guardBits) - 1);
+			//these are the constant bits to recenter the average error around 0 and allow for more truncation error
 		}
-
-		vhdl << tab << "R" << " <= " << bitHeap.getSumName() << range(wOut-1 + guardBits, guardBits) << ";" << endl;
-
+		bitHeap ->  printBitHeapStatus();
+		schedule(); // This schedule up to the compressor tree
+		//		THROWERROR("stop here");
+		// Perform the bit heap compression only if this is a standalone operator
+		if (dynamic_cast<CompressionStrategy*>(tilingStrategy)) {
+			REPORT(LogLevel::DEBUG,  "Class is derived from CompressionStrategy, passing result for compressor tree.");
+			bitHeap->startCompression(dynamic_cast<CompressionStrategy*>(tilingStrategy));
+		} else {
+			bitHeap->startCompression();
+		}
+		vhdl << tab << "R" << " <= " << bitHeap->getSumName() << range(wOut-1 + guardBits, guardBits) << ";" << endl;
+		delete bitHeap;
 		delete tilingStrategy;
+#endif
+		
 	}
 
 	unsigned int IntMultiplier::computeGuardBits(unsigned int wX, unsigned int wY, unsigned int wOut)
@@ -340,10 +688,14 @@ namespace flopoco {
 		return nbDontCare - nbUnneeded;
 	}
 
+
+
+	// This function is being deprecated as its essence is split over the two following functions.
+	// Plus I don't like the fact that the error returned is called errorBudget
 	void IntMultiplier::computeTruncMultParamsMPZ(unsigned wX, unsigned wY, unsigned wFull, unsigned wOut, bool signedIO, unsigned &g, unsigned &k, mpz_class &errorBudget, mpz_class &constant) {
         unsigned l_P = wFull - wOut, l_ext = 0, t = 0;
         mpz_class colweight = 2, deltan = 0, deltap = 0, wlext = 1, wlextpe = 2, tbits = 0;
-        mpz_pow_ui(errorBudget.get_mpz_t(), mpz_class(2).get_mpz_t(), l_P-1); //tiling error budget
+				errorBudget = mpz_class(1) << (l_P-1); // was mpz_pow_ui(errorBudget.get_mpz_t(), mpz_class(2).get_mpz_t(), l_P-1); //tiling error budget
         if(l_P == 0) return;
         mpz_class delta_n_new = deltan + additionalError_n(wX, wY, l_ext, t + 1, wFull, signedIO) * wlext;
         mpz_class delta_p_new = deltap + additionalError_p(wX, wY, l_ext, t + 1, wFull, signedIO) * wlext;
@@ -358,7 +710,7 @@ namespace flopoco {
             if(widthOfDiagonalOfRect(wX, wY, l_ext+1, wFull) <= t){
                 t = 0, l_ext++;
                 wlext = wlextpe;
-                mpz_pow_ui(wlextpe.get_mpz_t(), mpz_class(2).get_mpz_t(), l_ext+1);
+                wlextpe = mpz_class(1) << (l_ext+1) ; // was mpz_pow_ui(wlextpe.get_mpz_t(), mpz_class(2).get_mpz_t(), l_ext+1);
             }
             delta_n_new = deltan + additionalError_n(wX, wY, l_ext, t + 1, wFull, signedIO) * wlext;
             delta_p_new = deltap + additionalError_p(wX, wY, l_ext, t + 1, wFull, signedIO) * wlext;
@@ -373,6 +725,63 @@ namespace flopoco {
         //cout << "errorBudget=" << errorBudget << ", C=" << constant << endl;
     }
 
+
+	// The version of Florent with no external function.
+	// It only works for a plain multiplier, not for a squarer nor a Booth one
+	// To cover this, this function should become a static method of BitHeap that just inputs an array of column heights and an error budget 
+	void IntMultiplier::computeTruncMultParams(unsigned wX, unsigned wY, mpz_class errorBudget, unsigned &col, unsigned &keepBits, mpz_class &constant){
+		int k=0;
+		col=0;
+		constant=0;
+		mpz_class error=0;
+		unsigned colHeight=1;
+		mpz_class errorDueToRemovingNextBit = 1; // error of truncating the rightmost column which contains one bit
+
+		cerr << "Error budget: " << errorBudget << endl;
+		// For readability I use a stupid quadratic algorithm instead of the linear one in the book
+		while (error + errorDueToRemovingNextBit < errorBudget) { //
+			k++; // remove this bit
+			error += errorDueToRemovingNextBit;// take the corresponding error into accout
+			cerr << "removing bit " <<k<< " in col " << col << ", current error=" << error << endl;
+			if(k==colHeight) { // we have removed all the bits of this column
+				col++; // move to the next column
+				errorDueToRemovingNextBit = errorDueToRemovingNextBit<<1;
+				k=0; // reset k
+				/*  What is the height of the next column? Draw a bit heap for a 2x6 multiplier:
+				 *  xxxxxx
+				 * xxxxxx      */
+				if (col<std::min(wX,wY)) {
+					colHeight=col+1;
+				} else if (col < std::max(wX,wY)) {
+					colHeight=std::min(wX,wY);
+				}
+				else {
+					cerr << "IntMultiplier::computeTruncMultParams() invoked for wX=" << wX << ", wY=" << wY << " and an error budget of "<< errorBudget
+							 <<" which doesn't make much sense: you probably had better truncate the inputs" << endl;
+					if (col<wX+wY-1) {	colHeight = wX+wY-1-col; }
+					else {
+						colHeight=0;
+						cerr << "IntMultiplier::computeTruncMultParams() invoked for wX=" << wX << ", wY=" << wY << " and an error budget of "<< errorBudget
+								 << " larger than removing the whole multiplier: please remove this multiplier." <<endl;
+						throw(string("Bug invoking IntMultiplier"));
+					} // otherwise we are in for an infinite loop.
+				}
+			}
+		}
+		keepBits=colHeight-k;
+		// Now compute the recentering constant. We will express it as bits from the last column
+		// Actually trivial in the case of multipliers:
+		// since removing one bit from the last column makes the error budget overflow, the best we can do is to transfer one of these bits to the constant
+		if(keepBits>0) {
+			keepBits--;
+			constant = mpz_class(1)<<col;
+		}
+		cerr << "Finally col=" << col << " k=" << k << " keepBits=" << keepBits << " error=" << error <<  " corrConstant=" << constant << endl;			
+		return;
+	}
+
+
+	
     mpz_class IntMultiplier::calcErcConst(mpz_class &errorBudget, mpz_class &wlext, mpz_class &deltap, mpz_class constant){
         if(constant == 0) return 0;
         constant = errorBudget - wlext;                                         //2^(l_P-1) - 2^(l_ext+1)
@@ -398,34 +807,6 @@ namespace flopoco {
         return 0;
     }
 
-    void IntMultiplier::computeTruncMultParamsMPZunsigned(unsigned wX, unsigned wY, unsigned wFull, unsigned wOut, unsigned &g, unsigned &k, mpz_class &errorBudget, mpz_class &constant) {
-        unsigned l_P = wFull - wOut, l_ext = 0, t = 0;
-        mpz_class colweight = 2, dlow = 0, wlext = 1, wlextpe = 2, wlp;
-        mpz_pow_ui(errorBudget.get_mpz_t(), mpz_class(2).get_mpz_t(), l_P-1); //tiling error budget
-        mpz_pow_ui(wlp.get_mpz_t(), mpz_class(2).get_mpz_t(), l_P); //2^l_P
-        if(l_P == 0) return;
-        //Try to remove whole diagonals without violating the error bound.
-        while( (t+1)*wlextpe + (dlow + widthOfDiagonalOfRect(wX,wY,l_ext+1,wFull)*wlext ) < wlp ){
-            dlow += widthOfDiagonalOfRect(wX,wY,l_ext+1,wFull) * wlext;
-            l_ext++;
-            wlext = wlextpe;
-            mpz_pow_ui(wlextpe.get_mpz_t(), mpz_class(2).get_mpz_t(), l_ext+1);
-            //printf("l_ext=%2i, dlow=%i, wlext=%i, wlextpe=%i, C=%i\n", l_ext, dlow.get_ui(), wlext.get_ui(), wlextpe.get_ui(), constant.get_ui());
-        }
-
-        //printf("l_ext=%2i, dlow=%i, wlext=%i, wlextpe=%i, C=%i, \n ", l_ext, dlow.get_ui(), wlext.get_ui(), wlextpe.get_ui(), constant.get_ui());
-
-        //Try to remove partial products from the next diagonal, until it would violate the error bound.
-        while( (t+2)*wlext + dlow < wlp && t < widthOfDiagonalOfRect(wX,wY,l_ext+1,wFull)){
-            t += 1;
-        }
-
-        constant = errorBudget - wlext;                                         //2^(l_P-1) - 2^(l_ext+1)
-        g = l_P - l_ext;
-        k = widthOfDiagonalOfRect(wX,wY,l_ext+1,wFull) - t;
-        //printf("w=%2i, l_ext=%i, t=%i, g=%i, k=%i, ", wX, l_ext, t, g, k);
-        //cout << "errorBudget=" << errorBudget << ", C=" << constant << endl;
-    }
 
     unsigned int IntMultiplier::widthOfDiagonalOfRect(unsigned wX, unsigned wY, unsigned col, unsigned wFull, bool signedIO){
         if(signedIO){ wX--; wY--; wFull = prodsize(wX, wY, signedIO, signedIO);}
@@ -511,8 +892,9 @@ namespace flopoco {
 		return s.str();
 	}
 
-	void IntMultiplier::branchToBitheap(BitHeap* bitheap, list<TilingStrategy::mult_tile_t> &solution, unsigned int bitheapLSBWeight)
+	void IntMultiplier::fillBitheap(BitHeap* bitheap, list<TilingStrategy::mult_tile_t> &solution, unsigned bitheapLSBWeight, int wX, int wY, bool squarer)
 	{
+		cerr << " ***** Entering Multiplier::fillBitheap with bitheapLSBWeight=" << bitheapLSBWeight << endl;
 		size_t i = 0;
 		stringstream oname, ofname;
 		for(auto & tile : solution) {
@@ -524,7 +906,7 @@ namespace flopoco {
 
 			oname.str("");
 			oname << "tile_" << i << "_output";
-			realiseTile(tile, i, oname.str());
+			realiseTile(bitheap->getOp(), tile, i, oname.str(), wX, wY, squarer);
 
 			ofname.str("");
 			ofname << "tile_" << i << "_filtered_output";
@@ -551,10 +933,10 @@ namespace flopoco {
 				    bool signedCase = (bothOne and (xIsSigned != yIsSigned)) or ((not bothOne) and (xIsSigned or yIsSigned));
 
 				    if(i && 31 < parameters.getMultType().size() && parameters.getMultType().substr(0, 31).compare("BaseMultiplierDSPKaratsuba_size") == 0){
-				        vhdl << declare(.0, ofname.str() + ((i)?to_string(i):""), parameters.getOutputSizes()[i]) << " <= " << "" << oname.str() + ((i)?to_string(i):"") + range(toSkip + tokeep - 1, toSkip) << ";" << endl;
-				        getSignalByName(ofname.str() + ((i)?to_string(i):""))->setIsSigned();        //for Karatsuba the outputs have to be treated signed
+				        		bitheap->getOp()->vhdl << bitheap->getOp()->declare(.0, ofname.str() + ((i)?to_string(i):""), parameters.getOutputSizes()[i]) << " <= " << "" << oname.str() + ((i)?to_string(i):"") + range(toSkip + tokeep - 1, toSkip) << ";" << endl;
+				        bitheap->getOp()->getSignalByName(ofname.str() + ((i)?to_string(i):""))->setIsSigned();        //for Karatsuba the outputs have to be treated signed
 				    } else {
-				        vhdl << tab << declareFixPoint(.0, ofname.str() + ((i)?to_string(i):""), signedCase, tokeep-1, 0) << " <= " << ((signedCase) ? "" : "un") << "signed(" << oname.str() + ((i)?to_string(i):"") <<
+				        bitheap->getOp()->vhdl << tab << bitheap->getOp()->declareFixPoint(.0, ofname.str() + ((i)?to_string(i):""), signedCase, tokeep-1, 0) << " <= " << ((signedCase) ? "" : "un") << "signed(" << oname.str() + ((i)?to_string(i):"") <<
 				        range(toSkip + tokeep - 1, toSkip) << ");" << endl;
 				    }
 
@@ -587,7 +969,7 @@ namespace flopoco {
 				bool bothOne = (xInputLength == 1) && (yInputLength == 1);
 				bool signedCase = (bothOne and (xIsSigned != yIsSigned)) or ((not bothOne) and (xIsSigned or yIsSigned));
 
-				vhdl << tab << declareFixPoint(.0, ofname.str(), signedCase, tokeep-1, 0) << " <= " << ((signedCase) ? "" : "un") << "signed(" << oname.str() <<
+				bitheap->getOp()->vhdl << tab << bitheap->getOp()->declareFixPoint(.0, ofname.str(), signedCase, tokeep-1, 0) << " <= " << ((signedCase) ? "" : "un") << "signed(" << oname.str() <<
 						range(toSkip + tokeep - 1, toSkip) << ");" << endl;
 
 				//squarers can have tile counted twice to exploit the symmetries, and hence might require a left shift by one bit or have tiles to be considered negative to compensate for overlap.
@@ -601,7 +983,8 @@ namespace flopoco {
 		}
 	}
 
-	Operator* IntMultiplier::realiseTile(TilingStrategy::mult_tile_t & tile, size_t idx, string output_name)
+	Operator* IntMultiplier::realiseTile(OperatorPtr op, TilingStrategy::mult_tile_t & tile, size_t idx, string output_name,
+																			 int wX, int wY, bool squarer)
 	{
 		auto& parameters = tile.first;
 		auto& anchor = tile.second;
@@ -633,8 +1016,10 @@ namespace flopoco {
 
 		nameOutput << "tile_" << idx << "_Out";
 
-		vhdl << tab << declare(0., nameX.str(), xInputLength) << " <= " << tileXSig << ";" << endl;
-		if(!tile.first.isSquarer()) vhdl << tab << declare(0., nameY.str(), yInputLength) << " <= " << tileYSig << ";" << endl;
+		op->vhdl << tab << op->declare(0., nameX.str(), xInputLength) << " <= " << tileXSig << ";" << endl;
+		if(!tile.first.isSquarer()) {
+			op->vhdl << tab << op->declare(0., nameY.str(), yInputLength) << " <= " << tileYSig << ";" << endl;
+		}
 
 		string multIn1SigName = nameX.str();
 		string multIn2SigName = nameY.str();
@@ -645,16 +1030,18 @@ namespace flopoco {
 		nameOutput.str("");
 		nameOutput << "tile_" << idx << "_mult";
 
-		inPortMap("X", multIn1SigName);
-		if(!tile.first.isSquarer()) inPortMap("Y", multIn2SigName);
-		outPortMap("R", output_name);
+		op->inPortMap("X", multIn1SigName);
+		if(!tile.first.isSquarer()) {
+			op->inPortMap("Y", multIn2SigName);
+		}
+		op->outPortMap("R", output_name);
 		for(unsigned i = 1; i < parameters.getOutputWeights().size(); i++){
-			outPortMap("R" + to_string(i), output_name + to_string(i));
+			op->outPortMap("R" + to_string(i), output_name + to_string(i));
 		}
 
-		auto mult = parameters.generateOperator(this, getTarget());
+		auto mult = parameters.generateOperator(op, op->getTarget());
 
-		vhdl << instance(mult, nameOutput.str(), false) <<endl;
+		op->vhdl << op->instance(mult, nameOutput.str(), false) <<endl;
 		return mult;
 	}
 
@@ -893,8 +1280,7 @@ namespace flopoco {
 
 	OperatorPtr IntMultiplier::parseArguments(OperatorPtr parentOp, Target *target, std::vector<std::string> &args, UserInterface& ui) {
 		int wX,wY, wOut, maxDSP;
-		bool signedIO,superTile, use2xk, useirregular, useLUT, useDSP, useKaratsuba, optiTrunc, minStages, squarer, useGenLUT, useBooth;
-		double dspOccupationThreshold=0.0;
+		bool signedIO,superTile, use2xk, useirregular, useLUT, useKaratsuba, optiTrunc, minStages, squarer, useGenLUT, useBooth;
 		int beamRange = 0;
 
 		ui.parseStrictlyPositiveInt(args, "wX", &wX);
@@ -905,18 +1291,16 @@ namespace flopoco {
 		ui.parseBoolean(args, "use2xk", &use2xk);
 		ui.parseBoolean(args, "useirregular", &useirregular);
 		ui.parseBoolean(args, "useLUT", &useLUT);
-		ui.parseBoolean(args, "useDSP", &useDSP);
 		ui.parseBoolean(args, "useKaratsuba", &useKaratsuba);
 		ui.parseBoolean(args, "useGenLUT", &useGenLUT);
 		ui.parseBoolean(args, "useBooth", &useBooth);
-		ui.parseFloat(args, "dspThreshold", &dspOccupationThreshold);
 		ui.parseInt(args, "maxDSP", &maxDSP);
         ui.parseBoolean(args, "optiTrunc", &optiTrunc);
         ui.parseBoolean(args, "minStages", &minStages);
 		ui.parsePositiveInt(args, "beamRange", &beamRange);
 		ui.parseBoolean(args, "squarer", &squarer);
 
-		return new IntMultiplier(parentOp, target, wX, wY, wOut, signedIO, dspOccupationThreshold, maxDSP, superTile, use2xk, useirregular, useLUT, useDSP, useKaratsuba, useGenLUT, useBooth, beamRange, optiTrunc, minStages, squarer);
+		return new IntMultiplier(parentOp, target, wX, wY, wOut, signedIO, maxDSP, superTile, use2xk, useirregular, useLUT, useKaratsuba, useGenLUT, useBooth, beamRange, optiTrunc, minStages, squarer);
 	}
 
 	template <>
@@ -935,16 +1319,12 @@ namespace flopoco {
 		 useLUT(bool)=true: if true, attempts to use the LUT-Multipliers for tiling;\
 		 useGenLUT(bool)=false: if true, attempts to use the generalized LUT Multipliers, as defined by multiplier_shapes.tiledef;\
 		 useBooth(bool)=false: if true, attempts to use LUT-based Booth Arrays;\
-		 useDSP(bool)=true: if true, attempts to use the DSP-Multipliers for tiling;\
 		 useKaratsuba(bool)=false: if true, attempts to use rectangular Karatsuba for tiling;\
 		 superTile(bool)=false: if true, attempts to use the DSP adders to chain sub-multipliers. This may entail lower logic consumption, but higher latency.;\
-		 dspThreshold(real)=0.0: threshold of relative occupation ratio of a DSP multiplier to be used or not;\
-		 optiTrunc(bool)=true: if true, considers the Truncation error dynamicly, instead of defining a hard border for tiling, like in th ARITH paper;\
+		 optiTrunc(bool)=true: if true, considers the Truncation error dynamicly, instead of defining a hard border for tiling, like in the ARITH paper;\
 		 minStages(bool)=true: if true, minimizes stages in combined opt. of tiling an comp., otherwise try to find a sol. with less LUTs and more stages;\
 		 beamRange(int)=3: range for beam search;\
-     squarer[hidden](bool)=false: generate squarer", // This string
-								// will be
-								// parsed
+     squarer[hidden](bool)=false: generate squarer", // This string will be parsed
 		""};
 
 	TestList IntMultiplier::unitTest(int testLevel)
@@ -1090,14 +1470,15 @@ namespace flopoco {
         return col;
     }
 
-    void IntMultiplier::createFigures(TilingStrategy *tilingStrategy) const {
+    void IntMultiplier::createFigures(TilingStrategy *tilingStrategy) {
 	    ofstream texfile;
+			int wTrunc=0; // TODO obviously wrong, the parameter is called wTrunc but was called below with the IntMultiplier attribute wOut
 	    texfile.open("multiplier_tiling.tex");
 	    if ((texfile.rdstate() & ofstream::failbit) != 0) {
 	        cerr << "Error when opening multiplier_tiling.tex file for output. Will not print tiling configuration."
 	        << endl;
 	    } else {
-	        tilingStrategy->printSolutionTeX(texfile, wOut, false);
+				tilingStrategy->printSolutionTeX(texfile, false); // was wOut
 	        texfile.close();
 	    }
 
@@ -1106,7 +1487,7 @@ namespace flopoco {
 	        cerr << "Error when opening multiplier_tiling.svg file for output. Will not print tiling configuration."
 	        << endl;
 	    } else {
-	        tilingStrategy->printSolutionSVG(texfile, wOut, false);
+	        tilingStrategy->printSolutionSVG(texfile, false);// was wOut
 	        texfile.close();
 	    }
 
@@ -1115,7 +1496,7 @@ namespace flopoco {
 	        cerr << "Error when opening multiplier_shape.tex file for output. Will not print tiling configuration."
 	        << endl;
 	    } else {
-	        tilingStrategy->printSolutionTeX(texfile, wOut, true);
+	        tilingStrategy->printSolutionTeX(texfile, true);// was wOut
 	        texfile.close();
 	    }
 

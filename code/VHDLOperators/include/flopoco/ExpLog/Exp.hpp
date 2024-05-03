@@ -12,8 +12,8 @@
   All rights reserved.
 
 */
-#ifndef __FPEXP_HPP
-#define __FPEXP_HPP
+#ifndef __EXP_HPP
+#define __EXP_HPP
 #include <sstream>
 #include <vector>
 
@@ -22,7 +22,6 @@
 #include "flopoco/Tables/DualTable.hpp"
 #include "flopoco/Tables/Table.hpp"
 #include "flopoco/ExpLog/ExpArchitecture.hpp"
-#include "flopoco/ExpLog/Exp.hpp"
 
 class Fragment;
 
@@ -30,9 +29,18 @@ class Fragment;
 namespace flopoco{
 
 
-	class FPExp : public Operator
+	class Exp : public Operator
 	{
 	public:
+		/** @brief The magic dual table, that holds either (e^A, e^Z-1) or (e^A, e^Z-Z-1)
+			   |.....e^A....||...expZpart.....|
+			   <--sizeExpA--><--sizeExpZPart-->
+		*/
+		vector<mpz_class>	magicTable(int sizeExpA, int sizeExpZPart, bool storeExpZmZm1);
+
+		/** The table that holds the exponential of the high bits of the input */
+		vector<mpz_class> ExpATable(int wIn, int wOut);
+
 
 		/** @brief The constructor with manual control of all options
 		* @param wE exponent size
@@ -46,7 +54,7 @@ namespace flopoco{
 		*                  so that  input shift doesn't padd it with 0s (useful
 		*                  for FPPow)
 		*/
-		FPExp(
+		Exp(
 					OperatorPtr parentOp,
 					Target* target,
 					int wE,
@@ -56,18 +64,14 @@ namespace flopoco{
 					int guardBits=-1,
 					bool fullInput=false);
 
-		~FPExp();
+		~Exp();
 
 		// Overloading the virtual functions of Operator
 		// void outputVHDL(std::ostream& o, std::string name);
-		void emulate(TestCase * tc);
-		void buildStandardTestCases(TestCaseList* tcl);
-		TestCase* buildRandomTestCase(int i);
-
+		//void emulate(TestCase * tc);
+		
 		/** Factory method that parses arguments and calls the constructor */
 		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
-
-		static TestList unitTest(int testLevel);
 
 	private:
 		int wE; /**< Exponent size */

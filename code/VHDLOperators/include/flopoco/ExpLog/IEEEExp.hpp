@@ -12,8 +12,8 @@
   All rights reserved.
 
 */
-#ifndef __FPEXP_HPP
-#define __FPEXP_HPP
+#ifndef __IEEEEXP_HPP
+#define __IEEEEXP_HPP
 #include <sstream>
 #include <vector>
 
@@ -30,7 +30,7 @@ class Fragment;
 namespace flopoco{
 
 
-	class FPExp : public Operator
+	class IEEEExp : public Operator
 	{
 	public:
 
@@ -46,7 +46,7 @@ namespace flopoco{
 		*                  so that  input shift doesn't padd it with 0s (useful
 		*                  for FPPow)
 		*/
-		FPExp(
+		IEEEExp(
 					OperatorPtr parentOp,
 					Target* target,
 					int wE,
@@ -56,7 +56,7 @@ namespace flopoco{
 					int guardBits=-1,
 					bool fullInput=false);
 
-		~FPExp();
+		~IEEEExp();
 
 		// Overloading the virtual functions of Operator
 		// void outputVHDL(std::ostream& o, std::string name);

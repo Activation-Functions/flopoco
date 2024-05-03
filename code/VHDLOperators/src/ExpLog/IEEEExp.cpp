@@ -18,7 +18,7 @@
 #include <sstream>
 
 #include "flopoco/ConstMult/FixRealKCM.hpp"
-#include "flopoco/ExpLog/FPExp.hpp"
+#include "flopoco/ExpLog/IEEEExp.hpp"
 #include "flopoco/FixFunctions/FixFunctionByPiecewisePoly.hpp"
 #include "flopoco/FixFunctions/FixFunctionByTable.hpp"
 #include "flopoco/IntAddSubCmp/IntAdder.hpp"
@@ -31,27 +31,12 @@
 
 using namespace std;
 
-/* TODOs
-Obtaining 400MHz in Exp 8 23 depends on the version of ISE. Test with recent one.
-remove the nextCycle after the multiplier
-
-check the multiplier in the case 8 27: logic only, why?
-
-Pass DSPThreshold to PolyEval
-
-replace the truncated mult and following adder with an FixedMultAdd
-Clean up poly eval and bitheapize it
-
-
-All the tables could be FixFunctionByTable...
-*/
-
 #define LARGE_PREC 1000 // 1000 bits should be enough for everybody
 
 namespace flopoco{
 
 
-	FPExp::FPExp(
+	IEEEExp::IEEEExp(
 							 OperatorPtr parentOp, Target* target,
 							 int wE_, int wF_,
 							 int k_, int d_, int guardBits, bool fullInput
@@ -63,11 +48,11 @@ namespace flopoco{
 		// Paperwork
 
 		ostringstream name;
-		name << "FPExp_" << wE << "_" << wF ;
+		name << "IEEEExp_" << wE << "_" << wF ;
 		setNameWithFreqAndUID(name.str());
 
 		setCopyrightString("F. de Dinechin, Bogdan Pasca (2008-2021)");
-		srcFileName="FPExp";
+		srcFileName="IEEEExp";
 
 		int blockRAMSize = getTarget()->sizeOfMemoryBlock();
 
@@ -101,8 +86,8 @@ namespace flopoco{
 		else
 			wFIn=wF;
 
-		addFPInput("X", wE, wFIn);
-		addFPOutput("R", wE, wF);
+		addIEEEInput("X", wE, wFIn);
+		addIEEEOutput("R", wE, wF);
 
 
 		addConstant("wE", "positive", wE);
@@ -113,20 +98,39 @@ namespace flopoco{
 		int bias = (1<<(wE-1))-1;
 		if(bias < wF+g){
 			ostringstream e;
-			e << "ERROR in FPExp, unable to build architecture if wF+g > 2^(wE-1)-1." <<endl;
+			e << "ERROR in IEEEExp, unable to build architecture if wF+g > 2^(wE-1)-1." <<endl;
 			e << "      Try increasing wE." << endl;
-			e << "      If you really need FPExp to work with such values, please report this as a bug :)" << endl;
+			e << "      If you really need IEEEExp to work with such values, please report this as a bug :)" << endl;
 			throw e.str();
 		}
 
-
-
 		//******** Input unpacking and shifting to fixed-point ********
+		// Unpack X
+		int w = wE + wF +1;
+		// sign
+		vhdl << tab << declare(.0, "X_s", 1, false) << "<= X" << of(w-1) << ";" << endl;
+		// exp
+		vhdl << tab << declare(.0, "X_e_tmp", wE) << "<= " << "X" << range(w - 2, wF) << ";" << endl;
+		// normal
+		vhdl << tab << declare(target->adderDelay(wE), "X_exp_is_not_zero", 1, false) << "<= '0' when X_e_tmp=\"" << string(wE, '0') << "\" else '1';" << endl;
+		// mantissa
+		vhdl << tab << declare(.0, "X_f", wF+1) << "<= X_exp_is_not_zero & X"  << range(wF -1, 0) << ";" << endl;
+		// Is mantissa empty
+		vhdl << tab << declare(target->adderDelay(wF), "X_empty_m", 1, false) << "<= '1' when X"  << range(wF -1, 0) << " = \""  << string(wF, '0') << "\" else '0';" << endl;
+		// detect nan and inf
+		vhdl << tab << declare(target->adderDelay(wE), "X_nan_or_inf", 1, false) << "<= '1' when X_e_tmp = \"" << string(wE, '1') << "\" else '0';" << endl;
+		vhdl << tab << declare("X_nan", 1, false) << " <= X_nan_or_inf AND (NOT X_empty_m);" << endl;
+		vhdl << tab << declare("X_sig_nan", 1,  false) << " <= X_nan_or_inf AND (NOT X_empty_m) AND (NOT X" << of(wF-1) << ");" << endl;
+		vhdl << tab << declare("X_inf", 1, false) << " <= X_nan_or_inf AND X_empty_m;" << endl;
+		vhdl << tab << declare("X_zero", 1, false) << " <= NOT(X_exp_is_not_zero) AND X_empty_m;" << endl;  
+		
+		vhdl << tab << declare("X_normal", 1, false) << " <= X_exp_is_not_zero OR X_empty_m;" << endl;
 
-		vhdl << tab  << declare("Xexn", 2) << " <= X(wE+wFIn+2 downto wE+wFIn+1);" << endl;
-		vhdl << tab  << declare("XSign") << " <= X(wE+wFIn);" << endl;
-		vhdl << tab  << declare("XexpField", wE) << " <= X(wE+wFIn-1 downto wFIn);" << endl;
-		vhdl << tab  << declareFixPoint("Xfrac", false, -1,-wFIn) << " <= unsigned(X(wFIn-1 downto 0));" << endl;
+		vhdl << declare("X_e", wE) << " <= X_e_tmp when X_exp_is_not_zero=\'1\' else  \"" << string(wE-1, '0') << "1\";" << endl;
+
+		vhdl << tab  << declare("XSign") << " <= X_s;" << endl;
+		vhdl << tab  << declare("XexpField", wE) << " <= X_e;" << endl;
+		
 
 		int e0 = bias - (wF+g);
 		vhdl << tab  << declare("e0", wE+2) << " <= conv_std_logic_vector(" << e0 << ", wE+2);  -- bias - (wF+g)" << endl;
@@ -137,7 +141,7 @@ namespace flopoco{
 
 		// As we don't have a signed shifter, shift first, complement next. TODO? replace with a signed shifter
 		vhdl << tab << "--  mantissa with implicit bit" << endl;
-		vhdl << tab  << declareFixPoint("mXu", false, 0,-wFIn) << " <= \"1\" & Xfrac;" << endl;
+		vhdl << tab  << declareFixPoint("mXu", false, 0,-wFIn) << " <= unsigned(X_f);" << endl;
 
 		// left shift
 		vhdl << tab  << "-- Partial overflow detection" << endl;
@@ -182,14 +186,58 @@ namespace flopoco{
 		// The following is generic normalization/rounding code if we have in expY an approx of exp(y) of size 	sizeExpY
 		// with MSB of weight 2^1
 
+		vhdl << tab << "-- Rounding" << endl;
+
+		// might need to recode this to make it work
+		// K is signed
+		// TODO :
+		// FPNumbers have normal numbers with exponent 0, not IEEE
+		// number is subnormal when K + bias >= - wF
+		// shift number is - (K + bias -1) if need no norm, otherwise -(K + bias)
+
 		vhdl << tab << declare("needNoNorm") << " <= expY(" << sizeExpY-1 << ");" << endl;
-		vhdl << tab << "-- Rounding: all this should consume one row of LUTs" << endl;
+		vhdl << tab << declare("expY_norm", sizeExpY) << "<= expY" << range(sizeExpY-1, 0) << " when needNoNorm='1' else expY" << range(sizeExpY-2, 0) << "& \"0\";" << endl;
+		vhdl << tab << declare("K_extended", wE+2) << "<= K(" << wE << ") & K;" << endl;
+		// If needNoNorm=0 then  E = K + bias -1 else E = K+bias
+		// add +1 because we need to shift if E=0
+		vhdl << tab << declare("preshiftSubnormalAmountMin1", wE+2) << "<= - ( signed(K_extended) + signed(conv_std_logic_vector(" << bias << ","<< wE+2 << ")) - 1 -1);" << endl;
+		vhdl << tab << declare("preshiftSubnormalAmountZero", wE+2) << "<= - ( signed(K_extended) + signed(conv_std_logic_vector(" << bias << ","<< wE+2 << "))-1);" << endl;
+		vhdl << tab << declare("preshiftSubnormalAmount", wE+2) << "<= preshiftSubnormalAmountMin1 when needNoNorm='0' else preshiftSubnormalAmountZero;" << endl;
+		
+		// isn't a subnormal if we don't have to shift
+		vhdl << tab << declare("notSubnormal") << " <= '1' when preshiftSubnormalAmount" << of(wE+1) << "='1' or preshiftSubnormalAmount=\"" << string(wE+2, '0') << "\"  else '0';" << endl;
+		
+		int shiftsize = intlog2(sizeExpY);
+	
+		addComment("Flush to zero command only works when detected as subnormal (underflow) ");
+		vhdl << tab << declare("flushed_to_zero") << " <= \'0\' when preshiftSubnormalAmount" << range(wE+1, shiftsize) << " = \"" << string(wE+1-shiftsize+1, '0') << "\" else \'1\';" << endl; 
+
+		// real shift : shift 0 if not subnormal
+		// else shift max if too big
+		// else shift normal value
+		vhdl << tab << declare("shiftSubnormalAmount", shiftsize) << "<= conv_std_logic_vector(0, "<< shiftsize << ") when notSubnormal='1' else" << endl
+		<< tab << tab << "conv_std_logic_vector(" << sizeExpY << ", " << shiftsize << ") when flushed_to_zero='1' else " << endl
+		<< tab << tab << "preshiftSubnormalAmount" << range(shiftsize-1, 0) << ";" << endl;
+		
+			newInstance("Shifter",
+						"subnormal_shift",
+						"wX=" + to_string(sizeExpY) + " maxShift=" + to_string(sizeExpY) + " wR=" + to_string(sizeExpY)+ " dir=1",
+						"X=>expY_norm,S=>shiftSubnormalAmount",
+						"R=>prepreRoundBiasSig");
+
+		vhdl << tab << declare(getTarget()->logicDelay(), "preRoundBiasSig", wE+wF+2)
+		<< " <= " << rangeAssign(wE+1, 0, "'0'") << " & prepreRoundBiasSig" << range(sizeExpY-2, sizeExpY-2-wF+1) << " when notSubnormal = '0'" << endl
+		<< tab << tab << " else conv_std_logic_vector(" << bias << ", wE+2)  & expY" << range(sizeExpY-2, sizeExpY-2-wF+1) << " when needNoNorm = '1'" << endl
+		<< tab << tab << "else conv_std_logic_vector(" << bias-1 << ", wE+2)  & expY" << range(sizeExpY-3, sizeExpY-3-wF+1) << " ;" << endl;
+
+		/*
 		vhdl << tab << declare(getTarget()->logicDelay(), "preRoundBiasSig", wE+wF+2)
 		<< " <= conv_std_logic_vector(" << bias << ", wE+2)  & expY" << range(sizeExpY-2, sizeExpY-2-wF+1) << " when needNoNorm = '1'" << endl
 		<< tab << tab << "else conv_std_logic_vector(" << bias-1 << ", wE+2)  & expY" << range(sizeExpY-3, sizeExpY-3-wF+1) << " ;" << endl;
+		*/
 
-		vhdl << tab << declare("roundBit") << " <= expY(" << sizeExpY-2-wF << ")  when needNoNorm = '1'    else expY(" <<  sizeExpY-3-wF << ") ;" << endl;
-		vhdl << tab << declare("roundNormAddend", wE+wF+2) << " <= K(" << wE << ") & K & "<< rangeAssign(wF-1, 1, "'0'") << " & roundBit;" << endl;
+		vhdl << tab << declare("roundBit") << " <= prepreRoundBiasSig(" << sizeExpY-2-wF << ")  when notSubnormal = '0' else expY(" << sizeExpY-2-wF << ")  when needNoNorm = '1'    else expY(" <<  sizeExpY-3-wF << ") ;" << endl;
+		vhdl << tab << declare("roundNormAddend", wE+wF+2) << " <= K(" << wE << ") & K & "<< rangeAssign(wF-1, 1, "'0'") << " & roundBit when notSubnormal='1' else " << rangeAssign(wE+2+wF-1, 1, "'0'") << " & roundBit;" << endl;
 
 
 		newInstance("IntAdder",
@@ -198,54 +246,66 @@ namespace flopoco{
 								"X=>preRoundBiasSig,Y=>roundNormAddend",
 								"R=>roundedExpSigRes",
 								"Cin=>'0'");
-		vhdl << tab << declare(getTarget()->logicDelay(), "roundedExpSig", wE+wF+2) << " <= roundedExpSigRes when Xexn=\"01\" else "
-		<< " \"000\" & (wE-2 downto 0 => '1') & (wF-1 downto 0 => '0');" << endl;
 
-		vhdl << tab << declare(getTarget()->logicDelay(), "ofl1") << " <= not XSign and overflow0 and (not Xexn(1) and Xexn(0)); -- input positive, normal,  very large" << endl;
-		vhdl << tab << declare("ofl2") << " <= not XSign and (roundedExpSig(wE+wF) and not roundedExpSig(wE+wF+1)) and (not Xexn(1) and Xexn(0)); -- input positive, normal, overflowed" << endl;
-		vhdl << tab << declare("ofl3") << " <= not XSign and Xexn(1) and not Xexn(0);  -- input was -infty" << endl;
+		// TODO add shifter for subnormal at some point
+
+		vhdl << tab << declare(getTarget()->logicDelay(), "roundedExpSig", wE+wF+2) << " <= roundedExpSigRes when X_nan_or_inf=\'0\' else "
+		<< "\"" << string(wE+wF+2, '1') << "\"; -- number in the normal case" << endl;
+
+		vhdl << tab << declare(getTarget()->logicDelay(), "ofl1") << " <= not XSign and overflow0 and X_normal; -- input positive, normal,  very large" << endl;
+		vhdl << tab << declare("exp_is_max") << "<= '1' when (roundedExpSig" << range(wE+wF-1, wF) << "= \"" << string(wE, '1') << "\") else '0';" << endl;
+		vhdl << tab << declare("ofl2") << " <= not XSign and ((roundedExpSig(wE+wF) and not roundedExpSig(wE+wF+1)) OR exp_is_max) and X_normal; -- input positive, normal, overflowed" << endl;
+		vhdl << tab << declare("ofl3") << " <= not XSign and X_inf;  -- input was +infty" << endl;
 		vhdl << tab << declare("ofl") << " <= ofl1 or ofl2 or ofl3;" << endl;
 
-		vhdl << tab << declare("ufl1") << " <= (roundedExpSig(wE+wF) and roundedExpSig(wE+wF+1))  and (not Xexn(1) and Xexn(0)); -- input normal" << endl;
-		vhdl << tab << declare("ufl2") << " <= XSign and Xexn(1) and not Xexn(0);  -- input was -infty" << endl;
-		vhdl << tab << declare("ufl3") << " <= XSign and overflow0  and (not Xexn(1) and Xexn(0)); -- input negative, normal,  very large" << endl;
+		vhdl << tab << declare("ufl1") << " <= flushed_to_zero and not notSubnormal and X_normal; -- input normal" << endl;
+		vhdl << tab << declare("ufl2") << " <= XSign and X_inf;  -- input was -infty" << endl;
+		vhdl << tab << declare("ufl3") << " <= XSign and overflow0  and X_normal; -- input negative, normal,  very large" << endl;
 
 		vhdl << tab << declare("ufl") << " <= ufl1 or ufl2 or ufl3;" << endl;
 
-		vhdl << tab << declare("Rexn", 2) << " <= \"11\" when Xexn = \"11\"" << endl
-		<< tab << tab << "else \"10\" when ofl='1'" << endl
-		<< tab << tab << "else \"00\" when ufl='1'" << endl
-		<< tab << tab << "else \"01\";" << endl;
+		vhdl << tab << "R <= \"0" << string(wE, '1') << "1" << string(wF-1, '0') << "\" when X_nan='1' else --nan" << endl
+		<< tab << tab << " \"0" << string(wE, '1') << string(wF, '0') << "\" when ofl='1' else -- +infty" << endl
+		<< tab << tab << " \"" << string(wE+wF+1, '0') << "\" when ufl='1' else -- 0" << endl
+		<< tab << tab << " '0' & roundedExpSig" << range(wE+wF-1, 0) << ";" << endl;
 
-		vhdl << tab << "R <= Rexn & '0' & roundedExpSig" << range(wE+wF-1, 0) << ";" << endl;
+		//flags
+		// inexact flag makes no sense always 1 except if input is 0
+		// overflow does 
+		// underflow also (underflow if output is subnormal)
+		// invalid does 
+		// should exp(-inf) = 0 ? yes
 
 	}
 
-	FPExp::~FPExp()
+	IEEEExp::~IEEEExp()
 	{
 	}
 
 
 
-	void FPExp::emulate(TestCase * tc)
+	void IEEEExp::emulate(TestCase * tc)
 	{
+		
 		/* Get I/O values */
 		mpz_class svX = tc->getInputValue("X");
 
 		/* Compute correct value */
-		FPNumber fpx(wE, wF, svX);
+		IEEENumber fpx(wE, wF, svX);
 
 		mpfr_t x, ru,rd;
 		mpfr_init2(x,  1+wF);
 		mpfr_init2(ru, 1+wF);
 		mpfr_init2(rd, 1+wF);
 		fpx.getMPFR(x);
-		mpfr_exp(rd, x, GMP_RNDD);
-		mpfr_exp(ru, x, GMP_RNDU);
-		FPNumber  fprd(wE, wF, rd);
-		FPNumber  fpru(wE, wF, ru);
+		int ternary_round_rd = mpfr_exp(rd, x, GMP_RNDD);
+		int ternary_round_ru = mpfr_exp(ru, x, GMP_RNDU);
+		IEEENumber  fprd(wE, wF, rd, ternary_round_rd, MPFR_RNDD);
+		IEEENumber  fpru(wE, wF, ru, ternary_round_ru, MPFR_RNDU);
 		mpz_class svRD = fprd.getSignalValue();
 		mpz_class svRU = fpru.getSignalValue();
+		if (svRD == svRU && svRU ==1) // weird bug with subnormals, where RD doesn't flush to 0 properly
+			svRD = 0;
 		tc->addExpectedOutput("R", svRD);
 		tc->addExpectedOutput("R", svRU);
 		mpfr_clears(x, ru, rd, NULL);
@@ -253,68 +313,64 @@ namespace flopoco{
 
 
 
-	void FPExp::buildStandardTestCases(TestCaseList* tcl){
+	void IEEEExp::buildStandardTestCases(TestCaseList* tcl){
 		TestCase *tc;
 
 		mpfr_t x, y;
-		FPNumber *fx, *fy;
+		IEEENumber *fx, *fy;
 		// double d;
 
 		mpfr_init2(x, 1+wF);
 		mpfr_init2(y, 1+wF);
 
-
-
 		tc = new TestCase(this);
-		tc->addFPInput("X", log(2));
+		tc->addIEEEInput("X", log(2));
 		emulate(tc);
 		tcl->add(tc);
 
 		tc = new TestCase(this);
-		tc->addFPInput("X", FPNumber::plusDirtyZero);
+		tc->addIEEEInput("X", 0.0);
 		emulate(tc);
 		tcl->add(tc);
 
 		tc = new TestCase(this);
-		tc->addFPInput("X", FPNumber::minusDirtyZero);
-		emulate(tc);
-		tcl->add(tc);
-
-
-
-		tc = new TestCase(this);
-		tc->addFPInput("X", 1.0);
+		tc->addIEEEInput("X", -0.0);
 		emulate(tc);
 		tcl->add(tc);
 
 		tc = new TestCase(this);
-		tc->addFPInput("X", 2.0);
+		tc->addIEEEInput("X", 1.0);
 		emulate(tc);
 		tcl->add(tc);
 
 		tc = new TestCase(this);
-		tc->addFPInput("X", 1.5);
+		tc->addIEEEInput("X", 2.0);
 		emulate(tc);
 		tcl->add(tc);
 
 		tc = new TestCase(this);
-		tc->addFPInput("X", -1.0);
+		tc->addIEEEInput("X", 1.5);
 		emulate(tc);
 		tcl->add(tc);
 
 		tc = new TestCase(this);
-		tc->addFPInput("X", -2.0);
+		tc->addIEEEInput("X", -1.0);
 		emulate(tc);
 		tcl->add(tc);
 
 		tc = new TestCase(this);
-		tc->addFPInput("X", -3.0);
+		tc->addIEEEInput("X", -2.0);
+		emulate(tc);
+		tcl->add(tc);
+
+		tc = new TestCase(this);
+		tc->addIEEEInput("X", -3.0);
 		emulate(tc);
 		tcl->add(tc);
 
 		tc = new TestCase(this);
 		tc->addComment("The largest number whose exp is finite");
-		fx = new FPNumber(wE, wF, FPNumber::largestPositive);
+		fx = new IEEENumber(wE, wF, IEEENumber::greatestNormal);
 		fx->getMPFR(x);
 		mpfr_log(y, x, GMP_RNDN);
 		//		cout << "A " << fx->getSignalValue() << endl;
@@ -322,8 +378,8 @@ namespace flopoco{
 		// cout << d << endl;
 		// d = mpfr_get_d(y, GMP_RNDN);
 		// cout << d << endl;
-		fy = new FPNumber(wE, wF, y);
-		tc->addFPInput("X", fy);
+		fy = new IEEENumber(wE, wF, y);
+		tc->addIEEEInput("X", *fy);
 		emulate(tc);
 		tcl->add(tc);
 		delete(fx);
@@ -331,18 +387,16 @@ namespace flopoco{
 		tc = new TestCase(this);
 		tc->addComment("The first number whose exp is infinite");
 		mpfr_nextabove(y);
-		fy = new FPNumber(wE, wF, y);
-		tc->addFPInput("X", fy);
+		fy = new IEEENumber(wE, wF, y);
+		tc->addIEEEInput("X", *fy);
 		emulate(tc);
 		tcl->add(tc);
 		delete(fy);
 
 
-
-
 		tc = new TestCase(this);
 		tc->addComment("The last number whose exp is nonzero");
-		fx = new FPNumber(wE, wF, FPNumber::smallestPositive);
+		fx = new IEEENumber(wE, wF, IEEENumber::smallestSubNormal);
 		fx->getMPFR(x);
 		mpfr_log(y, x, GMP_RNDU);
 
@@ -352,8 +406,8 @@ namespace flopoco{
 		// d = mpfr_get_d(y, GMP_RNDN);
 		// cout << d << endl;
 
-		fy = new FPNumber(wE, wF, y);
-		tc->addFPInput("X", fy);
+		fy = new IEEENumber(wE, wF, y);
+		tc->addIEEEInput("X", *fy);
 		emulate(tc);
 		tcl->add(tc);
 		delete(fx);
@@ -361,8 +415,36 @@ namespace flopoco{
 		tc = new TestCase(this);
 		tc->addComment("The first number whose exp flushes to zero");
 		mpfr_nextbelow(y);
-		fy = new FPNumber(wE, wF, y);
-		tc->addFPInput("X", fy);
+		fy = new IEEENumber(wE, wF, y);
+		tc->addIEEEInput("X", *fy);
+		emulate(tc);
+		tcl->add(tc);
+		delete(fy);
+
+
+		tc = new TestCase(this);
+		tc->addComment("The last number whose exp is nonzero, normal version");
+		fx = new IEEENumber(wE, wF, IEEENumber::smallestNormal);
+		fx->getMPFR(x);
+		mpfr_log(y, x, GMP_RNDU);
+
+		// cout << "A " << fx->getSignalValue() << endl;
+		// d = mpfr_get_d(x, GMP_RNDN);
+		// cout << d << endl;
+		// d = mpfr_get_d(y, GMP_RNDN);
+		// cout << d << endl;
+
+		fy = new IEEENumber(wE, wF, y);
+		tc->addIEEEInput("X", *fy);
+		emulate(tc);
+		tcl->add(tc);
+		delete(fx);
+
+		tc = new TestCase(this);
+		tc->addComment("The first number who outputs a subnormal");
+		mpfr_nextbelow(y);
+		fy = new IEEENumber(wE, wF, y);
+		tc->addIEEEInput("X", *fy);
 		emulate(tc);
 		tcl->add(tc);
 		delete(fy);
@@ -378,15 +460,14 @@ namespace flopoco{
 	// All the remaining ones test numbers with exponents between -wF-3 and wE-2,
 	// For numbers outside this range, exp over/underflows or flushes to 1.
 
-	TestCase* FPExp::buildRandomTestCase(int i){
+	TestCase* IEEEExp::buildRandomTestCase(int i){
 		TestCase *tc;
 		tc = new TestCase(this);
 		mpz_class x;
-		mpz_class normalExn = mpz_class(1)<<(wE+wF+1);
 		mpz_class bias = ((1<<(wE-1))-1);
 		/* Fill inputs */
 		if ((i & 7) == 0) { //fully random
-			x = getLargeRandom(wE+wF+3);
+			x = getLargeRandom(wE+wF+1);
 		}
 		else
 		{
@@ -394,7 +475,7 @@ namespace flopoco{
 				//cout << e << endl;
 				e = bias + e;
 				mpz_class sign = getLargeRandom(1);
-				x  = getLargeRandom(wF) + (e << wF) + (sign<<(wE+wF)) + normalExn;
+				x  = getLargeRandom(wF) + (e << wF) + (sign<<(wE+wF));
 			}
 			tc->addInput("X", x);
 		/* Get correct outputs */
@@ -405,7 +486,7 @@ namespace flopoco{
 
 
 
-		OperatorPtr FPExp::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
+		OperatorPtr IEEEExp::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 			int wE, wF, k, d, g;
 			bool fullInput;
 			ui.parseStrictlyPositiveInt(args, "wE", &wE);
@@ -414,12 +495,12 @@ namespace flopoco{
 			ui.parsePositiveInt(args, "d", &d);
 			ui.parseInt(args, "g", &g);
 			ui.parseBoolean(args, "fullInput", &fullInput);
-			return new FPExp(parentOp, target, wE, wF, k, d, g, fullInput);
+			return new IEEEExp(parentOp, target, wE, wF, k, d, g, fullInput);
 		}
 
 
 
-		TestList FPExp::unitTest(int testLevel)
+		TestList IEEEExp::unitTest(int testLevel)
 		{
 		// the static list of mandatory tests
 			TestList testStateList;
@@ -480,9 +561,9 @@ namespace flopoco{
 	}
 
 	template <>
-	const OperatorDescription<FPExp> op_descriptor<FPExp> {
-	    "FPExp", // name
-	    "A faithful floating-point exponential function.",
+	const OperatorDescription<IEEEExp> op_descriptor<IEEEExp> {
+	    "IEEEExp", // name
+	    "A faithful IEEE floating-point exponential function.",
 	    "ElementaryFunctions",
 	    "", // seeAlso
 	    "wE(int): exponent size in bits; \

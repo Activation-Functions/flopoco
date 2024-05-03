@@ -38,6 +38,9 @@ namespace flopoco{
 			THROWERROR("lsbIn limited to -30 (a table with 1O^9 entries should be enough for anybody). Do you really want me to write a source file of "
 								 << wOut * (mpz_class(1) << wIn) << " bytes?");
 		}
+		if(wOut<=0) {
+			THROWERROR("FixFunction determined that wOut=" << wOut << " which makes no sense");
+		}
 		vector<mpz_class> v;
 		for(int i=0; i<(1<<wIn); i++) {
 			mpz_class rn, devnull;

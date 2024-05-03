@@ -90,9 +90,6 @@ namespace flopoco {
 		//initialize the constant bits
 		constantBits = mpz_class(0);
 
-		//initialize the VHDL code buffer
-		vhdlCode.str("");
-
 		//create a compression strategy
 		compressionStrategy = nullptr;
 		isCompressed = false;
@@ -160,7 +157,7 @@ namespace flopoco {
 
 	bool BitHeap::lexicographicOrdering(const Bit* bit1, const Bit* bit2){
 		if( (bit1->signal->getCycle() < bit2->signal->getCycle()) ||
-				( (bit1->signal->getCycle() < bit2->signal->getCycle()) &&
+				( (bit1->signal->getCycle() == bit2->signal->getCycle()) &&
 					(bit1->signal->getCriticalPath() < bit2->signal->getCriticalPath()) )  ){
 			return true;
 		}
@@ -181,8 +178,8 @@ namespace flopoco {
 			return;
 		}
 
-		//insert the bit in the column
-		//  in the lexicographic order of the timing
+		//insert the bit in the column in the lexicographic order of the timing
+		// Note that when called from addBit with bits that are not yet scheduled, the following is useless
 		while(it != bits[columnNumber].end())
 		{
 			if((bit->signal->getCycle() < (*it)->signal->getCycle())
@@ -932,10 +929,10 @@ namespace flopoco {
 
 	void BitHeap::printBitHeapStatus()
 	{
-		REPORT(LogLevel::DEBUG, "Bitheap status:");
+		REPORT(LogLevel::DETAIL, "Bitheap status:");
 		for(unsigned w=0; w<bits.size(); w++)
 		{
-			REPORT(LogLevel::DEBUG, "Column position=" << w+lsb << ":\t height=" << bits[w].size());
+			REPORT(LogLevel::DETAIL, "Column position=" << w+lsb << ":\t height=" << bits[w].size());
 			printColumnInfo(w+lsb);
 		}
 	}

@@ -31,9 +31,10 @@ namespace flopoco
 		 * The FixMultAdd generic constructor computes x*y+a, faithful to msbOut.
 		 **/
 		FixMultAdd(OperatorPtr parentOp, Target* target,
-							 bool signedXY, int msbX, int lsbX,
+							 bool signedIO,
+							 int msbX, int lsbX,
 							 int msbY, int lsbY,
-							 bool signedA, int msbA, int lsbA,
+							 int msbA, int lsbA,
 							 int msbOut, int lsbOut);
 
 
@@ -86,25 +87,27 @@ namespace flopoco
 #endif
 
 
+		/**  Overloading Operator */
+		void emulate ( TestCase* tc );
+
+		/**  Overloading Operator */
+		void buildStandardTestCases(TestCaseList* tcl);
+
+		/**  Overloading Operator */
+		static TestList unitTest(int index);
+		
 		/** Factory method that parses arguments and calls the constructor */
 		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
 
 		
-		/**
-		 * The emulate function.
-		 * @param[in] tc               a test-case
-		 */
-		void emulate ( TestCase* tc );
 
-		void buildStandardTestCases(TestCaseList* tcl);
 
 	private:
-		bool signedXY; /**<  signedness of the multiplicands */
+		bool signedIO; /**<  signedness of the multiplicands */
 		int msbX;     /**<  MSB position of the first multiplicand X */		
 		int lsbX;			/**<	LSB position of the first multiplicand X */		
 		int msbY;     /**<  MSB position of the second multiplicand Y */   
 		int lsbY;     /**<	LSB position of the second multiplicand Y */  
-		bool signedA; /**<  signedness of the addend A */
 		int msbA;     /**<  MSB position of the addend A*/ 
 		int lsbA;     /**<	LSB position of the addend A*/ 
 		int msbOut;   /**<  MSB position of the output signal */
@@ -115,13 +118,16 @@ namespace flopoco
 		int wOut;			/**< size of the result */
 		int msbP;			/**< MSB of the product */
 		int lsbPfull;	/**< lsb of the exact product */
-		int wOutP;		/**< size of the product (not counting the guard bits) */
-		int lsbP;			/**< LSB of the product */
-		double maxError;     		/**< the max absolute value error of this multiplier, in ulps of the result. Should be 0 for untruncated, 1 or a bit less for truncated.*/
+		//		int lsbP;			/**< LSB of the truncated product */
+		double maxAbsError;   /**< the max absolute value error of this multiplier, in ulps of the result. Should be 0 for untruncated, 1 or a bit less for truncated.*/
+		bool isExact; /**< true if the operator involves no rounding */
+		bool isCorrectlyRounded; /**< true if the operator involves rounding and rounding is to nearest (ties to up) */
+		bool isFaithfullyRounded; /**< true if the operator involves rounding and rounding is faithful */
+		
 
-		int g ;                    	/**< the number of guard bits if the product is truncated */
-		int maxWeight;             	/**< The max weight for the bit heap of this multiplier, wOut + g*/
-		int possibleOutputs;  		/**< 1 if the operator is exact, 2 if it is faithfully rounded */
+		// int g ;                    	/**< the number of guard bits if the product is truncated */
+		// int maxWeight;             	/**< The max weight for the bit heap of this multiplier, wOut + g*/
+		// int possibleOutputs;  		/**< 1 if the operator is exact, 2 if it is faithfully rounded */
 
 	private:
 		BitHeap* bitHeap;    		/**< The heap of weighted bits that will be used to do the additions */

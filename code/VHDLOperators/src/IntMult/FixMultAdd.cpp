@@ -14,6 +14,10 @@
 /* TODO before there is any hope that it works:
 	 - add to IntMultiplier the version that adds a multiplier to a bit heap
 	 - and then more
+
+	 a few command lines to test while developing:
+	 ./flopoco fixmultadd signedio=0 msbx=3 lsbx=0 msby=3 lsby=0 msba=10 lsba=0 msbout=10 lsbout=0 testbench n=100
+
 */
 
 #include <cmath>
@@ -38,13 +42,17 @@ namespace flopoco {
 
 
 	FixMultAdd::FixMultAdd(OperatorPtr parentOp_, Target* target_,
-												 bool signedXY_, int msbX_, int lsbX_,
+												 bool signedIO_,
+												 int msbX_, int lsbX_,
 												 int msbY_, int lsbY_,
-												 bool signedA_, int msbA_, int lsbA_,
+												 int msbA_, int lsbA_,
 												 int msbOut_, int lsbOut_)
 		: Operator (parentOp_, target_),
-			signedXY(signedXY_), msbX(msbX_), lsbX(lsbX_), msbY(msbY_), lsbY(lsbY_),
-			signedA(signedA_), msbA(msbA_), lsbA(lsbA_), msbOut(msbOut_), lsbOut(lsbOut_)
+			signedIO(signedIO_),
+			msbX(msbX_), lsbX(lsbX_),
+			msbY(msbY_), lsbY(lsbY_),
+			msbA(msbA_), lsbA(lsbA_),
+			msbOut(msbOut_), lsbOut(lsbOut_)
 		{
 			srcFileName="FixMultAdd";
 			setCopyrightString ( "Florent de Dinechin, Matei Istoan, 2012-2014, 2024" );
@@ -59,13 +67,86 @@ namespace flopoco {
 			// compute positions of the full product
 			msbP = msbX+msbY+1; // always true, even though for signed numbers the MSB is nonzero only for one value: (-2^msbX) * (-2^msbY)
 			lsbPfull = lsbX+lsbY; // this one is easy
+
+			// A bit of sanity check on the IO formats
 			if(msbP>msbOut) {
 				THROWERROR("msbP is "<< msbP <<
 									 " which is larger than the supplied msbOut " << msbOut <<
-									 ", we don't do MSB truncation yet, sorry.");
+									 ", we don't do MSB truncation yet, sorry. Contact us if you have a use case.");
 			}
-		};
+			if(msbA>msbOut) {
+				THROWERROR("msbA is "<< msbA <<
+									 " which is larger than msbOut " << msbOut <<
+									 ", we don't see in which situation it could make sense. Contact us if you have a use case.");
+			}
+			if(msbA==msbOut) {
+				REPORT(LogLevel::MESSAGE, "Building a FixMultAdd that may overflow (msbA=msbOut), we hope you manage it");
+			}
+			if(msbP==msbOut) {
+				REPORT(LogLevel::MESSAGE, "Building a FixMultAdd that may overflow (msbP=msbOut), we hope you manage it");
+			}
 
+			string typecast=signedIO?"signed":"unsigned";
+			// Set the operator name
+			ostringstream name;
+			name <<"FixMultAdd";
+			name << "_" << typecast;
+			name << "_x_" << vhdlize(msbX) << "_" << vhdlize(lsbX);
+			name << "_y_" << vhdlize(msbY) << "_" << vhdlize(lsbY);
+			name << "_a_" << vhdlize(msbA) << "_" << vhdlize(lsbA);
+			name << "_r_" << vhdlize(msbOut) << "_" << vhdlize(lsbOut);
+			name << Operator::getNewUId();
+			setNameWithFreqAndUID(name.str());
+			REPORT(LogLevel::DEBUG, "Building " << name.str() << endl 
+						 << "     X is " << (signedIO?"s":"u") << "fix(" << msbX <<    ", " << lsbX << ")" <<endl 
+						 << "     Y is " << (signedIO?"s":"u") << "fix(" << msbY <<    ", " << lsbY << ")" <<endl 
+						 << " Pfull is " << (signedIO?"s":"u") << "fix(" << msbP <<    ", " << lsbPfull << ")" <<endl 
+						 << "     A is " << (signedIO?"s":"u") << "fix(" << msbA <<    ", " << lsbA << ")" <<endl 
+						 << "     R is " << (signedIO?"s":"u") << "fix(" << msbOut <<    ", " << lsbOut << ")" <<endl 
+						 );
+		
+			
+			addInput ("X",  wX);
+			addInput ("Y",  wY);
+			addInput ("A",  wA);
+			if(lsbPfull >= lsbOut) 			// Easy case when the multiplier needs no truncation
+				{
+					addOutput("R",  wOut);
+					isExact=true;
+					isCorrectlyRounded=true; // no rounding will ever happen
+					isFaithfullyRounded=true;// no rounding will ever happen
+					
+					// let's do this one first to get the virtual bit heap etc right.
+					if(getTarget()->plainVHDL()) { // mostly to debug emulate() and interface
+						vhdl << declareFixPoint("P", signedIO, msbP, lsbPfull) << " <= " << typecast << "(X)*" << typecast << "(Y);" << endl;
+						int newSizeP=msbOut -lsbPfull+1;
+						vhdl << declareFixPoint("RP", signedIO, msbOut, lsbOut) << " <= " << (signedIO ? signExtend("P",  newSizeP) : zeroExtend("P", newSizeP))<< ";" << endl;
+						//						cerr << "??? " << wA + msbOut-msbA << " " << signExtend("A", wA + msbOut-msbA) << " " << zeroExtend("A", wA+msbOut-msbA) << endl; 
+						int newSizeA=msbOut -lsbA+1;
+						vhdl << declareFixPoint("RA", signedIO, msbOut, lsbOut) << " <= " << typecast << "(" << (signedIO ? signExtend("A", newSizeA) : zeroExtend("A", newSizeA))<< ");" << endl;
+						
+						vhdl << declareFixPoint("RR", signedIO, msbOut, lsbOut) << " <= RA+RP;" << endl;
+						
+					}
+					else { // This is the bitheap-based version
+						BitHeap bh(this, wOut); // rather random
+						IntMultiplier::addToExistingBitHeap(&bh,  "X", "Y", 0);
+					}
+				}
+			else	{ /////////////////// lsbPfull < lsbOut so we build a truncated multiplier
+				isExact=false;
+				isCorrectlyRounded=false; //
+				isFaithfullyRounded=true;// 
+				// TODO a constructor argument for a correctly rounded mult?
+				addOutput("R",  wOut, 2); 
+
+			vhdl << "R <=0 -- This result is often wrong but it is computed quickly;  " << endl;
+			}
+			vhdl << "R <= std_logic_vector(RR);  " << endl;
+
+		};
+	
+	
 	
 #if 0	// The old constructor for a stand-alone operator
 	FixMultAdd::FixMultAdd(OperatorPtr parentOp, Target* target, Signal* x_, Signal* y_, Signal* a_,
@@ -97,17 +178,9 @@ namespace flopoco {
 								 << (y->isSigned()?"":"un")<<"signed. This case is currently not supported." );
 		}
 
-		// Set the operator name
-		{
-			ostringstream name;
-			name <<"FixMultAdd_";
-			name << wX << "x" << wY << "p" << wA << "r" << wOut << "" << (signedIO?"signed":"unsigned");
-			name << Operator::getNewUId();
-			setNameWithFreqAndUID(name.str());
-			REPORT(LogLevel::DEBUG, "Building " << name.str());
-		}
+		// THROWERROR("FixMultAdd needs more work");
+		
 
-		THROWERROR("FixMultAdd needs more work");
 #if 0
 		
 		// Set up the IO signals
@@ -347,130 +420,95 @@ namespace flopoco {
 
 
 
-
-
-	//FIXME: is this right? emulate function needs to be checked
-	//		 it makes no assumptions on the signals, except their relative alignments,
-	//		 so it should work for all combinations of the inputs
+	// New emulate function better than in version 4.1: 
+	// the inputs are fixed-point numbers, hence reals,
+	// we build the corresponding MPFR numbers and perform the computation on them
+	// This avoids replicating the logic of the VHDL as we had before.
 	void FixMultAdd::emulate ( TestCase* tc )
 	{
 		mpz_class svX = tc->getInputValue("X");
 		mpz_class svY = tc->getInputValue("Y");
 		mpz_class svA = tc->getInputValue("A");
-
-		mpz_class svP, svR, svRAux;
-		mpz_class twoToWR = (mpz_class(1) << (wOut));
-		mpz_class twoToWRm1 = (mpz_class(1) << (wOut-1));
-
-#if 0
-		if(!signedIO)
-		{
-			int outShift;
-
-			svP = svX * svY;
-
-			//align the product and the addend
-			if(a->LSB() < lsbP)
-			{
-				svP = svP << (lsbP-a->LSB());
-				outShift = outLSB - a->LSB();
-			}
-			else
-			{
-				svA = svA << (a->LSB()-lsbP);
-				outShift = outLSB - lsbP;
-			}
-
-			svR = svP + svA;
-
-			//align the multiply-and-add with the output format
-			if(outShift > 0)
-			{
-				svR = svR >> outShift;
-				possibleOutputs = 2;
-			}
-			else
-			{
-				svR = svR << (-outShift);
-				possibleOutputs = 1;
-			}
-
-			//add only the bits corresponding to the output format
-			svRAux = svR & (twoToWR -1);
-
-			tc->addExpectedOutput("R", svRAux);
-			if(possibleOutputs==2)
-			{
-				svR++;
-				svR &= (twoToWR -1);
-				tc->addExpectedOutput("R", svR);
-			}
+		// two's complement management)
+		if(signedIO) {
+			svX = bitVectorToSigned(svX, wX); 						// convert it to a signed mpz_class
+			svY = bitVectorToSigned(svY, wY); 						// convert it to a signed mpz_class
+			svA = bitVectorToSigned(svA, wA); 						// convert it to a signed mpz_class
 		}
-		else
-		{
-			int outShift;
+		
+		// now build the corresponding mpfr numbers
+		mpfr_t x, y, p, a, r,ru,rd;
 
-			// Manage signed digits
-			mpz_class twoToWX = (mpz_class(1) << (wX));
-			mpz_class twoToWXm1 = (mpz_class(1) << (wX-1));
-			mpz_class twoToWY = (mpz_class(1) << (wY));
-			mpz_class twoToWYm1 = (mpz_class(1) << (wY-1));
-			mpz_class twoToWA = (mpz_class(1) << (wA));
-			mpz_class twoToWAm1 = (mpz_class(1) << (wA-1));
+		mpfr_init2 (x, wX);
+		mpfr_set_z (x, svX.get_mpz_t(), MPFR_RNDD); 		// convert the integer svX to an MPFR; no rounding here
+		mpfr_mul_2si (x, x, lsbX, MPFR_RNDD); 						// multiply this integer by 2^lsbX to obtain a fixed-point value; also exact
 
-			if (svX >= twoToWXm1)
-				svX -= twoToWX;
+		mpfr_init2 (y, wY);
+		mpfr_set_z (y, svY.get_mpz_t(), MPFR_RNDD); 				// convert the integer svX to an MPFR; no rounding here
+		mpfr_mul_2si (y, y, lsbY, MPFR_RNDD); 						// multiply this integer by 2^lsbX to obtain a fixed-point value; also exact
 
-			if (svY >= twoToWYm1)
-				svY -= twoToWY;
+		mpfr_init2 (a, wA);
+		mpfr_set_z (a, svA.get_mpz_t(), MPFR_RNDD); 				// convert the integer svX to an MPFR; no rounding here
+		mpfr_mul_2si (a, a, lsbA, MPFR_RNDD); 						// multiply this integer by 2^lsbX to obtain a fixed-point value; also exact
 
-			if (svA >= twoToWAm1)
-				svA -= twoToWA;
+		mpfr_init2 (p, wX+wY); // enough bits for the exact product
+		mpfr_mul(p, x , y, MPFR_RNDD); // should be exact
+		int precForExact=max(msbOut, max(msbP, msbA)) - min(lsbOut, min(lsbPfull, lsbA)) + 2; 
+		mpfr_init2 (rd, precForExact); 
+		mpfr_init2 (ru, precForExact); 
+		mpfr_init2 (r, precForExact);
 
-			svP = svX * svY; //signed
+		// There are valid use cases where a FixMultAdd may overflow on random tests but won't in its context.
+		// we manage this by emulating the overflow (which depends on the signedness). 
+		// This is probably disputable... anyway the following variables help for this. 
+		mpz_class twotowR = mpz_class(1) << wOut;
+		mpz_class minval = signedIO? (-(mpz_class(1)<<(wOut-1))) : mpz_class(0);
+		mpz_class maxval = signedIO? ((mpz_class(1)<<(wOut-1))-1) : ((mpz_class(1)<<wOut)-1);
 
-			//align the product and the addend
-			if(a->LSB() < lsbP)
-			{
-				svP = svP << (lsbP-a->LSB());
-				outShift = outLSB - a->LSB();
+		if(isCorrectlyRounded){
+			mpfr_add(r, a , p, MPFR_RNDN); // still no rounding here
+			mpfr_mul_2si (r, r, -lsbOut, GMP_RNDN); // scaling back to integer: no rounding here
+			mpz_class rz;
+			mpfr_get_z (rz.get_mpz_t(), r, GMP_RNDN); 			// this is where rounding happens
+			// emulate over/underflow
+			while(rz >maxval) {	rz -= twotowR;	}
+			while (rz < minval) {	rz += twotowR; } 
+
+			if(signedIO) {
+				rz = signedToBitVector(rz, wOut);
 			}
-			else
-			{
-				svA = svA << (a->LSB()-lsbP);
-				outShift = outLSB - lsbP;
-			}
+			tc->addExpectedOutput ("R", rz);
 
-			svR = svP + svA;
 
-			//align the multiply-and-add with the output format
-			if(outShift > 0)
-			{
-				svR = svR >> outShift;
-				possibleOutputs = 2;
-			}
-			else
-			{
-				svR = svR << (-outShift);
-				possibleOutputs = 1;
-			}
-
-			// manage two's complement at output
-			if(svR < 0)
-				svR += twoToWR;
-
-			//add only the bits corresponding to the output format
-			svRAux = svR & (twoToWR -1);
-
-			tc->addExpectedOutput("R", svRAux);
-			if(possibleOutputs == 2)
-			{
-				svR++;
-				svR &= (twoToWR -1);
-				tc->addExpectedOutput("R", svR);
-			}
 		}
-		#endif
+		else{  // FAITHFUL ROUNDING
+			mpfr_add(rd, a , p, MPFR_RNDN); // no rounding here
+			mpfr_add(ru, a , p, MPFR_RNDN); // no rounding here
+			//		cerr << "(remove this annoying message) Size estimated to " << size << endl; 
+
+			mpfr_mul_2si (rd, rd, -lsbOut, GMP_RNDN); // conversion back to integer: no rounding here
+			mpfr_mul_2si (ru, ru, -lsbOut, GMP_RNDN); // conversion back to integer: no rounding here
+			mpz_class rdz, ruz;
+			mpfr_get_z (rdz.get_mpz_t(), rd, GMP_RNDD); 			// This is where rounding happens
+			mpfr_get_z (ruz.get_mpz_t(), ru, GMP_RNDU); 			// This is where rounding happens
+			// emulate overflow
+			while(rdz > maxval) {	rdz -= twotowR;  }
+			while(rdz < minval) {	rdz += twotowR; } 
+			while(ruz > maxval) {	ruz -= twotowR;  }
+			while(ruz < minval) {	ruz += twotowR; } 
+
+			if(signedIO) {
+				rdz = signedToBitVector(rdz, wOut);
+				ruz = signedToBitVector(ruz, wOut);
+			}
+
+			tc->addExpectedOutput ("R", rdz);
+			tc->addExpectedOutput ("R", ruz);
+		}
+
+		// free the memory
+		mpfr_clears (x, y, a, p, r, ru, rd, NULL);
+		
 	}
 
 
@@ -482,37 +520,95 @@ namespace flopoco {
 
 	
 	OperatorPtr FixMultAdd::parseArguments(OperatorPtr parentOp, Target *target, std::vector<std::string> &args, UserInterface& ui) {
-		bool signedXY, signedA;
+		bool signedIO;
 		int msbX, lsbX, msbY, lsbY, msbA, lsbA, msbOut, lsbOut;
-		ui.parseBoolean(args, "signedXY", &signedXY);
+		ui.parseBoolean(args, "signedIO", &signedIO);
 		ui.parseInt(args, "msbX", &msbX);
 		ui.parseInt(args, "lsbX", &lsbX);
 		ui.parseInt(args, "msbY", &msbY);
 		ui.parseInt(args, "lsbY", &lsbY);
-		ui.parseBoolean(args, "signedA", &signedA);
 		ui.parseInt(args, "msbA", &msbA);
 		ui.parseInt(args, "lsbA", &lsbA);
 		ui.parseInt(args, "msbOut", &msbOut);
 		ui.parseInt(args, "lsbOut", &lsbOut);
 		return new FixMultAdd(parentOp,target,
-													signedXY, msbX, lsbX,
+													signedIO,
+													msbX, lsbX,
 													msbY, lsbY,
-													signedA, msbA, lsbA,
+													msbA, lsbA,
 													msbOut, lsbOut);
 	}
 
+
+
+
+	TestList FixMultAdd::unitTest(int testLevel)
+	{
+		// the static list of mandatory tests
+		TestList testStateList;
+		vector<pair<string,string>> paramList;
+
+    list<vector<int>> params; // order: msbx lsbx msby lsby msba lsba msbout lsbout
+		// (they will all be tested in 4 combinations of plainVHDL and signedIO)
+    if(testLevel == TestLevel::QUICK)
+    { // The quick tests
+      params = {
+				{3,0, 3,0, 10,0, 11,0}, // exact integer without overflow
+				{3,0, 3,0, 10,0, 10,0}, // exact integer with overflow
+			};
+    }
+    else if(testLevel == TestLevel::SUBSTANTIAL)
+    { // The substantial unit tests
+    }
+    else if(testLevel >= TestLevel::EXHAUSTIVE)
+    { // The substantial unit tests
+    }
+
+    for (auto param : params)
+    {
+      int msbx = param[0];
+      int lsbx = param[1];
+      int msby = param[2];
+      int lsby = param[3];
+      int msba = param[4];
+      int lsba = param[5];
+      int msbout = param[6];
+      int lsbout = param[7];
+      for(int plainvhdl=1; plainvhdl < 2; plainvhdl ++) // TODO update to test the bitheap version
+				{
+					for(int signedio=0; signedio < 2; signedio++)
+						{
+							paramList.push_back(make_pair("plainVHDL", plainvhdl ? "true" : "false"));
+							paramList.push_back(make_pair("signedIO",   signedio ? "true" : "false"));
+							paramList.push_back(make_pair("msbX", to_string(msbx)));
+							paramList.push_back(make_pair("lsbX", to_string(lsbx)));
+							paramList.push_back(make_pair("msbY", to_string(msby)));
+							paramList.push_back(make_pair("lsbY", to_string(lsby)));
+							paramList.push_back(make_pair("msbA", to_string(msba)));
+							paramList.push_back(make_pair("lsbA", to_string(lsba)));
+							paramList.push_back(make_pair("msbOut", to_string(msbout)));
+							paramList.push_back(make_pair("lsbOut", to_string(lsbout)));
+							testStateList.push_back(paramList);
+							paramList.clear();
+						}
+				}
+    }
+		return testStateList;
+	}
+
+
+	
 	template <>
 	const OperatorDescription<FixMultAdd> op_descriptor<FixMultAdd> {
 	    "FixMultAdd", // name
 	    "A generic fixed-point A+X*Y. With so many parameters, it is probably mostly for internal use.",
 	    "BasicInteger", // category
 	    "",		    // see also
-	    "signedXY(bool): signedness of multiplicands X and Y;\
+	    "signedIO(bool): signedness of multiplicands X and Y;\
 		   msbX(int): position of the MSB of multiplicand X;\
 		   lsbX(int): position of the LSB of multiplicand X;\
 		   msbY(int): position of the MSB of multiplicand Y;\
 		   lsbY(int): position of the LSB of multiplicand Y;\
-		   signedA(bool): signedness of addend A;\
 		   msbA(int): position of the MSB of addend A;\
 		   lsbA(int): position of the LSB of addend A;\
        msbOut(int): position of the MSB of output;\

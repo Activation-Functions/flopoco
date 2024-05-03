@@ -7,7 +7,7 @@ namespace flopoco {
 	TilingStrategy::TilingStrategy(int wX, int wY, int wOut, bool signedIO, BaseMultiplierCollection *baseMultiplierCollection) :
 			wX(wX), wY(wY), wOut(wOut), signedIO(signedIO), baseMultiplierCollection(baseMultiplierCollection), target(baseMultiplierCollection->getTarget())
 	{
-
+		//		cerr << "********************* TilingStrategy wOut=" << wOut << endl;
 	}
 
 	void TilingStrategy::printSolution()
@@ -25,7 +25,7 @@ namespace flopoco {
 
 	}
 
-	void TilingStrategy::printSolutionTeX(ofstream &outstream, int wTrunc, bool triangularStyle)
+	void TilingStrategy::printSolutionTeX(ofstream &outstream, bool triangularStyle)
 	{
 		cerr << "Dumping multiplier schema in multiplier.tex\n";
 		outstream << "\\documentclass{standalone}\n\\usepackage{tikz}\n\n\\begin{document}\n\\begin{tikzpicture}[yscale=-1,xscale=-1]\n";
@@ -59,14 +59,14 @@ namespace flopoco {
 				float endY =  (offset >= wY) ? wY : offset + 0.5;
 				outstream << "\\draw[ultra thick, green] (" << offset << ".5, " << startY << ") -- (" << offset << ".5, " << endY << ");" << endl;
 			}
-
+#if 0 // temporarily removed by Florent while I make sense of wTrunc
 			if (wTrunc > offset) {
 				int truncOffset = IntMultiplier::prodsize(wX, wY, true, true) - wTrunc;
 				float startY = (wX <= truncOffset) ? (truncOffset - wX) + 0.5  : 0;
 				float endY =  (truncOffset >= wY) ? wY : truncOffset + 0.5;
 				outstream << "\\draw[ultra thick, brown] (" << truncOffset << ".5, " << startY << ") -- (" << truncOffset << ".5, " << endY << ");" << endl;
 			}
-
+#endif
 			for (size_t i = 0 ; i < static_cast<size_t>(wX) ; ++i) {
 				for (size_t j = 0 ; j < static_cast<size_t>(wY) ; ++j) {
 					string color = (j+i >= (size_t)offset) ? "black" : "purple";
@@ -114,7 +114,7 @@ namespace flopoco {
 		outstream << "\\end{tikzpicture}\n\\end{document}\n";
 	}
 
-	void TilingStrategy::printSolutionSVG(ofstream &outstream, int wTrunc, bool triangularStyle)
+	void TilingStrategy::printSolutionSVG(ofstream &outstream, bool triangularStyle)
 	{
 		string colour[] = { "Red", "Green", "Blue", "Cyan", "Magenta", "Yellow", "Violet", "Lime", "Orange", "Pink", "Beige" };
 		int xmin=0, ymin=0,xmax=0, ymax=0, col=0;

@@ -10,8 +10,9 @@ pages:
   artifacts:
     paths:
       - public
-  only:
+  only:    
     refs:
       - master
+      - merge_requests
     changes:
       - doc/web/**/*
