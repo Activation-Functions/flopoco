@@ -160,8 +160,13 @@ namespace flopoco{
 			REPORT(LogLevel::VERBOSE, "sizeExpZm1=" << sizeExpZm1);
 		}
 
+		if (IEEEFPMode) {
+			int Xmin = - floor( (-(1<<(wE-1))+2-wF) * log(2.0));
+			MSB = floor(log2(Xmin-1));
+		} else {
+			MSB = wE-2;
+		}
 
-		MSB = wE-2;
 		LSB = -wF-g;
 
 	}

@@ -145,7 +145,7 @@ namespace flopoco{
 
 		// left shift
 		vhdl << tab  << "-- Partial overflow detection" << endl;
-		int maxshift = wE-2+ wF+g; // maxX < 2^(wE-1);
+		int maxshift = MSB + wF+g; // maxX < 2^(wE-1)  when FPNumber, maybe more when IEEE;
 		vhdl << tab  << declare("maxShift", wE+1) << " <= conv_std_logic_vector(" << maxshift << ", wE+1);  -- wE-2 + wF+g" << endl;
 		vhdl << tab  << declare(getTarget()->adderDelay(wE+1),"overflow0") << " <= not shiftVal(wE+1) when shiftVal(wE downto 0) > maxShift else '0';" << endl;
 
@@ -158,9 +158,9 @@ namespace flopoco{
 								"R=>fixX0");
 
 		int sizeShiftOut=maxshift + wFIn+1;
-		int sizeXfix = wE-2 +wF+g +1; // still unsigned; msb=wE-1; lsb = -wF-g
+		int sizeXfix = MSB +wF+g +1; // still unsigned; msb=wE-1; lsb = -wF-g
 
-		vhdl << tab << declareFixPoint("ufixX", false, wE-2, -wF-g) << " <= " << " unsigned(fixX0" <<
+		vhdl << tab << declareFixPoint("ufixX", false, MSB, -wF-g) << " <= " << " unsigned(fixX0" <<
 			range(sizeShiftOut -1, sizeShiftOut- sizeXfix) <<
 			") when resultWillBeOne='0' else " << zg(sizeXfix) <<  ";" << endl;
 
@@ -171,6 +171,7 @@ namespace flopoco{
 		param << " d=" << d;
 		param << " k=" << k;
 		param << " g=" << g;
+		param << " IEEEFPMode=" << 1;
 
 		inmap << "ufixX_i=>ufixX,";
 		inmap << "XSign=>XSign";
@@ -197,7 +198,12 @@ namespace flopoco{
 
 		vhdl << tab << declare("needNoNorm") << " <= expY(" << sizeExpY-1 << ");" << endl;
 		vhdl << tab << declare("expY_norm", sizeExpY) << "<= expY" << range(sizeExpY-1, 0) << " when needNoNorm='1' else expY" << range(sizeExpY-2, 0) << "& \"0\";" << endl;
-		vhdl << tab << declare("K_extended", wE+2) << "<= K(" << wE << ") & K;" << endl;
+
+		if (MSB+3 == wE+1) {// this doesn't seem very robust
+			vhdl << tab << declare("K_extended", wE+2) << "<= K(" << wE << ") & K;" << endl;
+		} else {
+			vhdl << tab << declare("K_extended", wE+2) << "<=  K;" << endl;
+		}
 		// If needNoNorm=0 then  E = K + bias -1 else E = K+bias
 		// add +1 because we need to shift if E=0
 		vhdl << tab << declare("preshiftSubnormalAmountMin1", wE+2) << "<= - ( signed(K_extended) + signed(conv_std_logic_vector(" << bias << ","<< wE+2 << ")) - 1 -1);" << endl;
@@ -237,13 +243,12 @@ namespace flopoco{
 		*/
 
 		vhdl << tab << declare("roundBit") << " <= prepreRoundBiasSig(" << sizeExpY-2-wF << ")  when notSubnormal = '0' else expY(" << sizeExpY-2-wF << ")  when needNoNorm = '1'    else expY(" <<  sizeExpY-3-wF << ") ;" << endl;
-		vhdl << tab << declare("roundNormAddend", wE+wF+2) << " <= K(" << wE << ") & K & "<< rangeAssign(wF-1, 1, "'0'") << " & roundBit when notSubnormal='1' else " << rangeAssign(wE+2+wF-1, 1, "'0'") << " & roundBit;" << endl;
-
+		vhdl << tab << declare("roundNormAddend", wE+wF+2) << " <= K_extended & "<< rangeAssign(wF-1, 1, "'0'") << " & roundBit when notSubnormal='1' else " << rangeAssign(wE+2+wF-1, 1, "'0'") << " & roundBit;" << endl;
 
 		newInstance("IntAdder",
 								"roundedExpSigOperandAdder",
 								"wIn=" + to_string(wE+wF+2),
-								"X=>preRoundBiasSig,Y=>roundNormAddend",
+									"X=>preRoundBiasSig,Y=>roundNormAddend",
 								"R=>roundedExpSigRes",
 								"Cin=>'0'");
 
@@ -415,6 +420,16 @@ namespace flopoco{
 		tc = new TestCase(this);
 		tc->addComment("The first number whose exp flushes to zero");
 		mpfr_nextbelow(y);
+		fy = new IEEENumber(wE, wF, y);
+		tc->addIEEEInput("X", *fy);
+		emulate(tc);
+		tcl->add(tc);
+		delete(fy);
+
+		tc = new TestCase(this);
+		tc->addComment("The number before the last number whose exp is nonzero");
+		mpfr_nextabove(y);
+		mpfr_nextabove(y);
 		fy = new IEEENumber(wE, wF, y);
 		tc->addIEEEInput("X", *fy);
 		emulate(tc);
