@@ -30,13 +30,14 @@ namespace flopoco{
 
 	ExpArchitecture::ExpArchitecture(int blockRAMSize,
 							 int wE_, int wF_,
-							 int k_, int d_, int guardBits, bool fullInput
+							 int k_, int d_, int guardBits, bool fullInput, bool IEEEFPMode_
 							 ):
 		wE(wE_),
 		wF(wF_),
 		k(k_),
 		d(d_),
-		g(guardBits)
+		g(guardBits),
+		IEEEFPMode(IEEEFPMode_)
 	{
 
 
@@ -177,6 +178,7 @@ namespace flopoco{
 	bool ExpArchitecture::getExpYTabulated() { return this->expYTabulated; }
 	bool ExpArchitecture::getUseTableExpZm1() { return this->useTableExpZm1; }
 	bool ExpArchitecture::getUseTableExpZmZm1() { return this->useTableExpZmZm1; }
+	bool ExpArchitecture::getIEEEFPMode() { return this->IEEEFPMode; }
 	int ExpArchitecture::getSizeY() { return this->sizeY; }
 	int ExpArchitecture::getSizeZ() { return this->sizeZ; }
 	int ExpArchitecture::getSizeExpY() { return this->sizeExpY; }

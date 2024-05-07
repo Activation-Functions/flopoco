@@ -18,7 +18,7 @@
 #include <sstream>
 
 #include "flopoco/ConstMult/FixRealKCM.hpp"
-#include "flopoco/ExpLog/IEEEExp.hpp"
+#include "flopoco/ExpLog/IEEEFPExp.hpp"
 #include "flopoco/FixFunctions/FixFunctionByPiecewisePoly.hpp"
 #include "flopoco/FixFunctions/FixFunctionByTable.hpp"
 #include "flopoco/IntAddSubCmp/IntAdder.hpp"
@@ -36,7 +36,7 @@ using namespace std;
 namespace flopoco{
 
 
-	IEEEExp::IEEEExp(
+	IEEEFPExp::IEEEFPExp(
 							 OperatorPtr parentOp, Target* target,
 							 int wE_, int wF_,
 							 int k_, int d_, int guardBits, bool fullInput
@@ -48,15 +48,15 @@ namespace flopoco{
 		// Paperwork
 
 		ostringstream name;
-		name << "IEEEExp_" << wE << "_" << wF ;
+		name << "IEEEFPExp_" << wE << "_" << wF ;
 		setNameWithFreqAndUID(name.str());
 
 		setCopyrightString("F. de Dinechin, Bogdan Pasca (2008-2021)");
-		srcFileName="IEEEExp";
+		srcFileName="IEEEFPExp";
 
 		int blockRAMSize = getTarget()->sizeOfMemoryBlock();
 
-		ExpArchitecture* myExp = new ExpArchitecture(blockRAMSize, wE_, wF_, k_, d_, guardBits, fullInput);
+		ExpArchitecture* myExp = new ExpArchitecture(blockRAMSize, wE_, wF_, k_, d_, guardBits, fullInput, true);
 
 		// Various architecture parameter to be determined before attempting to
 		// build the architecture
@@ -98,9 +98,9 @@ namespace flopoco{
 		int bias = (1<<(wE-1))-1;
 		if(bias < wF+g){
 			ostringstream e;
-			e << "ERROR in IEEEExp, unable to build architecture if wF+g > 2^(wE-1)-1." <<endl;
+			e << "ERROR in IEEEFPExp, unable to build architecture if wF+g > 2^(wE-1)-1." <<endl;
 			e << "      Try increasing wE." << endl;
-			e << "      If you really need IEEEExp to work with such values, please report this as a bug :)" << endl;
+			e << "      If you really need IEEEFPExp to work with such values, please report this as a bug :)" << endl;
 			throw e.str();
 		}
 
@@ -278,13 +278,13 @@ namespace flopoco{
 
 	}
 
-	IEEEExp::~IEEEExp()
+	IEEEFPExp::~IEEEFPExp()
 	{
 	}
 
 
 
-	void IEEEExp::emulate(TestCase * tc)
+	void IEEEFPExp::emulate(TestCase * tc)
 	{
 		
 		/* Get I/O values */
@@ -313,7 +313,7 @@ namespace flopoco{
 
 
 
-	void IEEEExp::buildStandardTestCases(TestCaseList* tcl){
+	void IEEEFPExp::buildStandardTestCases(TestCaseList* tcl){
 		TestCase *tc;
 
 		mpfr_t x, y;
@@ -460,7 +460,7 @@ namespace flopoco{
 	// All the remaining ones test numbers with exponents between -wF-3 and wE-2,
 	// For numbers outside this range, exp over/underflows or flushes to 1.
 
-	TestCase* IEEEExp::buildRandomTestCase(int i){
+	TestCase* IEEEFPExp::buildRandomTestCase(int i){
 		TestCase *tc;
 		tc = new TestCase(this);
 		mpz_class x;
@@ -486,7 +486,7 @@ namespace flopoco{
 
 
 
-		OperatorPtr IEEEExp::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
+		OperatorPtr IEEEFPExp::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 			int wE, wF, k, d, g;
 			bool fullInput;
 			ui.parseStrictlyPositiveInt(args, "wE", &wE);
@@ -495,12 +495,12 @@ namespace flopoco{
 			ui.parsePositiveInt(args, "d", &d);
 			ui.parseInt(args, "g", &g);
 			ui.parseBoolean(args, "fullInput", &fullInput);
-			return new IEEEExp(parentOp, target, wE, wF, k, d, g, fullInput);
+			return new IEEEFPExp(parentOp, target, wE, wF, k, d, g, fullInput);
 		}
 
 
 
-		TestList IEEEExp::unitTest(int testLevel)
+		TestList IEEEFPExp::unitTest(int testLevel)
 		{
 		// the static list of mandatory tests
 			TestList testStateList;
@@ -561,8 +561,8 @@ namespace flopoco{
 	}
 
 	template <>
-	const OperatorDescription<IEEEExp> op_descriptor<IEEEExp> {
-	    "IEEEExp", // name
+	const OperatorDescription<IEEEFPExp> op_descriptor<IEEEFPExp> {
+	    "IEEEFPExp", // name
 	    "A faithful IEEE floating-point exponential function.",
 	    "ElementaryFunctions",
 	    "", // seeAlso
