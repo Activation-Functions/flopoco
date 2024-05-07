@@ -1,0 +1,54 @@
+--- /home/pierre/Repositories/flopoco/scalp/CMakeLists.txt	2024-05-03 14:19:26.660149963 +0200
++++ CMakeLists.txt	2024-05-03 15:48:24.573704780 +0200
+@@ -54,10 +54,6 @@
+ #################
+ # Find Packages #
+ #################
+-find_package(Gurobi)
+-find_package(CPLEX)
+-find_package(SCIP)
+-find_package(LPSolve)
+ 
+ ###############################
+ # Project Include Directories #
+@@ -68,7 +64,7 @@
+ # Execute Options #
+ ###################
+ # Deactivate C++11-abi?
+-if(OLD_CXX_ABI) 
++if(OLD_CXX_ABI)
+   add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
+ endif()
+ 
+@@ -124,6 +120,7 @@
+ #####################
+ # Gurobi
+ if(USE_GUROBI)
++  find_package(Gurobi)
+   add_library(ScaLP-Gurobi ${LIBRARY_TYPE} src/ScaLP/SolverBackend/SolverGurobi.cpp)
+   include_directories(ScaLP-Gurobi PUBLIC ${GUROBI_INCLUDE_DIRS})
+   target_link_libraries(ScaLP-Gurobi ${GUROBI_LIBRARIES} ScaLP)
+@@ -133,6 +130,7 @@
+ 
+ # CPLEX
+ if(USE_CPLEX)
++  find_package(CPLEX)
+   add_library(ScaLP-CPLEX ${LIBRARY_TYPE} src/ScaLP/SolverBackend/SolverCPLEX.cpp)
+   include_directories(ScaLP-CPLEX PUBLIC ${CPLEX_INCLUDE_DIRS})
+   target_link_libraries(ScaLP-CPLEX ${CPLEX_LIBRARIES} ScaLP)
+@@ -142,6 +140,7 @@
+ 
+ # SCIP
+ if(USE_SCIP)
++  find_package(SCIP)
+   add_library(ScaLP-SCIP ${LIBRARY_TYPE} src/ScaLP/SolverBackend/SolverSCIP.cpp)
+   include_directories(ScaLP-SCIP PUBLIC ${SCIP_INCLUDE_DIRS})
+   target_link_libraries(ScaLP-SCIP ${SCIP_LIBRARIES} ScaLP)
+@@ -151,6 +150,7 @@
+ 
+ # LPSolve
+ if(USE_LPSOLVE)
++    find_package(LPSolve)
+   add_library(ScaLP-LPSolve ${LIBRARY_TYPE} src/ScaLP/SolverBackend/SolverLPSolve.cpp)
+   include_directories(ScaLP-LPSolve PUBLIC ${LPSOLVE_INCLUDE_DIRS})
+   target_link_libraries(ScaLP-LPSolve ${LPSOLVE_LIBRARIES} ScaLP)
