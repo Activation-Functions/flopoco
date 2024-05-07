@@ -53,6 +53,7 @@ namespace flopoco{
 		* @param fullInput boolean, if true input mantissa is of size wE+wF+1,
 		*                  so that  input shift doesn't padd it with 0s (useful
 		*                  for FPPow)
+		* @param IEEEFPMode boolean, if true then output is an IEEE number (with subnormal)
 		*/
 		Exp(
 					OperatorPtr parentOp,
@@ -62,7 +63,8 @@ namespace flopoco{
 					int k,
 					int d,
 					int guardBits=-1,
-					bool fullInput=false);
+					bool fullInput=false,
+					bool IEEEFPMode=false);
 
 		~Exp();
 

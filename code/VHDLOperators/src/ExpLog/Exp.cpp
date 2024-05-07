@@ -229,7 +229,7 @@ namespace flopoco{
 	Exp::Exp(
 							 OperatorPtr parentOp, Target* target,
 							 int wE_, int wF_,
-							 int k_, int d_, int guardBits, bool fullInput
+							 int k_, int d_, int guardBits, bool fullInput, bool IEEEFPMode
 							 ):
 		Operator(parentOp, target),
 		wE(wE_),
@@ -246,7 +246,7 @@ namespace flopoco{
 
 		int blockRAMSize = getTarget()->sizeOfMemoryBlock();
 
-		ExpArchitecture* myExp = new ExpArchitecture(blockRAMSize, wE_, wF_, k_, d_, guardBits, fullInput);
+		ExpArchitecture* myExp = new ExpArchitecture(blockRAMSize, wE_, wF_, k_, d_, guardBits, fullInput, IEEEFPMode);
 
 		// Various architecture parameter to be determined before attempting to
 		// build the architecture
@@ -267,8 +267,7 @@ namespace flopoco{
 		int sizeMultIn = myExp->getSizeMultIn();
 		int MSB = myExp->getMSB();
 		int LSB = myExp->getLSB();
-		bool IEEEFPMode = myExp->getIEEEFPMode();
-
+		
 		// TODO add possibility to change MSB and LSB
 
 		// nY is in [-1/2, 1/2]
@@ -283,12 +282,12 @@ namespace flopoco{
 		addInput("XSign");
 
 		addOutput("expY",sizeExpY);
-		addOutput("K",wE+1);
+		addOutput("K", MSB+3); // not sure this is really what we want
 
 		//addFPInput("X", wE, wFIn);
 		//addFPOutput("R", wE, wF);
 
-		vhdl << declareFixPoint("ufixX", false, wE-2, -wF-g) << " <= unsigned(ufixX_i);" << endl;
+		vhdl << declareFixPoint("ufixX", false, MSB, -wF-g) << " <= unsigned(ufixX_i);" << endl;
 
 		addConstant("wE", "positive", wE);
 		addConstant("wF", "positive", wF);
@@ -314,7 +313,7 @@ namespace flopoco{
 			"); -- truncation, error 2^-3" << endl;
 #else
 		int lsbXforFirstMult = -3;
-		int msbXforFirstMult = wE-2;
+		int msbXforFirstMult = MSB;
 		resizeFixPoint("xMulIn", "ufixX", msbXforFirstMult, lsbXforFirstMult);
 #endif
 
@@ -335,8 +334,8 @@ namespace flopoco{
 
 		// Now I have two things to do in parallel: compute K, and compute absKLog2
 		// First compute K
-		vhdl << tab << declare(getTarget()->adderDelay(wE+1),
-													 "minusAbsK",wE+1) << " <= " << rangeAssign(wE, 0, "'0'")<< " - ('0' & absK);"<<endl;
+		vhdl << tab << declare(getTarget()->adderDelay(MSB+3),
+													 "minusAbsK",MSB+3) << " <= " << rangeAssign(MSB+3-1, 0, "'0'")<< " - ('0' & absK);"<<endl;
 		// The synthesizer should be able to merge the addition and this mux,
 		//vhdl << tab << declare("K",wE+1) << " <= minusAbsK when  XSign='1'   else ('0' & absK);"<<endl;
 		vhdl << tab << "K <= minusAbsK when  XSign='1'   else ('0' & absK);"<<endl;
@@ -347,7 +346,7 @@ namespace flopoco{
 		newInstance("FixRealKCM",
 								"MulLog2",
 								// unsigned here, the conversion to signed comes later
-								 "signedIn=0 msbIn=" + to_string(wE-1)
+								 "signedIn=0 msbIn=" + to_string(MSB+1) // always msb+1 ? TODO check
 								+ " lsbIn=0"
 								+ " lsbOut=" + to_string(-wF-g)
 								+ " constant=log(2)"
@@ -637,14 +636,15 @@ namespace flopoco{
 
 		OperatorPtr Exp::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {
 			int wE, wF, k, d, g;
-			bool fullInput;
+			bool fullInput, IEEEFPMode;
 			ui.parseStrictlyPositiveInt(args, "wE", &wE);
 			ui.parseStrictlyPositiveInt(args, "wF", &wF);
 			ui.parsePositiveInt(args, "k", &k);
 			ui.parsePositiveInt(args, "d", &d);
 			ui.parseInt(args, "g", &g);
+			ui.parseBoolean(args, "IEEEFPMode", &IEEEFPMode);
 			ui.parseBoolean(args, "fullInput", &fullInput);
-			return new Exp(parentOp, target, wE, wF, k, d, g, fullInput);
+			return new Exp(parentOp, target, wE, wF, k, d, g, fullInput, IEEEFPMode);
 		}
 
 	template <>
@@ -658,6 +658,7 @@ namespace flopoco{
          d(int)=0: degree of the polynomial. 0 choses a sensible default.; \
          k(int)=0: input size to the range reduction table, should be between 5 and 15. 0 choses a sensible default.;\
          g(int)=-1: number of guard bits;\
+				 IEEEFPMode(bool)=0: true when the output format is destined to be IEEEFP;\
          fullInput(bool)=0: input a mantissa of wF+wE+g bits (useful mostly for FPPow)",
 	    "Parameter d and k control the DSP/RamBlock tradeoff. In both "
 	    "cases, a value of 0 choses a sensible default. Parameter g is "
