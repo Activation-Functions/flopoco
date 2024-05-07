@@ -48,7 +48,8 @@ namespace flopoco{
 					int k,
 					int d,
 					int guardBits=-1,
-					bool fullInput=false);
+					bool fullInput=false,
+					bool IEEEFPMode=false);
 
 		~ExpArchitecture();
 
@@ -60,6 +61,7 @@ namespace flopoco{
 		bool getExpYTabulated();
 		bool getUseTableExpZm1(); /**< Use  table to approximate expZ-1 */
 		bool getUseTableExpZmZm1(); /**< Use table to approximate expZ-Z-1 */
+		bool getIEEEFPMode();
 		int getSizeY(); /**< Size of input */
 		int getSizeZ(); /**< Size of the tabulated part of the input */
 		int getSizeExpY(); /**< Size of the exponential of input*/
@@ -82,6 +84,7 @@ namespace flopoco{
 		bool expYTabulated; /**< Is Y fully tabulated */
 		bool useTableExpZm1; /**< Use  table to approximate expZ-1 */
 		bool useTableExpZmZm1; /**< Use table to approximate expZ-Z-1 */
+		bool IEEEFPMode; /** Using IEEE mode, need to know for subnormals*/
 		int sizeY; /**< Size of input */
 		int sizeZ; /**< Size of the tabulated part of the input */
 		int sizeExpY; /**< Size of the exponential of input*/

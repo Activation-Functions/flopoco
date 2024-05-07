@@ -267,6 +267,7 @@ namespace flopoco{
 		int sizeMultIn = myExp->getSizeMultIn();
 		int MSB = myExp->getMSB();
 		int LSB = myExp->getLSB();
+		bool IEEEFPMode = myExp->getIEEEFPMode();
 
 		// TODO add possibility to change MSB and LSB
 

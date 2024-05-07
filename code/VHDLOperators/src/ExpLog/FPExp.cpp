@@ -71,7 +71,7 @@ namespace flopoco{
 
 		int blockRAMSize = getTarget()->sizeOfMemoryBlock();
 
-		ExpArchitecture* myExp = new ExpArchitecture(blockRAMSize, wE_, wF_, k_, d_, guardBits, fullInput);
+		ExpArchitecture* myExp = new ExpArchitecture(blockRAMSize, wE_, wF_, k_, d_, guardBits, fullInput, false);
 
 		// Various architecture parameter to be determined before attempting to
 		// build the architecture
