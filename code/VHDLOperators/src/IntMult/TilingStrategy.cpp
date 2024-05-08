@@ -4,12 +4,29 @@
 namespace flopoco {
 
 
-	TilingStrategy::TilingStrategy(int wX, int wY, int wOut, bool signedIO, BaseMultiplierCollection *baseMultiplierCollection) :
-			wX(wX), wY(wY), wOut(wOut), signedIO(signedIO), baseMultiplierCollection(baseMultiplierCollection), target(baseMultiplierCollection->getTarget())
+	TilingStrategy::TilingStrategy(int wX, int wY, bool signedIO, mpz_class errorBound, BaseMultiplierCollection *baseMultiplierCollection) :
+			wX(wX), wY(wY), signedIO(signedIO), errorBound(errorBound),  baseMultiplierCollection(baseMultiplierCollection), target(baseMultiplierCollection->getTarget())
 	{
-		//		cerr << "********************* TilingStrategy wOut=" << wOut << endl;
 	}
 
+
+	list<TilingStrategy::mult_tile_t>& TilingStrategy::getSolution()
+	{
+		return solution;
+	}
+
+	mpz_class TilingStrategy::getErrorCorrectionConstant() {
+		return errorCorrectionConstant;
+	}
+
+	int TilingStrategy::getwX() {
+		return wX;
+	}
+	int TilingStrategy::getwY() {
+		return wY;
+	}
+
+	
 	void TilingStrategy::printSolution()
 	{
 		for (auto& tile : solution)
@@ -25,7 +42,7 @@ namespace flopoco {
 
 	}
 
-	void TilingStrategy::printSolutionTeX(ofstream &outstream, bool triangularStyle)
+	void TilingStrategy::printSolutionTeX(ofstream &outstream, int wOut, bool triangularStyle)
 	{
 		cerr << "Dumping multiplier schema in multiplier.tex\n";
 		outstream << "\\documentclass{standalone}\n\\usepackage{tikz}\n\n\\begin{document}\n\\begin{tikzpicture}[yscale=-1,xscale=-1]\n";
@@ -51,7 +68,6 @@ namespace flopoco {
 					xend << ", " << ystart << ") -- ("<< xend + deltaY <<", "<< yend<<") -- ("<< xstart + deltaY <<", "<< yend <<")--cycle;\n";
 				cerr << "Got one tile at (" << xstart << ", " << ystart << ") of size (" << parametrization.getTileXWordSize() << ", " << parametrization.getTileYWordSize() << ").\n";
 			}
-
 			int offset = IntMultiplier::prodsize(wX, wY, true, true) - wOut;
 
 			if (offset > 0) {
@@ -114,7 +130,7 @@ namespace flopoco {
 		outstream << "\\end{tikzpicture}\n\\end{document}\n";
 	}
 
-	void TilingStrategy::printSolutionSVG(ofstream &outstream, bool triangularStyle)
+	void TilingStrategy::printSolutionSVG(ofstream &outstream, int wOut, bool triangularStyle)
 	{
 		string colour[] = { "Red", "Green", "Blue", "Cyan", "Magenta", "Yellow", "Violet", "Lime", "Orange", "Pink", "Beige" };
 		int xmin=0, ymin=0,xmax=0, ymax=0, col=0;

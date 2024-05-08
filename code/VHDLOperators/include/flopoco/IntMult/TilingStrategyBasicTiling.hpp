@@ -10,8 +10,8 @@ class TilingStrategyBasicTiling : public TilingStrategy {
 		TilingStrategyBasicTiling(
 				unsigned int wX,
 				unsigned int wY,
-				unsigned int wOut,
 				bool signedIO,
+				mpz_class errorBudget,
 				BaseMultiplierCollection* bmc,
 				base_multiplier_id_t prefered_multiplier,
 				float occupation_threshold,
