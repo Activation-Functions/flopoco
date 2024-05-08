@@ -319,7 +319,7 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 		
 		if (truncated) {
 			//Perform tiling from left to right to increase the number of full multipliers
-			unsigned int actualLSB, keepBits;
+			unsigned int keepBits; // we will do nothing of it, I think
 			IntMultiplier::computeTruncMultParams(wX, wY, errorBound,
 																						actualLSB, keepBits, errorCorrectionConstant);
 
