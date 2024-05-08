@@ -23,10 +23,11 @@ namespace flopoco {
 		void printSolutionTeX(ofstream &outstream, int wOut, bool triangularStyle=false);
 		void printSolutionSVG(ofstream &outstream, int wOut, bool triangularStyle=false);
 
-		list<mult_tile_t>& getSolution();
-		mpz_class  getErrorCorrectionConstant();
 		int getwX();
 		int getwY();
+		list<mult_tile_t>& getSolution();
+		mpz_class  getErrorCorrectionConstant();
+		unsigned int getActualLSB();
 		
 	protected:
 		/*!
@@ -43,6 +44,7 @@ namespace flopoco {
 		int wY;                         /**< the width for Y after possible swap such that wX>wY */
 		bool signedIO;                   /**< true if the IOs are two's complement */
 		mpz_class errorBound;  /** the error bound allowed for this tiling, expressed in ulps of the exact result */
+		unsigned int actualLSB;  /** this tiling will add bits only on columns >= actualLSB. 0 for an exact multiplier, >0 for a truncated one. This replaces guardBits, which can be deduced from it */
 		mpz_class errorCorrectionConstant;       /** the constant to add to the bit heap to recenter the truncation error, expressed in ulps of the exact result. Should be at most errorBound */
 		mpz_class error;       /** the error actually achieved by the tiling, , expressed in ulps of the exact result. Should be at most errorBound */
 		BaseMultiplierCollection* baseMultiplierCollection;

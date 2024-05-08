@@ -10,23 +10,14 @@ namespace flopoco {
 	}
 
 
-	list<TilingStrategy::mult_tile_t>& TilingStrategy::getSolution()
-	{
-		return solution;
-	}
+	// all the getters
+	int TilingStrategy::getwX() {	return wX; }
+	int TilingStrategy::getwY() {	return wY; }
+	list<TilingStrategy::mult_tile_t>& TilingStrategy::getSolution() { return solution;	}
+	mpz_class TilingStrategy::getErrorCorrectionConstant() { return errorCorrectionConstant; }
+	unsigned int  TilingStrategy::getActualLSB(){ return actualLSB;	}
 
-	mpz_class TilingStrategy::getErrorCorrectionConstant() {
-		return errorCorrectionConstant;
-	}
-
-	int TilingStrategy::getwX() {
-		return wX;
-	}
-	int TilingStrategy::getwY() {
-		return wY;
-	}
-
-	
+	// visualization methods
 	void TilingStrategy::printSolution()
 	{
 		for (auto& tile : solution)

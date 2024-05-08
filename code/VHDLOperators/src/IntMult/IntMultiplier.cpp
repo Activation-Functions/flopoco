@@ -47,6 +47,90 @@ using namespace std;
 
 namespace flopoco {
 
+
+
+	
+
+	
+	IntMultiplier::IntMultiplier (Operator *parentOp, Target* target_, int wX_, int wY_, int wOut_, bool signedIO_, int maxDSP, bool superTiles, bool use2xk, bool useirregular, bool useLUT, bool useKaratsuba, bool useGenLUT, bool useBooth, int beamRange, bool optiTrunc, bool minStages, bool squarer):
+		Operator ( parentOp, target_ ),wX(wX_), wY(wY_), wOut(wOut_),signedIO(signedIO_),  squarer(squarer)
+	{
+		srcFileName = "IntMultiplier";
+		setCopyrightString("Martin Kumm, Florent de Dinechin, Kinga Illyes, Bogdan Popa, Bogdan Pasca, 2012-");
+		
+		dspOccupationThreshold = target_->unusedHardMultThreshold();
+		bool useDSP = target_->useHardMultipliers();
+		
+		
+		wFullP = prodsize(wX, wY, signedIO_, signedIO_);
+		if (wOut == 0 || wFullP < wOut) {
+			wOut = wFullP;
+		}
+		ostringstream name, trunc_info;
+		name << "IntMultiplier_"<< wX << "x" << wY<< "_"<< wOut;
+		setNameWithFreqAndUID(name.str());
+		
+		// the addition operators need the ieee_std_signed/unsigned libraries
+		useNumericStd();
+		
+		multiplierUid = parentOp->getNewUId();
+
+		string xname="X";
+		string yname="Y";
+
+		// Set up the IO signals
+		addInput(xname, wX, true);
+		addInput(yname, wY, true);
+		addOutput("R", wOut, true);
+
+		// The larger of the two inputs
+		vhdl << tab << declare(addUID("XX"), wX, true) << " <= " << xname << " ;" << endl;
+		vhdl << tab << declare(addUID("YY"), wY, true) << " <= " << yname << " ;" << endl;
+
+		if(target_->plainVHDL()) {
+			vhdl << tab << declareFixPoint("XX",signedIO,-1, -wX) << " <= " << (signedIO?"signed":"unsigned") << "(" << xname <<");" << endl;
+			vhdl << tab << declareFixPoint("YY",signedIO,-1, -wY) << " <= " << (signedIO?"signed":"unsigned") << "(" << yname <<");" << endl;
+			vhdl << tab << declareFixPoint("RR",signedIO,-1, -wX-wY) << " <= XX*YY;" << endl;
+			vhdl << tab << "R <= std_logic_vector(RR" << range(wX+wY-1, wX+wY-wOut) << ");" << endl;
+
+			return;
+		}
+		
+		BitHeap* bitHeap = new BitHeap(this, wFullP);
+		
+		// Current status is: exact multipliers work.
+		// TODO compute the error correction constant and understand what truncated tiling does.
+
+		// error budget is one half-ulp, and there is also one half-ulp for final rounding
+		int lsbOut = wFullP - wOut;
+		mpz_class errorBudget = 0;
+		if(wOut<wFullP) {
+			errorBudget = mpz_class(1) << (lsbOut-1);
+		}
+		REPORT(LogLevel::DEBUG,  " errorBudget=" << errorBudget);
+
+		// calling the virtual constructor that does all the work
+		auto tilingStrategy = addToExistingBitHeap(bitHeap,  xname,  yname, errorBudget, 0);
+		
+		if (dynamic_cast<CompressionStrategy*>(tilingStrategy)) { // for the combined tiling+compression, currently disabled  
+			REPORT(LogLevel::DEBUG,  "Class is derived from CompressionStrategy, passing result for compressor tree.");
+			bitHeap->startCompression(dynamic_cast<CompressionStrategy*>(tilingStrategy));
+		}
+		else { // normal process, tiling then compression
+			// Add the rounding bit for a faithfully rounded truncated multiplier  
+			if (wOut<wFullP) {
+				bitHeap->addConstantOneBit(lsbOut-1);
+			}
+			bitHeap->startCompression();
+		}
+		vhdl << tab << "R" << " <= " << bitHeap->getSumName() << range(wFullP-1, wFullP-wOut) << ";" << endl;
+		delete bitHeap;	
+		delete tilingStrategy;
+
+	}
+
+
+	// the virtual multiplier method
 	TilingStrategy*	IntMultiplier::addToExistingBitHeap(BitHeap* bh, string xname, string yname, mpz_class errorBudget, int exactProductLSBPosition)
 	{
 		OperatorPtr op=bh->getOp();
@@ -71,28 +155,7 @@ namespace flopoco {
 
 		// from now on we switch to the integer-multiplier point of view of the Fulda code
 		int wFullP = prodsize(wX, wY, signedX, signedY);
-		unsigned actualLSB; // the position of the last column on which we have bits
-		unsigned lastColumnKeepBits; // the number of bits to keep on the last column
-		mpz_class centerErrConstant; // recentering constant to add to the bit heap
 
-		// TODO check: is this call really useful? It must be done by tilingStrategy anyway
-		computeTruncMultParams(wX, wY, errorBudget, actualLSB, lastColumnKeepBits, centerErrConstant);
-		REPORT(LogLevel::MESSAGE, "errorBudget=" << errorBudget << " actualLSB=" << actualLSB << "  lastColumnKeepBits=" << lastColumnKeepBits << "  centerErrConstant=" << centerErrConstant);
-		
-		// Sanity check: is the bit heap large enough? (another option would be to silently enlarge it)
-		if(bh->lsb > lsbPfull + actualLSB) {
-			ostringstream e;
-			e << "In IntMultiplier::addToExistingBitHeap, we need a bit heap up to LSB=" << lsbPfull + actualLSB << " but provided bit heap only extends to LSB=" << bh->lsb;
-			throw(e.str());
-		}
-		
-		if(bh->msb < lsbPfull+wFullP-1) {
-			ostringstream e;
-			e << "In IntMultiplier::addToExistingBitHeap, we need a bit heap up to MSB=" << lsbPfull+wFullP-1 << " but provided bit heap only extends to MSB=" << bh->msb;
-			throw(e.str());
-		}
-		unsigned wOutPlusGuardBits = wFullP - actualLSB;
-		
 		// Generate a tiling
 
 		// Useless noise that I have to live with because Fulda didn't clean it up
@@ -278,6 +341,9 @@ namespace flopoco {
 		REPORT(LogLevel::DETAIL, "Solving tiling problem");
 		tilingStrategy->solve();
 
+
+
+
 		// Trimming signs? Not sure what this does.
 		if(signedX) {
 			for(auto & tile : tilingStrategy->getSolution()) {
@@ -297,13 +363,36 @@ namespace flopoco {
 		
 		op -> schedule(); // This schedules up to the inputs of the multiplier
 
+		// Now we want to transfer this tiling to the bit heap.
+		// Sanity check: is the bit heap large enough? (another option would be to silently enlarge it)
+		unsigned actualLSB = tilingStrategy->getActualLSB(); // the position of the last column on which we have bits
+		//		unsigned lastColumnKeepBits = tilingStrategy->getLastColumnKeepBits(); // the number of bits to keep on the last column: commented out because mostly useless
+		mpz_class centerErrConstant= tilingStrategy->getErrorCorrectionConstant(); // recentering constant to add to the bit heap
+		REPORT(LogLevel::MESSAGE, "errorBudget=" << errorBudget << " actualLSB=" << actualLSB << "  centerErrConstant=" << centerErrConstant);
+		
+		if(bh->lsb > lsbPfull + actualLSB) {
+			ostringstream e;
+			e << "In IntMultiplier::addToExistingBitHeap, we need a bit heap up to LSB=" << lsbPfull + actualLSB << " but provided bit heap only extends to LSB=" << bh->lsb;
+			throw(e.str());
+		}
+		
+		if(bh->msb < lsbPfull+wFullP-1) {
+			ostringstream e;
+			e << "In IntMultiplier::addToExistingBitHeap, we need a bit heap up to MSB=" << lsbPfull+wFullP-1 << " but provided bit heap only extends to MSB=" << bh->msb;
+			throw(e.str());
+		}
+		unsigned wOutPlusGuardBits = wFullP - actualLSB;
+		
+
+
+
 		// Transfer the tiling, including the correction constant, to the bit heap
 		cerr << "XXXXXXXXXXXXXXXXXXXX " << actualLSB << "  " <<  exactProductLSBPosition << endl;
 		fillBitheap(bh, tilingStrategy, squarer);
 
 		bh -> printBitHeapStatus();
 		op -> schedule(); // This schedule up to the compressor tree
-		return tilingStrategy;
+		return tilingStrategy; // to transfer useful parameters such as actualLSB
 	}
 
 
@@ -311,91 +400,6 @@ namespace flopoco {
 
 
 	
-
-	
-	IntMultiplier::IntMultiplier (Operator *parentOp, Target* target_, int wX_, int wY_, int wOut_, bool signedIO_, int maxDSP, bool superTiles, bool use2xk, bool useirregular, bool useLUT, bool useKaratsuba, bool useGenLUT, bool useBooth, int beamRange, bool optiTrunc, bool minStages, bool squarer):
-		Operator ( parentOp, target_ ),wX(wX_), wY(wY_), wOut(wOut_),signedIO(signedIO_),  squarer(squarer)
-	{
-		srcFileName = "IntMultiplier";
-		setCopyrightString("Martin Kumm, Florent de Dinechin, Kinga Illyes, Bogdan Popa, Bogdan Pasca, 2012-");
-		
-		dspOccupationThreshold = target_->unusedHardMultThreshold();
-		bool useDSP = target_->useHardMultipliers();
-		
-		
-		wFullP = prodsize(wX, wY, signedIO_, signedIO_);
-		if (wOut == 0 || wFullP < wOut) {
-			wOut = wFullP;
-		}
-		ostringstream name, trunc_info;
-		name << "IntMultiplier_"<< wX << "x" << wY<< "_"<< wOut;
-		setNameWithFreqAndUID(name.str());
-		
-		// the addition operators need the ieee_std_signed/unsigned libraries
-		useNumericStd();
-		
-		multiplierUid = parentOp->getNewUId();
-
-		string xname="X";
-		string yname="Y";
-
-		// Set up the IO signals
-		addInput(xname, wX, true);
-		addInput(yname, wY, true);
-		addOutput("R", wOut, true);
-
-		// The larger of the two inputs
-		vhdl << tab << declare(addUID("XX"), wX, true) << " <= " << xname << " ;" << endl;
-		vhdl << tab << declare(addUID("YY"), wY, true) << " <= " << yname << " ;" << endl;
-
-		if(target_->plainVHDL()) {
-			vhdl << tab << declareFixPoint("XX",signedIO,-1, -wX) << " <= " << (signedIO?"signed":"unsigned") << "(" << xname <<");" << endl;
-			vhdl << tab << declareFixPoint("YY",signedIO,-1, -wY) << " <= " << (signedIO?"signed":"unsigned") << "(" << yname <<");" << endl;
-			vhdl << tab << declareFixPoint("RR",signedIO,-1, -wX-wY) << " <= XX*YY;" << endl;
-			vhdl << tab << "R <= std_logic_vector(RR" << range(wX+wY-1, wX+wY-wOut) << ");" << endl;
-
-			return;
-		}
-		
-		BitHeap* bitHeap = new BitHeap(this, wFullP);
-		unsigned int guardBits = 0, keepBits = 0;
-		mpz_class errorBudget = 0, centerErrConstant = 0;
-
-
-		
-		// Current status is: exact multipliers work.
-		// TODO compute the error correction constant and understand what truncated tiling does.
-
-		
-		// error budget is one half-ulp, and there is also one half-ulp for final rounding
-		int lsbOut = wFullP - wOut;
-		if(wOut<wFullP) {
-			errorBudget = mpz_class(1) << (lsbOut-1);
-		}
-		REPORT(LogLevel::DEBUG,  " errorBudget=" << errorBudget);
-		
-		auto tilingStrategy = addToExistingBitHeap(bitHeap,  xname,  yname, errorBudget, 0);
-
-
-		if (dynamic_cast<CompressionStrategy*>(tilingStrategy)) { // for the combined tiling+compression  
-			REPORT(LogLevel::DEBUG,  "Class is derived from CompressionStrategy, passing result for compressor tree.");
-			bitHeap->startCompression(dynamic_cast<CompressionStrategy*>(tilingStrategy));
-		}
-		else { // normal process, tiling then compression
-			// Add the rounding bit for a faithfully rounded truncated multiplier  
-			if (wOut<wFullP) {
-				bitHeap->addConstantOneBit(lsbOut-1);
-			}
-			bitHeap->startCompression();
-		}
-		vhdl << tab << "R" << " <= " << bitHeap->getSumName() << range(wOut-1 + guardBits, guardBits) << ";" << endl;
-		delete bitHeap;	
-		delete tilingStrategy;
-
-	}
-
-
-
 	/** Simple auxiliary function that computes the height of a column in a standard (non-Booth) multiplier */
 	int computePlainMultColHeight(int wX, int wY, int col) {
 		/*	The bit array for a 2x6 multiplier, to illustrate the logic:
@@ -430,7 +434,7 @@ namespace flopoco {
 	// The version of Florent with no external function.
 	// It only works for a plain multiplier, not for a squarer nor a Booth one
 	// To cover this, this function should become a static method of BitHeap that just inputs an array of column heights and an error budget
-	// The computation of the error correction constant is not that of The Book, because we input errorBudget.
+	// The computation of the error correction constant is not that of The Book, because we input errorBudget, but the result is the same when called for a faithful mult
 	void IntMultiplier::computeTruncMultParams(unsigned wX, unsigned wY, mpz_class errorBudget, unsigned &actualLSB, unsigned &keepBits, mpz_class &errorCenteringConstant){
 		actualLSB=0;
 		errorCenteringConstant=0;
@@ -442,12 +446,12 @@ namespace flopoco {
 		mpz_class wcSumOfTruncatedBits=0; // worst-case sum of all the truncated bits (assuming they are all 1)
 		unsigned colHeight = 1; // height of the rightmost column of an untruncated multiplier
 		mpz_class weightOfNextBitToBeRemoved = 1; // we start with position actualLSB=0, whose weight is 1
-		errorCenteringConstant=errorBudget-1;
+		errorCenteringConstant=errorBudget-1; // if we truncate nothing, this constant works
 		// For readability I use a stupid quadratic algorithm instead of the linear one in the book
 		bool keepGoing=true;
 		while(keepGoing) {
 			wcSumOfTruncatedBits += weightOfNextBitToBeRemoved;
-			mpz_class tentativeMinError = -errorCenteringConstant; // by construction errorCenteringConstant <= errorBudget
+			mpz_class tentativeMinError = -errorCenteringConstant; // when all truncated bits are 0; and by construction errorCenteringConstant < errorBudget
 			mpz_class tentativeMaxError = wcSumOfTruncatedBits-errorCenteringConstant;
 			if (tentativeMaxError<=errorBudget) { // one bit in col actualLSB can be removed 
 				colHeight--;
