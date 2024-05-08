@@ -83,6 +83,11 @@ namespace flopoco {
 		addInput(yname, wY, true);
 		addOutput("R", wOut, true);
 
+		if(signedIO){ // declare the IO names as signed, so that addToExistingBitHeap() knows it
+			getSignalByName(xname)->setIsSigned();
+			getSignalByName(yname)->setIsSigned();
+		}
+		
 		// The larger of the two inputs
 		vhdl << tab << declare(addUID("XX"), wX, true) << " <= " << xname << " ;" << endl;
 		vhdl << tab << declare(addUID("YY"), wY, true) << " <= " << yname << " ;" << endl;
@@ -96,13 +101,12 @@ namespace flopoco {
 			return;
 		}
 		
+		// Bit heap of size wFullP even if the multiplier is truncated, makes life easier. 
 		BitHeap* bitHeap = new BitHeap(this, wFullP);
-		
-		// Current status is: exact multipliers work.
-		// TODO compute the error correction constant and understand what truncated tiling does.
+
+		int lsbOut = wFullP - wOut;
 
 		// error budget is one half-ulp, and there is also one half-ulp for final rounding
-		int lsbOut = wFullP - wOut;
 		mpz_class errorBudget = 0;
 		if(wOut<wFullP) {
 			errorBudget = mpz_class(1) << (lsbOut-1);
@@ -150,7 +154,8 @@ namespace flopoco {
 			e << "Product of two signals " << xname << " and " << yname << " with different signednesses is not supported in IntMultiplier::addToExistingBitHeap";
 			throw(e.str());
 		}
-		
+
+		cerr << "SSSSSSSSSSSSSSS signedX=" << signedX << endl;
 		int lsbPfull = lsbX+lsbY; // This is the anchor for exactProductLSBPosition
 
 		// from now on we switch to the integer-multiplier point of view of the Fulda code
@@ -344,7 +349,7 @@ namespace flopoco {
 
 
 
-		// Trimming signs? Not sure what this does.
+		// ???  Not sure what this does.
 		if(signedX) {
 			for(auto & tile : tilingStrategy->getSolution()) {
 				//resize DSPs to be aligned with left and bottom border of the tiled area to allow the correct handling of the sign
