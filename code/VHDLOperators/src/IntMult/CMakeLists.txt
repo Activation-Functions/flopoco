@@ -26,15 +26,16 @@ add_flopocolib_src(
     MultiplierTileCollection.cpp
     NearestPointCursor.cpp
     TargetBaseMultSpecialisation.cpp
-    TilingAndCompressionOptILP.cpp
     #Tiling.cpp
-    TilingStrategyBasicTiling.cpp
-    TilingStrategyBeamSearch.cpp
-    TilingStrategy.cpp
-    TilingStrategyGreedy.cpp
-    TilingStrategyOptimalILP.cpp
-    TilingStrategyXGreedy.cpp
-    TilingStrategyCSV.cpp
+     TilingStrategyBasicTiling.cpp
+     TilingStrategy.cpp
+# All the other tiling strategies temporarily disabled by Florent while bringing up virtual multipliers 
+#    TilingStrategyBeamSearch.cpp
+#    TilingStrategyGreedy.cpp
+#    TilingStrategyOptimalILP.cpp
+#    TilingStrategyXGreedy.cpp
+#    TilingStrategyCSV.cpp
+#    TilingAndCompressionOptILP.cpp
 )
 
 target_include_directories(FloPoCoLib PRIVATE ${flopocolib_header_root}/IntMult)
