@@ -32,7 +32,7 @@ ifeq ($(OS), UBUNTU)
     SYSDEPS += libmpfi-dev
     SYSDEPS += libmpfr-dev
     SYSDEPS += sollya
-    SYSDEPS +=  liblpsolve55-dev lp-solve
+    SYSDEPS +=  liblpsolve55-dev
 
 sysdeps:
 	$(call shell_info, Updating $(OS) system $(B)dependencies$(N): $(SYSDEPS))
@@ -98,8 +98,10 @@ ifeq ($(SCALP_BACKEND), SCIP)
     SCALP_CMAKE_OPTIONS += -DSCIP_DIR=$(SCIP_BINARY_DIR)
     SCALP_CMAKE_OPTIONS += -DSOPLEX_DIR=$(SOPLEX_BINARY_DIR)
 else
+    LPSOLVE_LIBRARIES := /usr/lib/lp_solve/liblpsolve55.so
     SCALP_DEPENDENCIES += sysdeps
     SCALP_CMAKE_OPTIONS += -DUSE_LPSOLVE=ON
+    SCALP_CMAKE_OPTIONS += -DLPSOLVE_ROOT_DIR=/usr/include/lpsolve
     SCALP_CMAKE_OPTIONS += -DLPSOLVE_LIBRARIES=$(LPSOLVE_LIBRARIES)
     SCALP_CMAKE_OPTIONS += -DLPSOLVE_INCLUDE_DIRS=$(LPSOLVE_INCLUDE_DIRS)
     SCALP_CMAKE_OPTIONS += -DBUILD_SHARED_LIBRARIES=OFF
@@ -152,6 +154,7 @@ PAGSUITE_GIT := https://gitlab.com/kumm/pagsuite.git
 PAGSUITE_SOURCE_DIR := $(BUILD_DEPENDENCIES_SOURCE_DIR)/pagsuite
 PAGSUITE_BINARY_DIR := $(BUILD_DEPENDENCIES_BINARY_DIR)/pagsuite
 PAGSUITE := $(PAGSUITE_BINARY_DIR)/lib/librpag.so
+PAGSUITE_CMAKE_PATCH := $(MKROOT)/tools/pagsuite_fpc.patch
 
 pagsuite: $(PAGSUITE)
 
@@ -161,6 +164,7 @@ $(PAGSUITE): $(SCALP)
 	@mkdir -p $(PAGSUITE_BINARY_DIR)
 	@git clone $(PAGSUITE_GIT) $(PAGSUITE_SOURCE_DIR)
 	@cd $(PAGSUITE_SOURCE_DIR)
+	@patch -p0 CMakeLists.txt $(PAGSUITE_CMAKE_PATCH)
 	@cmake -B build -G$(CMAKE_GENERATOR)			\
 	       -DSCALP_PREFIX_PATH=$(SCALP_BINARY_DIR)		\
 	       -DCMAKE_INSTALL_PREFIX=$(PAGSUITE_BINARY_DIR)
