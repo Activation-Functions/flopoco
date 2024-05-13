@@ -1,0 +1,11 @@
+--- build/dependencies/src/pagsuite/CMakeLists.txt	2024-05-13 15:44:08.316265273 +0200
++++ cmake-pag-patch.txt	2024-05-13 15:43:36.648371919 +0200
+@@ -16,7 +16,7 @@
+ Message(STATUS "Using PAGSuite's paglib: ${PAG_LIB} (${PAGSUITE_INCLUDE_DIR})")
+ 
+ FIND_LIBRARY(SCALP_LIB
+-	NAMES libScaLP libScaLP.so libScaLP.dylib
++	NAMES libScaLP libScaLP.so libScaLP.dylib libScaLP.a
+ 	HINTS "${SCALP_PREFIX_PATH}/lib"
+ 	DOC "Directory of the ScaLP library")
+ 

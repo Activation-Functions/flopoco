@@ -54,7 +54,7 @@ find_path(ScaLP_INCLUDE_DIR
 )
 
 find_library(ScaLP_LIBRARY
-    NAMES libScaLP.dylib libScaLP libScaLP.so
+    NAMES libScaLP.dylib libScaLP libScaLP.so libScaLP.a
     PATHS ${PC_ScaLP_LIBRARY_DIRS} ${SCALP_LOCAL}/lib
     DOC "Directory of the ScaLP library"
 )
@@ -87,40 +87,3 @@ if (ScaLP_FOUND)
 endif()
 
 mark_as_advanced(ScaLP_INCLUDE_DIR ScaLP_LIBRARY)
-
-# ---------------------------------------------------------------------------
-# Otherwise, clone ScaLP and add as a CMake dependency
-# ---------------------------------------------------------------------------
-#message(STATUS "ScaLP not found, will attempt to fetch and build locally")
-#set (FETCHCONTENT_QUIET FALSE)
-#include(FetchContent)
-#FetchContent_Declare(
-#    ScaLP
-#    GIT_REPOSITORY https://digidev.digi.e-technik.uni-kassel.de/git/scalp.git
-#    GIT_PROGRESS TRUE
-#    # GIT_TAG 185b84e4ff967f42cf2de5db4db4e6fa0cc18fb8
-#    UPDATE_DISCONNECTED False
-#    SOURCE_SUBDIR NonExistentRepo
-#)
-#FetchContent_MakeAvailable(ScaLP)
-#if (${scalp_POPULATED})
-#    # ------------------------------------------------------------------
-#    # Patch ScaLP main CMakeLists.txt, required if optional dependencies
-#    # such as Gurobi and/or CPLEX are not available.
-#    # ------------------------------------------------------------------
-#    execute_process(
-#        WORKING_DIRECTORY ${scalp_SOURCE_DIR}
-#        COMMAND patch -p0 CMakeLists.txt ${CMAKE_SOURCE_DIR}/tools/scalp_fpc.patch
-#        COMMAND_ECHO "STDOUT"
-#    )
-#    # For now, use LPSolve
-#    set(USE_LPSOLVE TRUE)
-#    set(LPSOLVE_ROOT_DIR ${LPSOLVE_INCLUDE_DIR}/lpsolve)
-#    find_library(LPSOLVE_LIB NAMES lpsolve55 PATH_SUFFIXES lpsolve lp_solve)
-#    find_path(LPSOLVE_INCLUDE_DIR NAMES lpsolve/lp_types.h)
-#    set(ScaLP_FOUND TRUE)
-#    # -------------------------------------------------------
-#    add_subdirectory(${scalp_SOURCE_DIR} ${scalp_BINARY_DIR})
-#    # -------------------------------------------------------
-#    set(SCALP_LOCALLY_BUILT TRUE)
-#endif()
