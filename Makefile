@@ -1,4 +1,11 @@
 
+FLOPOCO_VERSION_MAJOR   := 5
+FLOPOCO_VERSION_MINOR   := 0
+FLOPOCO_VERSION_PATCH   := 0
+FLOPOCO_VERSION         := $(FLOPOCO_VERSION_MAJOR).$(FLOPOCO_VERSION_MINOR)
+FLOPOCO_VERSION_FULL    := $(FLOPOCO_VERSION).$(FLOPOCO_VERSION_PATCH)
+FLOPOCO_BRANCH          := $(shell git symbolic-ref --short HEAD)
+FLOPOCO_COMMIT_HASH     := $(shell git rev-parse HEAD)
 
 MKROOT := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 BUILD_DEPENDENCIES_DIR := $(MKROOT)/build/dependencies
@@ -14,12 +21,25 @@ endif
 
 include $(MKROOT)/tools/utilities.mk
 
-$(call static_info, OS: $(B)$(OS)$(N))
-$(call static_info, Using ScaLP backend: $(B)$(SCALP_BACKEND)$(N))
+$(call static_ok, Running $(B)FloPoCo$(N) build script\
+    ($(B)v$(FLOPOCO_VERSION_FULL)$(N)) on $(B)$(OS)$(N)  \
+    ($(OS_VERSION) $(OS_LTS)))
+
+$(call static_ok, Branch $(B)$(FLOPOCO_BRANCH)$(N))
+$(call static_ok, Commit $(B)#$(FLOPOCO_COMMIT_HASH)$(N))
+$(call static_ok, Running $(B)from$(N): $(PWD))
+$(call static_ok, $(B)Make targets$(N): $(MAKECMDGOALS))
+$(call static_ok, ScaLP backend: $(B)$(SCALP_BACKEND)$(N))
 
 # -----------------------------------------------------------------------------
 
 all: flopoco
+
+# -----------------------------------------------------------------------------
+.PHONY: help
+# -----------------------------------------------------------------------------
+help:
+	$(call shell_info,)
 
 # -----------------------------------------------------------------------------
 .PHONY: clean
@@ -28,11 +48,22 @@ clean:
 	@rm -rf build
 
 # -----------------------------------------------------------------------------
+.PHONY: docker
+# -----------------------------------------------------------------------------
+FLOPOCO_DOCKER_TAG := flopoco:$(FLOPOCO_VERSION_FULL)-$(SCALP_BACKEND)
+docker:
+	$(call shell_info, Building docker image $(B)$(FLOPOCO_DOCKER_TAG)$(N))
+	@docker build --no-cache \
+		       --build-arg SCALP_BACKEND=$(SCALP_BACKEND) \
+		       -t flopoco:$(FLOPOCO_VERSION_FULL)-$(SCALP_BACKEND) \
+		       $(MKROOT)
+
+# -----------------------------------------------------------------------------
 .PHONY: sysdeps
 # -----------------------------------------------------------------------------
 
 # ------------------------------------------
-ifeq ($(OS), $(filter $(OS), UBUNTU DEBIAN))
+ifeq ($(OS), $(filter $(OS), Ubuntu Debian))
 # ------------------------------------------
     SYSDEPS += git
     SYSDEPS += g++
@@ -53,7 +84,7 @@ sysdeps:
 	@$(SUDO) apt update
 	@yes | $(SUDO) apt install $(SYSDEPS)
 # -------------------------------------
-else ifeq ($(OS), ARCHLINUX)
+else ifeq ($(OS), Arch)
 # -------------------------------------
 # Using AUR with docker::
 # docker pull greyltc/archlinux-aur:yay
@@ -76,7 +107,7 @@ sysdeps:
 	@yay -S $(SYSDEPS)
 
 # -------------------------------------
-else ifeq ($(OS), ALPINE)
+else ifeq ($(OS), Alpine)
 # -------------------------------------
     SYSDEPS += git
     SYSDEPS += gcc
