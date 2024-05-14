@@ -58,18 +58,18 @@ $(call static_info, Including $(B)utilities.mk$(N) file)
 # ---------------------------------------------------
 ifeq ($(call file_exists, /etc/arch-release), 1)
 # ---------------------------------------------------
-    OS              := ARCHLINUX
+    OS              := Arch
 # ---------------------------------------------------
 else ifeq ($(call file_exists, /etc/lsb-release), 1)
 # ---------------------------------------------------
-    OS              := UBUNTU
+    OS              := Ubuntu
     OS_VERSION_FULL := $(shell lsb_release -d)
     OS_VERSION      := $(word 3, $(OS_VERSION_FULL))
     OS_LTS          := $(word 4, $(OS_VERSION_FULL))
 # ---------------------------------------------------
 else ifeq ($(call file_exists, /etc/debian_version), 1)
 # ---------------------------------------------------
-    OS              := DEBIAN
+    OS              := Debian
     OS_VERSION_FULL := $(shell cat /etc/debian_version)
     OS_VERSION      := $(OS_VERSION_FULL)
     OS_LTS          := $(OS_VERSION)
