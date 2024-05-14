@@ -8,6 +8,10 @@ BUILD_DEPENDENCIES_BINARY_DIR := $(BUILD_DEPENDENCIES_DIR)/bin
 CMAKE_GENERATOR ?= Ninja
 SCALP_BACKEND ?= LPSOLVE
 
+ifneq ($(CONFIG), docker)
+    SUDO := sudo
+endif
+
 include $(MKROOT)/tools/utilities.mk
 
 $(call static_info, OS: $(B)$(OS)$(N))
@@ -46,8 +50,8 @@ ifeq ($(OS), $(filter $(OS), UBUNTU DEBIAN))
     SYSDEPS += pkg-config
 sysdeps:
 	$(call shell_info, Updating $(OS) system $(B)dependencies$(N): $(SYSDEPS))
-	@sudo apt update
-	@sudo apt install $(SYSDEPS)
+	@$(SUDO) apt update
+	@yes | $(SUDO) apt install $(SYSDEPS)
 # -------------------------------------
 else ifeq ($(OS), ARCHLINUX)
 # -------------------------------------
