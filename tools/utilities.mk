@@ -67,6 +67,12 @@ else ifeq ($(call file_exists, /etc/lsb-release), 1)
     OS_VERSION      := $(word 3, $(OS_VERSION_FULL))
     OS_LTS          := $(word 4, $(OS_VERSION_FULL))
 # ---------------------------------------------------
+else ifeq ($(call file_exists, /etc/debian_version), 1)
+# ---------------------------------------------------
+    OS              := DEBIAN
+    OS_VERSION_FULL := $(shell cat /etc/debian_version)
+    OS_VERSION      := $(OS_VERSION_FULL)
+    OS_LTS          := $(OS_VERSION)
 else
 # ---------------------------------------------------
     OS              := NA

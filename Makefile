@@ -27,18 +27,72 @@ clean:
 .PHONY: sysdeps
 # -----------------------------------------------------------------------------
 
-ifeq ($(OS), UBUNTU)
+# ------------------------------------------
+ifeq ($(OS), $(filter $(OS), UBUNTU DEBIAN))
+# ------------------------------------------
+    SYSDEPS += git
+    SYSDEPS += g++
+    SYSDEPS += cmake
+    SYSDEPS += ninja-build
     SYSDEPS += libgmp-dev
     SYSDEPS += libmpfi-dev
     SYSDEPS += libmpfr-dev
-    SYSDEPS += sollya
-    SYSDEPS +=  liblpsolve55-dev
-
+    SYSDEPS += libsollya-dev
+    SYSDEPS += liblpsolve55-dev
+    SYSDEPS += dh-autoreconf
+    SYSDEPS += libf2c2-dev
+    SYSDEPS += flex
+    SYSDEPS += libboost-all-dev
+    SYSDEPS += pkg-config
 sysdeps:
 	$(call shell_info, Updating $(OS) system $(B)dependencies$(N): $(SYSDEPS))
 	@sudo apt update
 	@sudo apt install $(SYSDEPS)
+# -------------------------------------
+else ifeq ($(OS), ARCHLINUX)
+# -------------------------------------
+# Using AUR with docker::
+# docker pull greyltc/archlinux-aur:yay
+    SYSDEPS += git
+    SYSDEPS += gcc
+    SYSDEPS += cmake
+    SYSDEPS += ninja
+    SYSDEPS += gmp
+    SYSDEPS += mpfr
+    SYSDEPS += mpfi
+    SYSDEPS += flex
+    SYSDEPS += lpsolve
+    SYSDEPS += boost
+    SYSDEPS += pkgconf
+    SYSDEPS += sollya-git
+    SYSDEPS += f2c
+sysdeps:
+	$(call shell_info, Updating $(OS) system $(B)dependencies$(N): $(SYSDEPS))
+	@yay -Syu
+	@yay -S $(SYSDEPS)
+
+# -------------------------------------
+else ifeq ($(OS), ALPINE)
+# -------------------------------------
+    SYSDEPS += git
+    SYSDEPS += gcc
+    SYSDEPS += cmake
+    SYSDEPS += automake
+    SYSDEPS += libtool
+    SYSDEPS += ninja
+    SYSDEPS += gmp-dev
+    SYSDEPS += mpfr-dev
+    SYSDEPS += boost-dev
+    SYSDEPS += flex
+    SYSDEPS += bison
+    SYSDEPS += gnuplot
+    SYSDEPS += pkgconf
+    SYSDEPS += libxml2-dev
+    SYSDEPS += libmpfi libmpfi-static # edge/testing
 endif
+
+# build fplll manually ?
+# for building sollya: autoreconf -fi ./configure and make
 
 # -----------------------------------------------------------------------------
 .PHONY: soplex
