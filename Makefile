@@ -15,6 +15,8 @@ BUILD_DEPENDENCIES_BINARY_DIR := $(BUILD_DEPENDENCIES_DIR)/bin
 CMAKE_GENERATOR ?= Ninja
 SCALP_BACKEND ?= LPSOLVE
 
+PREFIX ?= /usr/local
+
 ifneq ($(CONFIG), docker)
     SUDO := sudo
 endif
@@ -29,7 +31,7 @@ $(call static_ok, Branch $(B)$(FLOPOCO_BRANCH)$(N))
 $(call static_ok, Commit $(B)#$(FLOPOCO_COMMIT_HASH)$(N))
 $(call static_ok, Running $(B)from$(N): $(PWD))
 $(call static_ok, $(B)Make targets$(N): $(MAKECMDGOALS))
-$(call static_ok, ScaLP backend: $(B)$(SCALP_BACKEND)$(N))
+$(call static_ok, $(B)ScaLP backend$(N): $(SCALP_BACKEND))
 
 # -----------------------------------------------------------------------------
 
@@ -53,10 +55,10 @@ clean:
 FLOPOCO_DOCKER_TAG := flopoco:$(FLOPOCO_VERSION_FULL)-$(SCALP_BACKEND)
 docker:
 	$(call shell_info, Building docker image $(B)$(FLOPOCO_DOCKER_TAG)$(N))
-	@docker build --no-cache \
-		       --build-arg SCALP_BACKEND=$(SCALP_BACKEND) \
-		       -t flopoco:$(FLOPOCO_VERSION_FULL)-$(SCALP_BACKEND) \
-		       $(MKROOT)
+	@docker build --no-cache					    \
+		      --build-arg SCALP_BACKEND=$(SCALP_BACKEND)	    \
+		       -t flopoco:$(FLOPOCO_VERSION_FULL)-$(SCALP_BACKEND)  \
+		      $(MKROOT)
 
 # -----------------------------------------------------------------------------
 .PHONY: sysdeps
@@ -124,6 +126,9 @@ else ifeq ($(OS), Alpine)
     SYSDEPS += pkgconf
     SYSDEPS += libxml2-dev
     SYSDEPS += libmpfi libmpfi-static # edge/testing
+else
+sysdeps:
+	$(call shell_info, Linux distribution could not be identified, skipping...)
 endif
 
 # build fplll manually ?
@@ -281,12 +286,15 @@ $(FLOPOCO): $(FLOPOCO_DEPENDENCIES)
 	@cmake -B build -G$(CMAKE_GENERATOR)	    \
 	       -DWCPG_LOCAL=$(WCPG_BINARY_DIR)	    \
 	       -DSCALP_LOCAL=$(SCALP_BINARY_DIR)    \
-	       -DPAG_LOCAL=$(PAGSUITE_BINARY_DIR)
+	       -DPAG_LOCAL=$(PAGSUITE_BINARY_DIR)   \
+	       -DCMAKE_INSTALL_PREFIX=$(PREFIX)
 	@cmake --build build
 
 # -----------------------------------------------------------------------------
+.ONESHELL:
 .PHONY: install
 # -----------------------------------------------------------------------------
 install: $(FLOPOCO)
+	@cd $(MKROOT)
 	@cmake --build build --target install
 

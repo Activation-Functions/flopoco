@@ -16,9 +16,8 @@ set(USED_CMAKE_GENERATOR "${CMAKE_GENERATOR}" CACHE STRING "Expose CMAKE_GENERAT
 message(STATUS "Trying to build FloPoCo on " ${CMAKE_SYSTEM_NAME} ",
     compiler is " ${CMAKE_C_COMPILER}
 )
-message(STATUS "CMAKE_CURRENT_BINARY_DIR is " ${CMAKE_CURRENT_BINARY_DIR}  ",
-    CMAKE_CURRENT_SOURCE_DIR is " ${CMAKE_CURRENT_SOURCE_DIR}
-)
+message(STATUS "CMAKE_CURRENT_BINARY_DIR: ${CMAKE_CURRENT_BINARY_DIR}")
+message(STATUS "CMAKE_CURRENT_SOURCE_DIR: ${CMAKE_CURRENT_SOURCE_DIR}")
 
 cmake_policy(SET CMP0028 NEW) # Support for imported targets
 cmake_policy(SET CMP0076 NEW) # Conversion of target_sources argument to absolute
@@ -26,6 +25,9 @@ cmake_policy(SET CMP0115 NEW) # Allow source file extension deduction
 
 # Add module to find custom dependencies
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
+list(APPEND CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/lib)
+
+message(STATUS "CMAKE_INSTALL_RPATH: ${CMAKE_INSTALL_RPATH}")
 
 #Compilation flags
 string(APPEND CMAKE_CXX_FLAGS_DEBUG_INIT "-Wall")
