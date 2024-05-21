@@ -26,8 +26,6 @@ target_link_libraries(bin2ieee MPFR::MPFR GMPXX::GMPXX FloPoCoLib)
 add_executable(longacc2fp src/longacc2fp.cpp)
 target_link_libraries(longacc2fp MPFR::MPFR GMPXX::GMPXX FloPoCoLib)
 
-list(APPEND CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/lib)
-
 install(TARGETS flopoco fp2bin bin2fp ieee2bin bin2ieee longacc2fp
         RUNTIME DESTINATION bin
 )
