@@ -12,7 +12,7 @@
 */
 
 /* TODO before there is any hope that it works:
-	 - add to IntMultiplier the version that adds a multiplier to a bit heap
+	 - add to IntMultiplier the version that adds a multiplier to a bit heap: DONE
 	 - and then more
 
 	 a few command lines to test while developing:
@@ -116,6 +116,7 @@ namespace flopoco {
 					isCorrectlyRounded=true; // no rounding will ever happen
 					isFaithfullyRounded=true;// no rounding will ever happen
 					
+
 					// let's do this one first to get the virtual bit heap etc right.
 					if(getTarget()->plainVHDL()) { // mostly to debug emulate() and interface
 						vhdl << declareFixPoint("P", signedIO, msbP, lsbPfull) << " <= " << typecast << "(X)*" << typecast << "(Y);" << endl;
@@ -127,10 +128,17 @@ namespace flopoco {
 						
 						vhdl << declareFixPoint("RR", signedIO, msbOut, lsbOut) << " <= RA+RP;" << endl;
 						
-					}
+					} // end plainVHDL
+					
+
+					
 					else { // This is the bitheap-based version
 						BitHeap bh(this, wOut); // rather random
-						IntMultiplier::addToExistingBitHeap(&bh,  "X", "Y", 0);
+						IntMultiplier::addToExistingBitHeap(&bh,  "X", "Y", 0, 0); // TODO this is for an exact XY+A
+						bh.addSignal("A", 0);
+						bh.startCompression();
+						vhdl << tab << declareFixPoint("RR", signedIO, msbOut, lsbOut) << " <= " << typecast << "(" << bh.getSumName() << range(msbOut, lsbOut) << ");" << endl;
+
 					}
 				}
 			else	{ /////////////////// lsbPfull < lsbOut so we build a truncated multiplier
