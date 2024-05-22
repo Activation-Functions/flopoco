@@ -13,10 +13,6 @@
 */
 
 
-// This is the switch to move to the version that doesn't work yet...
-#define USE_REFACTORED 1
-
-
 
 #include <cassert>
 #include <cmath>
@@ -141,7 +137,7 @@ namespace flopoco {
 		Signal* x = op -> getSignalByName(xname);
 		Signal* y = op -> getSignalByName(yname);
 		// let's get over with the fixed-point stuff
-		int msbX = x->MSB();
+	int msbX = x->MSB();
 		int msbY = y->MSB();
 		int lsbX = x->LSB();
 		int lsbY = y->LSB();
@@ -155,7 +151,7 @@ namespace flopoco {
 			throw(e.str());
 		}
 
-		cerr << "SSSSSSSSSSSSSSS signedX=" << signedX << endl;
+		//cerr << "SSSSSSSSSSSSSSS signedX=" << signedX << endl;
 		int lsbPfull = lsbX+lsbY; // This is the anchor for exactProductLSBPosition
 
 		// from now on we switch to the integer-multiplier point of view of the Fulda code
@@ -189,26 +185,8 @@ namespace flopoco {
 
 		REPORT(LogLevel::DETAIL, "Creating TilingStrategy using tiling method " << tilingMethod);
 
-		// // TODO HERE I have to invent a wOut and a guardBits for this to compile,
-		// // but I shouldn't have to
-		// int wOut, guardBits;
-		// if(errorBudget==0)  {
-		// 	wOut=wFullP;
-		// 	guardBits=0;
-		// }
-		// else { // what should I do here?
-		// 	int lsbOut=0;
-		// 	int wOut=wFullP;
-		// 	mpz_class error=1;
-		// 	while(error<errorBudget) {
-		// 		lsbOut++;
-		// 		wOut--;
-		// 		error = error<<1;
-		// 	} // This was an intlog2
-		// 	int guardBits=0;
-		// 	// let's assume that the inconsistent interface could be compressed into  wOut+guardBits
-		// }
 		TilingStrategy* tilingStrategy;
+
 		// Message to Andreas:
 		// Florent commented out all these methods for you to revive them someday once I have converged on the proper interface.
 		// (still TODO)
@@ -349,7 +327,7 @@ namespace flopoco {
 
 
 
-		// ???  Not sure what this does.
+		// ??? Message to Andreas: Not sure what this does. Please add a comment
 		if(signedX) {
 			for(auto & tile : tilingStrategy->getSolution()) {
 				//resize DSPs to be aligned with left and bottom border of the tiled area to allow the correct handling of the sign
@@ -369,18 +347,17 @@ namespace flopoco {
 		op -> schedule(); // This schedules up to the inputs of the multiplier
 
 		// Now we want to transfer this tiling to the bit heap.
-		// Sanity check: is the bit heap large enough? (another option would be to silently enlarge it)
 		unsigned actualLSB = tilingStrategy->getActualLSB(); // the position of the last column on which we have bits
 		//		unsigned lastColumnKeepBits = tilingStrategy->getLastColumnKeepBits(); // the number of bits to keep on the last column: commented out because mostly useless
 		mpz_class centerErrConstant= tilingStrategy->getErrorCorrectionConstant(); // recentering constant to add to the bit heap
+
+		// Sanity check: is the bit heap large enough? (another option would be to silently enlarge it)
 		REPORT(LogLevel::MESSAGE, "errorBudget=" << errorBudget << " actualLSB=" << actualLSB << "  centerErrConstant=" << centerErrConstant);
-		
 		if(bh->lsb > lsbPfull + actualLSB) {
 			ostringstream e;
 			e << "In IntMultiplier::addToExistingBitHeap, we need a bit heap up to LSB=" << lsbPfull + actualLSB << " but provided bit heap only extends to LSB=" << bh->lsb;
 			throw(e.str());
 		}
-		
 		if(bh->msb < lsbPfull+wFullP-1) {
 			ostringstream e;
 			e << "In IntMultiplier::addToExistingBitHeap, we need a bit heap up to MSB=" << lsbPfull+wFullP-1 << " but provided bit heap only extends to MSB=" << bh->msb;
@@ -392,7 +369,7 @@ namespace flopoco {
 
 
 		// Transfer the tiling, including the correction constant, to the bit heap
-		cerr << "XXXXXXXXXXXXXXXXXXXX " << actualLSB << "  " <<  exactProductLSBPosition << endl;
+		// cerr << "XXXXXXXXXXXXXXXXXXXX " << actualLSB << "  " <<  exactProductLSBPosition << endl;
 		fillBitheap(bh, tilingStrategy, squarer);
 
 		bh -> printBitHeapStatus();

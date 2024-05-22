@@ -20,7 +20,7 @@
 	  int maxDSP=-1, bool superTiles=false, bool use2xk=false, bool useirregular=false, bool useLUT=true,  bool useKaratsuba=false, bool useGenLUT=false, bool useBooth=false, int beamRange=0, bool optiTrunc=true, bool minStages=true */
 
 
-/* TODO: re-enable virtual multipliers as they were working in 4.1.2
+/* Work in progress: re-enable virtual multipliers as they were working in 4.1.2
 
 	 Some use cases among many others that the current IntMultiplier cannot address :
 		   FixComplexMult computes a*b+c*d in a single bit heap
@@ -51,9 +51,13 @@
 		Each tiling is responsible for computing the recentering constant in case of a truncation.
 
 
-		The problem with current code is that wOut for instance is an attribute of the IntMultiplier class (which is OK: we need it for emulate())
-     that is used all over the place in the tilings etc. Sometimes messed with guardBits, etc.
-		All the tiling algorithms should become error-centered (some already are)
+		An example of problem with previous code:
+		wOut is an attribute of the IntMultiplier class. This is OK: we need it for emulate() etc.
+    BUT it was used all over the place in the tilings etc. Sometimes messed with guardBits, etc.
+		This is not OK as virtual multipliers input an anchor (the position of the LSB of the exact product) and an accuracy,
+		  and somehow compute their internal truncation out of this. 
+		So wOut should be removed from the tiling inputs. Same for others.
+		All algorithms should become error-centered (some already are)
 		
 		One thing that will make life simpler (and simpler than in 4.1.2) is to accept to construct a bit heap with empty columns.
 		For instance for a faithful FixComplexMult, let us create a bit heap large enough for the exact products,
@@ -272,10 +276,9 @@ namespace flopoco {
 		int multiplierUid;
 
         /**
-         * @brief Define and calculate the size of the output signals of each multiplier tile in the solution to the BitHeap
-         * @param bh BitHeap instance, where the partial results form the multiplier tiles should compressed
-         * @param solution list of the placed tiles with their parametrization and anchor point
-         * @param bitheapLSBWeight weight (2^bitheapLSBWeight) of the LSB that should be compressed on BH. It is supposed to be 0 for regular multipliers, but can be higher for truncated multipliers.
+         * @brief From a tiling solution, generates VHDL that implements these tiles and transfers their result to a BitHeap
+         * @param bh BitHeap instance, where the partial results form the multiplier tiles should be sent
+         * @param squarer boolean, true if this multiplier tiling is actually a squarer.
          * @return none
          */
 		static void fillBitheap(BitHeap* bh, TilingStrategy *tiling, bool squarer);
