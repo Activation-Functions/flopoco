@@ -56,7 +56,7 @@
     BUT it was used all over the place in the tilings etc. Sometimes messed with guardBits, etc.
 		This is not OK as virtual multipliers input an anchor (the position of the LSB of the exact product) and an accuracy,
 		  and somehow compute their internal truncation out of this. 
-		So wOut should be removed from the tiling inputs. Same for others.
+		So wOut should be removed from the tiling inputs. Same for other parameters (guardBits...).
 		All algorithms should become error-centered (some already are)
 		
 		One thing that will make life simpler (and simpler than in 4.1.2) is to accept to construct a bit heap with empty columns.
