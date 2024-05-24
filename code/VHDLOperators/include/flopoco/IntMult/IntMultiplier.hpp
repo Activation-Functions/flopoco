@@ -109,8 +109,9 @@ namespace flopoco {
 		/** A virtual operator that adds to an existing BitHeap belonging to another Operator.
 		 Also fixed-point oriented:
 		   the formats of the inputs are read from the signals named xname and yname;
-			 the error is given as an mpz_class and is an error in ulps of the exact product
-			 TODO Frankly I don't know what is a tilingStrategy and why it should be returned... 
+			 the errorBudget is given as an mpz_class and is an error in ulps of the exact product
+			 The bit heap is assumed in fixed point (bits range from lsbBH to msbBH)
+			 and exactProductLSBPosition defines the position of the ulp of the exact product in this range.
 		*/
 		static TilingStrategy* addToExistingBitHeap(BitHeap* externalBitheapPtr, string xname, string yname, mpz_class errorBudget, int exactProductLSBPosition=0 );
 
@@ -278,10 +279,11 @@ namespace flopoco {
         /**
          * @brief From a tiling solution, generates VHDL that implements these tiles and transfers their result to a BitHeap
          * @param bh BitHeap instance, where the partial results form the multiplier tiles should be sent
+         * @param exactProductLSB defines the position in the bit heap of the ulp of the exact product.
          * @param squarer boolean, true if this multiplier tiling is actually a squarer.
          * @return none
          */
-		static void fillBitheap(BitHeap* bh, TilingStrategy *tiling, bool squarer);
+		static void fillBitheap(BitHeap* bh, TilingStrategy *tiling, int exactProductLSB, bool squarer);
 
 		static void createFigures(TilingStrategy *tiling);
  
