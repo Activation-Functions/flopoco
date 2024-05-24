@@ -60,33 +60,39 @@ FLOPOCO_DOCKER_TAG := flopoco:$(FLOPOCO_VERSION_FULL)-$(SCALP_BACKEND)-$(DOCKER_
 # -------------------------------------------------------------------------------
 ifeq ($(DOCKER_IMAGE), debian)
 # -------------------------------------------------------------------------------
-DOCKER_SCRIPT += FROM debian:latest\n
-DOCKER_SCRIPT += RUN apt update\n
-DOCKER_SCRIPT += RUN yes | apt install git make sudo\n
-DOCKER_SCRIPT += RUN git clone https://gitlab.com/flopoco/flopoco\n
-DOCKER_SCRIPT += RUN cd flopoco && git checkout dev/cmake && make && make install\n
+define docker_script
+    FROM debian:latest
+    RUN apt update
+    RUN yes | apt install git make sudo
+    RUN git clone https://gitlab.com/flopoco/flopoco
+    RUN cd flopoco && git checkout dev/cmake && make && make install
+endef
 # -------------------------------------------------------------------------------
 else ifeq ($(DOCKER_IMAGE), ubuntu)
 # -------------------------------------------------------------------------------
-DOCKER_SCRIPT += FROM ubuntu:latest\n
-DOCKER_SCRIPT += ARG DEBIAN_FRONTEND=noninteractive\n
-DOCKER_SCRIPT += RUN apt update\n
-DOCKER_SCRIPT += RUN yes | apt install git make sudo\n
-DOCKER_SCRIPT += RUN git clone https://gitlab.com/flopoco/flopoco\n
-DOCKER_SCRIPT += RUN cd flopoco && git checkout dev/cmake && make && make install\n
+define docker_script
+    FROM ubuntu:latest
+    ARG DEBIAN_FRONTEND=noninteractive
+    RUN apt update
+    RUN yes | apt install git make sudo
+    RUN git clone https://gitlab.com/flopoco/flopoco
+    RUN cd flopoco && git checkout dev/cmake && make && make install
+endef
 # -------------------------------------------------------------------------------
 else ifeq ($(DOCKER_IMAGE), archlinux)
 # -------------------------------------------------------------------------------
-DOCKER_SCRIPT := FROM greyltc/archlinux-aur:yay\n
-DOCKER_SCRIPT += RUN yay --noconfirm \n
-DOCKER_SCRIPT += RUN yay --noconfirm -S git make sudo\n
-DOCKER_SCRIPT += RUN git clone https://gitlab.com/flopoco/flopoco\n
-DOCKER_SCRIPT += RUN cd flopoco && git checkout dev/cmake && make && make install\n
+define docker_script
+    FROM greyltc/archlinux-aur:yay
+    RUN yay --noconfirm
+    RUN yay --noconfirm -S git make sudo
+    RUN git clone https://gitlab.com/flopoco/flopoco
+    RUN cd flopoco && git checkout dev/cmake && make && make install
+endef
 endif
 
 $(DOCKERFILE):
 	$(call shell_info, Generating $(B)Dockerfile$(N))
-	@echo '$(DOCKER_SCRIPT)' > $(DOCKERFILE)
+	@echo '$(call docker_script)' > $(DOCKERFILE)
 
 docker: $(DOCKERFILE)
 	$(call shell_info, Building docker image $(B)$(FLOPOCO_DOCKER_TAG)$(N))
@@ -116,8 +122,11 @@ ifeq ($(OS), $(filter $(OS), Ubuntu Debian))
     SYSDEPS += libboost-all-dev
     SYSDEPS += pkg-config
 
-    SYSDEPS_CMD += @$(SUDO) apt update
-    SYSDEPS_CMD += @yes | $(SUDO) apt install $(SYSDEPS)
+define sysdeps_cmd
+    $(SUDO) apt update
+    yes | $(SUDO) apt install $(SYSDEPS)
+endef
+
 # -----------------------------------------------------------
 else ifeq ($(OS), Arch)
 # Using AUR with docker::
@@ -136,8 +145,11 @@ else ifeq ($(OS), Arch)
     SYSDEPS += sollya-git
     SYSDEPS += f2c
 
-    SYSDEPS_CMD += @yay -Syu
-    SYSDEPS_CMD += @yay -S $(SYSDEPS)
+define sysdeps_cmd
+    yay -Syu
+    yay -S $(SYSDEPS)
+endef
+
 # -----------------------------------------------------------
 else ifeq ($(OS), Alpine)
 # -----------------------------------------------------------
@@ -185,7 +197,7 @@ endif
 
 sysdeps:
 	$(call shell_info, Updating $(OS) system $(B)dependencies$(N): $(SYSDEPS))
-	$(SYSDEPS_CMD)
+	$(call sysdeps_cmd)
 
 # build fplll manually ?
 # for building sollya: autoreconf -fi ./configure and make
