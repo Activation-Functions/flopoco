@@ -110,17 +110,28 @@ namespace flopoco {
 			addInput ("Y",  wY);
 			addInput ("A",  wA);
 
-			vhdl << declareFixPoint("XX", signedIO, msbX, lsbX) << " <= " << typecast << "(X);" << endl;
-			vhdl << declareFixPoint("YY", signedIO, msbY, lsbY) << " <= " << typecast << "(Y);" << endl;
-			vhdl << declareFixPoint("AA", signedIO, msbA, lsbA) << " <= " << typecast << "(A);" << endl;
+			// Declaring the output
 			if(lsbPfull >= lsbOut) 			// Easy case when the multiplier needs no truncation
 				{
-					addOutput("R",  wOut);
 					isExact=true;
 					isCorrectlyRounded=true; // no rounding will ever happen
 					isFaithfullyRounded=true;// no rounding will ever happen
-					
+					addOutput("R",  wOut, 2); 
+				}
+			else{ /////////////////// lsbPfull < lsbOut so we build a truncated multiplier
+				isExact=false;
+				isCorrectlyRounded=false; //
+				isFaithfullyRounded=true;// 
+				addOutput("R",  wOut); 
+			}
 
+			// We cast all the inputs to fixed point, it makes life easier. Honest.
+			vhdl << declareFixPoint("XX", signedIO, msbX, lsbX) << " <= " << typecast << "(X);" << endl;
+			vhdl << declareFixPoint("YY", signedIO, msbY, lsbY) << " <= " << typecast << "(Y);" << endl;
+			vhdl << declareFixPoint("AA", signedIO, msbA, lsbA) << " <= " << typecast << "(A);" << endl;
+			
+			if(lsbPfull >= lsbOut) 			// Easy case when the multiplier needs no truncation
+				{
 					// let's do this one first to get the virtual bit heap etc right.
 					if(getTarget()->plainVHDL()) { // mostly to debug emulate() and interface
 						vhdl << declareFixPoint("P", signedIO, msbP, lsbPfull) << " <= XX*YY;" << endl;
@@ -146,11 +157,6 @@ namespace flopoco {
 					}
 				}
 			else	{ /////////////////// lsbPfull < lsbOut so we build a truncated multiplier
-				isExact=false;
-				isCorrectlyRounded=false; //
-				isFaithfullyRounded=true;// 
-				// TODO a constructor argument for a correctly rounded mult?
-				addOutput("R",  wOut, 2); 
 
 			vhdl << "R <=0 -- This result is often wrong but it is computed quickly;  " << endl;
 			}
@@ -567,6 +573,7 @@ namespace flopoco {
       params = {
 				{3,0, 3,0, 10,0, 11,0}, // exact integer without overflow
 				{3,0, 3,0, 10,0, 10,0}, // exact integer with overflow
+				{3,-3, 3,-3, 10,0, 11,0}, // truncated mult added to an integer without overflow
 			};
     }
     else if(testLevel == TestLevel::SUBSTANTIAL)
@@ -586,7 +593,7 @@ namespace flopoco {
       int lsba = param[5];
       int msbout = param[6];
       int lsbout = param[7];
-      for(int plainvhdl=1; plainvhdl < 2; plainvhdl ++) // TODO update to test the bitheap version
+      for(int plainvhdl=0; plainvhdl < 2; plainvhdl ++) // TODO update to test the bitheap version
 				{
 					for(int signedio=0; signedio < 2; signedio++)
 						{
