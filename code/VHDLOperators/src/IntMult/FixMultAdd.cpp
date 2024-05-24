@@ -160,8 +160,11 @@ namespace flopoco {
 					
 			else  // This is the bitheap-based version
 				{
-					BitHeap bh(this, wOut); // rather random
-					IntMultiplier::addToExistingBitHeap(&bh,  "XX", "YY", 0, 0); // TODO this is for an exact XY+A
+					// Or a fixed-point bit heap, not sure it has been much tested
+					int lsbBH = min(lsbPfull, lsbA); // we will never create bits lower than that; some of these columns may remain empty
+					BitHeap bh(this, msbOut, lsbBH);
+					mpz_class multUlpError=0; // TODO an unsigned integer that measures the allowed mult error in ulps of the exact product
+					IntMultiplier::addToExistingBitHeap(&bh,  "XX", "YY", multUlpError, lsbPfull); 
 					bh.addSignal("AA", 0);
 					bh.startCompression();
 					vhdl << tab << declareFixPoint("RR", signedIO, msbOut, lsbOut) << " <= " << typecast << "(" << bh.getSumName() << range(msbOut, lsbOut) << ");" << endl;
@@ -578,9 +581,11 @@ namespace flopoco {
     if(testLevel == TestLevel::QUICK)
     { // The quick tests
       params = {
-				{3,0, 3,0, 10,0, 11,0}, // exact integer without overflow
-				{3,0, 3,0, 10,0, 10,0}, // exact integer with overflow
-				{3,-3, 3,-3, 10,0, 11,0}, // truncated mult added to an integer without overflow
+				{3,0, 3,0, 10,0, 11,0}, // all exact integer without overflow
+				{3,0, 3,0, 10,0, 10,0}, // all exact integer with overflow
+				{3,-3, 3,-3, 10,0, 11,0}, // truncated mult, exact integer without overflow, result integer
+				{3,-3, 3,-3, 10,0, 11,-1}, // truncated mult, exact addend, result half-integer
+				{3,-3, 3,-3, 8,-2, 11,-1}, // truncated mult, truncated addend, result half-integer
 			};
     }
     else if(testLevel == TestLevel::SUBSTANTIAL)

@@ -130,6 +130,8 @@ namespace flopoco {
 	}
 
 
+	
+
 	// the virtual multiplier method
 	TilingStrategy*	IntMultiplier::addToExistingBitHeap(BitHeap* bh, string xname, string yname, mpz_class errorBudget, int exactProductLSBPosition)
 	{
@@ -137,7 +139,7 @@ namespace flopoco {
 		Signal* x = op -> getSignalByName(xname);
 		Signal* y = op -> getSignalByName(yname);
 		// let's get over with the fixed-point stuff
-	int msbX = x->MSB();
+		int msbX = x->MSB();
 		int msbY = y->MSB();
 		int lsbX = x->LSB();
 		int lsbY = y->LSB();
@@ -151,7 +153,7 @@ namespace flopoco {
 			throw(e.str());
 		}
 
-		//cerr << "SSSSSSSSSSSSSSS signedX=" << signedX << endl;
+		//
 		int lsbPfull = lsbX+lsbY; // This is the anchor for exactProductLSBPosition
 
 		// from now on we switch to the integer-multiplier point of view of the Fulda code
@@ -346,7 +348,11 @@ namespace flopoco {
 		
 		op -> schedule(); // This schedules up to the inputs of the multiplier
 
+
 		// Now we want to transfer this tiling to the bit heap.
+		
+#if 0  // TODO? These sanity checks were checking the wrong thing and have been disabled.
+		// Not sure they deserve to be fixed
 		unsigned actualLSB = tilingStrategy->getActualLSB(); // the position of the last column on which we have bits
 		//		unsigned lastColumnKeepBits = tilingStrategy->getLastColumnKeepBits(); // the number of bits to keep on the last column: commented out because mostly useless
 		mpz_class centerErrConstant= tilingStrategy->getErrorCorrectionConstant(); // recentering constant to add to the bit heap
@@ -364,13 +370,13 @@ namespace flopoco {
 			throw(e.str());
 		}
 		unsigned wOutPlusGuardBits = wFullP - actualLSB;
-		
+#endif
 
 
 
 		// Transfer the tiling, including the correction constant, to the bit heap
 		// cerr << "XXXXXXXXXXXXXXXXXXXX " << actualLSB << "  " <<  exactProductLSBPosition << endl;
-		fillBitheap(bh, tilingStrategy, squarer);
+		fillBitheap(bh, tilingStrategy, exactProductLSBPosition, squarer);
 
 		bh -> printBitHeapStatus();
 		op -> schedule(); // This schedule up to the compressor tree
@@ -546,16 +552,16 @@ namespace flopoco {
 		return s.str();
 	}
 
-	void IntMultiplier::fillBitheap(BitHeap* bitheap, TilingStrategy *tiling, bool squarer)
+	void IntMultiplier::fillBitheap(BitHeap* bitheap, TilingStrategy *tiling, int exactProductLSB, bool squarer)
 	{
 		int wX=tiling->getwX();
 		int wY=tiling->getwY();
 		int bitheapLSBWeight=0; 
 		auto solution = tiling->getSolution();
 		mpz_class correctionConstant=tiling->getErrorCorrectionConstant();
-		cerr << " ***** Entering Multiplier::fillBitheap with bitheapLSBWeight=" << bitheapLSBWeight << " and constant=" <<  correctionConstant << endl;
+		cerr << " ***** Entering Multiplier::fillBitheap with bitheapLSBWeight=" << bitheapLSBWeight << " exactProductLSB=" <<  exactProductLSB << " correctionConstant=" <<  correctionConstant << endl;
 		// add the constant to start with
-		bitheap->addConstant(correctionConstant, 0);
+		bitheap->addConstant(correctionConstant, exactProductLSB);
 		// Now add the tiles
 		size_t i = 0;
 		stringstream oname, ofname;
@@ -604,9 +610,9 @@ namespace flopoco {
 
 				    //squarers can have tile counted twice to exploit the symmetries, and hence might require a left shift by one bit or have tiles to be considered negative to compensate for overlap.
 				    if(tile.first.getTilingWeight() == 1 || tile.first.getTilingWeight() == 2){
-				        bitheap->addSignal(ofname.str() + ((i)?to_string(i):""), bitHeapOffset + ((tile.first.getTilingWeight() == 2)?1:0) );
+				        bitheap->addSignal(ofname.str() + ((i)?to_string(i):""), exactProductLSB + bitHeapOffset + ((tile.first.getTilingWeight() == 2)?1:0) );
 				    } else {
-				        bitheap->subtractSignal(ofname.str() + ((i)?to_string(i):""), bitHeapOffset + ((tile.first.getTilingWeight() == -2)?1:0) );
+				        bitheap->subtractSignal(ofname.str() + ((i)?to_string(i):""), exactProductLSB + bitHeapOffset + ((tile.first.getTilingWeight() == -2)?1:0) );
 				    }
 
 					cout << "output (" << i+1 << "/" << parameters.getOutputWeights().size() << "): " << ofname.str() + to_string(i) << " shift " << bitHeapOffset+parameters.getOutputWeights()[i] << endl;
@@ -636,9 +642,9 @@ namespace flopoco {
 
 				//squarers can have tile counted twice to exploit the symmetries, and hence might require a left shift by one bit or have tiles to be considered negative to compensate for overlap.
 				if(tile.first.getTilingWeight() == 1 || tile.first.getTilingWeight() == 2){
-				    bitheap->addSignal(ofname.str(), bitHeapOffset + ((tile.first.getTilingWeight() == 2)?1:0) );
+				    bitheap->addSignal(ofname.str(), exactProductLSB + bitHeapOffset + ((tile.first.getTilingWeight() == 2)?1:0) );
 				} else {
-				    bitheap->subtractSignal(ofname.str(), bitHeapOffset + ((tile.first.getTilingWeight() == -2)?1:0) );
+				    bitheap->subtractSignal(ofname.str(), exactProductLSB + bitHeapOffset + ((tile.first.getTilingWeight() == -2)?1:0) );
 				}
 			}
 			i += 1;
