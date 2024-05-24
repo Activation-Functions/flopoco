@@ -13,9 +13,8 @@ BUILD_DEPENDENCIES_SOURCE_DIR := $(BUILD_DEPENDENCIES_DIR)/src
 BUILD_DEPENDENCIES_BINARY_DIR := $(BUILD_DEPENDENCIES_DIR)/bin
 
 CMAKE_GENERATOR ?= Ninja
-SCALP_BACKEND ?= LPSOLVE
-
 PREFIX ?= /usr/local
+SCALP_BACKEND ?= SCIP
 
 ifneq ($(CONFIG), docker)
     SUDO := sudo
@@ -75,7 +74,6 @@ ifeq ($(OS), $(filter $(OS), Ubuntu Debian))
     SYSDEPS += libmpfi-dev
     SYSDEPS += libmpfr-dev
     SYSDEPS += libsollya-dev
-    SYSDEPS += liblpsolve55-dev
     SYSDEPS += dh-autoreconf
     SYSDEPS += libf2c2-dev
     SYSDEPS += flex
@@ -98,7 +96,6 @@ else ifeq ($(OS), Arch)
     SYSDEPS += mpfr
     SYSDEPS += mpfi
     SYSDEPS += flex
-    SYSDEPS += lpsolve
     SYSDEPS += boost
     SYSDEPS += pkgconf
     SYSDEPS += sollya-git
@@ -126,6 +123,25 @@ else ifeq ($(OS), Alpine)
     SYSDEPS += pkgconf
     SYSDEPS += libxml2-dev
     SYSDEPS += libmpfi libmpfi-static # edge/testing
+# --------------------------------------------
+else ifeq ($(OS), Darwin)
+# macOS: brew (Anastasia) or macports (Martin)
+# --------------------------------------------
+    SYSDEPS += git # brew: ok
+    SYSDEPS += cmake # brew: ok
+    SYSDEPS += gmp # brew: ok
+    SYSDEPS += mpfr # brew: ok
+    SYSDEPS += mpfi # brew: ok
+    SYSDEPS += sollya # brew: ok
+    SYSDEPS += pkg-config # brew: ok
+    SYSDEPS += boost # brew: ok
+    SYSDEPS += autoconf # brew: ok
+    SYSDEPS += automake # brew: ok
+    SYSDEPS += libtool # brew: ok
+    SYSDEPS += f2c #macports: ok
+# issue: https://github.com/buffer/pylibemu/issues/24
+
+
 else
 sysdeps:
 	$(call shell_info, Linux distribution could not be identified, skipping...)
@@ -181,25 +197,13 @@ SCALP_GIT := https://digidev.digi.e-technik.uni-kassel.de/git/scalp.git
 SCALP_SOURCE_DIR := $(BUILD_DEPENDENCIES_SOURCE_DIR)/scalp
 SCALP_BINARY_DIR := $(BUILD_DEPENDENCIES_BINARY_DIR)/scalp
 SCALP_CMAKE_PATCH := $(MKROOT)/tools/scalp_fpc.patch
-SCALP_DEPENDENCIES += $(SCALP_CMAKE_PATCH)
 SCALP := $(SCALP_BINARY_DIR)/lib/libScaLP.so
 
-# ------------------------------------------------------------------
-ifeq ($(SCALP_BACKEND), SCIP)
-# ------------------------------------------------------------------
-    SCALP_DEPENDENCIES += $(SCIP)
-    SCALP_CMAKE_OPTIONS += -DUSE_LPSOLVE=OFF
-    SCALP_CMAKE_OPTIONS += -DSCIP_DIR=$(SCIP_BINARY_DIR)
-    SCALP_CMAKE_OPTIONS += -DSOPLEX_DIR=$(SOPLEX_BINARY_DIR)
-else
-    LPSOLVE_LIBRARIES := /usr/lib/lp_solve/liblpsolve55.so
-    SCALP_DEPENDENCIES += sysdeps
-    SCALP_CMAKE_OPTIONS += -DUSE_LPSOLVE=ON
-    SCALP_CMAKE_OPTIONS += -DLPSOLVE_ROOT_DIR=/usr/include/lpsolve
-    SCALP_CMAKE_OPTIONS += -DLPSOLVE_LIBRARIES=$(LPSOLVE_LIBRARIES)
-    SCALP_CMAKE_OPTIONS += -DLPSOLVE_INCLUDE_DIRS=$(LPSOLVE_INCLUDE_DIRS)
-    SCALP_CMAKE_OPTIONS += -DBUILD_SHARED_LIBRARIES=OFF
-endif
+SCALP_DEPENDENCIES += $(SCALP_CMAKE_PATCH)
+SCALP_DEPENDENCIES += $(SCIP)
+SCALP_CMAKE_OPTIONS += -DUSE_LPSOLVE=OFF
+SCALP_CMAKE_OPTIONS += -DSCIP_DIR=$(SCIP_BINARY_DIR)
+SCALP_CMAKE_OPTIONS += -DSOPLEX_DIR=$(SOPLEX_BINARY_DIR)
 
 # TODO:
 #SCALP_DEPENDENCIES += GUROBI
@@ -213,7 +217,7 @@ $(SCALP): $(SCALP_DEPENDENCIES)
 	@mkdir -p $(SCALP_BINARY_DIR)
 	@git clone $(SCALP_GIT) $(SCALP_SOURCE_DIR)
 	@cd $(SCALP_SOURCE_DIR)
-	@patch -p0 CMakeLists.txt $(SCALP_CMAKE_PATCH)
+	@patch -p0 -f CMakeLists.txt $(SCALP_CMAKE_PATCH)
 	@cmake -B build -G$(CMAKE_GENERATOR)		    \
 	       -DCMAKE_INSTALL_PREFIX=$(SCALP_BINARY_DIR)   \
 	       $(SCALP_CMAKE_OPTIONS)
@@ -258,7 +262,7 @@ $(PAGSUITE): $(SCALP)
 	@mkdir -p $(PAGSUITE_BINARY_DIR)
 	@git clone $(PAGSUITE_GIT) $(PAGSUITE_SOURCE_DIR)
 	@cd $(PAGSUITE_SOURCE_DIR)
-	@patch -p0 CMakeLists.txt $(PAGSUITE_CMAKE_PATCH)
+	@patch -p0 -f CMakeLists.txt $(PAGSUITE_CMAKE_PATCH)
 	@cmake -B build -G$(CMAKE_GENERATOR)			\
 	       -DSCALP_PREFIX_PATH=$(SCALP_BINARY_DIR)		\
 	       -DCMAKE_INSTALL_PREFIX=$(PAGSUITE_BINARY_DIR)
