@@ -129,37 +129,44 @@ namespace flopoco {
 			vhdl << declareFixPoint("XX", signedIO, msbX, lsbX) << " <= " << typecast << "(X);" << endl;
 			vhdl << declareFixPoint("YY", signedIO, msbY, lsbY) << " <= " << typecast << "(Y);" << endl;
 			vhdl << declareFixPoint("AA", signedIO, msbA, lsbA) << " <= " << typecast << "(A);" << endl;
+
+
+
+
 			
-			if(lsbPfull >= lsbOut) 			// Easy case when the multiplier needs no truncation
-				{
 					// let's do this one first to get the virtual bit heap etc right.
-					if(getTarget()->plainVHDL()) { // mostly to debug emulate() and interface
+			if(getTarget()->plainVHDL())  // mostly to debug emulate() and interface
+				{
+					if(lsbPfull >= lsbOut) 			// Easy case when the multiplier needs no truncation
+					{
 						vhdl << declareFixPoint("P", signedIO, msbP, lsbPfull) << " <= XX*YY;" << endl;
 						int newSizeP=msbOut -lsbPfull+1;
 						vhdl << declareFixPoint("RP", signedIO, msbOut, lsbOut) << " <= " << (signedIO ? signExtend("P",  newSizeP) : zeroExtend("P", newSizeP))<< ";" << endl;
 						//						cerr << "??? " << wA + msbOut-msbA << " " << signExtend("A", wA + msbOut-msbA) << " " << zeroExtend("A", wA+msbOut-msbA) << endl; 
 						int newSizeA=msbOut -lsbA+1;
 						vhdl << declareFixPoint("RA", signedIO, msbOut, lsbOut) << " <= " << typecast << "(" << (signedIO ? signExtend("AA", newSizeA) : zeroExtend("AA", newSizeA))<< ");" << endl;
-						
+				
 						vhdl << declareFixPoint("RR", signedIO, msbOut, lsbOut) << " <= RA+RP;" << endl;
-						
-					} // end plainVHDL
-					
-
-					
-					else { // This is the bitheap-based version
-						BitHeap bh(this, wOut); // rather random
-						IntMultiplier::addToExistingBitHeap(&bh,  "XX", "YY", 0, 0); // TODO this is for an exact XY+A
-						bh.addSignal("AA", 0);
-						bh.startCompression();
-						vhdl << tab << declareFixPoint("RR", signedIO, msbOut, lsbOut) << " <= " << typecast << "(" << bh.getSumName() << range(msbOut, lsbOut) << ");" << endl;
-
+				
 					}
-				}
-			else	{ /////////////////// lsbPfull < lsbOut so we build a truncated multiplier
+				else
+					{ /////////////////// lsbPfull < lsbOut so we build a truncated multiplier
 
-			vhdl << "R <=0 -- This result is often wrong but it is computed quickly;  " << endl;
-			}
+						vhdl << "RR <=0; -- This result is often wrong but it is computed quickly;  " << endl;
+					}
+
+				}
+
+					
+			else  // This is the bitheap-based version
+				{
+					BitHeap bh(this, wOut); // rather random
+					IntMultiplier::addToExistingBitHeap(&bh,  "XX", "YY", 0, 0); // TODO this is for an exact XY+A
+					bh.addSignal("AA", 0);
+					bh.startCompression();
+					vhdl << tab << declareFixPoint("RR", signedIO, msbOut, lsbOut) << " <= " << typecast << "(" << bh.getSumName() << range(msbOut, lsbOut) << ");" << endl;
+					
+				}
 			vhdl << "R <= std_logic_vector(RR);  " << endl;
 
 		};
