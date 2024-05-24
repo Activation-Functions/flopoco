@@ -166,6 +166,9 @@ namespace flopoco {
 					mpz_class multUlpError=0; // TODO an unsigned integer that measures the allowed mult error in ulps of the exact product
 					IntMultiplier::addToExistingBitHeap(&bh,  "XX", "YY", multUlpError, lsbPfull); 
 					bh.addSignal("AA", 0);
+					if(!isExact) {
+						bh.addConstantOneBit(lsbOut-1); // the round bit
+					}
 					bh.startCompression();
 					vhdl << tab << declareFixPoint("RR", signedIO, msbOut, lsbOut) << " <= " << typecast << "(" << bh.getSumName() << range(msbOut, lsbOut) << ");" << endl;
 					
@@ -541,9 +544,24 @@ namespace flopoco {
 
 
 
-	void FixMultAdd::buildStandardTestCases(TestCaseList* tcl)
-	{
-		//TODO
+	void FixMultAdd::buildStandardTestCases(TestCaseList* tcl) {
+		TestCase *tc;
+
+		// our noble purpose here is to debug until the case 0*0+0 works
+		tc = new TestCase(this); 
+		tc->addInput("X", 0);
+		tc->addInput("Y", 0);
+		tc->addInput("A", 0);
+		emulate(tc);
+		tcl->add(tc);
+
+		// ... and then the case 0*0 + ulp(A)		(a distant dream)
+		tc = new TestCase(this); 
+		tc->addInput("X", 0);
+		tc->addInput("Y", 0);
+		tc->addInput("A", 1);
+		emulate(tc);
+		tcl->add(tc);
 	}
 
 	
