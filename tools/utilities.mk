@@ -73,6 +73,14 @@ else ifeq ($(call file_exists, /etc/debian_version), 1)
     OS_VERSION_FULL := $(shell cat /etc/debian_version)
     OS_VERSION      := $(OS_VERSION_FULL)
     OS_LTS          := $(OS_VERSION)
+    # ---------------------------------------------------
+else ifeq ($(call file_exists, /usr/bin/sw_vers), 1)
+# ---------------------------------------------------
+    OS              := Darwin
+    OS_VERSION_FULL := $(word 4, $(shell /usr/bin/sw_vers))
+    OS_VERSION      := $(OS_VERSION_FULL)
+    OS_LTS          := NA
+# ---------------------------------------------------
 else
 # ---------------------------------------------------
     OS              := NA

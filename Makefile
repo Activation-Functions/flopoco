@@ -51,8 +51,44 @@ clean:
 # -----------------------------------------------------------------------------
 .PHONY: docker
 # -----------------------------------------------------------------------------
-FLOPOCO_DOCKER_TAG := flopoco:$(FLOPOCO_VERSION_FULL)-$(SCALP_BACKEND)
-docker:
+
+DOCKER_IMAGE ?= debian
+DOCKER_IMAGE_SUPPORTED := ubuntu debian archlinux alpine
+DOCKERFILE := $(MKROOT)/Dockerfile
+FLOPOCO_DOCKER_TAG := flopoco:$(FLOPOCO_VERSION_FULL)-$(SCALP_BACKEND)-$(DOCKER_IMAGE)
+
+# -------------------------------------------------------------------------------
+ifeq ($(DOCKER_IMAGE), debian)
+# -------------------------------------------------------------------------------
+DOCKER_SCRIPT += FROM debian:latest\n
+DOCKER_SCRIPT += RUN apt update\n
+DOCKER_SCRIPT += RUN yes | apt install git make sudo\n
+DOCKER_SCRIPT += RUN git clone https://gitlab.com/flopoco/flopoco\n
+DOCKER_SCRIPT += RUN cd flopoco && git checkout dev/cmake && make && make install\n
+# -------------------------------------------------------------------------------
+else ifeq ($(DOCKER_IMAGE), ubuntu)
+# -------------------------------------------------------------------------------
+DOCKER_SCRIPT += FROM ubuntu:latest\n
+DOCKER_SCRIPT += ARG DEBIAN_FRONTEND=noninteractive\n
+DOCKER_SCRIPT += RUN apt update\n
+DOCKER_SCRIPT += RUN yes | apt install git make sudo\n
+DOCKER_SCRIPT += RUN git clone https://gitlab.com/flopoco/flopoco\n
+DOCKER_SCRIPT += RUN cd flopoco && git checkout dev/cmake && make && make install\n
+# -------------------------------------------------------------------------------
+else ifeq ($(DOCKER_IMAGE), archlinux)
+# -------------------------------------------------------------------------------
+DOCKER_SCRIPT := FROM greyltc/archlinux-aur:yay\n
+DOCKER_SCRIPT += RUN yay --noconfirm \n
+DOCKER_SCRIPT += RUN yay --noconfirm -S git make sudo\n
+DOCKER_SCRIPT += RUN git clone https://gitlab.com/flopoco/flopoco\n
+DOCKER_SCRIPT += RUN cd flopoco && git checkout dev/cmake && make && make install\n
+endif
+
+$(DOCKERFILE):
+	$(call shell_info, Generating $(B)Dockerfile$(N))
+	@echo '$(DOCKER_SCRIPT)' > $(DOCKERFILE)
+
+docker: $(DOCKERFILE)
 	$(call shell_info, Building docker image $(B)$(FLOPOCO_DOCKER_TAG)$(N))
 	@docker build --no-cache					    \
 		      --build-arg SCALP_BACKEND=$(SCALP_BACKEND)	    \
@@ -63,9 +99,9 @@ docker:
 .PHONY: sysdeps
 # -----------------------------------------------------------------------------
 
-# ------------------------------------------
+# -----------------------------------------------------------
 ifeq ($(OS), $(filter $(OS), Ubuntu Debian))
-# ------------------------------------------
+# -----------------------------------------------------------
     SYSDEPS += git
     SYSDEPS += g++
     SYSDEPS += cmake
@@ -79,15 +115,14 @@ ifeq ($(OS), $(filter $(OS), Ubuntu Debian))
     SYSDEPS += flex
     SYSDEPS += libboost-all-dev
     SYSDEPS += pkg-config
-sysdeps:
-	$(call shell_info, Updating $(OS) system $(B)dependencies$(N): $(SYSDEPS))
-	@$(SUDO) apt update
-	@yes | $(SUDO) apt install $(SYSDEPS)
-# -------------------------------------
+
+    SYSDEPS_CMD += @$(SUDO) apt update
+    SYSDEPS_CMD += @yes | $(SUDO) apt install $(SYSDEPS)
+# -----------------------------------------------------------
 else ifeq ($(OS), Arch)
-# -------------------------------------
 # Using AUR with docker::
 # docker pull greyltc/archlinux-aur:yay
+# -----------------------------------------------------------
     SYSDEPS += git
     SYSDEPS += gcc
     SYSDEPS += cmake
@@ -100,14 +135,12 @@ else ifeq ($(OS), Arch)
     SYSDEPS += pkgconf
     SYSDEPS += sollya-git
     SYSDEPS += f2c
-sysdeps:
-	$(call shell_info, Updating $(OS) system $(B)dependencies$(N): $(SYSDEPS))
-	@yay -Syu
-	@yay -S $(SYSDEPS)
 
-# -------------------------------------
+    SYSDEPS_CMD += @yay -Syu
+    SYSDEPS_CMD += @yay -S $(SYSDEPS)
+# -----------------------------------------------------------
 else ifeq ($(OS), Alpine)
-# -------------------------------------
+# -----------------------------------------------------------
     SYSDEPS += git
     SYSDEPS += gcc
     SYSDEPS += cmake
@@ -123,29 +156,36 @@ else ifeq ($(OS), Alpine)
     SYSDEPS += pkgconf
     SYSDEPS += libxml2-dev
     SYSDEPS += libmpfi libmpfi-static # edge/testing
-# --------------------------------------------
+# -----------------------------------------------------------
 else ifeq ($(OS), Darwin)
-# macOS: brew (Anastasia) or macports (Martin)
-# --------------------------------------------
-    SYSDEPS += git # brew: ok
-    SYSDEPS += cmake # brew: ok
-    SYSDEPS += gmp # brew: ok
-    SYSDEPS += mpfr # brew: ok
-    SYSDEPS += mpfi # brew: ok
-    SYSDEPS += sollya # brew: ok
-    SYSDEPS += pkg-config # brew: ok
-    SYSDEPS += boost # brew: ok
-    SYSDEPS += autoconf # brew: ok
-    SYSDEPS += automake # brew: ok
-    SYSDEPS += libtool # brew: ok
-    SYSDEPS += f2c #macports: ok
-# issue: https://github.com/buffer/pylibemu/issues/24
-
-
+# macOS: homebrew (Anastasia) or macports (Martin)
+MACOS_PKG_MANAGER ?= brew
+# -----------------------------------------------------------
+    SYSDEPS += git          # brew: ok | macports: ok
+    SYSDEPS += wget         # brew: ok | macports: ok
+    SYSDEPS += make         # brew: ok | macports: gmake
+    SYSDEPS += cmake        # brew: ok | macports: cmake
+    SYSDEPS += gmp          # brew: ok | macports: ok
+    SYSDEPS += mpfr         # brew: ok | macports: ok
+    SYSDEPS += mpfi         # brew: ok | macports: ok
+    SYSDEPS += sollya       # brew: ok | macports: nope
+    SYSDEPS += pkg-config   # brew: ok | macports: pkgconfig
+    SYSDEPS += boost        # brew: ok | macports: ok
+    SYSDEPS += autoconf     # brew: ok | macports: ok
+    SYSDEPS += automake     # brew: ok | macports: ok
+    SYSDEPS += libtool      # brew: ok | macports: ok
+    SYSDEPS += f2c          # brew: nope | macports: ok
+    SYSDEPS += lapack       # brew: ok
+    SYSDEPS += openblas     # brew: ok
+# -----------------------------------------------------------
 else
-sysdeps:
-	$(call shell_info, Linux distribution could not be identified, skipping...)
+# -----------------------------------------------------------
+    SYSDEPS_CMD += $(call shell_info, Linux distribution could not be identified, skipping...)
 endif
+
+sysdeps:
+	$(call shell_info, Updating $(OS) system $(B)dependencies$(N): $(SYSDEPS))
+	$(SYSDEPS_CMD)
 
 # build fplll manually ?
 # for building sollya: autoreconf -fi ./configure and make
@@ -191,6 +231,14 @@ $(SCIP): $(SOPLEX)
 	@cmake --build build --target install
 
 # -----------------------------------------------------------------------------
+.PHONY: gurobi
+# -----------------------------------------------------------------------------
+# Gurobi (TODO):
+# - Linux(x86): https://packages.gurobi.com/11.0/gurobi11.0.2_linux64.tar.gz
+# - Linux(arm): https://packages.gurobi.com/11.0/gurobi11.0.2_armlinux64.tar.gz
+# -- macOS: https://packages.gurobi.com/11.0/gurobi11.0.2_macos_universal2.pkg
+
+# -----------------------------------------------------------------------------
 .PHONY: scalp
 # -----------------------------------------------------------------------------
 SCALP_GIT := https://digidev.digi.e-technik.uni-kassel.de/git/scalp.git
@@ -200,14 +248,15 @@ SCALP_CMAKE_PATCH := $(MKROOT)/tools/scalp_fpc.patch
 SCALP := $(SCALP_BINARY_DIR)/lib/libScaLP.so
 
 SCALP_DEPENDENCIES += $(SCALP_CMAKE_PATCH)
-SCALP_DEPENDENCIES += $(SCIP)
 SCALP_CMAKE_OPTIONS += -DUSE_LPSOLVE=OFF
-SCALP_CMAKE_OPTIONS += -DSCIP_DIR=$(SCIP_BINARY_DIR)
-SCALP_CMAKE_OPTIONS += -DSOPLEX_DIR=$(SOPLEX_BINARY_DIR)
 
-# TODO:
-#SCALP_DEPENDENCIES += GUROBI
-#SCALP_DEPENDENCIES += CPLEX
+ifdef WITH_GUROBI # ---------------
+    SCALP_DEPENDENCIES += $(GUROBI)
+else # ----------------------------
+    SCALP_DEPENDENCIES += $(SCIP)
+    SCALP_CMAKE_OPTIONS += -DSCIP_DIR=$(SCIP_BINARY_DIR)
+    SCALP_CMAKE_OPTIONS += -DSOPLEX_DIR=$(SOPLEX_BINARY_DIR)
+endif # ---------------------------
 
 scalp: $(SCALP)
 
@@ -231,6 +280,12 @@ WCPG_COMMIT_HASH := b90253a4a6a650300454f5656a7e8410e0493175
 WCPG_SOURCE_DIR := $(BUILD_DEPENDENCIES_SOURCE_DIR)/wcpg
 WCPG_BINARY_DIR := $(BUILD_DEPENDENCIES_BINARY_DIR)/wcpg
 WCPG := $(WCPG_BINARY_DIR)/lib/libwcpg.a
+WCPG_CONFIGURE_FLAGS += CFLAGS=-I/opt/local/include
+
+# ----------------------------------------------------------------
+.PHONY: f2c
+# ----------------------------------------------------------------
+# on a few distributions (macOS) f2c is not available as a package
 
 wcpg: $(WCPG)
 
@@ -242,7 +297,7 @@ $(WCPG):
 	@cd $(WCPG_SOURCE_DIR)
 	@git checkout $(WCPG_COMMIT_HASH)
 	@bash autogen.sh
-	@./configure --prefix=$(WCPG_BINARY_DIR)
+	@./configure --prefix=$(WCPG_BINARY_DIR) $(WCPG_CONFIGURE_FLAGS)
 	@make -j8 install
 
 # -----------------------------------------------------------------------------
