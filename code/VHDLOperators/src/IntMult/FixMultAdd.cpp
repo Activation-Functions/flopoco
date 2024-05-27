@@ -137,24 +137,48 @@ namespace flopoco {
 					// let's do this one first to get the virtual bit heap etc right.
 			if(getTarget()->plainVHDL())  // mostly to debug emulate() and interface
 				{
-					if(lsbPfull >= lsbOut) 			// Easy case when the multiplier needs no truncation
-					{
-						vhdl << declareFixPoint("P", signedIO, msbP, lsbPfull) << " <= XX*YY;" << endl;
-						int newSizeP=msbOut -lsbPfull+1;
-						vhdl << declareFixPoint("RP", signedIO, msbOut, lsbOut) << " <= " << (signedIO ? signExtend("P",  newSizeP) : zeroExtend("P", newSizeP))<< ";" << endl;
-						//						cerr << "??? " << wA + msbOut-msbA << " " << signExtend("A", wA + msbOut-msbA) << " " << zeroExtend("A", wA+msbOut-msbA) << endl; 
-						int newSizeA=msbOut -lsbA+1;
-						vhdl << declareFixPoint("RA", signedIO, msbOut, lsbOut) << " <= " << typecast << "(" << (signedIO ? signExtend("AA", newSizeA) : zeroExtend("AA", newSizeA))<< ");" << endl;
-				
-						vhdl << declareFixPoint("RR", signedIO, msbOut, lsbOut) << " <= RA+RP;" << endl;
-				
-					}
-				else
-					{ /////////////////// lsbPfull < lsbOut so we build a truncated multiplier
+					//For plainVHDL we even sometimes round to the nearest because we are lazy
 
-						vhdl << "RR <=0; -- This result is often wrong but it is computed quickly;  " << endl;
-					}
+					// Error analysis cases. lsbAdd is the size of the eventual adder.
+					int lsbAdd = lsbOut-2; // works in any case, ie if both addend and product are truncated to lsbAdd
+					if((lsbPfull<lsbOut-1 && lsbA>=lsbOut-1)  || (lsbPfull>=lsbOut-1 && lsbA<lsbOut-1) ) 	 
+						{
+							lsbAdd=lsbOut-1; 		// only one will be truncated with this lsbAdd
+						}
+					else if(lsbPfull>=lsbOut && lsbA>=lsbOut) // nobody needs truncation  
+						{
+							lsbAdd=min(lsbPfull,lsbA);
+						}
+						
+					vhdl << declareFixPoint("Pfull", signedIO, msbP, lsbPfull) << " <= XX*YY;" << endl;
+					// Now we have to possibly truncate and possibly extend both A and Pfull
+					// Ptrunc and Atrunc manage the LSBs: either truncate with a range, or zero-extend to the right 
+					vhdl << declareFixPoint("Ptrunc", signedIO, msbP, lsbAdd) << " <= Pfull" << (lsbAdd>lsbPfull? range(msbP-lsbPfull, lsbAdd-lsbPfull) : "") << (lsbAdd<lsbPfull? " & "+zg(lsbPfull-lsbAdd): "") << ";" << endl;
+					int newSizeP = msbOut-lsbAdd+1;
+					vhdl << declareFixPoint("Pext", signedIO, msbOut, lsbAdd) << " <= " << (signedIO ? signExtend("Ptrunc",  newSizeP) : zeroExtend("Ptrunc", newSizeP))<< ";" << endl;
 
+					vhdl << declareFixPoint("Atrunc", signedIO, msbA, lsbAdd) << " <= AA" << (lsbAdd>lsbA? range(msbA-lsbA,lsbAdd-lsbA): "") << (lsbAdd<lsbA? " & "+zg(lsbA-lsbAdd): "") << ";" << endl;
+					int newSizeA = msbOut-lsbAdd+1;
+					vhdl << declareFixPoint("Aext", signedIO, msbOut, lsbAdd) << " <= " << (signedIO ? signExtend("Atrunc",  newSizeA) : zeroExtend("Atrunc", newSizeA))<< ";" << endl;
+
+					if (lsbAdd==lsbOut-1)
+						{// we may add the rounding bit for free
+							vhdl << declareFixPoint("Sum", signedIO, msbOut, lsbOut-1) << " <= Aext+Pext + to_" << typecast << "(1, Sum'length); -- rounding bit" << endl;
+							vhdl << declareFixPoint("RR", signedIO, msbOut, lsbOut) << " <= Sum" << range(msbOut-lsbOut+1, 1) << ";" << endl;
+						}
+					if (lsbAdd==lsbOut-2)
+						{// We add half a rounding bit, better than nothing but adding the rounding bit at the proper place would be more expensive 
+							vhdl << declareFixPoint("Sum", signedIO, msbOut, lsbOut-1) << " <= Aext+Pext + to_" << typecast << "(1, Sum'length); --half rounding bit but it is already good" << endl;
+							vhdl << declareFixPoint("RR", signedIO, msbOut, lsbOut) << " <= Sum" << range(msbOut-lsbOut+2, 2) << ";" << endl;
+						}
+					if (lsbAdd==lsbOut)
+						{// We add half a rounding bit, better than nothing but adding the rounding bit at the proper place would be more expensive 
+							vhdl << declareFixPoint("RR", signedIO, msbOut, lsbOut) << " <= Aext+Pext;" << endl;
+						}
+					if (lsbAdd>lsbOut)						
+						{
+							vhdl << declareFixPoint("RR", signedIO, msbOut, lsbOut) << " <= (Aext+Pext) & "<< zg(lsbAdd-lsbOut) <<";" << endl;
+						}
 				}
 
 					
@@ -170,7 +194,7 @@ namespace flopoco {
 						bh.addConstantOneBit(lsbOut-1); // the round bit
 					}
 					bh.startCompression();
-					vhdl << tab << declareFixPoint("RR", signedIO, msbOut, lsbOut) << " <= " << typecast << "(" << bh.getSumName() << range(msbOut, lsbOut) << ");" << endl;
+					vhdl << tab << declareFixPoint("RR", signedIO, msbOut, lsbOut) << " <= " << typecast << "(" << bh.getSumName() << range(msbOut-lsbBH, lsbOut-lsbBH) << ");" << endl;
 					
 				}
 			vhdl << "R <= std_logic_vector(RR);  " << endl;
@@ -547,7 +571,7 @@ namespace flopoco {
 	void FixMultAdd::buildStandardTestCases(TestCaseList* tcl) {
 		TestCase *tc;
 
-		// our noble purpose here is to debug until the case 0*0+0 works
+		// our ambitious goal here is to debug until the case 0*0+0 works
 		tc = new TestCase(this); 
 		tc->addInput("X", 0);
 		tc->addInput("Y", 0);

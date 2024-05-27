@@ -413,8 +413,9 @@ enum BitType : unsigned;
 	private:
 		Operator* op;          /**< This is where the VHDL will go for instance */
 
-		vector<vector<Bit*> > bits;                 /**< The bits currently contained in the bitheap, ordered into columns by position in the bitheap,
-														 and by arrival time of the bits, i.e. lexicographic order on (cycle, cp), inside each column. */
+		vector<vector<Bit*> > bits;                 /**< The bits currently contained in the bitheap,
+																									 ordered into columns by position in the bitheap (vector[0] corresponds to lsb),
+														 and ordered in each column by arrival time of the bits, i.e. lexicographic order on (cycle, cp). */
 		vector<vector<Bit*> > history;              /**< All the bits that have been added (and possibly removed at some point) to the bitheap. */
 		mpz_class constantBits;						          /**< The sum of all the constant bits that need to be added to the bit heap
 												   (constants added to the bitheap, for rounding, two's complement etc)
