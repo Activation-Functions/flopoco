@@ -95,7 +95,6 @@ namespace flopoco {
 			name << "_y_" << vhdlize(msbY) << "_" << vhdlize(lsbY);
 			name << "_a_" << vhdlize(msbA) << "_" << vhdlize(lsbA);
 			name << "_r_" << vhdlize(msbOut) << "_" << vhdlize(lsbOut);
-			name << Operator::getNewUId();
 			setNameWithFreqAndUID(name.str());
 			REPORT(LogLevel::DEBUG, "Building " << name.str() << endl 
 						 << "     X is " << (signedIO?"s":"u") << "fix(" << msbX <<    ", " << lsbX << ")" <<endl 
@@ -380,6 +379,7 @@ namespace flopoco {
     else if(testLevel >= TestLevel::EXHAUSTIVE)
     { // The substantial unit tests
     }
+		
 
     for (auto param : params)
     {
