@@ -34,6 +34,7 @@ CMAKE_GENERATOR ?= Ninja
 GUROBI_ROOT_DIR ?= $(GUROBI_HOME)
 PREFIX ?= /usr/local
 WITH_SCIP ?= ON
+WITH_NVC ?= ON
 
 $(call static_info, $(B)Make targets$(N): $(MAKECMDGOALS))
 
@@ -146,6 +147,8 @@ ifeq ($(OS), $(filter $(OS), Ubuntu Debian))
     SYSDEPS += libgmp-dev
     SYSDEPS += libmpfi-dev
     SYSDEPS += libmpfr-dev
+    SYSDEPS += libopenblas-dev
+    SYSDEPS += liblapack-dev
     SYSDEPS += libsollya-dev
     SYSDEPS += dh-autoreconf
     SYSDEPS += libf2c2-dev
@@ -156,6 +159,22 @@ ifeq ($(OS), $(filter $(OS), Ubuntu Debian))
 define sysdeps_cmd
     $(SUDO) apt update
     yes | $(SUDO) apt install $(SYSDEPS)
+endef
+
+    NVC_DEPENDENCIES += build-essential
+    NVC_DEPENDENCIES += automake
+    NVC_DEPENDENCIES += autoconf
+    NVC_DEPENDENCIES += flex
+    NVC_DEPENDENCIES += llvm-dev
+    NVC_DEPENDENCIES += pkg-config
+    NVC_DEPENDENCIES += zlib1g-dev
+    NVC_DEPENDENCIES += libdw-dev
+    NVC_DEPENDENCIES += libffi-dev
+    NVC_DEPENDENCIES += libzstd-dev
+
+define nvcdeps_cmd
+    $(SUDO) apt update
+    yes | $(SUDO) apt install $(NVC_DEPENDENCIES)
 endef
 
 # -----------------------------------------------------------
@@ -386,12 +405,33 @@ $(PAGSUITE): $(SCALP)
 	@cmake --build build --target install
 
 # -----------------------------------------------------------------------------
+.PHONY: nvc
+# -----------------------------------------------------------------------------
+NVC := /usr/local/bin/nvc
+NVC_GIT := https://github.com/nickg/nvc.git
+NVC_SOURCE_DIR := $(BUILD_DEPENDENCIES_SOURCE_DIR)/nvc
+
+nvc: $(NVC)
+
+.ONESHELL:
+$(NVC):
+	$(call shell_info, Fetching and build $(B)NVC$(N) dependency)
+	$(call nvcdeps_cmd)
+	@git clone $(NVC_GIT) $(NVC_SOURCE_DIR)
+	@cd $(NVC_SOURCE_DIR)
+	@./autogen.sh
+
+# -----------------------------------------------------------------------------
 .PHONY: dependencies
 # -----------------------------------------------------------------------------
 FLOPOCO_DEPENDENCIES += sysdeps
 FLOPOCO_DEPENDENCIES += $(SCALP)
 FLOPOCO_DEPENDENCIES += $(WCPG)
 FLOPOCO_DEPENDENCIES += $(PAGSUITE)
+
+ifeq ($(WITH_NVC), ON)
+    FLOPOCO_DEPENDENCIES += $(NVC)
+endif
 
 dependencies: $(FLOPOCO_DEPENDENCIES)
 
