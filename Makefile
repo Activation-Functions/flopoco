@@ -12,14 +12,6 @@ BUILD_DEPENDENCIES_DIR := $(MKROOT)/build/dependencies
 BUILD_DEPENDENCIES_SOURCE_DIR := $(BUILD_DEPENDENCIES_DIR)/src
 BUILD_DEPENDENCIES_BINARY_DIR := $(BUILD_DEPENDENCIES_DIR)/bin
 
-CMAKE_GENERATOR ?= Ninja
-PREFIX ?= /usr/local
-SCALP_BACKEND ?= SCIP
-
-ifneq ($(CONFIG), docker)
-    SUDO := sudo
-endif
-
 include $(MKROOT)/tools/utilities.mk
 
 $(call static_ok, Running $(B)FloPoCo$(N) build script\
@@ -29,8 +21,32 @@ $(call static_ok, Running $(B)FloPoCo$(N) build script\
 $(call static_ok, Branch $(B)$(FLOPOCO_BRANCH)$(N))
 $(call static_ok, Commit $(B)#$(FLOPOCO_COMMIT_HASH)$(N))
 $(call static_ok, Running $(B)from$(N): $(PWD))
+
+ifndef MAKECMDGOALS
+    MAKECMDGOALS := all
+endif
+
+ifneq ($(CONFIG), docker)
+    SUDO := sudo
+endif
+
+CMAKE_GENERATOR ?= Ninja
+GUROBI_ROOT_DIR ?= /opt/gurobi1102/linux64
+PREFIX ?= /usr/local
+
 $(call static_ok, $(B)Make targets$(N): $(MAKECMDGOALS))
-$(call static_ok, $(B)ScaLP backend$(N): $(SCALP_BACKEND))
+
+# -----------------------------------------------------------------------------
+SCALP_BACKEND ?= SCIP
+SCALP_BACKEND_SUPPORTED := SCIP GUROBI
+# -----------------------------------------------------------------------------
+ifneq ($(SCALP_BACKEND), $(filter $(SCALP_BACKEND), $(SCALP_BACKEND_SUPPORTED)))
+    $(call static_error, Unsupported $(B)SCALP_BACKEND$(N) $(SCALP_BACKEND))
+    $(call static_error, Supported backends: $(SCALP_BACKEND_SUPPORTED))
+    $(error Aborting...)
+else
+    $(call static_ok, $(B)SCALP_BACKEND$(N): $(SCALP_BACKEND))
+endif
 
 # -----------------------------------------------------------------------------
 
@@ -54,6 +70,17 @@ clean:
 
 DOCKER_IMAGE ?= debian
 DOCKER_IMAGE_SUPPORTED := ubuntu debian archlinux alpine
+
+ifeq (docker, $(filter docker, $(MAKECMDGOALS)))
+    ifneq ($(DOCKER_IMAGE), $(filter $(DOCKER_IMAGE), $(DOCKER_IMAGE_SUPPORTED)))
+        $(call static_error, Unsupported $(B)DOCKER_IMAGE$(N) $(DOCKER_IMAGE))
+        $(call static_error, Supported images: $(DOCKER_IMAGE_SUPPORTED))
+        $(error Aborting...)
+    else
+        $(call static_ok, $(B)DOCKER_IMAGE$(N): $(DOCKER_IMAGE))
+    endif
+endif
+
 DOCKERFILE := $(MKROOT)/Dockerfile
 FLOPOCO_DOCKER_TAG := flopoco:$(FLOPOCO_VERSION_FULL)-$(SCALP_BACKEND)-$(DOCKER_IMAGE)
 
@@ -168,7 +195,7 @@ else ifeq ($(OS), Alpine)
     SYSDEPS += pkgconf
     SYSDEPS += libxml2-dev
     SYSDEPS += libmpfi libmpfi-dev # edge/testing
-    SYSDEPS += blas-dev openblas-dev
+    SYSDEPS += blas-dev openblas-dev # doesn't work with WCPG
 # -----------------------------------------------------------
 else ifeq ($(OS), Darwin)
 # macOS: homebrew (Anastasia) or macports (Martin)
@@ -208,7 +235,9 @@ sysdeps:
 # -----------------------------------------------------------------------------
 SOPLEX_GIT := https://github.com/scipopt/soplex.git
 SOPLEX_SOURCE_DIR := $(BUILD_DEPENDENCIES_SOURCE_DIR)/soplex
-SOPLEX_BINARY_DIR := $(BUILD_DEPENDENCIES_BINARY_DIR)/soplex
+
+# /!\ ScaLP looks for soplex in the same 'lib' directory
+SOPLEX_BINARY_DIR := $(BUILD_DEPENDENCIES_BINARY_DIR)/scip
 SOPLEX := $(SOPLEX_BINARY_DIR)/lib/libsoplex.a
 
 soplex: $(SOPLEX)
@@ -258,7 +287,9 @@ SCALP_GIT := https://digidev.digi.e-technik.uni-kassel.de/git/scalp.git
 SCALP_SOURCE_DIR := $(BUILD_DEPENDENCIES_SOURCE_DIR)/scalp
 SCALP_BINARY_DIR := $(BUILD_DEPENDENCIES_BINARY_DIR)/scalp
 SCALP_CMAKE_PATCH := $(MKROOT)/tools/scalp_fpc.patch
-SCALP := $(SCALP_BINARY_DIR)/lib/libScaLP.so
+SCALP_SCIP_PATCH := $(MKROOT)/tools/find_scip.patch
+
+SCALP += $(SCALP_BINARY_DIR)/lib/libScaLP.so
 
 SCALP_DEPENDENCIES += $(SCALP_CMAKE_PATCH)
 SCALP_CMAKE_OPTIONS += -DUSE_LPSOLVE=OFF
@@ -266,10 +297,13 @@ SCALP_CMAKE_OPTIONS += -DUSE_LPSOLVE=OFF
 ifeq ($(SCALP_BACKEND), GUROBI)
     SCALP_DEPENDENCIES += $(GUROBI)
     SCALP_CMAKE_OPTIONS += -DUSE_GUROBI=ON
-    SCALP_CMAKE_OPTIONS += -DGUROBI_ROOT_DIR=/opt/gurobi1102/linux64
+    SCALP_CMAKE_OPTIONS += -DGUROBI_ROOT_DIR=$(GUROBI_ROOT_DIR)
+    SCALP += $(SCALP_BINARY_DIR)/lib/libScaLP-Gurobi.so
 else # ------------------------------------------------------
     SCALP_DEPENDENCIES += $(SCIP)
+    SCALP_CMAKE_OPTIONS += -DUSE_SCIP=ON
     SCALP_CMAKE_OPTIONS += -DSCIP_ROOT_DIR=$(SCIP_BINARY_DIR)
+    SCALP += $(SCALP_BINARY_DIR)/lib/libScaLP-SCIP.so
 endif # -----------------------------------------------------
 
 scalp: $(SCALP)
@@ -281,6 +315,7 @@ $(SCALP): $(SCALP_DEPENDENCIES)
 	@git clone $(SCALP_GIT) $(SCALP_SOURCE_DIR)
 	@cd $(SCALP_SOURCE_DIR)
 	@patch -p0 -f CMakeLists.txt $(SCALP_CMAKE_PATCH)
+	@patch -p0 -f CMakeExtensions/FindSCIP.cmake $(SCALP_SCIP_PATCH)
 	@cmake -B build -G$(CMAKE_GENERATOR)		    \
 	       -DCMAKE_INSTALL_PREFIX=$(SCALP_BINARY_DIR)   \
 	       $(SCALP_CMAKE_OPTIONS)
@@ -384,7 +419,6 @@ install: $(FLOPOCO)
 	@cp $(SCALP) $(PREFIX)/lib
 	$(call shell_info, Installing dependency $(B)PAGSuite$(N) ($(PAGSUITE)) to $(PREFIX))
 	@cp $(PAGSUITE) $(PREFIX)/lib
-
 
 # -----------------------------------------------------------------------------
 .ONESHELL:
