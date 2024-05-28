@@ -32,7 +32,7 @@ find_package(ScaLP)
 #detect PAG suite
 include(PAGSuite)
 
-add_library(FloPoCoLib STATIC ${CMAKE_CURRENT_BINARY_DIR}/VHDLLexer.cpp)
+add_library(FloPoCoLib SHARED ${CMAKE_CURRENT_BINARY_DIR}/VHDLLexer.cpp)
 
 target_include_directories(FloPoCoLib PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>

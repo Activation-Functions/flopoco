@@ -142,7 +142,7 @@ else ifeq ($(OS), Arch)
     SYSDEPS += flex
     SYSDEPS += boost
     SYSDEPS += pkgconf
-    SYSDEPS += sollya-git
+    SYSDEPS += sollya-git # broken
     SYSDEPS += f2c
 
 define sysdeps_cmd
@@ -167,7 +167,8 @@ else ifeq ($(OS), Alpine)
     SYSDEPS += gnuplot
     SYSDEPS += pkgconf
     SYSDEPS += libxml2-dev
-    SYSDEPS += libmpfi libmpfi-static # edge/testing
+    SYSDEPS += libmpfi libmpfi-dev # edge/testing
+    SYSDEPS += blas-dev openblas-dev
 # -----------------------------------------------------------
 else ifeq ($(OS), Darwin)
 # macOS: homebrew (Anastasia) or macports (Martin)
@@ -186,9 +187,9 @@ MACOS_PKG_MANAGER ?= brew
     SYSDEPS += autoconf     # brew: ok | macports: ok
     SYSDEPS += automake     # brew: ok | macports: ok
     SYSDEPS += libtool      # brew: ok | macports: ok
-    SYSDEPS += f2c          # brew: nope | macports: ok
+    SYSDEPS += f2c          # brew: nope | macports: ok (TO BE REMOVED)
     SYSDEPS += lapack       # brew: ok
-    SYSDEPS += openblas     # brew: ok
+    SYSDEPS += openblas     # brew: ok (TO BE REMOVED)
 # -----------------------------------------------------------
 else
 # -----------------------------------------------------------
@@ -262,13 +263,14 @@ SCALP := $(SCALP_BINARY_DIR)/lib/libScaLP.so
 SCALP_DEPENDENCIES += $(SCALP_CMAKE_PATCH)
 SCALP_CMAKE_OPTIONS += -DUSE_LPSOLVE=OFF
 
-ifdef WITH_GUROBI # ---------------
+ifeq ($(SCALP_BACKEND), GUROBI)
     SCALP_DEPENDENCIES += $(GUROBI)
-else # ----------------------------
+    SCALP_CMAKE_OPTIONS += -DUSE_GUROBI=ON
+    SCALP_CMAKE_OPTIONS += -DGUROBI_ROOT_DIR=/opt/gurobi1102/linux64
+else # ------------------------------------------------------
     SCALP_DEPENDENCIES += $(SCIP)
-    SCALP_CMAKE_OPTIONS += -DSCIP_DIR=$(SCIP_BINARY_DIR)
-    SCALP_CMAKE_OPTIONS += -DSOPLEX_DIR=$(SOPLEX_BINARY_DIR)
-endif # ---------------------------
+    SCALP_CMAKE_OPTIONS += -DSCIP_ROOT_DIR=$(SCIP_BINARY_DIR)
+endif # -----------------------------------------------------
 
 scalp: $(SCALP)
 
@@ -291,8 +293,14 @@ WCPG_GIT := https://github.com/fixif/WCPG
 WCPG_COMMIT_HASH := b90253a4a6a650300454f5656a7e8410e0493175
 WCPG_SOURCE_DIR := $(BUILD_DEPENDENCIES_SOURCE_DIR)/wcpg
 WCPG_BINARY_DIR := $(BUILD_DEPENDENCIES_BINARY_DIR)/wcpg
-WCPG := $(WCPG_BINARY_DIR)/lib/libwcpg.a
-WCPG_CONFIGURE_FLAGS += CFLAGS=-I/opt/local/include
+
+WCPG += $(WCPG_BINARY_DIR)/lib/libwcpg.so.0.0.9
+WCPG += $(WCPG_BINARY_DIR)/lib/libwcpg.so.0
+WCPG += $(WCPG_BINARY_DIR)/lib/libwcpg.so
+
+ifeq ($(OS), Darwin)
+    WCPG_CONFIGURE_FLAGS += CFLAGS=-I/opt/local/include
+endif
 
 # ----------------------------------------------------------------
 .PHONY: f2c
@@ -318,8 +326,11 @@ $(WCPG):
 PAGSUITE_GIT := https://gitlab.com/kumm/pagsuite.git
 PAGSUITE_SOURCE_DIR := $(BUILD_DEPENDENCIES_SOURCE_DIR)/pagsuite
 PAGSUITE_BINARY_DIR := $(BUILD_DEPENDENCIES_BINARY_DIR)/pagsuite
-PAGSUITE := $(PAGSUITE_BINARY_DIR)/lib/librpag.so
-PAGSUITE_CMAKE_PATCH := $(MKROOT)/tools/pagsuite_fpc.patch
+PAGSUITE += $(PAGSUITE_BINARY_DIR)/lib/libpag.so
+PAGSUITE += $(PAGSUITE_BINARY_DIR)/lib/libpag.so.0
+PAGSUITE += $(PAGSUITE_BINARY_DIR)/lib/libpag.so.2.1.0
+PAGSUITE += $(PAGSUITE_BINARY_DIR)/lib/librpag.so
+PAGSUITE += $(PAGSUITE_BINARY_DIR)/lib/liboscm.so
 
 pagsuite: $(PAGSUITE)
 
@@ -329,7 +340,6 @@ $(PAGSUITE): $(SCALP)
 	@mkdir -p $(PAGSUITE_BINARY_DIR)
 	@git clone $(PAGSUITE_GIT) $(PAGSUITE_SOURCE_DIR)
 	@cd $(PAGSUITE_SOURCE_DIR)
-	@patch -p0 -f CMakeLists.txt $(PAGSUITE_CMAKE_PATCH)
 	@cmake -B build -G$(CMAKE_GENERATOR)			\
 	       -DSCALP_PREFIX_PATH=$(SCALP_BINARY_DIR)		\
 	       -DCMAKE_INSTALL_PREFIX=$(PAGSUITE_BINARY_DIR)
@@ -368,4 +378,17 @@ $(FLOPOCO): $(FLOPOCO_DEPENDENCIES)
 install: $(FLOPOCO)
 	@cd $(MKROOT)
 	@cmake --build build --target install
+	$(call shell_info, Installing dependency $(B)WCPG$(N) ($(WCPG)) to $(PREFIX))
+	@cp $(WCPG) $(PREFIX)/lib
+	$(call shell_info, Installing dependency $(B)SCALP$(N) ($(SCALP)) to $(PREFIX))
+	@cp $(SCALP) $(PREFIX)/lib
+	$(call shell_info, Installing dependency $(B)PAGSuite$(N) ($(PAGSUITE)) to $(PREFIX))
+	@cp $(PAGSUITE) $(PREFIX)/lib
 
+
+# -----------------------------------------------------------------------------
+.ONESHELL:
+.PHONY: test
+# -----------------------------------------------------------------------------
+test: $(FLOPOCO)
+	@$(FLOPOCO) autotest operator=fpadd
