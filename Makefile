@@ -14,13 +14,13 @@ BUILD_DEPENDENCIES_BINARY_DIR := $(BUILD_DEPENDENCIES_DIR)/bin
 
 include $(MKROOT)/tools/utilities.mk
 
-$(call static_ok, Running $(B)FloPoCo$(N) build script\
+$(call static_info, Running $(B)FloPoCo$(N) build script\
     ($(B)v$(FLOPOCO_VERSION_FULL)$(N)) on $(B)$(OS)$(N)  \
     ($(OS_VERSION) $(OS_LTS)))
 
-$(call static_ok, Branch $(B)$(FLOPOCO_BRANCH)$(N))
-$(call static_ok, Commit $(B)#$(FLOPOCO_COMMIT_HASH)$(N))
-$(call static_ok, Running $(B)from$(N): $(PWD))
+$(call static_info, Branch $(B)$(FLOPOCO_BRANCH)$(N))
+$(call static_info, Commit $(B)#$(FLOPOCO_COMMIT_HASH)$(N))
+$(call static_info, Running $(B)from$(N): $(PWD))
 
 ifndef MAKECMDGOALS
     MAKECMDGOALS := all
@@ -31,22 +31,29 @@ ifneq ($(CONFIG), docker)
 endif
 
 CMAKE_GENERATOR ?= Ninja
-GUROBI_ROOT_DIR ?= /opt/gurobi1102/linux64
+GUROBI_ROOT_DIR ?= $(GUROBI_HOME)
 PREFIX ?= /usr/local
+WITH_SCIP ?= ON
 
-$(call static_ok, $(B)Make targets$(N): $(MAKECMDGOALS))
+$(call static_info, $(B)Make targets$(N): $(MAKECMDGOALS))
 
 # -----------------------------------------------------------------------------
-SCALP_BACKEND ?= SCIP
-SCALP_BACKEND_SUPPORTED := SCIP GUROBI
+ifeq ($(call file_exists, $(GUROBI_ROOT_DIR)/bin/gurobi.sh), 1)
+# Try to find Gurobi from either $GUROBI_HOME environment variable or
+# a user-defined path. If Gurobi can't be found, only SCIP will be used.
 # -----------------------------------------------------------------------------
-ifneq ($(SCALP_BACKEND), $(filter $(SCALP_BACKEND), $(SCALP_BACKEND_SUPPORTED)))
-    $(call static_error, Unsupported $(B)SCALP_BACKEND$(N) $(SCALP_BACKEND))
-    $(call static_error, Supported backends: $(SCALP_BACKEND_SUPPORTED))
-    $(error Aborting...)
+    SCALP_BACKEND += GUROBI
+    $(call static_ok, Found $(B)Gurobi$(N) in $(GUROBI_ROOT_DIR))
+    ifeq ($(WITH_SCIP), ON)
+        # Add SCIP anyway, unless explicitly set OFF by the user
+        SCALP_BACKEND += SCIP
+    endif
 else
-    $(call static_ok, $(B)SCALP_BACKEND$(N): $(SCALP_BACKEND))
+    # Otherwise, just use SCIP
+    SCALP_BACKEND := SCIP
 endif
+
+$(call static_info, $(B)ScaLP backends$(N): $(SCALP_BACKEND))
 
 # -----------------------------------------------------------------------------
 
@@ -82,7 +89,7 @@ ifeq (docker, $(filter docker, $(MAKECMDGOALS)))
 endif
 
 DOCKERFILE := $(MKROOT)/Dockerfile
-FLOPOCO_DOCKER_TAG := flopoco:$(FLOPOCO_VERSION_FULL)-$(SCALP_BACKEND)-$(DOCKER_IMAGE)
+FLOPOCO_DOCKER_TAG := flopoco:$(FLOPOCO_VERSION_FULL)-$(DOCKER_IMAGE)
 
 # -------------------------------------------------------------------------------
 ifeq ($(DOCKER_IMAGE), debian)
@@ -123,10 +130,7 @@ $(DOCKERFILE):
 
 docker: $(DOCKERFILE)
 	$(call shell_info, Building docker image $(B)$(FLOPOCO_DOCKER_TAG)$(N))
-	@docker build --no-cache					    \
-		      --build-arg SCALP_BACKEND=$(SCALP_BACKEND)	    \
-		       -t flopoco:$(FLOPOCO_VERSION_FULL)-$(SCALP_BACKEND)  \
-		      $(MKROOT)
+	@docker build --no-cache -t $(FLOPOCO_DOCKER_TAG) $(MKROOT)
 
 # -----------------------------------------------------------------------------
 .PHONY: sysdeps
@@ -294,17 +298,18 @@ SCALP += $(SCALP_BINARY_DIR)/lib/libScaLP.so
 SCALP_DEPENDENCIES += $(SCALP_CMAKE_PATCH)
 SCALP_CMAKE_OPTIONS += -DUSE_LPSOLVE=OFF
 
-ifeq ($(SCALP_BACKEND), GUROBI)
+ifeq (GUROBI, $(filter GUROBI, $(SCALP_BACKEND)))
     SCALP_DEPENDENCIES += $(GUROBI)
     SCALP_CMAKE_OPTIONS += -DUSE_GUROBI=ON
     SCALP_CMAKE_OPTIONS += -DGUROBI_ROOT_DIR=$(GUROBI_ROOT_DIR)
     SCALP += $(SCALP_BINARY_DIR)/lib/libScaLP-Gurobi.so
-else # ------------------------------------------------------
+endif
+ifeq (SCIP, $(filter SCIP, $(SCALP_BACKEND)))
     SCALP_DEPENDENCIES += $(SCIP)
     SCALP_CMAKE_OPTIONS += -DUSE_SCIP=ON
     SCALP_CMAKE_OPTIONS += -DSCIP_ROOT_DIR=$(SCIP_BINARY_DIR)
     SCALP += $(SCALP_BINARY_DIR)/lib/libScaLP-SCIP.so
-endif # -----------------------------------------------------
+endif
 
 scalp: $(SCALP)
 
@@ -425,4 +430,4 @@ install: $(FLOPOCO)
 .PHONY: test
 # -----------------------------------------------------------------------------
 test: $(FLOPOCO)
-	@$(FLOPOCO) autotest operator=fpadd
+	@$(FLOPOCO) autotest operator=all testlevel=0
