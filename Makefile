@@ -415,11 +415,15 @@ nvc: $(NVC)
 
 .ONESHELL:
 $(NVC):
-	$(call shell_info, Fetching and build $(B)NVC$(N) dependency)
+	$(call shell_info, Fetching and building $(B)NVC$(N) dependency)
 	$(call nvcdeps_cmd)
 	@git clone $(NVC_GIT) $(NVC_SOURCE_DIR)
 	@cd $(NVC_SOURCE_DIR)
 	@./autogen.sh
+	@mkdir build && cd build
+	@../configure
+	@make
+	@make install
 
 # -----------------------------------------------------------------------------
 .PHONY: dependencies
