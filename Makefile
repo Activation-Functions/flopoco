@@ -15,8 +15,7 @@ BUILD_DEPENDENCIES_BINARY_DIR := $(BUILD_DEPENDENCIES_DIR)/bin
 include $(MKROOT)/tools/utilities.mk
 
 $(call static_info, Running $(B)FloPoCo$(N) build script\
-    ($(B)v$(FLOPOCO_VERSION_FULL)$(N)) on $(B)$(OS)$(N)  \
-    ($(OS_VERSION) $(OS_LTS)))
+    ($(B)v$(FLOPOCO_VERSION_FULL)$(N)) on $(B)$(OS_PRETTY_NAME)$(N))
 
 $(call static_info, Branch $(B)$(FLOPOCO_BRANCH)$(N))
 $(call static_info, Commit $(B)#$(FLOPOCO_COMMIT_HASH)$(N))
@@ -107,11 +106,14 @@ else ifeq ($(DOCKER_IMAGE), ubuntu)
 # -------------------------------------------------------------------------------
 define docker_script
     FROM ubuntu:latest
-    ARG DEBIAN_FRONTEND=noninteractive
+    ENV DEBIAN_FRONTEND=noninteractive
     RUN apt update
     RUN yes | apt install git make sudo
     RUN git clone https://gitlab.com/flopoco/flopoco
-    RUN cd flopoco && git checkout dev/cmake && make && make install
+    RUN cd flopoco \
+    && git checkout dev/cmake \
+    && make DEBIAN_FRONTEND=noninteractive \
+    && make install
 endef
 # -------------------------------------------------------------------------------
 else ifeq ($(DOCKER_IMAGE), archlinux)
@@ -132,13 +134,14 @@ $(DOCKERFILE):
 docker: $(DOCKERFILE)
 	$(call shell_info, Building docker image $(B)$(FLOPOCO_DOCKER_TAG)$(N))
 	@docker build --no-cache -t $(FLOPOCO_DOCKER_TAG) $(MKROOT)
+	@rm -rf $(DOCKERFILE)
 
 # -----------------------------------------------------------------------------
 .PHONY: sysdeps
 # -----------------------------------------------------------------------------
 
 # -----------------------------------------------------------
-ifeq ($(OS), $(filter $(OS), Ubuntu Debian))
+ifeq ($(OS_ID), $(filter $(OS_ID), ubuntu debian))
 # -----------------------------------------------------------
     SYSDEPS += git
     SYSDEPS += g++
@@ -158,7 +161,7 @@ ifeq ($(OS), $(filter $(OS), Ubuntu Debian))
 
 define sysdeps_cmd
     $(SUDO) apt update
-    yes | $(SUDO) apt install $(SYSDEPS)
+    $(SUDO) apt install -y $(SYSDEPS)
 endef
 
     NVC_DEPENDENCIES += build-essential
@@ -178,7 +181,7 @@ define nvcdeps_cmd
 endef
 
 # -----------------------------------------------------------
-else ifeq ($(OS), Arch)
+else ifeq ($(OS_ID), arch)
 # Using AUR with docker::
 # docker pull greyltc/archlinux-aur:yay
 # -----------------------------------------------------------
@@ -201,7 +204,7 @@ define sysdeps_cmd
 endef
 
 # -----------------------------------------------------------
-else ifeq ($(OS), Alpine)
+else ifeq ($(OS_ID), alpine)
 # -----------------------------------------------------------
     SYSDEPS += git
     SYSDEPS += gcc
@@ -220,26 +223,50 @@ else ifeq ($(OS), Alpine)
     SYSDEPS += libmpfi libmpfi-dev # edge/testing
     SYSDEPS += blas-dev openblas-dev # doesn't work with WCPG
 # -----------------------------------------------------------
-else ifeq ($(OS), Darwin)
+else ifeq ($(OS_ID), macos)
 # macOS: homebrew (Anastasia) or macports (Martin)
 MACOS_PKG_MANAGER ?= brew
 # -----------------------------------------------------------
-    SYSDEPS += git          # brew: ok | macports: ok
-    SYSDEPS += wget         # brew: ok | macports: ok
-    SYSDEPS += make         # brew: ok | macports: gmake
-    SYSDEPS += cmake        # brew: ok | macports: cmake
-    SYSDEPS += gmp          # brew: ok | macports: ok
-    SYSDEPS += mpfr         # brew: ok | macports: ok
-    SYSDEPS += mpfi         # brew: ok | macports: ok
-    SYSDEPS += sollya       # brew: ok | macports: nope
-    SYSDEPS += pkg-config   # brew: ok | macports: pkgconfig
-    SYSDEPS += boost        # brew: ok | macports: ok
-    SYSDEPS += autoconf     # brew: ok | macports: ok
-    SYSDEPS += automake     # brew: ok | macports: ok
-    SYSDEPS += libtool      # brew: ok | macports: ok
-    SYSDEPS += f2c          # brew: nope | macports: ok (TO BE REMOVED)
-    SYSDEPS += lapack       # brew: ok
-    SYSDEPS += openblas     # brew: ok (TO BE REMOVED)
+# Common to both package managers (brew & port)
+
+SYSDEPS += git          # brew: ok | macports: ok
+SYSDEPS += wget         # brew: ok | macports: ok
+SYSDEPS += cmake        # brew: ok | macports: ok
+SYSDEPS += gmp          # brew: ok | macports: ok
+SYSDEPS += mpfr         # brew: ok | macports: ok
+SYSDEPS += mpfi         # brew: ok | macports: ok
+SYSDEPS += boost        # brew: ok | macports: ok
+SYSDEPS += autoconf     # brew: ok | macports: ok
+SYSDEPS += automake     # brew: ok | macports: ok
+SYSDEPS += libtool      # brew: ok | macports: ok
+SYSDEPS += lapack       # brew: ok
+SYSDEPS += openblas     # brew: ok (TO BE REMOVED)
+
+# ---------------------------------------------------------
+ifeq ($(MACOS_PKG_MANAGER), brew)
+# ---------------------------------------------------------
+SYSDEPS += make         # brew: ok | macports: gmake
+SYSDEPS += pkg-config   # brew: ok | macports: pkgconfig
+SYSDEPS += sollya       # brew: ok | macports: nope
+
+define sysdeps_cmd
+    brew update && brew upgrade
+    brew install $(SYSDEPS)
+endef
+# ---------------------------------------------------------
+else ifeq ($(MACOS_PKG_MANAGER), port)
+# ---------------------------------------------------------
+SYSDEPS += gmake
+SYSDEPS += pkgconfig
+SYSDEPS += f2c # /!\ not available with brew
+
+define sysdeps_cmd # ----------
+    sudo port selfupdate
+    sudo port install $(SYSDEPS)
+endef # -----------------------
+
+endif
+
 # -----------------------------------------------------------
 else
 # -----------------------------------------------------------
@@ -357,9 +384,9 @@ WCPG += $(WCPG_BINARY_DIR)/lib/libwcpg.so.0.0.9
 WCPG += $(WCPG_BINARY_DIR)/lib/libwcpg.so.0
 WCPG += $(WCPG_BINARY_DIR)/lib/libwcpg.so
 
-ifeq ($(OS), Darwin)
+ifeq ($(OS_ID)), macos) # -----------------------------
     WCPG_CONFIGURE_FLAGS += CFLAGS=-I/opt/local/include
-endif
+endif # -----------------------------------------------
 
 # ----------------------------------------------------------------
 .PHONY: f2c
