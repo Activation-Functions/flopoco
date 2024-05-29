@@ -150,11 +150,11 @@ ifeq ($(OS_ID), $(filter $(OS_ID), ubuntu debian))
     SYSDEPS += libgmp-dev
     SYSDEPS += libmpfi-dev
     SYSDEPS += libmpfr-dev
-    SYSDEPS += libopenblas-dev
+#    SYSDEPS += libopenblas-dev
     SYSDEPS += liblapack-dev
     SYSDEPS += libsollya-dev
     SYSDEPS += dh-autoreconf
-    SYSDEPS += libf2c2-dev
+#    SYSDEPS += libf2c2-dev
     SYSDEPS += flex
     SYSDEPS += libboost-all-dev
     SYSDEPS += pkg-config
@@ -196,7 +196,6 @@ else ifeq ($(OS_ID), arch)
     SYSDEPS += boost
     SYSDEPS += pkgconf
     SYSDEPS += sollya-git # broken
-    SYSDEPS += f2c
 
 define sysdeps_cmd
     yay -Syu
@@ -221,7 +220,7 @@ else ifeq ($(OS_ID), alpine)
     SYSDEPS += pkgconf
     SYSDEPS += libxml2-dev
     SYSDEPS += libmpfi libmpfi-dev # edge/testing
-    SYSDEPS += blas-dev openblas-dev # doesn't work with WCPG
+#    SYSDEPS += blas-dev openblas-dev # doesn't work with WCPG
 # -----------------------------------------------------------
 else ifeq ($(OS_ID), macos)
 # macOS: homebrew (Anastasia) or macports (Martin)
@@ -240,7 +239,6 @@ SYSDEPS += autoconf     # brew: ok | macports: ok
 SYSDEPS += automake     # brew: ok | macports: ok
 SYSDEPS += libtool      # brew: ok | macports: ok
 SYSDEPS += lapack       # brew: ok
-SYSDEPS += openblas     # brew: ok (TO BE REMOVED)
 
 # ---------------------------------------------------------
 ifeq ($(MACOS_PKG_MANAGER), brew)
@@ -258,7 +256,6 @@ else ifeq ($(MACOS_PKG_MANAGER), port)
 # ---------------------------------------------------------
 SYSDEPS += gmake
 SYSDEPS += pkgconfig
-SYSDEPS += f2c # /!\ not available with brew
 
 define sysdeps_cmd # ----------
     sudo port selfupdate
@@ -386,12 +383,9 @@ WCPG += $(WCPG_BINARY_DIR)/lib/libwcpg.so
 
 ifeq ($(OS_ID)), macos) # -----------------------------
     WCPG_CONFIGURE_FLAGS += CFLAGS=-I/opt/local/include
+    WCPG_CONFIGURE_FLAGS += --with-lapack=/usr/local/opt/lapack
+#    WCPG_CONFIGURE_FLAGS += --wit-blas=/usr/local/opt/openblas
 endif # -----------------------------------------------
-
-# ----------------------------------------------------------------
-.PHONY: f2c
-# ----------------------------------------------------------------
-# on a few distributions (macOS) f2c is not available as a package
 
 wcpg: $(WCPG)
 
@@ -401,7 +395,7 @@ $(WCPG):
 	@mkdir -p $(WCPG_BINARY_DIR)
 	@git clone $(WCPG_GIT) $(WCPG_SOURCE_DIR)
 	@cd $(WCPG_SOURCE_DIR)
-	@git checkout $(WCPG_COMMIT_HASH)
+#	@git checkout $(WCPG_COMMIT_HASH)
 	@bash autogen.sh
 	@./configure --prefix=$(WCPG_BINARY_DIR) $(WCPG_CONFIGURE_FLAGS)
 	@make -j8 install
