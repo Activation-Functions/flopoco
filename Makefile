@@ -29,11 +29,13 @@ ifneq ($(CONFIG), docker)
     SUDO := sudo
 endif
 
+#TODO: detect ninja, or else Unix Makefiles
 CMAKE_GENERATOR ?= Ninja
+
 GUROBI_ROOT_DIR ?= $(GUROBI_HOME)
 PREFIX ?= /usr/local
 WITH_SCIP ?= ON
-WITH_NVC ?= ON
+WITH_NVC ?= OFF
 
 $(call static_info, $(B)Make targets$(N): $(MAKECMDGOALS))
 
@@ -143,37 +145,35 @@ docker: $(DOCKERFILE)
 # -----------------------------------------------------------
 ifeq ($(OS_ID), $(filter $(OS_ID), ubuntu debian))
 # -----------------------------------------------------------
-    SYSDEPS += git
-    SYSDEPS += g++
-    SYSDEPS += cmake
-    SYSDEPS += ninja-build
-    SYSDEPS += libgmp-dev
-    SYSDEPS += libmpfi-dev
-    SYSDEPS += libmpfr-dev
-#    SYSDEPS += libopenblas-dev
-    SYSDEPS += liblapack-dev
-    SYSDEPS += libsollya-dev
-    SYSDEPS += dh-autoreconf
-#    SYSDEPS += libf2c2-dev
-    SYSDEPS += flex
-    SYSDEPS += libboost-all-dev
-    SYSDEPS += pkg-config
+SYSDEPS += git
+SYSDEPS += g++
+SYSDEPS += cmake
+SYSDEPS += ninja-build
+SYSDEPS += libgmp-dev
+SYSDEPS += libmpfi-dev
+SYSDEPS += libmpfr-dev
+SYSDEPS += liblapack-dev liblapacke-dev
+SYSDEPS += libsollya-dev
+SYSDEPS += dh-autoreconf
+SYSDEPS += flex
+SYSDEPS += libboost-all-dev
+SYSDEPS += pkg-config
 
 define sysdeps_cmd
     $(SUDO) apt update
     $(SUDO) apt install -y $(SYSDEPS)
 endef
 
-    NVC_DEPENDENCIES += build-essential
-    NVC_DEPENDENCIES += automake
-    NVC_DEPENDENCIES += autoconf
-    NVC_DEPENDENCIES += flex
-    NVC_DEPENDENCIES += llvm-dev
-    NVC_DEPENDENCIES += pkg-config
-    NVC_DEPENDENCIES += zlib1g-dev
-    NVC_DEPENDENCIES += libdw-dev
-    NVC_DEPENDENCIES += libffi-dev
-    NVC_DEPENDENCIES += libzstd-dev
+NVC_DEPENDENCIES += build-essential
+NVC_DEPENDENCIES += automake
+NVC_DEPENDENCIES += autoconf
+NVC_DEPENDENCIES += flex
+NVC_DEPENDENCIES += llvm-dev
+NVC_DEPENDENCIES += pkg-config
+NVC_DEPENDENCIES += zlib1g-dev
+NVC_DEPENDENCIES += libdw-dev
+NVC_DEPENDENCIES += libffi-dev
+NVC_DEPENDENCIES += libzstd-dev
 
 define nvcdeps_cmd
     $(SUDO) apt update
@@ -185,17 +185,17 @@ else ifeq ($(OS_ID), arch)
 # Using AUR with docker::
 # docker pull greyltc/archlinux-aur:yay
 # -----------------------------------------------------------
-    SYSDEPS += git
-    SYSDEPS += gcc
-    SYSDEPS += cmake
-    SYSDEPS += ninja
-    SYSDEPS += gmp
-    SYSDEPS += mpfr
-    SYSDEPS += mpfi
-    SYSDEPS += flex
-    SYSDEPS += boost
-    SYSDEPS += pkgconf
-    SYSDEPS += sollya-git # broken
+SYSDEPS += git
+SYSDEPS += gcc
+SYSDEPS += cmake
+SYSDEPS += ninja
+SYSDEPS += gmp
+SYSDEPS += mpfr
+SYSDEPS += mpfi
+SYSDEPS += flex
+SYSDEPS += boost
+SYSDEPS += pkgconf
+SYSDEPS += sollya-git # broken
 
 define sysdeps_cmd
     yay -Syu
@@ -205,29 +205,27 @@ endef
 # -----------------------------------------------------------
 else ifeq ($(OS_ID), alpine)
 # -----------------------------------------------------------
-    SYSDEPS += git
-    SYSDEPS += gcc
-    SYSDEPS += cmake
-    SYSDEPS += automake
-    SYSDEPS += libtool
-    SYSDEPS += ninja
-    SYSDEPS += gmp-dev
-    SYSDEPS += mpfr-dev
-    SYSDEPS += boost-dev
-    SYSDEPS += flex
-    SYSDEPS += bison
-    SYSDEPS += gnuplot
-    SYSDEPS += pkgconf
-    SYSDEPS += libxml2-dev
-    SYSDEPS += libmpfi libmpfi-dev # edge/testing
-#    SYSDEPS += blas-dev openblas-dev # doesn't work with WCPG
+SYSDEPS += git
+SYSDEPS += gcc
+SYSDEPS += cmake
+SYSDEPS += automake
+SYSDEPS += libtool
+SYSDEPS += ninja
+SYSDEPS += gmp-dev
+SYSDEPS += mpfr-dev
+SYSDEPS += boost-dev
+SYSDEPS += flex
+SYSDEPS += bison
+SYSDEPS += gnuplot
+SYSDEPS += pkgconf
+SYSDEPS += libxml2-dev
+SYSDEPS += libmpfi libmpfi-dev # edge/testing
 # -----------------------------------------------------------
 else ifeq ($(OS_ID), macos)
 # macOS: homebrew (Anastasia) or macports (Martin)
 MACOS_PKG_MANAGER ?= brew
 # -----------------------------------------------------------
-# Common to both package managers (brew & port)
-
+# Common to both package managers (brew & port):
 SYSDEPS += git          # brew: ok | macports: ok
 SYSDEPS += wget         # brew: ok | macports: ok
 SYSDEPS += cmake        # brew: ok | macports: ok
@@ -238,7 +236,7 @@ SYSDEPS += boost        # brew: ok | macports: ok
 SYSDEPS += autoconf     # brew: ok | macports: ok
 SYSDEPS += automake     # brew: ok | macports: ok
 SYSDEPS += libtool      # brew: ok | macports: ok
-SYSDEPS += lapack       # brew: ok
+SYSDEPS += lapack       # brew: ok | macports: ok
 
 # ---------------------------------------------------------
 ifeq ($(MACOS_PKG_MANAGER), brew)
@@ -246,28 +244,32 @@ ifeq ($(MACOS_PKG_MANAGER), brew)
 SYSDEPS += make         # brew: ok | macports: gmake
 SYSDEPS += pkg-config   # brew: ok | macports: pkgconfig
 SYSDEPS += sollya       # brew: ok | macports: nope
+SYSDEPS += ninja        # brew: ok | macports: nope
 
 define sysdeps_cmd
     brew update && brew upgrade
     brew install $(SYSDEPS)
 endef
+
 # ---------------------------------------------------------
 else ifeq ($(MACOS_PKG_MANAGER), port)
 # ---------------------------------------------------------
 SYSDEPS += gmake
 SYSDEPS += pkgconfig
 
-define sysdeps_cmd # ----------
+define sysdeps_cmd
     sudo port selfupdate
     sudo port install $(SYSDEPS)
-endef # -----------------------
+endef
 
-endif
+endif # MACOS_PKG_MANAGER
+# -----------------------------------------------------------
+else # Unknown distro, do nothing
+# -----------------------------------------------------------
+define sysdeps_cmd
+    $(call shell_info, Linux distribution could not be identified, skipping...)
+endef
 
-# -----------------------------------------------------------
-else
-# -----------------------------------------------------------
-    SYSDEPS_CMD += $(call shell_info, Linux distribution could not be identified, skipping...)
 endif
 
 sysdeps:
@@ -373,7 +375,6 @@ $(SCALP): $(SCALP_DEPENDENCIES)
 .PHONY: wcpg
 # -----------------------------------------------------------------------------
 WCPG_GIT := https://github.com/fixif/WCPG
-WCPG_COMMIT_HASH := b90253a4a6a650300454f5656a7e8410e0493175
 WCPG_SOURCE_DIR := $(BUILD_DEPENDENCIES_SOURCE_DIR)/wcpg
 WCPG_BINARY_DIR := $(BUILD_DEPENDENCIES_BINARY_DIR)/wcpg
 
@@ -381,10 +382,10 @@ WCPG += $(WCPG_BINARY_DIR)/lib/libwcpg.so.0.0.9
 WCPG += $(WCPG_BINARY_DIR)/lib/libwcpg.so.0
 WCPG += $(WCPG_BINARY_DIR)/lib/libwcpg.so
 
-ifeq ($(OS_ID)), macos) # -----------------------------
-    WCPG_CONFIGURE_FLAGS += CFLAGS=-I/opt/local/include
-    WCPG_CONFIGURE_FLAGS += --with-lapack=/usr/local/opt/lapack
-#    WCPG_CONFIGURE_FLAGS += --wit-blas=/usr/local/opt/openblas
+ifeq ($(OS_ID), macos) # -----------------------------
+    WCPG_CONFIGURE_FLAGS += CFLAGS="-I/opt/local/opt/lapack/include \
+                                    -L/opt/local/opt/lapack/lib"
+#    WCPG_CONFIGURE_FLAGS += --with-lapack=/usr/local/opt/lapack
 endif # -----------------------------------------------
 
 wcpg: $(WCPG)
@@ -395,7 +396,6 @@ $(WCPG):
 	@mkdir -p $(WCPG_BINARY_DIR)
 	@git clone $(WCPG_GIT) $(WCPG_SOURCE_DIR)
 	@cd $(WCPG_SOURCE_DIR)
-#	@git checkout $(WCPG_COMMIT_HASH)
 	@bash autogen.sh
 	@./configure --prefix=$(WCPG_BINARY_DIR) $(WCPG_CONFIGURE_FLAGS)
 	@make -j8 install
@@ -483,12 +483,8 @@ $(FLOPOCO): $(FLOPOCO_DEPENDENCIES)
 install: $(FLOPOCO)
 	@cd $(MKROOT)
 	@cmake --build build --target install
-	$(call shell_info, Installing dependency $(B)WCPG$(N) ($(WCPG)) to $(PREFIX))
-	@cp $(WCPG) $(PREFIX)/lib
-	$(call shell_info, Installing dependency $(B)SCALP$(N) ($(SCALP)) to $(PREFIX))
-	@cp $(SCALP) $(PREFIX)/lib
-	$(call shell_info, Installing dependency $(B)PAGSuite$(N) ($(PAGSUITE)) to $(PREFIX))
-	@cp $(PAGSUITE) $(PREFIX)/lib
+	$(call shell_info, Installing $(B)dependencies$(N) ($(FLOPOCO_DEPENDENCIES)) to $(PREFIX))
+	@cp $(FLOPOCO_DEPENDENCIES) $(PREFIX)/lib
 
 # -----------------------------------------------------------------------------
 .ONESHELL:
