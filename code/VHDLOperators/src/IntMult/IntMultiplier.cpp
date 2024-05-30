@@ -183,7 +183,7 @@ namespace flopoco {
 
 		MultiplierTileCollection multiplierTileCollection(op->getTarget(), &baseMultiplierCollection, wX, wY, superTiles, use2xk, useirregular, useLUT, useDSP, useKaratsuba, useGenLUT, useBooth, squarer);
 
-		string tilingMethod = op->getTarget()->getTilingMethod();
+		string tilingMethod = op->getTarget()->getTilingMethod(); // has been lowercased
 
 		REPORT(LogLevel::DETAIL, "Creating TilingStrategy using tiling method " << tilingMethod);
 
@@ -191,8 +191,8 @@ namespace flopoco {
 
 		// Message to Andreas:
 		// Florent commented out all these methods for you to revive them now that I have converged on the proper interface.
-		
-		 if(tilingMethod.compare("heuristicBasicTiling") == 0) {
+		// Beware that I also made the option case-insensitive by lowercasing them...
+		if(tilingMethod.compare("heuristicbasictiling") == 0) {
 			tilingStrategy = new TilingStrategyBasicTiling(
 					wX,
 					wY,
@@ -203,7 +203,7 @@ namespace flopoco {
 					dspOccupationThreshold,
 					((maxDSP<0)?(unsigned)INT_MAX:(unsigned)((useDSP)?maxDSP:0))	);
 		 }
-		// else if(tilingMethod.compare("heuristicGreedyTiling") == 0) { 
+		// else if(tilingMethod.compare("heuristicgreedytiling") == 0) { 
 		// 	tilingStrategy = new TilingStrategyGreedy(
 		// 			wX,
 		// 			wY,
@@ -240,7 +240,7 @@ namespace flopoco {
 		// 			lastColumnKeepBits );
 		// }
 	  // else
-		// if(tilingMethod.compare("heuristicBeamSearchTiling") == 0) {
+		// if(tilingMethod.compare("heuristicbeamsearchtiling") == 0) {
 		// 	tilingStrategy = new TilingStrategyBeamSearch(
 		// 																								wX,
 		// 																								wY,
@@ -277,7 +277,7 @@ namespace flopoco {
 		// 			optiTrunc,
 		// 			squarer );
 		// }
-		// 	else if(tilingMethod.compare("optimalTilingAndCompression") == 0){
+		// 	else if(tilingMethod.compare("optimaltilingandcompression") == 0){
 		// 	tilingStrategy = new TilingAndCompressionOptILP(
 		// 			wX,
 		// 			wY,

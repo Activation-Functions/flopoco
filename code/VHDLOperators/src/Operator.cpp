@@ -1034,7 +1034,7 @@ namespace flopoco{
 		signalMap_[s->getName()] = s;
 
 		// add its lowercase version to the global list for sanity check
-		allSignalsLowercased.insert(toLower(s->getName()));
+		allSignalsLowercased.insert(toLowerCase(s->getName()));
 
 	}
 
@@ -2793,7 +2793,7 @@ namespace flopoco{
 				try{
 				lhs = getSignalByName(it->first());
 				}catch(string &e){
-					if (allSignalsLowercased.find(toLower(it->first())) != allSignalsLowercased.end()) {
+					if (allSignalsLowercased.find(toLowerCase(it->first())) != allSignalsLowercased.end()) {
 						THROWERROR("Signal " << it->first() << " undeclared, but a signal that differs only by capitalization has been declared" << endl
 											 << "Please fix it, as it will crash the scheduler: FloPoCo, contrary to VHDL, is case-sensitive");
 					}
@@ -2806,11 +2806,11 @@ namespace flopoco{
 				try {
 					rhs = getSignalByName(it->second());
 				} catch (string &e) {
-					if (allSignalsLowercased.find(toLower(it->second())) != allSignalsLowercased.end()) {
+					if (allSignalsLowercased.find(toLowerCase(it->second())) != allSignalsLowercased.end()) {
 						THROWERROR("Signal " << it->second() << " undeclared, but a signal that differs only by capitalization has been declared");
 					} else {
 						unknownRHSName = true;
-						std::string lower = toLower(it->second());
+						std::string lower = toLowerCase(it->second());
 						if (lower == "unsigned" || lower == "signed" || lower == "conv_std_logic_vector") {
 							// this is a VHDL function
 						} else if (constants_.find(it->second()) != constants_.end()) {
