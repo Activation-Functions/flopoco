@@ -7,7 +7,7 @@
 
 	Initial software.
 	Copyright © ENS-Lyon, INRIA, CNRS, UCBL,
-	2012-2014.
+	2024-.
 	All rights reserved.
 */
 
@@ -15,8 +15,6 @@
 	 - add to IntMultiplier the version that adds a multiplier to a bit heap: DONE
 	 - and then more
 
-	 a few command lines to test while developing:
-	 ./flopoco fixmultadd signedio=0 msbx=3 lsbx=0 msby=3 lsby=0 msba=10 lsba=0 msbout=10 lsbout=0 testbench n=100
 
 */
 
@@ -110,18 +108,18 @@ namespace flopoco {
 			addInput ("A",  wA);
 
 			// Declaring the output
-			if(lsbPfull >= lsbOut) 			// Easy case when the multiplier needs no truncation
+			if(lsbPfull >= lsbOut && lsbA>=lsbOut) 			// Easy case when multiplier and addend need no truncation
 				{
 					isExact=true;
 					isCorrectlyRounded=true; // no rounding will ever happen
 					isFaithfullyRounded=true;// no rounding will ever happen
-					addOutput("R",  wOut, 2); 
+					addOutput("R",  wOut); 
 				}
 			else{ /////////////////// lsbPfull < lsbOut so we build a truncated multiplier
 				isExact=false;
 				isCorrectlyRounded=false; //
 				isFaithfullyRounded=true;// 
-				addOutput("R",  wOut); 
+				addOutput("R",  wOut, 2); 
 			}
 
 			// We cast all the inputs to fixed point, it makes life easier. Honest.
@@ -358,7 +356,7 @@ namespace flopoco {
 		// the static list of mandatory tests
 		TestList testStateList;
 		vector<pair<string,string>> paramList;
-
+ 
     list<vector<int>> params; // order: msbx lsbx msby lsby msba lsba msbout lsbout
 		// (they will all be tested in 4 combinations of plainVHDL and signedIO)
     if(testLevel == TestLevel::QUICK)
@@ -370,7 +368,9 @@ namespace flopoco {
 				{3,-3, 3,-3, 10,0, 11,-1}, // truncated mult, exact addend, result half-integer
 				{3,-3, 3,-3, 8,-2, 11,-1}, // truncated mult, truncated addend, result half-integer
 				{3,0, 3,0, 8,-3, 11,-1}, // exact mult, truncated addend, result half-integer
-				//				{3,-1, 3,0, 8,-3, 11,-1}, // exact mult, truncated addend, result half-integer
+				{3,-1, 3,0, 8,-3, 11,-1}, // exact mult, truncated addend, result half-integer
+				{3,-1, 3,0, 8,-3, 11,-1}, // truncated mult, truncated addend, result half-integer
+				{3,-3, 3,-3, 8,-4, 11,0}, // truncated mult, truncated addend, result integer
 			};
     }
     else if(testLevel == TestLevel::SUBSTANTIAL)
