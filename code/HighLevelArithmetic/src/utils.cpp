@@ -796,12 +796,6 @@ namespace flopoco{
 		return tmp.str();
 	}
 
-	string to_lowercase(const std::string& s){
-		std::string t;
-		for (std::string::const_iterator i = s.begin(); i != s.end(); ++i)
-		t += tolower(*i);
-		return t;
-	}
 
 	map<string, double> inDelayMap(string s, double d){
 		map<string, double> m;
@@ -863,7 +857,7 @@ namespace flopoco{
     return string(pad1, padchar) + str + string(pad2, padchar);
 	}
 
-	string toLower(const string& str) {
+	string toLowerCase(const string& str) {
 		ostringstream s;
 		std::locale loc; // direct from stack overflow
 		for(auto elem : str)

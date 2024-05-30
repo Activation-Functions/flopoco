@@ -117,8 +117,8 @@ namespace flopoco{
 			throw(string("inputScale should be strictly positive"));
 		}
 		OperatorPtr op;
-		string fl = to_lowercase(fIn);
-		string method = to_lowercase(methodIn);
+		string fl = toLowerCase(fIn);
+		string method = toLowerCase(methodIn);
 
 
 		auto af = activationFunction[fl];

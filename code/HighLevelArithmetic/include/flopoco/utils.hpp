@@ -388,7 +388,6 @@ namespace flopoco{
 
 	std::string printVectorContent( std::vector<std::pair<std::string, int> > table);
 
-	std::string to_lowercase(const std::string& s);
 
 	/** a function that converts a bit vector (an mpz input to emulate()) to its signed value */
 	mpz_class bitVectorToSigned(mpz_class x, int size);
@@ -403,7 +402,7 @@ namespace flopoco{
 	std::string center(const std::string& str, char padchar=' ', int width=80);
 
 	/** A helper function that will convert a signal name into its lowercase version */
-	std::string toLower(const std::string& str);
+	std::string toLowerCase(const std::string& str);
 
 	/** A helper function that generates vhdl shift function code */
         std::string op_shift(std::string dir, std::string sigin,
