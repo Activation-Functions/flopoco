@@ -95,14 +95,6 @@ ifeq (docker, $(filter docker, $(MAKECMDGOALS)))
     endif
 endif
 
-DOCKERFILE := $(MKROOT)/Dockerfile
-FLOPOCO_DOCKER_TAG := flopoco:$(FLOPOCO_VERSION_FULL)-$(DOCKER_IMAGE)
-DOCKER_ARGS += --no-cache
-
-ifdef DOCKER_PROGRESS_PLAIN
-    DOCKER_ARGS += --progress=plain
-endif
-
 # -------------------------------------------------------------------------------
 ifeq ($(DOCKER_IMAGE), debian)
 # -------------------------------------------------------------------------------
@@ -137,6 +129,14 @@ define docker_script
     RUN git clone https://gitlab.com/flopoco/flopoco
     RUN cd flopoco && git checkout dev/cmake && make && make install
 endef
+endif
+
+DOCKERFILE := $(MKROOT)/Dockerfile
+FLOPOCO_DOCKER_TAG := flopoco:$(FLOPOCO_VERSION_FULL)-$(DOCKER_IMAGE)
+DOCKER_ARGS += --no-cache
+
+ifdef DOCKER_PROGRESS_PLAIN
+    DOCKER_ARGS += --progress=plain
 endif
 
 $(DOCKERFILE):
@@ -490,7 +490,6 @@ endif
 
 dependencies: $(FLOPOCO_LOCAL_DEPENDENCIES)
 
-FLOPOCO_DEPENDENCIES += sysdeps
 FLOPOCO_DEPENDENCIES += $(FLOPOCO_LOCAL_DEPENDENCIES)
 
 # -----------------------------------------------------------------------------
@@ -500,7 +499,7 @@ FLOPOCO_DEPENDENCIES += $(FLOPOCO_LOCAL_DEPENDENCIES)
 FLOPOCO := $(MKROOT)/build/code/FloPoCoBin/flopoco
 flopoco: $(FLOPOCO)
 
-$(FLOPOCO): $(FLOPOCO_DEPENDENCIES)
+$(FLOPOCO): $(FLOPOCO_DEPENDENCIES) sysdeps
 	$(call shell_info, Now building $(B)FloPoCo$(N))
 	@cmake -B build -G$(CMAKE_GENERATOR)	    \
 	       -DWCPG_LOCAL=$(WCPG_BINARY_DIR)	    \
@@ -508,6 +507,15 @@ $(FLOPOCO): $(FLOPOCO_DEPENDENCIES)
 	       -DPAG_LOCAL=$(PAGSUITE_BINARY_DIR)   \
 	       -DCMAKE_INSTALL_PREFIX=$(PREFIX)
 	@cmake --build build
+	$(call shell_info, Adding 'flopoco' $(B)symlink$(N)' in repository's root directory)
+	@ln -s $(FLOPOCO) $(MKROOT)
+	$(call shell_info, Building the $(B)HTML documentation$(N) in doc/web)
+	$(MKROOT)/flopoco BuildHTMLDoc
+	$(call shell_info, Generating and installing $(B)bash autocompletion$(N) file)
+	$(MKROOT)/flopoco BuildAutocomplete
+	$(call shell_info, Now running $(B)FloPoCo$(N))
+	$(MKROOT)/flopoco
+	$(call shell_ok, If you saw the command-line help of FloPoCo - Welcome!)
 
 # -----------------------------------------------------------------------------
 .ONESHELL:
