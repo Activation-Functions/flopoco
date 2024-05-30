@@ -97,6 +97,11 @@ endif
 
 DOCKERFILE := $(MKROOT)/Dockerfile
 FLOPOCO_DOCKER_TAG := flopoco:$(FLOPOCO_VERSION_FULL)-$(DOCKER_IMAGE)
+DOCKER_ARGS += --no-cache
+
+ifdef DOCKER_PROGRESS_PLAIN
+    DOCKER_ARGS += --progress=plain
+endif
 
 # -------------------------------------------------------------------------------
 ifeq ($(DOCKER_IMAGE), debian)
@@ -140,7 +145,7 @@ $(DOCKERFILE):
 
 docker: $(DOCKERFILE)
 	$(call shell_info, Building docker image $(B)$(FLOPOCO_DOCKER_TAG)$(N))
-	@docker build --no-cache -t $(FLOPOCO_DOCKER_TAG) $(MKROOT)
+	@docker build $(DOCKER_ARGS) -t $(FLOPOCO_DOCKER_TAG) $(MKROOT)
 	@rm -rf $(DOCKERFILE)
 
 # -----------------------------------------------------------------------------
@@ -404,7 +409,8 @@ ifeq ($(OS_ID), macos) # ------------------------------------
     # can't be found, we have to explicitely set these
     # additional flags:
     WCPG_MACOS_FLAGS += -I/usr/local/opt/lapack/include
-    WCPG_MACOS_FLAGS += -I/usr/local/opt/lapack/lib
+    WCPG_MACOS_FLAGS += -L/usr/local/opt/lapack/lib
+    WCPG_CONFIGURE_FLAGS += --with-lapack=/usr/local/opt/lapack"
     WCPG_CONFIGURE_FLAGS += CFLAGS="$(WCPG_MACOS_FLAGS)"
 endif # -----------------------------------------------------
 
