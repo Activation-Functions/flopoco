@@ -38,53 +38,11 @@ namespace flopoco
 							 int msbOut, int lsbOut);
 
 
-
-#if 0 // Old constructor
-		/**
-		 * The old FixMultAdd generic constructor computes x*y+a, faithful to outLSB.
-		 * @param[in] target            target device
-		 * @param[in] x                 Signal (should be of fixed-point type)
-		 * @param[in] y                 Signal (should be of fixed-point type)
-		 * @param[in] a                 Signal (should be of fixed-point type)
-		 * @param[in] outMSB            weight of the MSB of the product
-		 * @param[in] outLSB            weight of the LSB of the product
-		 * @param[in] enableSuperTiles  if true, supertiles will decrease resource consumption but increase latency
-		 **/
-		FixMultAdd(OperatorPtr parentOp, Target* target, Signal* x, Signal* y, Signal* a,
-							 int outMSB, int outLSB,
-		           bool enableSuperTiles=true);
-
-#endif 
-
-
 		
 		/**
 		 *  Destructor
 		 */
 		~FixMultAdd();
-
-
-		
-#if 0 // This is probably useless now, and should be replaced with the standard interface
-
-		/**
-		 * Generates a component, and produces VHDL code for the instance inside an operator.
-		 * The inputs signal names (x|y|a)SignalName are names of existing signals of the FloPoCo fixed-point types.
-		 * This method reads the fixed-point parameters from them. 
-		 * It then declares two new signals: rSignalName as a numeric_std (parameters isSigned, rMSB, rLSB),
-		 * and rSignalName+"_slv" is the equivalent standard_logic_vector 
-		 */
-		static FixMultAdd* newComponentAndInstance(
-																							 Operator* op,
-																							 string instanceName,
-																							 string xSignalName,
-																							 string ySignalName,
-																							 string aSignalName,
-																							 string rSignalName,
-																							 int rMSB,
-																							 int rLSB
-																							 );
-#endif
 
 
 		/**  Overloading Operator */

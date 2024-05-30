@@ -7,16 +7,14 @@
 
 	Initial software.
 	Copyright © ENS-Lyon, INRIA, CNRS, UCBL,
-	2012-2014.
+	2024-.
 	All rights reserved.
 */
 
 /* TODO before there is any hope that it works:
-	 - add to IntMultiplier the version that adds a multiplier to a bit heap
+	 - add to IntMultiplier the version that adds a multiplier to a bit heap: DONE
 	 - and then more
 
-	 a few command lines to test while developing:
-	 ./flopoco fixmultadd signedio=0 msbx=3 lsbx=0 msby=3 lsby=0 msba=10 lsba=0 msbout=10 lsbout=0 testbench n=100
 
 */
 
@@ -95,7 +93,6 @@ namespace flopoco {
 			name << "_y_" << vhdlize(msbY) << "_" << vhdlize(lsbY);
 			name << "_a_" << vhdlize(msbA) << "_" << vhdlize(lsbA);
 			name << "_r_" << vhdlize(msbOut) << "_" << vhdlize(lsbOut);
-			name << Operator::getNewUId();
 			setNameWithFreqAndUID(name.str());
 			REPORT(LogLevel::DEBUG, "Building " << name.str() << endl 
 						 << "     X is " << (signedIO?"s":"u") << "fix(" << msbX <<    ", " << lsbX << ")" <<endl 
@@ -109,265 +106,98 @@ namespace flopoco {
 			addInput ("X",  wX);
 			addInput ("Y",  wY);
 			addInput ("A",  wA);
-			if(lsbPfull >= lsbOut) 			// Easy case when the multiplier needs no truncation
+
+			// Declaring the output
+			if(lsbPfull >= lsbOut && lsbA>=lsbOut) 			// Easy case when multiplier and addend need no truncation
 				{
-					addOutput("R",  wOut);
 					isExact=true;
 					isCorrectlyRounded=true; // no rounding will ever happen
 					isFaithfullyRounded=true;// no rounding will ever happen
-					
-					// let's do this one first to get the virtual bit heap etc right.
-					if(getTarget()->plainVHDL()) { // mostly to debug emulate() and interface
-						vhdl << declareFixPoint("P", signedIO, msbP, lsbPfull) << " <= " << typecast << "(X)*" << typecast << "(Y);" << endl;
-						int newSizeP=msbOut -lsbPfull+1;
-						vhdl << declareFixPoint("RP", signedIO, msbOut, lsbOut) << " <= " << (signedIO ? signExtend("P",  newSizeP) : zeroExtend("P", newSizeP))<< ";" << endl;
-						//						cerr << "??? " << wA + msbOut-msbA << " " << signExtend("A", wA + msbOut-msbA) << " " << zeroExtend("A", wA+msbOut-msbA) << endl; 
-						int newSizeA=msbOut -lsbA+1;
-						vhdl << declareFixPoint("RA", signedIO, msbOut, lsbOut) << " <= " << typecast << "(" << (signedIO ? signExtend("A", newSizeA) : zeroExtend("A", newSizeA))<< ");" << endl;
-						
-						vhdl << declareFixPoint("RR", signedIO, msbOut, lsbOut) << " <= RA+RP;" << endl;
-						
-					}
-					else { // This is the bitheap-based version
-						BitHeap bh(this, wOut); // rather random
-						IntMultiplier::addToExistingBitHeap(&bh,  "X", "Y", 0);
-					}
+					addOutput("R",  wOut); 
 				}
-			else	{ /////////////////// lsbPfull < lsbOut so we build a truncated multiplier
+			else{ /////////////////// lsbPfull < lsbOut so we build a truncated multiplier
 				isExact=false;
 				isCorrectlyRounded=false; //
 				isFaithfullyRounded=true;// 
-				// TODO a constructor argument for a correctly rounded mult?
 				addOutput("R",  wOut, 2); 
-
-			vhdl << "R <=0 -- This result is often wrong but it is computed quickly;  " << endl;
 			}
+
+			// We cast all the inputs to fixed point, it makes life easier. Honest.
+			vhdl << declareFixPoint("XX", signedIO, msbX, lsbX) << " <= " << typecast << "(X);" << endl;
+			vhdl << declareFixPoint("YY", signedIO, msbY, lsbY) << " <= " << typecast << "(Y);" << endl;
+			vhdl << declareFixPoint("AA", signedIO, msbA, lsbA) << " <= " << typecast << "(A);" << endl;
+
+
+
+
+			if(getTarget()->plainVHDL())  // mostly to debug emulate() and interface
+				{
+					//For plainVHDL we even sometimes round to the nearest because we are lazy
+
+					// Error analysis cases. lsbAdd is the size of the eventual adder.
+					int lsbAdd = lsbOut-2; // works in any case, ie if both addend and product are truncated to lsbAdd
+					if((lsbPfull<lsbOut-1 && lsbA>=lsbOut-1)  || (lsbPfull>=lsbOut-1 && lsbA<lsbOut-1) ) 	 
+						{
+							lsbAdd=lsbOut-1; 		// only one will be truncated with this lsbAdd
+						}
+					else if(lsbPfull>=lsbOut && lsbA>=lsbOut) // nobody needs truncation  
+						{
+							lsbAdd=min(lsbPfull,lsbA);
+						}
+						
+					vhdl << declareFixPoint("Pfull", signedIO, msbP, lsbPfull) << " <= XX*YY;" << endl;
+					// Now we have to possibly truncate and possibly extend both A and Pfull
+					// Ptrunc and Atrunc manage the LSBs: either truncate with a range, or zero-extend to the right 
+					vhdl << declareFixPoint("Ptrunc", signedIO, msbP, lsbAdd) << " <= Pfull" << (lsbAdd>lsbPfull? range(msbP-lsbPfull, lsbAdd-lsbPfull) : "") << (lsbAdd<lsbPfull? " & "+zg(lsbPfull-lsbAdd): "") << ";" << endl;
+					int newSizeP = msbOut-lsbAdd+1;
+					vhdl << declareFixPoint("Pext", signedIO, msbOut, lsbAdd) << " <= " << (signedIO ? signExtend("Ptrunc",  newSizeP) : zeroExtend("Ptrunc", newSizeP))<< ";" << endl;
+
+					vhdl << declareFixPoint("Atrunc", signedIO, msbA, lsbAdd) << " <= AA" << (lsbAdd>lsbA? range(msbA-lsbA,lsbAdd-lsbA): "") << (lsbAdd<lsbA? " & "+zg(lsbA-lsbAdd): "") << ";" << endl;
+					int newSizeA = msbOut-lsbAdd+1;
+					vhdl << declareFixPoint("Aext", signedIO, msbOut, lsbAdd) << " <= " << (signedIO ? signExtend("Atrunc",  newSizeA) : zeroExtend("Atrunc", newSizeA))<< ";" << endl;
+
+					if (lsbAdd==lsbOut-1)
+						{// we may add the rounding bit for free
+							vhdl << declareFixPoint("Sum", signedIO, msbOut, lsbOut-1) << " <= Aext+Pext + to_" << typecast << "(1, Sum'length); -- rounding bit" << endl;
+							vhdl << declareFixPoint("RR", signedIO, msbOut, lsbOut) << " <= Sum" << range(msbOut-lsbOut+1, 1) << ";" << endl;
+						}
+					if (lsbAdd==lsbOut-2)
+						{// We add half a rounding bit, better than nothing but adding the rounding bit at the proper place would be more expensive 
+							vhdl << declareFixPoint("Sum", signedIO, msbOut, lsbOut-1) << " <= Aext+Pext + to_" << typecast << "(1, Sum'length); --half rounding bit but it is already good" << endl;
+							vhdl << declareFixPoint("RR", signedIO, msbOut, lsbOut) << " <= Sum" << range(msbOut-lsbOut+2, 2) << ";" << endl;
+						}
+					if (lsbAdd==lsbOut)
+						{// We add half a rounding bit, better than nothing but adding the rounding bit at the proper place would be more expensive 
+							vhdl << declareFixPoint("RR", signedIO, msbOut, lsbOut) << " <= Aext+Pext;" << endl;
+						}
+					if (lsbAdd>lsbOut)						
+						{
+							vhdl << declareFixPoint("RR", signedIO, msbOut, lsbOut) << " <= (Aext+Pext) & "<< zg(lsbAdd-lsbOut) <<";" << endl;
+						}
+				}
+
+					
+			else  // This is the bitheap-based version. Look Ma, it is shorter!
+				{
+					// Or a fixed-point bit heap, not sure it has been much tested
+					int lsbBH = min(lsbPfull, lsbA); // we will never create bits lower than that; some of these columns may remain empty
+					BitHeap bh(this, msbOut, lsbBH);
+					mpz_class multUlpError=0; // TODO an unsigned integer that measures the allowed mult error in ulps of the exact product
+					IntMultiplier::addToExistingBitHeap(&bh,  "XX", "YY", multUlpError, lsbPfull); 
+					bh.addSignal("AA", 0);
+					if(!isExact) {
+						bh.addConstantOneBit(lsbOut-1); // the round bit
+					}
+					bh.startCompression();
+					vhdl << tab << declareFixPoint("RR", signedIO, msbOut, lsbOut) << " <= " << typecast << "(" << bh.getSumName() << range(msbOut-lsbBH, lsbOut-lsbBH) << ");" << endl;
+					
+				}
 			vhdl << "R <= std_logic_vector(RR);  " << endl;
 
 		};
 	
 	
 	
-#if 0	// The old constructor for a stand-alone operator
-	FixMultAdd::FixMultAdd(OperatorPtr parentOp, Target* target, Signal* x_, Signal* y_, Signal* a_,
-												 int outMSB_, int outLSB_, bool enableSuperTiles_):
-		Operator (parentOp, target),
-		x(x_), y(y_), a(a_),
-		outMSB(outMSB_),
-		outLSB(outLSB_),
-		wOut(outMSB_- outLSB_ + 1),
-		enableSuperTiles(enableSuperTiles_)
-	{
-
-		srcFileName="FixMultAdd";
-		setCopyrightString ( "Florent de Dinechin, Matei Istoan, 2012-2014, 2024" );
-
-		// Set up the VHDL library style
-		useNumericStd();
-
-		wX = x->MSB() - x->LSB() +1;
-		wY = y->MSB() - y->LSB() +1;
-		wA = a->MSB() - a->LSB() +1;
-
-		signedIO = (x->isSigned() && y->isSigned());
-		// TODO: manage the case when one is signed and not the other.
-		if((x->isSigned() && !y->isSigned()) || (!x->isSigned() && y->isSigned()))
-		{
-			THROWERROR("Different signs: x is "
-								 << (x->isSigned()?"":"un")<<"signed and y is "
-								 << (y->isSigned()?"":"un")<<"signed. This case is currently not supported." );
-		}
-
-		// THROWERROR("FixMultAdd needs more work");
-		
-
-#if 0
-		
-		// Set up the IO signals
-		xname="X";
-		yname="Y";
-		aname="A";
-		rname="R";
-
-		// Determine the msb and lsb of the full product X*Y
-		lsbP = x->LSB() + y->LSB();
-		msbP = lsbP + (wX + wY + (signedIO ? -1 : 0)) - 1;
-
-		//use 1 guard bit as default when we need to truncate A (and when either lsbP>aLSB or aMSB>msbP)
-		g = ((a->LSB()<outLSB && lsbP>a->LSB() && lsbP>outLSB)
-				|| (a->LSB()<outLSB && a->MSB()>msbP && msbP<outLSB)) ? 1 : 0;
-
-		// Determine the actual msb and lsb of the product,
-		// from the output's msb and lsb, and the (possible) number of guard bits
-		//lsb
-		if(((lsbP <= outLSB-g) && (g==1)) || ((lsbP < outLSB) && (g==0)))
-		{
-			//the result of the multiplication will be truncated
-			workPLSB = outLSB-g;
-
-			possibleOutputs = 2;
-			REPORT(LogLevel::VERBOSE, "Faithfully rounded architecture");
-
-			ostringstream dbgMsg;
-			dbgMsg << "Multiplication of " << wX << " by " << wY << " bits, with the result truncated to weight " << workPLSB;
-			REPORT(LogLevel::VERBOSE, dbgMsg.str());
-		}
-		else
-		{
-			//the result of the multiplication will not be truncated
-			workPLSB = lsbP;
-
-			possibleOutputs = 1; // No faithful rounding
-			REPORT(LogLevel::VERBOSE, "Exact architecture");
-
-			ostringstream dbgMsg;
-			dbgMsg << "Full multiplication of " << wX << " by " << wY;
-			REPORT(LogLevel::VERBOSE, dbgMsg.str());
-		}
-		//msb
-		if(msbP <= outMSB)
-		{
-			//all msbs of the product are used
-			workPMSB = msbP;
-		}
-		else
-		{
-			//not all msbs of the product are used
-			workPMSB = outMSB;
-		}
-
-		//compute the needed guard bits and update the lsb
-		if(msbP >= outLSB-g)
-		{
-			//workPLSB += ((g==1 && !(workPLSB==workPMSB && msbP==(outLSB-1))) ? 1 : 0);			//because of the default g=1 value
-			g = IntMultiplier::neededGuardBits(target, wX, wY, workPMSB-workPLSB+1);
-			workPLSB -= g;
-		}
-
-		// Determine the actual msb and lsb of the addend,
-		// from the output's msb and lsb
-		//lsb
-		if(a->LSB() < outLSB)
-		{
-			//truncate the addend
-			workALSB = (outLSB-g < a->LSB()) ? a->LSB() : outLSB-g;
-			//need to correct the LSB of A (the corner case when, because of truncating A, some extra bits of X*Y are required, which are needed only for the rounding)
-			if((a->LSB()<outLSB) && (a->MSB()>msbP) && (msbP<outLSB))
-			{
-				workALSB += (msbP==(outLSB-1) ? -1 : 0);
-			}
-		}
-		else
-		{
-			//keep the full addend
-			workALSB = a->LSB();
-		}
-		//msb
-		if(a->MSB() <= outMSB)
-		{
-			//all msbs of the addend are used
-			workAMSB = a->MSB();
-		}
-		else
-		{
-			//not all msbs of the product are used
-			workAMSB = outMSB;
-		}
-
-		//create the inputs and the outputs of the operator
-		addInput (xname,  wX);
-		addInput (yname,  wY);
-		addInput (aname,  wA);
-		addOutput(rname,  wOut, possibleOutputs);
-
-		//create the bit heap
-		{
-			ostringstream dbgMsg;
-			dbgMsg << "Using " << g << " guard bits" << endl;
-			dbgMsg << "Creating bit heap of size " << wOut+g << ", out of which " << g << " guard bits";
-			REPORT(LogLevel::VERBOSE, dbgMsg.str());
-		}
-		bitHeap = new BitHeap(this,								//parent operator
-							  wOut+g,							//size of the bit heap
-							  enableSuperTiles);				//whether super-tiles are used
-
-		//FIXME: are the guard bits included in the bits output by the multiplier?
-		//create the multiplier
-		//	this is a virtual operator, which uses the bit heap to do all its computations
-		//cerr << "Before " << getCurrentCycle() << endl;
-		if(msbP >= outLSB-g)
-		{
-			mult = new IntMultiplier(this,							//parent operator
-															 target,
-															 bitHeap,						//the bit heap that performs the compression
-															 getSignalByName(xname),		//first input to the multiplier (a signal)
-															 getSignalByName(yname),		//second input to the multiplier (a signal)
-															 lsbP-(outLSB-g),				//offset of the LSB of the multiplier in the bit heap
-															 false /*negate*/,				//whether to subtract the result of the multiplication from the bit heap
-															 signedIO);
-		}
-		//cerr << "After " << getCurrentCycle() << endl;
-
-		//add the addend to the bit heap
-		int addendWeight;
-
-		//if the addend is truncated, no shift is needed
-		//	else, compute the shift from the output lsb
-		//the offset for the signal in the bitheap can be either positive (signal's lsb < than bitheap's lsb), or negative
-		//	the case of a negative offset is treated with a correction term, as it makes more sense in the context of a bitheap
-		addendWeight = a->LSB()-(outLSB-g);
-		//needed to correct the value of g=1, when the multiplier s truncated as well
-		if((workALSB >= a->LSB()) && (g>1))
-		{
-			addendWeight += (msbP==(outLSB-1) ? 1 : 0);
-		}
-		//only add A to the bitheap if there is something to add
-		if((a->MSB() >= outLSB-g) && (workAMSB>=workALSB))
-		{
-			if(signedIO)
-			{
-				bitHeap->addSignedBitVector(addendWeight,			//weight of signal in the bit heap
-											aname,					//name of the signal
-											workAMSB-workALSB+1,	//size of the signal added
-											workALSB-a->LSB(),		//index of the lsb in the bit vector from which to add the bits of the addend
-											(addendWeight<0));		//if we are correcting the index in the bit vector with a negative weight
-			}
-			else
-			{
-				bitHeap->addUnsignedBitVector(addendWeight,			//weight of signal in the bit heap
-											  aname,				//name of the signal
-											  workAMSB-workALSB+1,	//size of the signal added
-											  (a->MSB()-a->LSB())-(workAMSB-a->MSB()),
-																	//index of the msb in the actual bit vector from which to add the bits of the addend
-											  workALSB-a->LSB(),	//index of the lsb in the actual bit vector from which to add the bits of the addend
-											  (addendWeight<0));	//if we are correcting the index in the bit vector with a negative weight
-			}
-		}
-
-		//correct the number of guard bits, if needed, because of the corner cases
-		if((a->LSB()<outLSB) && (a->MSB()>msbP) && (msbP<outLSB))
-		{
-			if(msbP==(outLSB-1))
-			{
-				g++;
-			}
-		}
-
-		//add the rounding bit
-		if(g>0)
-			bitHeap->addConstantOneBit(g-1);
-
-		//compress the bit heap
-		bitHeap -> generateCompressorVHDL();
-		//assign the output
-		vhdl << tab << rname << " <= " << bitHeap->getSumName() << range(wOut+g-1, g) << ";" << endl;
-		
-#endif
-
-	}
-
-#endif // Old constructor
-
 
 	FixMultAdd::~FixMultAdd()
 	{
@@ -381,42 +211,6 @@ namespace flopoco {
 
 
 	
-#if 0 // This is probably useless now, and should be replaced with the standard interface
-	FixMultAdd* FixMultAdd::newComponentAndInstance(
-													Operator* op,
-													string instanceName,
-													string xSignalName,
-													string ySignalName,
-													string aSignalName,
-													string rSignalName,
-													int rMSB,
-													int rLSB )
-	{
-		FixMultAdd* f = new FixMultAdd(
-										 op->getTarget(),
-										 op->getSignalByName(xSignalName),
-										 op->getSignalByName(ySignalName),
-										 op->getSignalByName(aSignalName),
-										 rMSB, rLSB
-										 );
-		op->addSubComponent(f);
-
-		op->inPortMap(f, "X", xSignalName);
-		op->inPortMap(f, "Y", ySignalName);
-		op->inPortMap(f, "A", aSignalName);
-
-		op->outPortMap(f, "R", join(rSignalName,"_slv"));  // here rSignalName_slv is std_logic_vector
-		op->vhdl << op->instance(f, instanceName);
-		// hence a sign mismatch in next iteration.
-		
-		op->vhdl << tab << op->declareFixPoint(rSignalName, f->signedIO, rMSB, rLSB)
-				<< " <= " <<  (f->signedIO ? "signed(" : "unsigned(") << (join(rSignalName, "_slv")) << ");" << endl;
-
-		return f;
-	}
-
-
-#endif
 
 
 
@@ -513,9 +307,24 @@ namespace flopoco {
 
 
 
-	void FixMultAdd::buildStandardTestCases(TestCaseList* tcl)
-	{
-		//TODO
+	void FixMultAdd::buildStandardTestCases(TestCaseList* tcl) {
+		TestCase *tc;
+
+		// our ambitious goal here is to debug until the case 0*0+0 works
+		tc = new TestCase(this); 
+		tc->addInput("X", 0);
+		tc->addInput("Y", 0);
+		tc->addInput("A", 0);
+		emulate(tc);
+		tcl->add(tc);
+
+		// ... and then the case 0*0 + ulp(A)		(a distant dream)
+		tc = new TestCase(this); 
+		tc->addInput("X", 0);
+		tc->addInput("Y", 0);
+		tc->addInput("A", 1);
+		emulate(tc);
+		tcl->add(tc);
 	}
 
 	
@@ -547,14 +356,21 @@ namespace flopoco {
 		// the static list of mandatory tests
 		TestList testStateList;
 		vector<pair<string,string>> paramList;
-
+ 
     list<vector<int>> params; // order: msbx lsbx msby lsby msba lsba msbout lsbout
 		// (they will all be tested in 4 combinations of plainVHDL and signedIO)
     if(testLevel == TestLevel::QUICK)
     { // The quick tests
       params = {
-				{3,0, 3,0, 10,0, 11,0}, // exact integer without overflow
-				{3,0, 3,0, 10,0, 10,0}, // exact integer with overflow
+				{3,0, 3,0, 10,0, 11,0}, // all exact integer without overflow
+				{3,0, 3,0, 10,0, 10,0}, // all exact integer with overflow
+				{3,-3, 3,-3, 10,0, 11,0}, // truncated mult, exact integer without overflow, result integer
+				{3,-3, 3,-3, 10,0, 11,-1}, // truncated mult, exact addend, result half-integer
+				{3,-3, 3,-3, 8,-2, 11,-1}, // truncated mult, truncated addend, result half-integer
+				{3,0, 3,0, 8,-3, 11,-1}, // exact mult, truncated addend, result half-integer
+				{3,-1, 3,0, 8,-3, 11,-1}, // exact mult, truncated addend, result half-integer
+				{3,-1, 3,0, 8,-3, 11,-1}, // truncated mult, truncated addend, result half-integer
+				{3,-3, 3,-3, 8,-4, 11,0}, // truncated mult, truncated addend, result integer
 			};
     }
     else if(testLevel == TestLevel::SUBSTANTIAL)
@@ -563,6 +379,7 @@ namespace flopoco {
     else if(testLevel >= TestLevel::EXHAUSTIVE)
     { // The substantial unit tests
     }
+		
 
     for (auto param : params)
     {
@@ -574,7 +391,7 @@ namespace flopoco {
       int lsba = param[5];
       int msbout = param[6];
       int lsbout = param[7];
-      for(int plainvhdl=1; plainvhdl < 2; plainvhdl ++) // TODO update to test the bitheap version
+      for(int plainvhdl=0; plainvhdl < 2; plainvhdl ++) // TODO update to test the bitheap version
 				{
 					for(int signedio=0; signedio < 2; signedio++)
 						{

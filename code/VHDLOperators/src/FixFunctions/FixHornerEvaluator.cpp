@@ -119,6 +119,7 @@ namespace flopoco{
 
 		// Main loop of the Horner recurrence
 		for(int i=degree-1; i>=0; i--) {
+			REPORT(LogLevel::VERBOSE, " iteration " << i );
 			resizeFixPoint(join("YsTrunc", i), "Ys", 0, Arch.wcYLSB[i]);
 
 			//  assemble faithful operators (either FixMultAdd, or truncated mult)
@@ -143,9 +144,8 @@ namespace flopoco{
 			}
 
 			else { // using FixMultAdd
-				THROWERROR("Sorry, use the plainVHDL option until we revive FixMultAdd");
 #if 0
-				//REPORT(LogLevel::DEBUG, "*** iteration " << i << );
+				THROWERROR("Sorry, use the plainVHDL option until we revive FixMultAdd");
 				FixMultAdd::newComponentAndInstance(this,
 																						join("Step",i),     // instance name
 																						join("XsTrunc",i),  // x
@@ -154,6 +154,32 @@ namespace flopoco{
 																						join("S", i),   // result
 																						wcSumMSB[i], wcSumLSB[i]
 																						);
+#else
+				Signal* x = getSignalByName(join("YsTrunc",i));
+				Signal* y = getSignalByName(join("S",i+1));
+				Signal* a = getSignalByName(join("As",i));
+
+				newInstance("FixMultAdd",
+										getName() + join("_step_",i),
+										// the parameter list will be a long one, TODO for luxury: provide the former signal-based interface
+										"signedIO=true"
+										+ join(" msbX=",x->MSB() )
+										+ join(" lsbX=",x->LSB() )
+										+ join(" msbY=",y->MSB() )
+										+ join(" lsbY=",y->LSB() )
+										+ join(" msbA=",a->MSB() )
+										+ join(" lsbA=",a->LSB() )
+										+ join(" msbOut=", Arch.wcSumMSB[i] )
+										+ join(" lsbOut=", Arch.wcSumLSB[i] ),
+										// the input formal/actual signal wiring
+										"X=>"+join("YsTrunc",i)
+										+ ",Y=>"+join("S",i+1)
+										+ ",A=>"+join("As",i),
+										// the output formal/actual wiring
+										"R=>"+join("SS",i)
+										);
+				// this line is needed because we don"t have addFixOutput
+				vhdl <<  declareFixPoint(join("S",i), true, Arch.wcSumMSB[i], Arch.wcSumLSB[i]) << " <= signed(" << join("SS",i) << ");" <<endl;
 #endif
 			}
 		}

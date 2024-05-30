@@ -20,7 +20,7 @@
 	  int maxDSP=-1, bool superTiles=false, bool use2xk=false, bool useirregular=false, bool useLUT=true,  bool useKaratsuba=false, bool useGenLUT=false, bool useBooth=false, int beamRange=0, bool optiTrunc=true, bool minStages=true */
 
 
-/* TODO: re-enable virtual multipliers as they were working in 4.1.2
+/* Work in progress: re-enable virtual multipliers as they were working in 4.1.2
 
 	 Some use cases among many others that the current IntMultiplier cannot address :
 		   FixComplexMult computes a*b+c*d in a single bit heap
@@ -48,10 +48,16 @@
 		  using the least possible bitheap columns.
 		It should also report its LSB and the actual error achieved, sometimes it will be lower than the error bound.
 
+		Each tiling is responsible for computing the recentering constant in case of a truncation.
 
-		The problem with current code is that wOut for instance is an attribute of the IntMultiplier class (which is OK: we need it for emulate())
-     that is used all over the place in the tilings etc. Sometimes messed with guardBits, etc.
-		All the tiling algorithms should become error-centered (some already are)
+
+		An example of problem with previous code:
+		wOut is an attribute of the IntMultiplier class. This is OK: we need it for emulate() etc.
+    BUT it was used all over the place in the tilings etc. Sometimes messed with guardBits, etc.
+		This is not OK as virtual multipliers input an anchor (the position of the LSB of the exact product) and an accuracy,
+		  and somehow compute their internal truncation out of this. 
+		So wOut should be removed from the tiling inputs. Same for other parameters (guardBits...).
+		All algorithms should become error-centered (some already are)
 		
 		One thing that will make life simpler (and simpler than in 4.1.2) is to accept to construct a bit heap with empty columns.
 		For instance for a faithful FixComplexMult, let us create a bit heap large enough for the exact products,
@@ -103,8 +109,9 @@ namespace flopoco {
 		/** A virtual operator that adds to an existing BitHeap belonging to another Operator.
 		 Also fixed-point oriented:
 		   the formats of the inputs are read from the signals named xname and yname;
-			 the error is given as an mpz_class and is an error in ulps of the exact product
-			 TODO Frankly I don't know what is a tilingStrategy and why it should be returned... 
+			 the errorBudget is given as an mpz_class and is an error in ulps of the exact product
+			 The bit heap is assumed in fixed point (bits range from lsbBH to msbBH)
+			 and exactProductLSBPosition defines the position of the ulp of the exact product in this range.
 		*/
 		static TilingStrategy* addToExistingBitHeap(BitHeap* externalBitheapPtr, string xname, string yname, mpz_class errorBudget, int exactProductLSBPosition=0 );
 
@@ -172,34 +179,15 @@ namespace flopoco {
          * @return number of partial products in the diagonal
          */
 		static unsigned int widthOfDiagonalOfRect(unsigned int wX, unsigned int wY, unsigned int col, unsigned wFull, bool signedIO=false);
-
-		/** TODO Deprecate once it has been properly split in two 
-        * @brief Compute several parameters for a faithfully rounding truncated multiplier, supports the signed case
-        * @details Compute guard-bits, keep-bits, the error re-centering constant and the error budget. The parameters are estimated by sucessivly removing partial products (as they would apperar in an and array, although the actual multiplier might use larger tiles) as long as the error bounds are met. The function considers the dynamic calculation of the error recentering constant to extend the permissible error to allow more truncated bits and hence a lower cost. In contrast to the algorithm published in the truncation paper mentioned below, this variant also considers that the singed case, where the partial products at the left and bottom edge |_ of the tiled area cause a positive when omitted (as they count negative in the result). The function has quadratic complexity.
-        * @param wX width of the rectangle
-        * @param wY height of the rectangle
-        * @param wFull width of result of a non-truncated multiplier with the same input widths
-        * @param wOut requested output width of the result vector of the truncated multiplier
-        * @param g the number of bits below the output LSB that we need to keep in the summation
-        * @param signedIO signedness of the multiplier
-        * @param k number of bits to keep in in the column with weight w-g
-        * @param errorBudget maximal permissible weight of the sum of the omitted partial products (as they would appear in an array multiplier)
-        * @param constant to recenter the truncation error around 0 since it can otherwise only be negative, since there are only partial products left out. This allows a larger error, so more products can be omitted
-        * @return none
-        */
-        static void computeTruncMultParamsMPZ(unsigned wX, unsigned wY, unsigned wFull, unsigned wOut, bool signedIO, unsigned &g, unsigned &k, mpz_class &errorBudget, mpz_class &constant);
-
 		
 		/** 
-        * @brief Compute the guard bits, keep bits, and the error-centering constant for a faithfully rounding truncated multiplier
+        * @brief Compute the guard bits, keep bits, and the error-centering constant for truncated multiplier respecting a given error budget
         * @details See 7.2.4.2 of Application Specific Arithmetic 2024.
-				In addition to the algorithm there, this variant takes into account the negative sign of the partial products at the left and bottom edge |_ in signed multipliers.
+				TODO: this variant does not take into account the negative sign of the partial products at the left and bottom edge |_ in signed multipliers.
 				This should never be useful in a multiplier computing just right (see 8.1.4), but the world conspires to prove my intuitions wrong.
-				This function is assuming an integer multiplier (lsbX=lsbY=0), so the error budget and the constant are integers
-				This function has quadratic complexity.
         * @param wX size in bits of input X 
         * @param wY size in bits of input Y
-        * @param errorBudget strict upper bound on the allowed error after truncation 
+        * @param errorBudget strict upper bound on the allowed error after truncation: |error| should be < errorBudget 
         * @param actualLSB the rightmost position where we need to keep bits
         * @param k number of bits to keep in the rightmost position
         * @param constant to recenter the truncation error around 0 since it can otherwise only be negative, since there are only partial products left out. This allows a larger error, so more products can be omitted. 
@@ -289,24 +277,18 @@ namespace flopoco {
 		int multiplierUid;
 
         /**
-         * @brief Define and calculate the size of the output signals of each multiplier tile in the solution to the BitHeap
-         * @param bh BitHeap instance, where the partial results form the multiplier tiles should compressed
-         * @param solution list of the placed tiles with their parametrization and anchor point
-         * @param bitheapLSBWeight weight (2^bitheapLSBWeight) of the LSB that should be compressed on BH. It is supposed to be 0 for regular multipliers, but can be higher for truncated multipliers.
+         * @brief From a tiling solution, generates VHDL that implements these tiles and transfers their result to a BitHeap
+         * @param bh BitHeap instance, where the partial results form the multiplier tiles should be sent
+         * @param exactProductLSB defines the position in the bit heap of the ulp of the exact product.
+         * @param squarer boolean, true if this multiplier tiling is actually a squarer.
          * @return none
          */
-		static void fillBitheap(BitHeap* bh, list<TilingStrategy::mult_tile_t> &solution, unsigned int bitheapLSBWeight, int wX, int wY, bool squarer);
+		static void fillBitheap(BitHeap* bh, TilingStrategy *tiling, int exactProductLSB, bool squarer);
 
-		static void createFigures(TilingStrategy *tilingStrategy);
+		static void createFigures(TilingStrategy *tiling);
  
-		// TODO remove all the following
-        static unsigned additionalError_n(unsigned int wX, unsigned int wY, unsigned int col, unsigned int t, unsigned int wFull, bool signedIO);
 
-        static unsigned additionalError_p(unsigned int wX, unsigned int wY, unsigned int col, unsigned int t, unsigned int wFull, bool signedIO);
-
-        static mpz_class calcErcConst(mpz_class &errorBudget, mpz_class &wlext, mpz_class &deltap, mpz_class constant=1);
-
-    };
+	};
 
 }
 #endif

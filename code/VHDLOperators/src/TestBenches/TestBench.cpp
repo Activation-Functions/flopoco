@@ -252,7 +252,7 @@ namespace flopoco{
 			o << tab << tab << "if testSuccess_" << s->getName() << " = false then" << endl;
 			o << tab << tab << tab << "report(\"Test #\" & integer'image(testCounter) & \", incorrect output for " << s->getName() << ": \" & lf"
 				<< " & \" expected values: \" & expectedOutputS(1 to expectedOutputSize) & lf "; 
-			o << " & \"          result:   \" & str(" << s->getName() << ") ) severity error;" << endl;
+			o << " & \"          result:    \" & str(" << s->getName() << ") ) severity error;" << endl;
 			o << tab << tab << "end if;" << endl;
 			o << tab << tab << "" << endl;
 		}

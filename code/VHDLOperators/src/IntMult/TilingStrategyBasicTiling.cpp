@@ -8,16 +8,17 @@ namespace flopoco {
 TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 		unsigned int wX_,
 		unsigned int wY_,
-		unsigned int wOut_,
 		bool signedIO_,
+		mpz_class errorBound_,
 		BaseMultiplierCollection* bmc,
 		base_multiplier_id_t prefered_multiplier,
 		float occupation_threshold,
-		size_t maxPrefMult):TilingStrategy(
+		size_t maxPrefMult):
+	TilingStrategy(
 			wX_,
 			wY_,
-			wOut_,
 			signedIO_,
+			errorBound_,
 			bmc),
 		prefered_multiplier_{prefered_multiplier},
 		small_tile_mult_{1}, //Most compact LUT-Based multiplier
@@ -25,7 +26,7 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 		occupation_threshold_{occupation_threshold},
 		max_pref_mult_{maxPrefMult}
 	{
-		truncated = ((unsigned)wOut < IntMultiplier::prodsize(wY, wX, signedIO_, signedIO_));
+		truncated = (errorBound>0); // was ((unsigned)wOut < IntMultiplier::prodsize(wY, wX, signedIO_, signedIO_));
 	}
 
 	int TilingStrategyBasicTiling::shrinkBox(
@@ -293,7 +294,12 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 		float totalCost = 0.0f;
 		auto& bm = baseMultiplierCollection->getBaseMultiplier(prefered_multiplier_);
 		int wXmultMax = bm.getMaxWordSizeLargeInputUnsigned();
+
+		// TODO for Fulda: please comment this algorithm. Florent is not clever enough.
+		
 		//TODO Signed int deltaSignedUnsigned = bm.getDeltaWidthSigned();
+
+		//??? What is this loop computing?
 		int wXmult = 1;
 		int wYmult = 1;
 		int intMultArea = 1;
@@ -306,19 +312,21 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 				intMultArea = testMultArea;
 			}
 		}
-
 		int deltaWidthSigned = bm.getDeltaWidthSigned();
 
 		float multArea = float(intMultArea);
 
+		
 		if (truncated) {
-			//Perform tiling from left to right to increase the number of full
-			//multipliers
-			int offset = IntMultiplier::prodsize(wX, wY, signedIO, signedIO) - wOut;
+			//Perform tiling from left to right to increase the number of full multipliers
+			unsigned int keepBits; // we will do nothing of it, I think
+			IntMultiplier::computeTruncMultParams(wX, wY, errorBound,
+																						actualLSB, keepBits, errorCorrectionConstant);
+
 			int curX = wX - 1;
 			int curY = 0;
-			if (curX < offset) {
-				curY = offset - curX;
+			if (curX < actualLSB) {
+				curY = actualLSB - curX;
 			}
 
 			while (curY < wY) {
@@ -328,7 +336,7 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 					int curDeltaX = wXmult;
 					int curDeltaY = wYmult;
 					bool isXSigned = ((static_cast<unsigned int>(curX + wXmult)) >= (unsigned)wX) and signedIO;
-
+					
 					if (isYSigned)
 						curDeltaY += deltaWidthSigned;
 					if (isXSigned)
@@ -337,7 +345,7 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 					int rightX = curX - curDeltaX + 1;
 					int topY = curY;
 
-					int area = shrinkBox(rightX, topY, curDeltaX, curDeltaY, offset);
+					int area = shrinkBox(rightX, topY, curDeltaX, curDeltaY, actualLSB);
 					if (area == 0) { // All the box is below the line cut
 						break;
 					}
@@ -345,21 +353,23 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 					float occupationRatio = (float (area)) /  multArea;
 					bool occupationAboveThreshold = occupationRatio >= occupation_threshold_;
 					bool hardLimitUnreached = (numUsedMults_ < max_pref_mult_);
+					
 					if (occupationAboveThreshold and hardLimitUnreached) {
 						// Emit a preferred multiplier for this block
 						auto param = bm.parametrize(
-								curDeltaX,
-								curDeltaY,
-								isXSigned,
-								isYSigned
-							);
+																				curDeltaX,
+																				curDeltaY,
+																				isXSigned,
+																				isYSigned
+																				);
 						auto coords = make_pair(rightX, topY);
 						solution.push_back(make_pair(param, coords));
 						totalCost += target->getBitHeapCompressionCostperBit() * param.getOutWordSize();
 						numUsedMults_ += 1;
-					} else {
+					}
+					else {
 						//Tile the subBox with smaller multiplier;
-						totalCost += tileBox(rightX, topY, curDeltaX, curDeltaY, offset);
+						totalCost += tileBox(rightX, topY, curDeltaX, curDeltaY, actualLSB);
 					}
 					curX -= wXmult;
 					if (isXSigned)
@@ -368,6 +378,8 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 				curY += wYmult;
 				if (isYSigned)
 					curY += deltaWidthSigned;
+				
+
 			}
 
 		} else {
