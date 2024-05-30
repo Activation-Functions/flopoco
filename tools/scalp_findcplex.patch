@@ -1,0 +1,14 @@
+--- /home/pierre/Repositories/flopoco/dev/master/build/dependencies/src/scalp/CMakeExtensions/FindCPLEX.cmake	2024-05-30 18:18:59.899855112 +0200
++++ FindCPLEX.cmake	2024-05-30 18:18:26.568044772 +0200
+@@ -11,10 +11,9 @@
+     message(STATUS "CPLEX Root Dir not set by user.")
+ else()
+     message(STATUS "CPLEX Root Dir set by user: " ${CPLEX_ROOT_DIR})
++    STRING(REGEX MATCH "[0-9]+" CPLEX_VERSION ${CPLEX_ROOT_DIR})
+ endif()
+ 
+-STRING(REGEX MATCH "[0-9]+" CPLEX_VERSION ${CPLEX_ROOT_DIR})
+-
+ if (WIN32)
+     execute_process(COMMAND cmd /C set CPLEX_STUDIO_DIR OUTPUT_VARIABLE CPLEX_STUDIO_DIR_VAR ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
+ 

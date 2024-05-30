@@ -362,8 +362,10 @@ $(SCIP): $(SOPLEX)
 SCALP_GIT := https://digidev.digi.e-technik.uni-kassel.de/git/scalp.git
 SCALP_SOURCE_DIR := $(BUILD_DEPENDENCIES_SOURCE_DIR)/scalp
 SCALP_BINARY_DIR := $(BUILD_DEPENDENCIES_BINARY_DIR)/scalp
-SCALP_CMAKE_PATCH := $(MKROOT)/tools/scalp_fpc.patch
-SCALP_SCIP_PATCH := $(MKROOT)/tools/find_scip.patch
+
+SCALP_FIND_GUROBI_PATCH := $(MKROOT)/tools/scalp_findgurobi.patch
+SCALP_FIND_CPLEX_PATCH  := $(MKROOT)/tools/scalp_findcplex.patch
+SCALP_FIND_SCIP_PATCH   := $(MKROOT)/tools/scalp_findscip.patch
 
 SCALP += $(SCALP_BINARY_DIR)/lib/libScaLP.so
 scalp: $(SCALP)
@@ -375,7 +377,6 @@ SCALP_CMAKE_OPTIONS += -DUSE_LPSOLVE=OFF
 ifeq (GUROBI, $(filter GUROBI, $(SCALP_BACKEND)))
 # -----------------------------------------------
     SCALP_DEPENDENCIES += $(GUROBI)
-    SCALP_CMAKE_OPTIONS += -DUSE_GUROBI=ON
     SCALP_CMAKE_OPTIONS += -DGUROBI_ROOT_DIR=$(GUROBI_ROOT_DIR)
     SCALP += $(SCALP_BINARY_DIR)/lib/libScaLP-Gurobi.so
 endif
@@ -383,7 +384,6 @@ endif
 ifeq (SCIP, $(filter SCIP, $(SCALP_BACKEND)))
 # -------------------------------------------
     SCALP_DEPENDENCIES += $(SCIP)
-    SCALP_CMAKE_OPTIONS += -DUSE_SCIP=ON
     SCALP_CMAKE_OPTIONS += -DSCIP_ROOT_DIR=$(SCIP_BINARY_DIR)
     SCALP += $(SCALP_BINARY_DIR)/lib/libScaLP-SCIP.so
 endif
@@ -394,8 +394,9 @@ $(SCALP): $(SCALP_DEPENDENCIES)
 	@mkdir -p $(SCALP_BINARY_DIR)
 	@git clone $(SCALP_GIT) $(SCALP_SOURCE_DIR)
 	@cd $(SCALP_SOURCE_DIR)
-	@patch -p0 -f CMakeLists.txt $(SCALP_CMAKE_PATCH)
-	@patch -p0 -f CMakeExtensions/FindSCIP.cmake $(SCALP_SCIP_PATCH)
+	@patch -p0 -f CMakeExtensions/FindCPLEX.cmake $(SCALP_FIND_CPLEX_PATCH)
+	@patch -p0 -f CMakeExtensions/FindGurobi.cmake $(SCALP_FIND_GUROBI_PATCH)
+	@patch -p0 -f CMakeExtensions/FindSCIP.cmake $(SCALP_FIND_SCIP_PATCH)
 	@cmake -B build -G$(CMAKE_GENERATOR)		    \
 	       -DCMAKE_INSTALL_PREFIX=$(SCALP_BINARY_DIR)   \
 	       $(SCALP_CMAKE_OPTIONS)
