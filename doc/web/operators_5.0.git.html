@@ -48,6 +48,17 @@
 </dl></dd>
 </dl>
 <dl>
+<dt class="operatorname">Normalizer</dt>
+<dd class="operatordescription">A combined leading zero/one counter and left shifter, useful for floating-point normalization.</dd>
+<dd><em>Parameters:</em> <dl>
+<dt> <code class="parametername">wX</code>  (<code class="parametertype">int</code>) </dt><dd>input size in bits</dd>
+<dt> <code class="parametername">wR</code>  (<code class="parametertype">int</code>) </dt><dd>output size in bits, with wR <= wX</dd>
+<dt> <code class="parametername">maxShift</code>  (<code class="parametertype">int</code>) </dt><dd>how many bits to count, with maxShift<= wX </dd>
+<span class="optionalparam"> <dt> <code class="parametername">computeSticky</code>  (<code class="parametertype">bool</code>)   (optional, default value is false)</dt><dd>if true and wR<wX, a sticky bit is computed out of the discarded bits</dd> </span>
+<span class="optionalparam"> <dt> <code class="parametername">countType</code>  (<code class="parametertype">int</code>)   (optional, default value is -1)</dt><dd>0 to count zeroes, 1 to count ones, -1 to have a dynamic OZb input that tells what to count</dd> </span>
+</dl></dd>
+</dl>
+<dl>
 <dt class="operatorname">LZOC3</dt>
 <dd class="operatordescription">A leading zero counter. The output size is computed.</dd>
 <dd><em>Parameters:</em> <dl>
@@ -64,18 +75,22 @@
 <span class="optionalparam"> <dt> <code class="parametername">reset</code>  (<code class="parametertype">int</code>)   (optional, default value is 0)</dt><dd>the reset type (0 for none, 1 for synchronous, 2 for asynchronous)</dd> </span>
 </dl></dd>
 </dl>
+<h3>Basic integer operators (pipelined)</h3>
 <dl>
-<dt class="operatorname">Normalizer</dt>
-<dd class="operatordescription">A combined leading zero/one counter and left shifter, useful for floating-point normalization.</dd>
+<dt class="operatorname">FixMultAdd</dt>
+<dd class="operatordescription">A generic fixed-point A+X*Y. With so many parameters, it is probably mostly for internal use.</dd>
 <dd><em>Parameters:</em> <dl>
-<dt> <code class="parametername">wX</code>  (<code class="parametertype">int</code>) </dt><dd>input size in bits</dd>
-<dt> <code class="parametername">wR</code>  (<code class="parametertype">int</code>) </dt><dd>output size in bits, with wR <= wX</dd>
-<dt> <code class="parametername">maxShift</code>  (<code class="parametertype">int</code>) </dt><dd>how many bits to count, with maxShift<= wX </dd>
-<span class="optionalparam"> <dt> <code class="parametername">computeSticky</code>  (<code class="parametertype">bool</code>)   (optional, default value is false)</dt><dd>if true and wR<wX, a sticky bit is computed out of the discarded bits</dd> </span>
-<span class="optionalparam"> <dt> <code class="parametername">countType</code>  (<code class="parametertype">int</code>)   (optional, default value is -1)</dt><dd>0 to count zeroes, 1 to count ones, -1 to have a dynamic OZb input that tells what to count</dd> </span>
+<dt> <code class="parametername">signedIO</code>  (<code class="parametertype">bool</code>) </dt><dd>signedness of multiplicands X and Y</dd>
+<dt> <code class="parametername">msbX</code>  (<code class="parametertype">int</code>) </dt><dd>position of the MSB of multiplicand X</dd>
+<dt> <code class="parametername">lsbX</code>  (<code class="parametertype">int</code>) </dt><dd>position of the LSB of multiplicand X</dd>
+<dt> <code class="parametername">msbY</code>  (<code class="parametertype">int</code>) </dt><dd>position of the MSB of multiplicand Y</dd>
+<dt> <code class="parametername">lsbY</code>  (<code class="parametertype">int</code>) </dt><dd>position of the LSB of multiplicand Y</dd>
+<dt> <code class="parametername">msbA</code>  (<code class="parametertype">int</code>) </dt><dd>position of the MSB of addend A</dd>
+<dt> <code class="parametername">lsbA</code>  (<code class="parametertype">int</code>) </dt><dd>position of the LSB of addend A</dd>
+<dt> <code class="parametername">msbOut</code>  (<code class="parametertype">int</code>) </dt><dd>position of the MSB of output</dd>
+<dt> <code class="parametername">lsbOut</code>  (<code class="parametertype">int</code>) </dt><dd>position of the LSB of output</dd>
 </dl></dd>
 </dl>
-<h3>Basic integer operators (pipelined)</h3>
 <dl>
 <dt class="operatorname">IntSquarerLUT</dt>
 <dd class="operatordescription">Implements a LUT squarer by simply tabulating all results in the LUT, should only be used for very small word sizes</dd>
@@ -85,37 +100,38 @@
 </dl></dd>
 </dl>
 <dl>
-<dt class="operatorname">BaseMultiplierXilinx2xk</dt>
-<dd class="operatordescription">Implements a 2xY-LUT-Multiplier that can be realized efficiently on some Xilinx-FPGAs</dd>
+<dt class="operatorname">IntMultiAdder</dt>
+<dd class="operatordescription">A component adding n integers, bitheap based. If wIn=1 it is also a population count</dd>
+<dd><em>Parameters:</em> <dl>
+<dt> <code class="parametername">signedIn</code>  (<code class="parametertype">bool</code>) </dt><dd>0=unsigned, 1=signed</dd>
+<dt> <code class="parametername">n</code>  (<code class="parametertype">int</code>) </dt><dd>number of inputs to add</dd>
+<dt> <code class="parametername">wIn</code>  (<code class="parametertype">int</code>) </dt><dd>input size in bits</dd>
+<span class="optionalparam"> <dt> <code class="parametername">wOut</code>  (<code class="parametertype">int</code>)   (optional, default value is 0)</dt><dd>output size in bits -- if 0, wOut is computed to be large enough to represent the result</dd> </span>
+</dl></dd>
+</dl>
+<dl>
+<dt class="operatorname">IntAddSub</dt>
+<dd class="operatordescription">Generic Integer adder/subtractor that supports addition and subtraction of up to three inputs (ternary adder) as well as runtime configuration of the signs of operation but no fancy pipelining like IntAdder.</dd>
+<dd><em>Parameters:</em> <dl>
+<dt> <code class="parametername">wIn</code>  (<code class="parametertype">int</code>) </dt><dd>input size in bits</dd>
+<span class="optionalparam"> <dt> <code class="parametername">isSigned</code>  (<code class="parametertype">bool</code>)   (optional, default value is false)</dt><dd>set to true if you want a signed adder (with correct sign extension of the inputs) or not, unsigned only works when not input is negative or configurable (as negative output numbers may occur)</dd> </span>
+<span class="optionalparam"> <dt> <code class="parametername">isTernary</code>  (<code class="parametertype">bool</code>)   (optional, default value is false)</dt><dd>set to true if you want a ternary (3-input adder)</dd> </span>
+<span class="optionalparam"> <dt> <code class="parametername">xNegative</code>  (<code class="parametertype">bool</code>)   (optional, default value is false)</dt><dd>set to true if X (first) input should be subtracted</dd> </span>
+<span class="optionalparam"> <dt> <code class="parametername">yNegative</code>  (<code class="parametertype">bool</code>)   (optional, default value is false)</dt><dd>set to true if Y (second) input should be subtracted</dd> </span>
+<span class="optionalparam"> <dt> <code class="parametername">zNegative</code>  (<code class="parametertype">bool</code>)   (optional, default value is false)</dt><dd>set to true if Z (third) input should be subtracted, only valid when isTernary=true</dd> </span>
+<span class="optionalparam"> <dt> <code class="parametername">xConfigurable</code>  (<code class="parametertype">bool</code>)   (optional, default value is false)</dt><dd>set to true if X input should be configurable with its sign (an extra input is added to decide add/subtract operation)</dd> </span>
+<span class="optionalparam"> <dt> <code class="parametername">yConfigurable</code>  (<code class="parametertype">bool</code>)   (optional, default value is false)</dt><dd>set to true if Y input should be configurable with its sign (an extra input is added to decide add/subtract operation)</dd> </span>
+<span class="optionalparam"> <dt> <code class="parametername">zConfigurable</code>  (<code class="parametertype">bool</code>)   (optional, default value is false)</dt><dd>set to true if Z input should be configurable with its sign (an extra input is added to decide add/subtract operation), only valid when isTernary=true</dd> </span>
+</dl></dd>
+</dl>
+<dl>
+<dt class="operatorname">IntKaratsubaRectangular</dt>
+<dd class="operatordescription">Implements a large unsigned Multiplier using rectangular shaped tiles as appears for Xilinx FPGAs. Currently limited to specific, hand-optimized sizes</dd>
 <dd><em>Parameters:</em> <dl>
 <dt> <code class="parametername">wX</code>  (<code class="parametertype">int</code>) </dt><dd>size of input X</dd>
 <dt> <code class="parametername">wY</code>  (<code class="parametertype">int</code>) </dt><dd>size of input Y</dd>
-<span class="optionalparam"> <dt> <code class="parametername">xIsSigned</code>  (<code class="parametertype">bool</code>)   (optional, default value is 0)</dt><dd>input X is signed</dd> </span>
-<span class="optionalparam"> <dt> <code class="parametername">yIsSigned</code>  (<code class="parametertype">bool</code>)   (optional, default value is 0)</dt><dd>input Y is signed</dd> </span>
-</dl></dd>
-</dl>
-<dl>
-<dt class="operatorname">BaseMultiplierIrregularLUTXilinx</dt>
-<dd class="operatordescription">Implements a non rectangular LUT multiplier from a set that yields a relatively high efficiency compared to recangular LUT multipliers 
-  _ _     _        _ _       _     _ _ _    _ _      _ _     _
- |_|_|_  |_|_     |_|_|_    |_|_  |_|_|_|  |_|_|_   |_|_|   |_|_
- |_|_|_| |_|_|_     |_|_|   |_|_|   |_|_|  |_|_|_|  |_|_|   |_|_|
- |_|_|_|   |_|_|              |_|                     |_|   |_|_|
- shape 1  shape 2 shape 3 shape 4 shape 5  shape 6 shape 7  shape 8
-</dd>
-<dd><em>Parameters:</em> <dl>
-<dt> <code class="parametername">wS</code>  (<code class="parametertype">int</code>) </dt><dd>shape ID</dd>
-<span class="optionalparam"> <dt> <code class="parametername">xSigned</code>  (<code class="parametertype">bool</code>)   (optional, default value is false)</dt><dd>input X can be signed or unsigned</dd> </span>
-<span class="optionalparam"> <dt> <code class="parametername">ySigned</code>  (<code class="parametertype">bool</code>)   (optional, default value is false)</dt><dd>input Y can be signed or unsigned</dd> </span>
-</dl></dd>
-</dl>
-<dl>
-<dt class="operatorname">BaseMultiplierDSPKaratsuba</dt>
-<dd class="operatordescription">Implements the Karatsuba pattern with DSPs where certain multipliers can be omitted to save DSPs</dd>
-<dd><em>Parameters:</em> <dl>
-<dt> <code class="parametername">wX</code>  (<code class="parametertype">int</code>) </dt><dd>size of input X of a single DSP-block</dd>
-<dt> <code class="parametername">wY</code>  (<code class="parametertype">int</code>) </dt><dd>size of input Y of a single DSP-block</dd>
-<dt> <code class="parametername">n</code>  (<code class="parametertype">int</code>) </dt><dd>size of pattern and number of DSP substitutions</dd>
+<span class="optionalparam"> <dt> <code class="parametername">useKaratsuba</code>  (<code class="parametertype">bool</code>)   (optional, default value is 1)</dt><dd>Uses Karatsuba when set to 1, instead a standard tiling without sharing is used.</dd> </span>
+<span class="optionalparam"> <dt> <code class="parametername">useRectangularTiles</code>  (<code class="parametertype">bool</code>)   (optional, default value is 1)</dt><dd>Uses rectangular tiles when set to 1, otherwise quadratic tiles are used</dd> </span>
 </dl></dd>
 </dl>
 <dl>
@@ -146,10 +162,17 @@
 <span class="optionalparam"> <dt> <code class="parametername">wZ</code>  (<code class="parametertype">int</code>)   (optional, default value is 0)</dt><dd>size of input Z (if post-adder is used)</dd> </span>
 <span class="optionalparam"> <dt> <code class="parametername">xIsSigned</code>  (<code class="parametertype">bool</code>)   (optional, default value is 0)</dt><dd>input X is signed</dd> </span>
 <span class="optionalparam"> <dt> <code class="parametername">yIsSigned</code>  (<code class="parametertype">bool</code>)   (optional, default value is 0)</dt><dd>input Y is signed</dd> </span>
-<span class="optionalparam"> <dt> <code class="parametername">isPipelined</code>  (<code class="parametertype">bool</code>)   (optional, default value is 1)</dt><dd>every stage is pipelined when set to 1</dd> </span>
 <span class="optionalparam"> <dt> <code class="parametername">usePostAdder</code>  (<code class="parametertype">bool</code>)   (optional, default value is 0)</dt><dd>use post-adders</dd> </span>
 <span class="optionalparam"> <dt> <code class="parametername">usePreAdder</code>  (<code class="parametertype">bool</code>)   (optional, default value is 0)</dt><dd>use pre-adders</dd> </span>
 <span class="optionalparam"> <dt> <code class="parametername">preAdderSubtracts</code>  (<code class="parametertype">bool</code>)   (optional, default value is 0)</dt><dd>if true, the pre-adder performs a pre-subtraction</dd> </span>
+</dl></dd>
+</dl>
+<dl>
+<dt class="operatorname">IntDualAddSub</dt>
+<dd class="operatordescription">Pipelined dual adder/subtractor</dd>
+<dd><em>Parameters:</em> <dl>
+<dt> <code class="parametername">wIn</code>  (<code class="parametertype">int</code>) </dt><dd>input size in bits</dd>
+<dt> <code class="parametername">opType</code>  (<code class="parametertype">int</code>) </dt><dd>1=compute X-Y and X+Y, 2=compute X-Y and Y-X</dd>
 </dl></dd>
 </dl>
 <dl>
@@ -175,11 +198,11 @@
 <span class="optionalparam"> <dt> <code class="parametername">use2xk</code>  (<code class="parametertype">bool</code>)   (optional, default value is false)</dt><dd>if true, attempts to use the 2xk-LUT-Multiplier with relatively high efficiency</dd> </span>
 <span class="optionalparam"> <dt> <code class="parametername">useirregular</code>  (<code class="parametertype">bool</code>)   (optional, default value is false)</dt><dd>if true, attempts to use the irregular-LUT-Multipliers with higher area/lut efficiency than the rectangular versions</dd> </span>
 <span class="optionalparam"> <dt> <code class="parametername">useLUT</code>  (<code class="parametertype">bool</code>)   (optional, default value is true)</dt><dd>if true, attempts to use the LUT-Multipliers for tiling</dd> </span>
-<span class="optionalparam"> <dt> <code class="parametername">useDSP</code>  (<code class="parametertype">bool</code>)   (optional, default value is true)</dt><dd>if true, attempts to use the DSP-Multipliers for tiling</dd> </span>
+<span class="optionalparam"> <dt> <code class="parametername">useGenLUT</code>  (<code class="parametertype">bool</code>)   (optional, default value is false)</dt><dd>if true, attempts to use the generalized LUT Multipliers, as defined by multiplier_shapes.tiledef</dd> </span>
+<span class="optionalparam"> <dt> <code class="parametername">useBooth</code>  (<code class="parametertype">bool</code>)   (optional, default value is false)</dt><dd>if true, attempts to use LUT-based Booth Arrays</dd> </span>
 <span class="optionalparam"> <dt> <code class="parametername">useKaratsuba</code>  (<code class="parametertype">bool</code>)   (optional, default value is false)</dt><dd>if true, attempts to use rectangular Karatsuba for tiling</dd> </span>
 <span class="optionalparam"> <dt> <code class="parametername">superTile</code>  (<code class="parametertype">bool</code>)   (optional, default value is false)</dt><dd>if true, attempts to use the DSP adders to chain sub-multipliers. This may entail lower logic consumption, but higher latency.</dd> </span>
-<span class="optionalparam"> <dt> <code class="parametername">dspThreshold</code>  (<code class="parametertype">real</code>)   (optional, default value is 0.0)</dt><dd>threshold of relative occupation ratio of a DSP multiplier to be used or not</dd> </span>
-<span class="optionalparam"> <dt> <code class="parametername">optiTrunc</code>  (<code class="parametertype">bool</code>)   (optional, default value is true)</dt><dd>if true, considers the Truncation error dynamicly, instead of defining a hard border for tiling, like in th ARITH paper</dd> </span>
+<span class="optionalparam"> <dt> <code class="parametername">optiTrunc</code>  (<code class="parametertype">bool</code>)   (optional, default value is true)</dt><dd>if true, considers the Truncation error dynamicly, instead of defining a hard border for tiling, like in the ARITH paper</dd> </span>
 <span class="optionalparam"> <dt> <code class="parametername">minStages</code>  (<code class="parametertype">bool</code>)   (optional, default value is true)</dt><dd>if true, minimizes stages in combined opt. of tiling an comp., otherwise try to find a sol. with less LUTs and more stages</dd> </span>
 <span class="optionalparam"> <dt> <code class="parametername">beamRange</code>  (<code class="parametertype">int</code>)   (optional, default value is 3)</dt><dd>range for beam search</dd> </span>
 <span class="optionalparam"> <dt> <code class="parametername">squarer</code>  (<code class="parametertype">bool</code>)   (optional, default value is false)</dt><dd>generate squarer</dd> </span>
@@ -197,6 +220,14 @@
 </dl></dd>
 </dl>
 <dl>
+<dt class="operatorname">Compressor</dt>
+<dd class="operatordescription">A basic compressor.</dd>
+<dd><em>Parameters:</em> <dl>
+<dt> <code class="parametername">columnHeights</code>  (<code class="parametertype">string</code>) </dt><dd>comma separated list of heights for the columns of the compressor, in decreasing order of the weight. For example, columnHeights="2,3" produces a (2,3:4) GPC</dd>
+<span class="optionalparam"> <dt> <code class="parametername">compactView</code>  (<code class="parametertype">bool</code>)   (optional, default value is false)</dt><dd>whether the VHDL code is printed in a more compact way, or not</dd> </span>
+</dl></dd>
+</dl>
+<dl>
 <dt class="operatorname">IntComparator</dt>
 <dd class="operatordescription">An integer comparator.</dd>
 <dd><em>Parameters:</em> <dl>
@@ -205,34 +236,6 @@
 <span class="optionalparam"> <dt> <code class="parametername">method</code>  (<code class="parametertype">int</code>)   (optional, default value is -1)</dt><dd>method to be used, for experimental purpose (-1: automatic, 0: symmetric, 1: asymmetric where gt is computed out of lt and eq, 2: binary tree, 3: two-level minimum latency)</dd> </span>
 </dl></dd>
 <dd>Outputs up to 3 mutually exclusive signals:  XltY (less than, strictly), XeqY (equal), XgtY (greater than, strictly)</dd>
-</dl>
-<dl>
-<dt class="operatorname">IntKaratsubaRectangular</dt>
-<dd class="operatordescription">Implements a large unsigned Multiplier using rectangular shaped tiles as appears for Xilinx FPGAs. Currently limited to specific, hand-optimized sizes</dd>
-<dd><em>Parameters:</em> <dl>
-<dt> <code class="parametername">wX</code>  (<code class="parametertype">int</code>) </dt><dd>size of input X</dd>
-<dt> <code class="parametername">wY</code>  (<code class="parametertype">int</code>) </dt><dd>size of input Y</dd>
-<span class="optionalparam"> <dt> <code class="parametername">useKaratsuba</code>  (<code class="parametertype">bool</code>)   (optional, default value is 1)</dt><dd>Uses Karatsuba when set to 1, instead a standard tiling without sharing is used.</dd> </span>
-<span class="optionalparam"> <dt> <code class="parametername">useRectangularTiles</code>  (<code class="parametertype">bool</code>)   (optional, default value is 1)</dt><dd>Uses rectangular tiles when set to 1, otherwise quadratic tiles are used</dd> </span>
-</dl></dd>
-</dl>
-<dl>
-<dt class="operatorname">IntDualAddSub</dt>
-<dd class="operatordescription">Pipelined dual adder/subtractor</dd>
-<dd><em>Parameters:</em> <dl>
-<dt> <code class="parametername">wIn</code>  (<code class="parametertype">int</code>) </dt><dd>input size in bits</dd>
-<dt> <code class="parametername">opType</code>  (<code class="parametertype">int</code>) </dt><dd>1=compute X-Y and X+Y, 2=compute X-Y and Y-X</dd>
-</dl></dd>
-</dl>
-<dl>
-<dt class="operatorname">BaseMultiplierDSPSuperTilesXilinx</dt>
-<dd class="operatordescription">Implements a DSP block commonly found in FPGAs incl. pre-adders and post-adders computing R = (X1+X2) * Y + Z</dd>
-<dd><em>Parameters:</em> <dl>
-<dt> <code class="parametername">shape</code>  (<code class="parametertype">int</code>) </dt><dd>Shape ID (1-12) of the DSP-Superblock</dd>
-<span class="optionalparam"> <dt> <code class="parametername">isPipelined</code>  (<code class="parametertype">bool</code>)   (optional, default value is 0)</dt><dd>use pipelining</dd> </span>
-<span class="optionalparam"> <dt> <code class="parametername">xIsSigned</code>  (<code class="parametertype">bool</code>)   (optional, default value is 0)</dt><dd>input X is signed</dd> </span>
-<span class="optionalparam"> <dt> <code class="parametername">yIsSigned</code>  (<code class="parametertype">bool</code>)   (optional, default value is 0)</dt><dd>input Y is signed</dd> </span>
-</dl></dd>
 </dl>
 <dl>
 <dt class="operatorname">IntAdder</dt>
@@ -244,77 +247,18 @@
 <span class="optionalparam"> <dt> <code class="parametername">SRL</code>  (<code class="parametertype">bool</code>)   (optional, default value is true)</dt><dd>optimize for shift registers</dd> </span>
 </dl></dd>
 </dl>
-<dl>
-<dt class="operatorname">IntMultiAdder</dt>
-<dd class="operatordescription">A component adding n integers, bitheap based. If wIn=1 it is also a population count</dd>
-<dd><em>Parameters:</em> <dl>
-<dt> <code class="parametername">signedIn</code>  (<code class="parametertype">bool</code>) </dt><dd>0=unsigned, 1=signed</dd>
-<dt> <code class="parametername">n</code>  (<code class="parametertype">int</code>) </dt><dd>number of inputs to add</dd>
-<dt> <code class="parametername">wIn</code>  (<code class="parametertype">int</code>) </dt><dd>input size in bits</dd>
-<span class="optionalparam"> <dt> <code class="parametername">wOut</code>  (<code class="parametertype">int</code>)   (optional, default value is 0)</dt><dd>output size in bits -- if 0, wOut is computed to be large enough to represent the result</dd> </span>
-</dl></dd>
-</dl>
-<dl>
-<dt class="operatorname">Compressor</dt>
-<dd class="operatordescription">A basic compressor.</dd>
-<dd><em>Parameters:</em> <dl>
-<dt> <code class="parametername">columnHeights</code>  (<code class="parametertype">string</code>) </dt><dd>comma separated list of heights for the columns of the compressor, in decreasing order of the weight. For example, columnHeights="2,3" produces a (2,3:4) GPC</dd>
-<span class="optionalparam"> <dt> <code class="parametername">compactView</code>  (<code class="parametertype">bool</code>)   (optional, default value is false)</dt><dd>whether the VHDL code is printed in a more compact way, or not</dd> </span>
-</dl></dd>
-</dl>
-<dl>
-<dt class="operatorname">BaseMultiplierBoothArrayXilinx</dt>
-<dd class="operatordescription">Implements a 2xY-LUT-Multiplier that can be realized efficiently on some Xilinx-FPGAs</dd>
-<dd><em>Parameters:</em> <dl>
-<dt> <code class="parametername">wX</code>  (<code class="parametertype">int</code>) </dt><dd>size of input X</dd>
-<dt> <code class="parametername">wY</code>  (<code class="parametertype">int</code>) </dt><dd>size of input Y</dd>
-<span class="optionalparam"> <dt> <code class="parametername">wAcc</code>  (<code class="parametertype">int</code>)   (optional, default value is 0)</dt><dd>size of the accumulate input</dd> </span>
-<span class="optionalparam"> <dt> <code class="parametername">xIsSigned</code>  (<code class="parametertype">bool</code>)   (optional, default value is 0)</dt><dd>input X is signed</dd> </span>
-<span class="optionalparam"> <dt> <code class="parametername">yIsSigned</code>  (<code class="parametertype">bool</code>)   (optional, default value is 0)</dt><dd>input Y is signed</dd> </span>
-</dl></dd>
-</dl>
 <h3>Basic floating-point operators</h3>
 <dl>
-<dt class="operatorname">FPDiv</dt>
-<dd class="operatordescription">A correctly rounded floating-point division.</dd>
-<dd><em>Parameters:</em> <dl>
-<dt> <code class="parametername">wE</code>  (<code class="parametertype">int</code>) </dt><dd>exponent size in bits</dd>
-<dt> <code class="parametername">wF</code>  (<code class="parametertype">int</code>) </dt><dd>mantissa size in bits</dd>
-<span class="optionalparam"> <dt> <code class="parametername">srt</code>  (<code class="parametertype">int</code>)   (optional, default value is 42)</dt><dd>Can be 42, 43 or 87 so far. Default 42 means radix 4 with digits between -2 and 2. Other choices may have a better area/speed trade-offs</dd> </span>
-</dl></dd>
-<dd>The algorithm used here is the division by digit recurrence (SRT). In radix 4, we use a maximally redundant digit set. In radix 8, we use split-digits in [-7,7], and a bit of prescaling.</dd>
-</dl>
-<dl>
-<dt class="operatorname">FPSqrt</dt>
-<dd class="operatordescription">A correctly rounded floating-point square root function.</dd>
-<dd><em>Parameters:</em> <dl>
-<dt> <code class="parametername">wE</code>  (<code class="parametertype">int</code>) </dt><dd>exponent size in bits</dd>
-<dt> <code class="parametername">wF</code>  (<code class="parametertype">int</code>) </dt><dd>mantissa size in bits</dd>
-<span class="optionalparam"> <dt> <code class="parametername">method</code>  (<code class="parametertype">int</code>)   (optional, default value is 1)</dt><dd>0 for plain restoring, 1 for nonrestoring method</dd> </span>
-</dl></dd>
-</dl>
-<dl>
-<dt class="operatorname">IEEEAdd</dt>
-<dd class="operatordescription">A single-path floating-point adder.</dd>
-<dd><em>Parameters:</em> <dl>
-<dt> <code class="parametername">wE</code>  (<code class="parametertype">int</code>) </dt><dd>exponent size in bits</dd>
-<dt> <code class="parametername">wF</code>  (<code class="parametertype">int</code>) </dt><dd>mantissa size in bits</dd>
-</dl></dd>
-</dl>
-<dl>
-<dt class="operatorname">FPComparator</dt>
-<dd class="operatordescription">An IEEE-like floating-point comparator.</dd>
-<dd><em>Parameters:</em> <dl>
-<dt> <code class="parametername">wE</code>  (<code class="parametertype">int</code>) </dt><dd>exponent size in bits</dd>
-<dt> <code class="parametername">wF</code>  (<code class="parametertype">int</code>) </dt><dd>mantissa size in bits</dd>
-<span class="optionalparam"> <dt> <code class="parametername">flags</code>  (<code class="parametertype">int</code>)   (optional, default value is 31)</dt><dd>generate XltY output if bit 0 set, XeqY if bit 1, XgtY if bit 2, XleY if bit 3, XgeY if bit 4</dd> </span>
-<span class="optionalparam"> <dt> <code class="parametername">method</code>  (<code class="parametertype">int</code>)   (optional, default value is -1)</dt><dd>method to be used in the IntComparator, see IntComparator</dd> </span>
-</dl></dd>
-<dd>Outputs up to 4 mutually exclusive signals: unordered (when one input is NaN), XltY (less than, strictly), XeqY (equal), XsgtY (greater than, strictly). Also two derived signals XleY (less or equal) and XgeY (greater or equal). unordered is set iff at least one of the inputs is NaN. The other ones behave as expected on two non-NaN values, with the IEEE 754 conventions: +0 = -0; +infinity = +infinity; -infinity = -infinity. The flags argument controls which signal is generated.; </dd>
-</dl>
-<dl>
-<dt class="operatorname">IEEEFMA</dt>
+<dt class="operatorname">IEEEFPFMA</dt>
 <dd class="operatordescription">A correctly rounded floating-point FMA.</dd>
+<dd><em>Parameters:</em> <dl>
+<dt> <code class="parametername">wE</code>  (<code class="parametertype">int</code>) </dt><dd>exponent size in bits</dd>
+<dt> <code class="parametername">wF</code>  (<code class="parametertype">int</code>) </dt><dd>mantissa size in bits</dd>
+</dl></dd>
+</dl>
+<dl>
+<dt class="operatorname">IEEEFPAdd</dt>
+<dd class="operatordescription">A single-path floating-point adder for standard IEEE floating-point data.</dd>
 <dd><em>Parameters:</em> <dl>
 <dt> <code class="parametername">wE</code>  (<code class="parametertype">int</code>) </dt><dd>exponent size in bits</dd>
 <dt> <code class="parametername">wF</code>  (<code class="parametertype">int</code>) </dt><dd>mantissa size in bits</dd>
@@ -335,6 +279,36 @@
 </dl></dd>
 </dl>
 <dl>
+<dt class="operatorname">FPSqrt</dt>
+<dd class="operatordescription">A correctly rounded floating-point square root function.</dd>
+<dd><em>Parameters:</em> <dl>
+<dt> <code class="parametername">wE</code>  (<code class="parametertype">int</code>) </dt><dd>exponent size in bits</dd>
+<dt> <code class="parametername">wF</code>  (<code class="parametertype">int</code>) </dt><dd>mantissa size in bits</dd>
+<span class="optionalparam"> <dt> <code class="parametername">method</code>  (<code class="parametertype">int</code>)   (optional, default value is 1)</dt><dd>0 for plain restoring, 1 for nonrestoring method</dd> </span>
+</dl></dd>
+</dl>
+<dl>
+<dt class="operatorname">FPComparator</dt>
+<dd class="operatordescription">An IEEE-like floating-point comparator.</dd>
+<dd><em>Parameters:</em> <dl>
+<dt> <code class="parametername">wE</code>  (<code class="parametertype">int</code>) </dt><dd>exponent size in bits</dd>
+<dt> <code class="parametername">wF</code>  (<code class="parametertype">int</code>) </dt><dd>mantissa size in bits</dd>
+<span class="optionalparam"> <dt> <code class="parametername">flags</code>  (<code class="parametertype">int</code>)   (optional, default value is 31)</dt><dd>generate XltY output if bit 0 set, XeqY if bit 1, XgtY if bit 2, XleY if bit 3, XgeY if bit 4</dd> </span>
+<span class="optionalparam"> <dt> <code class="parametername">method</code>  (<code class="parametertype">int</code>)   (optional, default value is -1)</dt><dd>method to be used in the IntComparator, see IntComparator</dd> </span>
+</dl></dd>
+<dd>Outputs up to 4 mutually exclusive signals: unordered (when one input is NaN), XltY (less than, strictly), XeqY (equal), XsgtY (greater than, strictly). Also two derived signals XleY (less or equal) and XgeY (greater or equal). unordered is set iff at least one of the inputs is NaN. The other ones behave as expected on two non-NaN values, with the IEEE 754 conventions: +0 = -0; +infinity = +infinity; -infinity = -infinity. The flags argument controls which signal is generated.; </dd>
+</dl>
+<dl>
+<dt class="operatorname">FPDiv</dt>
+<dd class="operatordescription">A correctly rounded floating-point division.</dd>
+<dd><em>Parameters:</em> <dl>
+<dt> <code class="parametername">wE</code>  (<code class="parametertype">int</code>) </dt><dd>exponent size in bits</dd>
+<dt> <code class="parametername">wF</code>  (<code class="parametertype">int</code>) </dt><dd>mantissa size in bits</dd>
+<span class="optionalparam"> <dt> <code class="parametername">srt</code>  (<code class="parametertype">int</code>)   (optional, default value is 42)</dt><dd>Can be 42, 43 or 87 so far. Default 42 means radix 4 with digits between -2 and 2. Other choices may have a better area/speed trade-offs</dd> </span>
+</dl></dd>
+<dd>The algorithm used here is the division by digit recurrence (SRT). In radix 4, we use a maximally redundant digit set. In radix 8, we use split-digits in [-7,7], and a bit of prescaling.</dd>
+</dl>
+<dl>
 <dt class="operatorname">FPAdd</dt>
 <dd class="operatordescription">A correctly rounded floating-point adder.</dd>
 <dd><em>Parameters:</em> <dl>
@@ -342,7 +316,7 @@
 <dt> <code class="parametername">wF</code>  (<code class="parametertype">int</code>) </dt><dd>mantissa size in bits</dd>
 <span class="optionalparam"> <dt> <code class="parametername">sub</code>  (<code class="parametertype">bool</code>)   (optional, default value is false)</dt><dd>implement a floating-point subtractor instead of an adder</dd> </span>
 <span class="optionalparam"> <dt> <code class="parametername">dualPath</code>  (<code class="parametertype">bool</code>)   (optional, default value is false)</dt><dd>use a dual-path algorithm, more expensive but shorter latency</dd> </span>
-<span class="optionalparam"> <dt> <code class="parametername">onlyPositiveIO</code>  (<code class="parametertype">bool</code>)   (optional, default value is false)</dt><dd>optimize for only positive input and output numbers</dd> </span>
+<span class="optionalparam"> <dt> <code class="parametername">onlyPositiveIO</code>  (<code class="parametertype">bool</code>)   (optional, default value is false)</dt><dd>only for dualPath adders, optimize for only positive input and output numbers</dd> </span>
 </dl></dd>
 <dd>Single-path is lower hardware, longer latency than dual-path.<br> The difference between single-path and dual-path is well explained in textbooks such as Ercegovac and Lang's <em>Digital Arithmetic</em>, or Muller et al's <em>Handbook of floating-point arithmetic.</em></dd>
 </dl>
@@ -379,6 +353,17 @@
 </dl>
 <h3>Multipliers and dividers by constants</h3>
 <dl>
+<dt class="operatorname">IntConstMult</dt>
+<dd class="operatordescription">An operator for building constant multipliers. It basically creates the instances of the highly optimized variants using shift and add or KCM</dd>
+<dd><em>Parameters:</em> <dl>
+<dt> <code class="parametername">wIn</code>  (<code class="parametertype">int</code>) </dt><dd>Wordsize of pag inputs</dd>
+<dt> <code class="parametername">constant</code>  (<code class="parametertype">string</code>) </dt><dd>constant(s) to multiply with, can be a single constant, multiple constants separated by semicolon or constant matrices, where rows are separated by comma (like in Matlab)</dd>
+<span class="optionalparam"> <dt> <code class="parametername">wOut</code>  (<code class="parametertype">int</code>)   (optional, default value is -1)</dt><dd>Output word size (-1 means full precision according to the constant and wIn)</dd> </span>
+<span class="optionalparam"> <dt> <code class="parametername">signed</code>  (<code class="parametertype">bool</code>)   (optional, default value is true)</dt><dd>signedness of input and output</dd> </span>
+<span class="optionalparam"> <dt> <code class="parametername">method</code>  (<code class="parametertype">string</code>)   (optional, default value is auto)</dt><dd>desired method. Can be 'KCM', 'minAdd', 'minAddTernary', 'ShiftAddRPAG', 'ShiftAddPlain' or 'auto' (let FloPoCo decide which operator performs best on the given target)</dd> </span>
+</dl></dd>
+</dl>
+<dl>
 <dt class="operatorname">FPConstMult</dt>
 <dd class="operatordescription">Floating-point constant multiplier using the shift-and-add approach.</dd>
 <dd><em>Parameters:</em> <dl>
@@ -387,7 +372,7 @@
 <dt> <code class="parametername">constant</code>  (<code class="parametertype">string</code>) </dt><dd>constant in sollya formalism (e.g. "cos(3*pi/2)" or "13176795b-22")</dd>
 <span class="optionalparam"> <dt> <code class="parametername">wEout</code>  (<code class="parametertype">int</code>)   (optional, default value is -1)</dt><dd>output exponent width, -1 means same as wE</dd> </span>
 <span class="optionalparam"> <dt> <code class="parametername">wFout</code>  (<code class="parametertype">int</code>)   (optional, default value is -1)</dt><dd>output significand width, -1 means same as wF</dd> </span>
-<span class="optionalparam"> <dt> <code class="parametername">cst_width</code>  (<code class="parametertype">int</code>)   (optional, default value is 0)</dt><dd>constant precision. If set to zero, the actual width will be computed in order to get a faithful result.</dd> </span>
+<span class="optionalparam"> <dt> <code class="parametername">cst_width</code>  (<code class="parametertype">int</code>)   (optional, default value is 0)</dt><dd>constant precision (number of bits). If set to zero, the width will be computed to ensure a faithful result.</dd> </span>
 </dl></dd>
 <dd>An early version of the technique used is described in  <a href="bib/flopoco.html#BrisebarreMullerDinechin2008:ASAP">this article</a>.</dd>
 </dl>
@@ -417,6 +402,19 @@
 <dd>The technique used is described in  <a href="bib/flopoco.html#Dinechin2012-TCASII">this article</a>.</dd>
 </dl>
 <dl>
+<dt class="operatorname">FPConstDiv</dt>
+<dd class="operatordescription">Correctly rounded floating-point divider by a small constant.</dd>
+<dd><em>Parameters:</em> <dl>
+<dt> <code class="parametername">wE</code>  (<code class="parametertype">int</code>) </dt><dd>exponent size in bits</dd>
+<dt> <code class="parametername">wF</code>  (<code class="parametertype">int</code>) </dt><dd>mantissa size in bits</dd>
+<dt> <code class="parametername">d</code>  (<code class="parametertype">int</code>) </dt><dd>small integer to divide by</dd>
+<span class="optionalparam"> <dt> <code class="parametername">dExp</code>  (<code class="parametertype">int</code>)   (optional, default value is 0)</dt><dd>binary exponent of d (the operator will divide by d.2^dExp)</dd> </span>
+<span class="optionalparam"> <dt> <code class="parametername">arch</code>  (<code class="parametertype">int</code>)   (optional, default value is 0)</dt><dd>architecture used for the mantissa IntConstDiv -- 0 for linear-time, 1 for log-time, 2 for multiply-and-add by the reciprocal</dd> </span>
+<span class="optionalparam"> <dt> <code class="parametername">alpha</code>  (<code class="parametertype">int</code>)   (optional, default value is -1)</dt><dd>Algorithm uses radix 2^alpha. -1 choses a sensible default.</dd> </span>
+</dl></dd>
+<dd>Correct rounding to the nearest (if you want other rounding modes contact us). This operator is described in <a href="bib/flopoco.html#dedinechin:2012:ensl-00642145:1">this article</a>.</dd>
+</dl>
+<dl>
 <dt class="operatorname">FixRealConstMult</dt>
 <dd class="operatordescription">Table based real multiplier. Output size is computed</dd>
 <dd><em>Parameters:</em> <dl>
@@ -431,11 +429,26 @@
 <dd>The KCM variant is described in <a href="bib/flopoco.html#volkova:hal-01561052">this article</a>. The Shift-and-Add variant is described  in <a href="bib/flopoco.html#deDinechinEtAl2019-Arith-KCMvsSA">this article</a>.<br> Special constants, such as 0 or powers of two, are handled efficiently.</dd>
 </dl>
 <dl>
+<dt class="operatorname">IntConstDiv</dt>
+<dd class="operatordescription">Integer divider by a small constant.</dd>
+<dd><em>Parameters:</em> <dl>
+<dt> <code class="parametername">wIn</code>  (<code class="parametertype">int</code>) </dt><dd>input size in bits</dd>
+<dt> <code class="parametername">d</code>  (<code class="parametertype">intlist</code>) </dt><dd>integer to divide by. Either a small integer, or a colon-separated list of small integers, in which case a composite divider by the product is built</dd>
+<span class="optionalparam"> <dt> <code class="parametername">arch</code>  (<code class="parametertype">int</code>)   (optional, default value is 0)</dt><dd>architecture used -- 0 for linear-time, 1 for log-time, 2 for multiply-and-add by the reciprocal, 3 for table-and-addition</dd> </span>
+<span class="optionalparam"> <dt> <code class="parametername">computeQuotient</code>  (<code class="parametertype">bool</code>)   (optional, default value is true)</dt><dd>if true, the architecture outputs the quotient</dd> </span>
+<span class="optionalparam"> <dt> <code class="parametername">computeRemainder</code>  (<code class="parametertype">bool</code>)   (optional, default value is true)</dt><dd>if true, the architecture outputs the remainder</dd> </span>
+<span class="optionalparam"> <dt> <code class="parametername">alpha</code>  (<code class="parametertype">int</code>)   (optional, default value is -1)</dt><dd>Algorithm uses radix 2^alpha. -1 choses a sensible default.</dd> </span>
+</dl></dd>
+<dd>This operator is described, for arch=0, in <a href="bib/flopoco.html#dedinechin:2012:ensl-00642145:1">this article</a>, for arch=1, in <a href="bib/flopoco.html#UgurdagEtAl2016">this article</a>, for arch=2 in TODO article, and for arch=3 in the TODO-Arith-2023 article.</dd>
+</dl>
+<dl>
 <dt class="operatorname">IntConstMultShiftAddOptTernary</dt>
 <dd class="operatordescription">Integer constant multiplication using shift and ternary additions in an optimal way (i.e., with minimum number of ternary adders). Works for coefficients up to 4194303 (22 bit)</dd>
 <dd><em>Parameters:</em> <dl>
 <dt> <code class="parametername">wIn</code>  (<code class="parametertype">int</code>) </dt><dd>Input word size</dd>
 <dt> <code class="parametername">constant</code>  (<code class="parametertype">int</code>) </dt><dd>constant</dd>
+<span class="optionalparam"> <dt> <code class="parametername">signed</code>  (<code class="parametertype">bool</code>)   (optional, default value is true)</dt><dd>signedness of input and output</dd> </span>
+<span class="optionalparam"> <dt> <code class="parametername">epsilon</code>  (<code class="parametertype">int</code>)   (optional, default value is 0)</dt><dd>Allowable error for truncated constant multipliers</dd> </span>
 </dl></dd>
 <dd>Nope.</dd>
 </dl>
@@ -483,6 +496,7 @@
 <dd><em>Parameters:</em> <dl>
 <dt> <code class="parametername">wIn</code>  (<code class="parametertype">int</code>) </dt><dd>Input word size</dd>
 <dt> <code class="parametername">constant</code>  (<code class="parametertype">int</code>) </dt><dd>constant</dd>
+<span class="optionalparam"> <dt> <code class="parametername">signed</code>  (<code class="parametertype">bool</code>)   (optional, default value is true)</dt><dd>signedness of input and output</dd> </span>
 <span class="optionalparam"> <dt> <code class="parametername">epsilon</code>  (<code class="parametertype">int</code>)   (optional, default value is 0)</dt><dd>Allowable error for truncated constant multipliers</dd> </span>
 </dl></dd>
 <dd>Nope.</dd>
@@ -492,55 +506,40 @@
 <dd class="operatordescription">Integer constant multiplication using shift and add using the RPAG algorithm</dd>
 <dd><em>Parameters:</em> <dl>
 <dt> <code class="parametername">wIn</code>  (<code class="parametertype">int</code>) </dt><dd>Input word size</dd>
-<dt> <code class="parametername">constant</code>  (<code class="parametertype">string</code>) </dt><dd>list of constants</dd>
+<dt> <code class="parametername">constants</code>  (<code class="parametertype">string</code>) </dt><dd>list of constants</dd>
+<span class="optionalparam"> <dt> <code class="parametername">signed</code>  (<code class="parametertype">bool</code>)   (optional, default value is true)</dt><dd>signedness of input and output</dd> </span>
 <span class="optionalparam"> <dt> <code class="parametername">epsilon</code>  (<code class="parametertype">int</code>)   (optional, default value is 0)</dt><dd>Allowable error for truncated constant multipliers</dd> </span>
 </dl></dd>
 <dd>Nope.</dd>
 </dl>
 <dl>
-<dt class="operatorname">IntConstMult</dt>
+<dt class="operatorname">IntConstMultShiftAddPlain</dt>
 <dd class="operatordescription">Integer multiplier of an unsigned number by a constant using a shift-and-add tree.</dd>
 <dd><em>Parameters:</em> <dl>
 <dt> <code class="parametername">wIn</code>  (<code class="parametertype">int</code>) </dt><dd>input size in bits</dd>
-<dt> <code class="parametername">n</code>  (<code class="parametertype">int</code>) </dt><dd>constant to multiply by</dd>
+<dt> <code class="parametername">constant</code>  (<code class="parametertype">int</code>) </dt><dd>constant to multiply with</dd>
 </dl></dd>
 <dd>An early version of this operator is described in <a href="bib/flopoco.html#BrisebarreMullerDinechin2008:ASAP">this article</a>.</dd>
-</dl>
-<dl>
-<dt class="operatorname">IntConstDiv</dt>
-<dd class="operatordescription">Integer divider by a small constant.</dd>
-<dd><em>Parameters:</em> <dl>
-<dt> <code class="parametername">wIn</code>  (<code class="parametertype">int</code>) </dt><dd>input size in bits</dd>
-<dt> <code class="parametername">d</code>  (<code class="parametertype">intlist</code>) </dt><dd>integer to divide by. Either a small integer, or a colon-separated list of small integers, in which case a composite divider by the product is built</dd>
-<span class="optionalparam"> <dt> <code class="parametername">arch</code>  (<code class="parametertype">int</code>)   (optional, default value is 0)</dt><dd>architecture used -- 0 for linear-time, 1 for log-time, 2 for multiply-and-add by the reciprocal</dd> </span>
-<span class="optionalparam"> <dt> <code class="parametername">computeQuotient</code>  (<code class="parametertype">bool</code>)   (optional, default value is true)</dt><dd>if true, the architecture outputs the quotient</dd> </span>
-<span class="optionalparam"> <dt> <code class="parametername">computeRemainder</code>  (<code class="parametertype">bool</code>)   (optional, default value is true)</dt><dd>if true, the architecture outputs the remainder</dd> </span>
-<span class="optionalparam"> <dt> <code class="parametername">alpha</code>  (<code class="parametertype">int</code>)   (optional, default value is -1)</dt><dd>Algorithm uses radix 2^alpha. -1 choses a sensible default.</dd> </span>
-</dl></dd>
-<dd>This operator is described, for arch=0, in <a href="bib/flopoco.html#dedinechin:2012:ensl-00642145:1">this article</a>, and for arch=1, in <a href="bib/flopoco.html#UgurdagEtAl2016">this article</a>.</dd>
 </dl>
 <dl>
 <dt class="operatorname">IntConstMultShiftAdd</dt>
 <dd class="operatordescription">A component for building constant multipliers based on pipelined adder graphs (PAGs).</dd>
 <dd><em>Parameters:</em> <dl>
 <dt> <code class="parametername">wIn</code>  (<code class="parametertype">int</code>) </dt><dd>Wordsize of pag inputs</dd>
-<dt> <code class="parametername">graph</code>  (<code class="parametertype">string</code>) </dt><dd>Realization string of the pag</dd>
+<dt> <code class="parametername">graph</code>  (<code class="parametertype">string</code>) </dt><dd>Adder graph description (see PAGSuite project) as string or as text file with file extension ".ag"</dd>
+<span class="optionalparam"> <dt> <code class="parametername">signed</code>  (<code class="parametertype">bool</code>)   (optional, default value is true)</dt><dd>signedness of input and output</dd> </span>
 <span class="optionalparam"> <dt> <code class="parametername">epsilon</code>  (<code class="parametertype">int</code>)   (optional, default value is 0)</dt><dd>Allowable error for truncated constant multipliers</dd> </span>
-<span class="optionalparam"> <dt> <code class="parametername">pipeline</code>  (<code class="parametertype">bool</code>)   (optional, default value is true)</dt><dd>Enable pipelining of the pag</dd> </span>
-<span class="optionalparam"> <dt> <code class="parametername">sync_inout</code>  (<code class="parametertype">bool</code>)   (optional, default value is true)</dt><dd>Enable pipeline registers for input and output stage</dd> </span>
-<span class="optionalparam"> <dt> <code class="parametername">sync_muxes</code>  (<code class="parametertype">bool</code>)   (optional, default value is true)</dt><dd>Enable counting mux-only stages as full stage</dd> </span>
-<span class="optionalparam"> <dt> <code class="parametername">sync_every</code>  (<code class="parametertype">int</code>)   (optional, default value is 1)</dt><dd>Count of stages after which will be pipelined</dd> </span>
-<span class="optionalparam"> <dt> <code class="parametername">truncations</code>  (<code class="parametertype">string</code>)   (optional, default value is "")</dt><dd>provides the truncations for subvalues</dd> </span>
+<span class="optionalparam"> <dt> <code class="parametername">truncations</code>  (<code class="parametertype">string</code>)   (optional, default value is "")</dt><dd>provides the truncations for intermediate values (format: const1,stage:trunc_input_0,trunc_input_1,...|const2,stage:trunc_input_0,trunc_input_1,...)</dd> </span>
 </dl></dd>
 </dl>
 <h3>Composite fixed-point operators</h3>
 <dl>
 <dt class="operatorname">Fix2DNorm</dt>
-<dd class="operatordescription">Computes sqrt(x*x+y*y)</dd>
+<dd class="operatordescription">Computes sqrt(x*x+y*y) in fixed point.</dd>
 <dd><em>Parameters:</em> <dl>
-<dt> <code class="parametername">msb</code>  (<code class="parametertype">int</code>) </dt><dd>weight of the MSB of both inputs and outputs</dd>
-<dt> <code class="parametername">lsb</code>  (<code class="parametertype">int</code>) </dt><dd>weight of the LSB of both inputs and outputs</dd>
-<span class="optionalparam"> <dt> <code class="parametername">method</code>  (<code class="parametertype">int</code>)   (optional, default value is -1)</dt><dd>technique to use, -1 selects a sensible default</dd> </span>
+<dt> <code class="parametername">lsbIn</code>  (<code class="parametertype">int</code>) </dt><dd>weight of the LSB of input</dd>
+<dt> <code class="parametername">lsbOut</code>  (<code class="parametertype">int</code>) </dt><dd>weight of the LSB of output</dd>
+<span class="optionalparam"> <dt> <code class="parametername">method</code>  (<code class="parametertype">int</code>)   (optional, default value is 0)</dt><dd>technique to use. Can be : 0 for CORDIC or 1 for LUT</dd> </span>
 </dl></dd>
 </dl>
 <h3>Elementary functions in fixed- or floating-Point</h3>
@@ -562,6 +561,15 @@
 <dt> <code class="parametername">method</code>  (<code class="parametertype">int</code>) </dt><dd>parameter select between: InvMultAtan with approximations of the corresponding degree (0..7), plain CORDIC (8), CORDIC with scaling (9), a method using surface approximation (10), Taylor approximation of order 1 (11) and 2 (12)</dd>
 </dl></dd>
 <dd>For more details, see <a href="bib/flopoco.html#DinIsto2015">this article</a>.</dd>
+</dl>
+<dl>
+<dt class="operatorname">FixSinOrCos</dt>
+<dd class="operatordescription">Computes (1-2^(-w)) sin(pi*x) or (1-2^(-w)) cos(pi*x) for x in -[1,1[.</dd>
+<dd><em>Parameters:</em> <dl>
+<dt> <code class="parametername">w</code>  (<code class="parametertype">int</code>) </dt><dd>fixed-point precision of inputs and outputs in bits</dd>
+<dt> <code class="parametername">degree</code>  (<code class="parametertype">int</code>) </dt><dd>degree of the polynomial-based method (-1 should default to something sensible )</dd>
+</dl></dd>
+<dd>For a fixed-point 2's complement input x in [-1,1[, evaluates (1-2^(lsbIn))*sin(pi*x) or (1-2^(lsbIn))*sin(pi*x) depending on the input SinCosbar.<br>For more details, see <a href="bib/flopoco.html#DinIstSer2013-HEART-SinCos">this article</a>.</dd>
 </dl>
 <dl>
 <dt class="operatorname">FPExp</dt>
@@ -596,13 +604,40 @@
 <span class="optionalparam"> <dt> <code class="parametername">type</code>  (<code class="parametertype">int</code>)   (optional, default value is 0)</dt><dd>0 for pow, 1 for the powr function introduced in IEEE754-2008</dd> </span>
 </dl></dd>
 </dl>
+<dl>
+<dt class="operatorname">IEEEFPExp</dt>
+<dd class="operatordescription">A faithful IEEE floating-point exponential function.</dd>
+<dd><em>Parameters:</em> <dl>
+<dt> <code class="parametername">wE</code>  (<code class="parametertype">int</code>) </dt><dd>exponent size in bits</dd>
+<dt> <code class="parametername">wF</code>  (<code class="parametertype">int</code>) </dt><dd>mantissa size in bits</dd>
+<span class="optionalparam"> <dt> <code class="parametername">d</code>  (<code class="parametertype">int</code>)   (optional, default value is 0)</dt><dd>degree of the polynomial. 0 choses a sensible default.</dd> </span>
+<span class="optionalparam"> <dt> <code class="parametername">k</code>  (<code class="parametertype">int</code>)   (optional, default value is 0)</dt><dd>input size to the range reduction table, should be between 5 and 15. 0 choses a sensible default.</dd> </span>
+<span class="optionalparam"> <dt> <code class="parametername">g</code>  (<code class="parametertype">int</code>)   (optional, default value is -1)</dt><dd>number of guard bits</dd> </span>
+<span class="optionalparam"> <dt> <code class="parametername">fullInput</code>  (<code class="parametertype">bool</code>)   (optional, default value is 0)</dt><dd>input a mantissa of wF+wE+g bits (useful mostly for FPPow)</dd> </span>
+</dl></dd>
+<dd>Parameter d and k control the DSP/RamBlock tradeoff. In both cases, a value of 0 choses a sensible default. Parameter g is mostly for internal use.<br> For all the details, see <a href="bib/flopoco.html#DinechinPasca2010-FPT">this article</a>.</dd>
+</dl>
+<dl>
+<dt class="operatorname">Exp</dt>
+<dd class="operatordescription">A helper operator for the faithful floating-point exponential function.</dd>
+<dd><em>Parameters:</em> <dl>
+<dt> <code class="parametername">wE</code>  (<code class="parametertype">int</code>) </dt><dd>exponent size in bits</dd>
+<dt> <code class="parametername">wF</code>  (<code class="parametertype">int</code>) </dt><dd>mantissa size in bits</dd>
+<span class="optionalparam"> <dt> <code class="parametername">d</code>  (<code class="parametertype">int</code>)   (optional, default value is 0)</dt><dd>degree of the polynomial. 0 choses a sensible default.</dd> </span>
+<span class="optionalparam"> <dt> <code class="parametername">k</code>  (<code class="parametertype">int</code>)   (optional, default value is 0)</dt><dd>input size to the range reduction table, should be between 5 and 15. 0 choses a sensible default.</dd> </span>
+<span class="optionalparam"> <dt> <code class="parametername">g</code>  (<code class="parametertype">int</code>)   (optional, default value is -1)</dt><dd>number of guard bits</dd> </span>
+<span class="optionalparam"> <dt> <code class="parametername">IEEEFPMode</code>  (<code class="parametertype">bool</code>)   (optional, default value is 0)</dt><dd>true when the output format is destined to be IEEEFP</dd> </span>
+<span class="optionalparam"> <dt> <code class="parametername">fullInput</code>  (<code class="parametertype">bool</code>)   (optional, default value is 0)</dt><dd>input a mantissa of wF+wE+g bits (useful mostly for FPPow)</dd> </span>
+</dl></dd>
+<dd>Parameter d and k control the DSP/RamBlock tradeoff. In both cases, a value of 0 choses a sensible default. Parameter g is mostly for internal use.<br> For all the details, see <a href="bib/flopoco.html#DinechinPasca2010-FPT">this article</a>.</dd>
+</dl>
 <h3>Arbitrary function approximators</h3>
 <dl>
 <dt class="operatorname">FixFunctionByMultipartiteTable</dt>
 <dd class="operatordescription">A function evaluator using the multipartite method.</dd>
 <dd><em>Parameters:</em> <dl>
 <dt> <code class="parametername">f</code>  (<code class="parametertype">string</code>) </dt><dd>function to be evaluated between double-quotes, for instance "exp(x*x)"</dd>
-<dt> <code class="parametername">signedIn</code>  (<code class="parametertype">bool</code>) </dt><dd>if true the function input range is [-1,1), if false it is [0,1)</dd>
+<span class="optionalparam"> <dt> <code class="parametername">signedIn</code>  (<code class="parametertype">bool</code>)   (optional, default value is 0)</dt><dd>if true the function input range is [-1,1), if false it is [0,1)</dd> </span>
 <dt> <code class="parametername">lsbIn</code>  (<code class="parametertype">int</code>) </dt><dd>weight of input LSB, for instance -8 for an 8-bit input</dd>
 <dt> <code class="parametername">lsbOut</code>  (<code class="parametertype">int</code>) </dt><dd>weight of output LSB</dd>
 <span class="optionalparam"> <dt> <code class="parametername">nbTO</code>  (<code class="parametertype">int</code>)   (optional, default value is 0)</dt><dd>number of Tables of Offsets, between 1 (bipartite) to 4 or 5 for large input sizes. -- 0: let the tool choose</dd> </span>
@@ -614,7 +649,7 @@
 <dd class="operatordescription">Evaluator of function f on [0,1) or [-1,1), depending on signedIn, using a table.</dd>
 <dd><em>Parameters:</em> <dl>
 <dt> <code class="parametername">f</code>  (<code class="parametertype">string</code>) </dt><dd>function to be evaluated between double-quotes, for instance "exp(x*x)"</dd>
-<dt> <code class="parametername">signedIn</code>  (<code class="parametertype">bool</code>) </dt><dd>if true the function input range is [-1,1), if false it is [0,1)</dd>
+<span class="optionalparam"> <dt> <code class="parametername">signedIn</code>  (<code class="parametertype">bool</code>)   (optional, default value is 0)</dt><dd>if true the function input range is [-1,1), if false it is [0,1)</dd> </span>
 <dt> <code class="parametername">lsbIn</code>  (<code class="parametertype">int</code>) </dt><dd>weight of input LSB, for instance -8 for an 8-bit input</dd>
 <dt> <code class="parametername">lsbOut</code>  (<code class="parametertype">int</code>) </dt><dd>weight of output LSB</dd>
 </dl></dd>
@@ -717,10 +752,9 @@
 <dd><em>Parameters:</em> <dl>
 <dt> <code class="parametername">wE</code>  (<code class="parametertype">int</code>) </dt><dd>input exponent size in bits</dd>
 <dt> <code class="parametername">wF</code>  (<code class="parametertype">int</code>) </dt><dd>input mantissa size in bits</dd>
-<span class="optionalparam"> <dt> <code class="parametername">signed</code>  (<code class="parametertype">bool</code>)   (optional, default value is true)</dt><dd>can be false if all numbers will be positive</dd> </span>
 <dt> <code class="parametername">MSB</code>  (<code class="parametertype">int</code>) </dt><dd>weight of the MSB of the output</dd>
 <dt> <code class="parametername">LSB</code>  (<code class="parametertype">int</code>) </dt><dd>weight of LSB of the output</dd>
-<span class="optionalparam"> <dt> <code class="parametername">trunc</code>  (<code class="parametertype">bool</code>)   (optional, default value is true)</dt><dd>true means truncated (cheaper), false means rounded</dd> </span>
+<span class="optionalparam"> <dt> <code class="parametername">trunc</code>  (<code class="parametertype">bool</code>)   (optional, default value is true)</dt><dd>true means truncated, false means rounded. Truncated is not really cheaper.</dd> </span>
 </dl></dd>
 </dl>
 <dl>
@@ -781,6 +815,19 @@
 <dd>For more details, see <a href="bib/flopoco.html#DinIstoMas2014-SOPCJR">this article</a>.</dd>
 </dl>
 <dl>
+<dt class="operatorname">IntFIRTransposed</dt>
+<dd class="operatordescription">A fix-point Finite Impulse Filter generator in transposed form using shif-and-add.</dd>
+<dd><em>Parameters:</em> <dl>
+<dt> <code class="parametername">wIn</code>  (<code class="parametertype">int</code>) </dt><dd>input word size in bits</dd>
+<span class="optionalparam"> <dt> <code class="parametername">wOut</code>  (<code class="parametertype">int</code>)   (optional, default value is -1)</dt><dd>output word size in bits, -1 means automatic determination without truncation, if wOut is less then necessary it will be rounded</dd> </span>
+<dt> <code class="parametername">coeff</code>  (<code class="parametertype">string</code>) </dt><dd>colon-separated list of integer coefficients. Example: coeff="123:321:123"</dd>
+<span class="optionalparam"> <dt> <code class="parametername">graph</code>  (<code class="parametertype">string</code>)   (optional, default value is "")</dt><dd>Realization string of the adder graph</dd> </span>
+<span class="optionalparam"> <dt> <code class="parametername">epsilon</code>  (<code class="parametertype">int</code>)   (optional, default value is 0)</dt><dd>Allowable error for truncated constant multipliers (currently only used to check error for given truncations in testbench)</dd> </span>
+<span class="optionalparam"> <dt> <code class="parametername">graph_truncations</code>  (<code class="parametertype">string</code>)   (optional, default value is "")</dt><dd>provides the truncations for intermediate values of the adder graph (format: const1,stage:trunc_input_0,trunc_input_1,...|const2,stage:trunc_input_0,trunc_input_1,...)"</dd> </span>
+<span class="optionalparam"> <dt> <code class="parametername">sa_truncations</code>  (<code class="parametertype">string</code>)   (optional, default value is "")</dt><dd>provides the truncations for the strucutal adder (format: sa_1_trunc_input_0,sa_1_trunc_input_1|...|sa_2_trunc_input_0,sa_2_trunc_input_1,...|...)</dd> </span>
+</dl></dd>
+</dl>
+<dl>
 <dt class="operatorname">FixSOPCfull</dt>
 <dd class="operatordescription">A fix-point Sum of Product by Constants (detailed interface).</dd>
 <dd><em>Parameters:</em> <dl>
@@ -832,111 +879,40 @@
 <dt> <code class="parametername">coeff</code>  (<code class="parametertype">string</code>) </dt><dd>colon-separated list of real coefficients using Sollya syntax. Example: coeff="1.234567890123:sin(3*pi/8)"</dd>
 </dl></dd>
 </dl>
-<h3>Test Benches</h3>
+<h3>Sorting operators</h3>
 <dl>
-<dt class="operatorname">TestBench</dt>
-<dd class="operatordescription">Behavorial test bench for the preceding operator.</dd>
+<dt class="operatorname">SortWrapper</dt>
+<dd class="operatordescription">Wrapper for sorting methods, can sort keys with payload</dd>
 <dd><em>Parameters:</em> <dl>
-<span class="optionalparam"> <dt> <code class="parametername">n</code>  (<code class="parametertype">int</code>)   (optional, default value is -2)</dt><dd>number of random tests. If n=-2, an exhaustive test is generated (use only for small operators)</dd> </span>
-<span class="optionalparam"> <dt> <code class="parametername">file</code>  (<code class="parametertype">bool</code>)   (optional, default value is true)</dt><dd>Inputs and outputs are stored in file test.input (lower VHDL compilation time). If false, they are stored in the VHDL</dd> </span>
+<dt> <code class="parametername">N</code>  (<code class="parametertype">int</code>) </dt><dd>Number of elements we are sorting</dd>
+<dt> <code class="parametername">wKey</code>  (<code class="parametertype">int</code>) </dt><dd>Width of the integer we are comparing</dd>
+<dt> <code class="parametername">wPayload</code>  (<code class="parametertype">int</code>) </dt><dd>Width of the payload. Can be 0 if no payload is needed</dd>
+<dt> <code class="parametername">direction</code>  (<code class="parametertype">bool</code>) </dt><dd>Sorts increasing if true and decreasing if false</dd>
+<span class="optionalparam"> <dt> <code class="parametername">indexPayload</code>  (<code class="parametertype">bool</code>)   (optional, default value is false)</dt><dd>If true then use indices in the sorting network instead of the payload. This is useful when the payload takes more time to compute than the key, but it is a bit more expensive in area.</dd> </span>
+<dt> <code class="parametername">method</code>  (<code class="parametertype">int</code>) </dt><dd>Which sort to use, 0 for sorting network, 1 for Tao sort</dd>
 </dl></dd>
+<dd>This is VHDL code is a wrapper for sorters</dd>
 </dl>
 <dl>
-<dt class="operatorname">Wrapper</dt>
-<dd class="operatordescription">Wraps the preceding operator between registers (for frequency testing).</dd>
+<dt class="operatorname">SortingNetwork</dt>
+<dd class="operatordescription">Implements a sorting network on unsigned integers with payload</dd>
 <dd><em>Parameters:</em> <dl>
+<dt> <code class="parametername">N</code>  (<code class="parametertype">int</code>) </dt><dd>Number of elements we are sorting</dd>
+<dt> <code class="parametername">wKey</code>  (<code class="parametertype">int</code>) </dt><dd>Width of the integer we are comparing</dd>
+<dt> <code class="parametername">wPayload</code>  (<code class="parametertype">int</code>) </dt><dd>Width of the payload. Can be 0 for no payload</dd>
+<dt> <code class="parametername">direction</code>  (<code class="parametertype">bool</code>) </dt><dd>Sorts increasing if true and decreasing if false</dd>
 </dl></dd>
-</dl>
-<h3>AutoTest</h3>
-<dl>
-<dt class="operatorname">AutoTest</dt>
-<dd class="operatordescription">A tester for operators.</dd>
-<dd><em>Parameters:</em> <dl>
-<dt> <code class="parametername">Operator</code>  (<code class="parametertype">string</code>) </dt><dd>name of the operator to test, All if we need to test all the operators</dd>
-<span class="optionalparam"> <dt> <code class="parametername">Dependences</code>  (<code class="parametertype">bool</code>)   (optional, default value is false)</dt><dd>test the operator's dependences</dd> </span>
-</dl></dd>
-</dl>
-<h3>Highly target optimized primitive operators</h3>
-<dl>
-<dt class="operatorname">XilinxTernaryAddSub</dt>
-<dd class="operatordescription">A ternary adder subtractor build of xilinx primitives.</dd>
-<dd><em>Parameters:</em> <dl>
-<dt> <code class="parametername">wIn</code>  (<code class="parametertype">int</code>) </dt><dd>The wordsize of the adder</dd>
-<span class="optionalparam"> <dt> <code class="parametername">AddSubBitMask</code>  (<code class="parametertype">int</code>)   (optional, default value is 0)</dt><dd>First bitmask for input negation</dd> </span>
-<span class="optionalparam"> <dt> <code class="parametername">AddSubBitMask2</code>  (<code class="parametertype">int</code>)   (optional, default value is -1)</dt><dd>Second bitmask for configurable input negation</dd> </span>
-</dl></dd>
+<dd>This is VHDL code following the bitonic sort, but can support different sorts if needed.</dd>
 </dl>
 <dl>
-<dt class="operatorname">Xilinx_LUT5</dt>
-<dd class="operatordescription">Provides variants of Xilinx LUT5 primitives.</dd>
+<dt class="operatorname">TaoSort</dt>
+<dd class="operatordescription">Implements a sorting method on unsigned integers that returns the index of how to sort them</dd>
 <dd><em>Parameters:</em> <dl>
-<dt> <code class="parametername">variant</code>  (<code class="parametertype">string</code>) </dt><dd>The LUT variant (LUT5, LUT5_L, etc.)</dd>
-<dt> <code class="parametername">init</code>  (<code class="parametertype">string</code>) </dt><dd>The LUT content</dd>
+<dt> <code class="parametername">N</code>  (<code class="parametertype">int</code>) </dt><dd>Number of elements we are sorting</dd>
+<dt> <code class="parametername">wKey</code>  (<code class="parametertype">int</code>) </dt><dd>Width of the integer we are comparing</dd>
+<span class="optionalparam"> <dt> <code class="parametername">outputDifference</code>  (<code class="parametertype">bool</code>)   (optional, default value is false)</dt><dd>If true, will output the absolute value of the difference between the inputs. Regular user should not need this option</dd> </span>
 </dl></dd>
-</dl>
-<dl>
-<dt class="operatorname">XilinxAddSub</dt>
-<dd class="operatordescription">An adder/subtractor build of xilinx primitives.</dd>
-<dd><em>Parameters:</em> <dl>
-<dt> <code class="parametername">wIn</code>  (<code class="parametertype">int</code>) </dt><dd>The wordsize of the adder</dd>
-<span class="optionalparam"> <dt> <code class="parametername">mode</code>  (<code class="parametertype">int</code>)   (optional, default value is 0)</dt><dd>Bitmask for input negation, removes configurability</dd> </span>
-<span class="optionalparam"> <dt> <code class="parametername">dss</code>  (<code class="parametertype">bool</code>)   (optional, default value is false)</dt><dd>Creates configurable adder with possibility to substract both inputs at same time</dd> </span>
-</dl></dd>
-</dl>
-<dl>
-<dt class="operatorname">XilinxLOOKAHEAD8</dt>
-<dd class="operatordescription">Provides the Xilinx LOOKAHEAD8 primitive introduced by Versal.</dd>
-<dd><em>Parameters:</em> <dl>
-<span class="optionalparam"> <dt> <code class="parametername">lookb</code>  (<code class="parametertype">string</code>)   (optional, default value is FALSE)</dt><dd>lookahead generic "bool" param (Values: "TRUE" | "FALSE")</dd> </span>
-<span class="optionalparam"> <dt> <code class="parametername">lookd</code>  (<code class="parametertype">string</code>)   (optional, default value is FALSE)</dt><dd>lookahead generic "bool" param (Values: "TRUE" | "FALSE")</dd> </span>
-<span class="optionalparam"> <dt> <code class="parametername">lookf</code>  (<code class="parametertype">string</code>)   (optional, default value is FALSE)</dt><dd>lookahead generic "bool" param (Values: "TRUE" | "FALSE")</dd> </span>
-<span class="optionalparam"> <dt> <code class="parametername">lookh</code>  (<code class="parametertype">string</code>)   (optional, default value is FALSE)</dt><dd>lookahead generic "bool" param (Values: "TRUE" | "FALSE")</dd> </span>
-</dl></dd>
-</dl>
-<dl>
-<dt class="operatorname">XilinxFourToTwoCompressor</dt>
-<dd class="operatordescription">An efficient 4:2 compressor build of xilinx primitives.</dd>
-<dd><em>Parameters:</em> <dl>
-<dt> <code class="parametername">wOut</code>  (<code class="parametertype">int</code>) </dt><dd>The wordsize of the 4:2 compressor</dd>
-<span class="optionalparam"> <dt> <code class="parametername">useLastColumn</code>  (<code class="parametertype">bool</code>)   (optional, default value is 0)</dt><dd>if the 4:2 compressor should additonally compress two bits in the last column, this should be set to true</dd> </span>
-</dl></dd>
-</dl>
-<dl>
-<dt class="operatorname">XilinxComparator</dt>
-<dd class="operatordescription">A comparator build of xilinx primitives.</dd>
-<dd><em>Parameters:</em> <dl>
-<dt> <code class="parametername">wIn </code>  (<code class="parametertype">int</code>) </dt><dd>Wordsize of comparator inputs</dd>
-<dt> <code class="parametername">type </code>  (<code class="parametertype">string</code>) </dt><dd>Type of comparator ( gt,ge,lt,le,eq,ne )</dd>
-</dl></dd>
-<dd>Nope.</dd>
-</dl>
-<dl>
-<dt class="operatorname">RowAdder</dt>
-<dd class="operatordescription">Row adder for cormpression.</dd>
-<dd><em>Parameters:</em> <dl>
-<dt> <code class="parametername">wIn</code>  (<code class="parametertype">int</code>) </dt><dd>input width of the row adder</dd>
-</dl></dd>
-</dl>
-<dl>
-<dt class="operatorname">XilinxGPC</dt>
-<dd class="operatordescription">Implements Xilinx optimized GPCs                        Available GPC sizes are:                        (6,0,6;5), (6,0,7;5), (6,1,5;5), (6,2,3;5)                        (1,3,2,5;5), (1,4,1,5;5), (1,4,0,6;5), (1,4,0,7;5), (2,1,1,7;5)</dd>
-<dd><em>Parameters:</em> <dl>
-<dt> <code class="parametername">columnHeights</code>  (<code class="parametertype">string</code>) </dt><dd>comma separated list of heights for the columns of the compressor, in decreasing order of the weight. For example, columnHeights="6,0,6" produces a (6,0,6:5) GPC</dd>
-</dl></dd>
-</dl>
-<dl>
-<dt class="operatorname">XilinxCARRY4</dt>
-<dd class="operatordescription">Provides the Xilinx CARRY4 primitive.</dd>
-<dd><em>Parameters:</em> <dl>
-</dl></dd>
-</dl>
-<dl>
-<dt class="operatorname">XilinxLUT</dt>
-<dd class="operatordescription">Provides variants of Xilinx LUT primitives.</dd>
-<dd><em>Parameters:</em> <dl>
-<dt> <code class="parametername">variant</code>  (<code class="parametertype">string</code>) </dt><dd>The LUT variant (LUT6, LUT6_2, etc.)</dd>
-<dt> <code class="parametername">init</code>  (<code class="parametertype">string</code>) </dt><dd>The LUT content</dd>
-</dl></dd>
+<dd>This is VHDL code following a sort introduced in 'Correctly Rounded Architectures for Floating-Point Multi-Operand Addition and Dot-Product Computation' Yao Tao, Gao Deyuan, Fan Xiaoya, Jari Nurmi. The outputDifference is needed to reproduce the architecture in this paper</dd>
 </dl>
 <h3>Miscellaneous</h3>
 <dl>
@@ -957,11 +933,41 @@
 <dd>Feel free to experiment with its code, it will not break anything in FloPoCo. <br> Also see the developper manual in the doc/ directory of FloPoCo.</dd>
 </dl>
 <dl>
+<dt class="operatorname">DAGOperator</dt>
+<dd class="operatordescription">DAG operator for FloPoCo. Example input files in doc/web/DAGOperator/</dd>
+<dd><em>Parameters:</em> <dl>
+<dt> <code class="parametername">infile</code>  (<code class="parametertype">string</code>) </dt><dd>name of the file containing the DAG specification</dd>
+</dl></dd>
+</dl>
+<dl>
 <dt class="operatorname">SRTDivNbBitsMin</dt>
 <dd class="operatordescription">A SRT design tool</dd>
 <dd><em>Parameters:</em> <dl>
 <dt> <code class="parametername">radix</code>  (<code class="parametertype">int</code>) </dt><dd>It has to be 2^n</dd>
 <dt> <code class="parametername">alpha</code>  (<code class="parametertype">int</code>) </dt><dd>digit set is [-alpha, alpha]</dd>
+</dl></dd>
+</dl>
+<h3>Test Benches</h3>
+<dl>
+<dt class="operatorname">RegisterSandwich</dt>
+<dd class="operatordescription">Wraps the preceding operator between registers (for frequency testing).</dd>
+<dd><em>Parameters:</em> <dl>
+</dl></dd>
+</dl>
+<dl>
+<dt class="operatorname">TestBench</dt>
+<dd class="operatordescription">Behavorial test bench for the preceding operator.</dd>
+<dd><em>Parameters:</em> <dl>
+<span class="optionalparam"> <dt> <code class="parametername">n</code>  (<code class="parametertype">int</code>)   (optional, default value is -1)</dt><dd>number of random tests. If n=-2, an exhaustive test is generated (use only for small operators). If n=-1, an exhaustive test is selected if there are fewer than 16 input bits, otherwise 10000 random tests are performed</dd> </span>
+</dl></dd>
+</dl>
+<h3>AutoTest</h3>
+<dl>
+<dt class="operatorname">AutoTest</dt>
+<dd class="operatordescription">A tester for operators.</dd>
+<dd><em>Parameters:</em> <dl>
+<dt> <code class="parametername">Operator</code>  (<code class="parametertype">string</code>) </dt><dd>name of the operator to test, All if we need to test all the operators</dd>
+<span class="optionalparam"> <dt> <code class="parametername">testLevel</code>  (<code class="parametertype">int</code>)   (optional, default value is 0)</dt><dd>test level (0-3), 0=only quick tests (< 1 second per operator), 1=substantial tests, 2=exhaustive tests, 3=infinite tests (which produce random parameter combinations which may take forever) </dd> </span>
 </dl></dd>
 </dl>
 </body>
