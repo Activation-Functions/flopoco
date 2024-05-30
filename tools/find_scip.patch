@@ -1,0 +1,37 @@
+--- build/dependencies/src/scalp/CMakeExtensions/FindSCIP.cmake	2024-05-28 10:27:38.258279999 +0200
++++ FindSCIP.cmake	2024-05-28 10:39:02.452912721 +0200
+@@ -20,18 +20,21 @@
+ #message(STATUS "SCIP Headers: ${SCIP_INCLUDE_DIR}")
+ 
+ find_library(SCIP_LIBRARY scip
+-        HINTS ${SCIP_ROOT_DIR}/lib64
+-        )
++     HINTS ${SCIP_ROOT_DIR}/lib64
++           ${SCIP_ROOT_DIR}/lib
++)
+ #message(STATUS "SCIP Library: ${SCIP_LIBRARY}")
+ 
+ find_library(SOPLEX_LIBRARY soplex
+-        HINTS ${SCIP_ROOT_DIR}/lib64
+-        )
++    HINTS ${SCIP_ROOT_DIR}/lib64
++          ${SCIP_ROOT_DIR}/lib
++)
+ #message(STATUS "Soplex Library: ${SOPLEX_LIBRARY}")
+ 
+ find_library(Z_LIBRARY z
+-        HINTS ${SCIP_ROOT_DIR}/lib64
+-        )
++    HINTS ${SCIP_ROOT_DIR}/lib64
++          ${SCIP_ROOT_DIR}/lib
++)
+ #message(STATUS "Z Library: ${Z_LIBRARY}")
+ 
+ include(FindPackageHandleStandardArgs)
+@@ -54,4 +57,4 @@
+     message(STATUS "Switching SCIP off")
+ ENDIF (SCIP_FOUND)
+ 
+-mark_as_advanced(SCIP_INCLUDE_DIR SCIP_LIBRARY SOPLEX_LIBRARY Z_LIBRARY)
+\ Pas de fin de ligne à la fin du fichier
++mark_as_advanced(SCIP_INCLUDE_DIR SCIP_LIBRARY SOPLEX_LIBRARY Z_LIBRARY)
