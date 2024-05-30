@@ -16,22 +16,22 @@
 #include "flopoco/Tables/Table.hpp"
 #include "flopoco/utils.hpp"
 
-/* TODO get rid of most of
+/* still TODO get rid of most of
 	  int maxDSP=-1, bool superTiles=false, bool use2xk=false, bool useirregular=false, bool useLUT=true,  bool useKaratsuba=false, bool useGenLUT=false, bool useBooth=false, int beamRange=0, bool optiTrunc=true, bool minStages=true */
 
 
-/* Work in progress: re-enable virtual multipliers as they were working in 4.1.2
+/* What I did re-enable virtual multipliers as they were working in 4.1.2
 
-	 Some use cases among many others that the current IntMultiplier cannot address :
+	 Context; Some use cases among many others that the previous IntMultiplier couldnot address :
 		   FixComplexMult computes a*b+c*d in a single bit heap
 			 FixMultAdd computes a+b*c in a single bit heap.
 			 FixSumOfProducts compute the faithful sum of N products.
 	 In all these cases, we want a BitHeap shared by several IntMultipliers.
-	 The simplest solution is to have a IntMultiplier method that throws VHDL into an existing Operator and the bits in an existing BitHeap.
-	 Since a BitHeap is associated to an Operator, we just need to pass the BitHeap and we can recover the Operator from it. 
+	 The simplest solution is to have a IntMultiplier static method that throws VHDL into an existing Operator, and the bits in an existing BitHeap.
+	 Since a BitHeap is associated to an Operator, we actually just need to pass the BitHeap and we can recover the Operator from it. 
 
 	 In summary, we should have two ways to instantiate an IntMultiplier:
-		* STAND-ALONE *: more or less what we have
+		* STAND-ALONE *: more or less what we had previously
 			inputs wOut, computes g out of it, computes lsbWeightInBitHeap, creates a tiling, instantiates a bit heap, and throws bits in it.
 			In case of truncation, adds a constant centering constant and a round bit
 
@@ -40,7 +40,7 @@
 		It is a static IntMultiplier method that inputs
 		  signal names for X and Y, absoluteError, externalBitHeapPtr, and externalBitHeapPos.
 		It checks the BH is large enough, creates a tiling, throws bits in it (with the corresponding VHDL going to bitheap->getOp()->vhdl)
-			then adds the centering  constant in case of truncation, but not the rounding bit: this is the responsibility of the parent bitheap->getOp()
+			then adds the centering  constant in case of truncation, **but not the rounding bit**: this is the responsibility of the parent bitheap->getOp()
 		
 		The coarser operator (e.g. FixComplexMult or FixSumOfProducts) implements an error analysis, 
 	   and defines an error budget for each IntMultiplier.
@@ -94,8 +94,7 @@
 			- it should report
 			     the error actually achieved,
 					 an LSB to which all the tiles should be truncated (for the fillBitHeap method of IntMultiplier) 
-			
-
+					 
 			
  */
 
