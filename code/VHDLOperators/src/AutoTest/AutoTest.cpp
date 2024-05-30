@@ -76,7 +76,7 @@ namespace {
 					out << line << "\n";
 				}
 			}
-			
+
 			void dumpnvcOut(std::string_view outName) {
 				std::ofstream out{std::string{outName}, std::ios::out};
 				for (auto const & line : nvcOut) {
@@ -197,6 +197,10 @@ namespace {
 				fs::create_directory(testRoot);
 			}
 			auto name = fs::absolute(UserInterface::getUserInterface().getExecName()).string();
+			if (!fs::exists(name)) {
+			    // This is required when installing flopoco system-wide (e.g. /usr/local/bin):
+			    name = UserInterface::getUserInterface().getExecName();
+			}
 			auto detailed = testRoot / "detailed.txt";
 			std::ofstream detailedFile{detailed, std::ios::out};
 			auto bufferOut = testRoot / "buffer.txt";
@@ -221,7 +225,7 @@ namespace {
 				std::cout << "Running test " << (id + 1) << " / " << nbTests << "    "   << " " << command << endl;
 #endif
 				detailedFile << id << ", " << name << " " << command << ", ";
-				auto flopocoStatus =  bp::system(name + " " + command, (bp::std_out & bp::std_err) > bufferOut.string(), bp::start_dir(testRoot.string())); 
+				auto flopocoStatus =  bp::system(name + " " + command, (bp::std_out & bp::std_err) > bufferOut.string(), bp::start_dir(testRoot.string()));
 				std::string nvcLine{""};
 				getLines(testCase.flopocoOut);
 				for (auto const & line : testCase.flopocoOut) {
@@ -346,7 +350,7 @@ namespace flopoco
 		FactoryRegistry& factRegistry = FactoryRegistry::getFactoryRegistry();
 
 		std::map<std::string, OperatorTester> testerMap;
-		
+
 		set<string> testedOperator;
 
 		bool doUnitTest = false;
@@ -385,7 +389,7 @@ namespace flopoco
 			}
 		} else {
 			auto f = factRegistry.getFactoryByName(opName);
-			if(!f->isHidden()) { 
+			if(!f->isHidden()) {
 				testedOperator.insert(f->name());
 			}
 				// Do we check for dependences ? No point really
@@ -413,7 +417,7 @@ namespace flopoco
 		}
 
 		// build summary.csv and a few global stats
-		auto summaryFilePath= *tmpDirHolder.tmpPath / "summary.csv"; 
+		auto summaryFilePath= *tmpDirHolder.tmpPath / "summary.csv";
 		ofstream outputSummary{summaryFilePath};
 		size_t totalTests=0, genOK=0, simOK=0;
 		outputSummary << "Operator Name, Total Tests, Generation OK, Simulation Ok\n";
@@ -421,9 +425,9 @@ namespace flopoco
 			totalTests += tester.getNbTests();
 			genOK += tester.nbGenerationOK();
 			simOK += tester.nbSimulationOk();
-			outputSummary << opName << ", " 
-										<< tester.getNbTests() << ", " 
-										<< tester.nbGenerationOK() << ", " 
+			outputSummary << opName << ", "
+										<< tester.getNbTests() << ", "
+										<< tester.nbGenerationOK() << ", "
 										<< tester.nbSimulationOk() << "\n";
 		}
 
@@ -447,7 +451,7 @@ namespace flopoco
 		 testBench = "1000";
 #else
 		testBench="-1";
-#endif		
+#endif
 		return testBench;
 	}
 };
