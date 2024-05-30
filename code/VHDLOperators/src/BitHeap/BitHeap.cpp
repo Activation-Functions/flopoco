@@ -771,15 +771,15 @@ namespace flopoco {
 		if (op->getTarget()->generateFigures())
 			latexPlot();
 
-		if(op->getTarget()->getCompressionMethod().compare("heuristicMaxEff") == 0)
+		if(op->getTarget()->getCompressionMethod().compare("heuristicmaxeff") == 0)
 		{
 			compressionStrategy = new MaxEfficiencyCompressionStrategy(this);
 		}
-		else if(op->getTarget()->getCompressionMethod().compare("heuristicPA") == 0)
+		else if(op->getTarget()->getCompressionMethod().compare("heuristicpa") == 0)
 		{
 			compressionStrategy = new ParandehAfsharCompressionStrategy(this);
 		}
-		else if(op->getTarget()->getCompressionMethod().compare("heuristicFirstFit") == 0)
+		else if(op->getTarget()->getCompressionMethod().compare("heuristicfirstfit") == 0)
 		{
 			compressionStrategy = new FirstFittingCompressionStrategy(this);
 		}
@@ -787,11 +787,11 @@ namespace flopoco {
 		{
 			compressionStrategy = new OptimalCompressionStrategy(this,false);
 		}
-		else if(op->getTarget()->getCompressionMethod().compare("optimalMinStages") == 0)
+		else if(op->getTarget()->getCompressionMethod().compare("optimalminstages") == 0)
 		{
 			compressionStrategy = new OptimalCompressionStrategy(this,true);
 		}
-		else if(op->getTarget()->getCompressionMethod().compare("optimal_minStages") == 0)
+		else if(op->getTarget()->getCompressionMethod().compare("optimal_minstages") == 0)
 		{
 		    compressionStrategy = new CompressionStrategyOptILP(this);
 		}
