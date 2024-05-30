@@ -21,28 +21,33 @@ $(call static_info, Branch $(B)$(FLOPOCO_BRANCH)$(N))
 $(call static_info, Commit $(B)#$(FLOPOCO_COMMIT_HASH)$(N))
 $(call static_info, Running $(B)from$(N): $(PWD))
 
-ifndef MAKECMDGOALS
+ifndef MAKECMDGOALS # ------------------------
+    # This is just for info-printing purposes:
     MAKECMDGOALS := all
-endif
+endif # --------------------------------------
 
-ifneq ($(CONFIG), docker)
+$(call static_info, $(B)Make targets$(N): $(MAKECMDGOALS))
+
+ifneq ($(CONFIG), docker) # ------------------
     SUDO := sudo
-endif
+endif # --------------------------------------
 
 #TODO: detect ninja, or else Unix Makefiles
 CMAKE_GENERATOR ?= Ninja
-
-GUROBI_ROOT_DIR ?= $(GUROBI_HOME)
+GUROBI_ROOT_DIR := $(GUROBI_HOME)
 PREFIX ?= /usr/local
 WITH_SCIP ?= ON
 WITH_NVC ?= OFF
 
-$(call static_info, $(B)Make targets$(N): $(MAKECMDGOALS))
+$(call static_info, $(B)CMAKE_GENERATOR$(N): $(CMAKE_GENERATOR))
+$(call static_info, $(B)PREFIX$(N): $(PREFIX))
+$(call static_info, $(B)NVC building$(N): $(WITH_NVC))
 
 # -----------------------------------------------------------------------------
 ifeq ($(call file_exists, $(GUROBI_ROOT_DIR)/bin/gurobi.sh), 1)
 # Try to find Gurobi from either $GUROBI_HOME environment variable or
-# a user-defined path. If Gurobi can't be found, only SCIP will be used.
+# a user-defined path. If Gurobi can't be found, only SCIP will be used
+# as a backend.
 # -----------------------------------------------------------------------------
     SCALP_BACKEND += GUROBI
     $(call static_ok, Found $(B)Gurobi$(N) in $(GUROBI_ROOT_DIR))
@@ -55,9 +60,9 @@ else
     SCALP_BACKEND := SCIP
 endif
 
-$(call static_info, $(B)ScaLP backends$(N): $(SCALP_BACKEND))
+$(call static_info, $(B)ScaLP backend(s)$(N): $(SCALP_BACKEND))
 
-# -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------xxxxxx
 
 all: flopoco
 
@@ -65,7 +70,7 @@ all: flopoco
 .PHONY: help
 # -----------------------------------------------------------------------------
 help:
-	$(call shell_info,)
+	$(call shell_info, TODO!)
 
 # -----------------------------------------------------------------------------
 .PHONY: clean
@@ -237,14 +242,13 @@ SYSDEPS += autoconf     # brew: ok | macports: ok
 SYSDEPS += automake     # brew: ok | macports: ok
 SYSDEPS += libtool      # brew: ok | macports: ok
 SYSDEPS += lapack       # brew: ok | macports: ok
-
 # ---------------------------------------------------------
 ifeq ($(MACOS_PKG_MANAGER), brew)
 # ---------------------------------------------------------
 SYSDEPS += make         # brew: ok | macports: gmake
 SYSDEPS += pkg-config   # brew: ok | macports: pkgconfig
-SYSDEPS += sollya       # brew: ok | macports: nope
-SYSDEPS += ninja        # brew: ok | macports: nope
+SYSDEPS += sollya       # brew: ok | macports: nope /!\
+SYSDEPS += ninja        # brew: ok | macports: nope /!\
 
 define sysdeps_cmd
     brew update && brew upgrade
@@ -273,7 +277,7 @@ endef
 endif
 
 sysdeps:
-	$(call shell_info, Updating $(OS) system $(B)dependencies$(N): $(SYSDEPS))
+	$(call shell_info, Updating $(OS_ID) system $(B)dependencies$(N): $(SYSDEPS))
 	$(call sysdeps_cmd)
 
 # build fplll manually ?
@@ -281,6 +285,9 @@ sysdeps:
 
 # -----------------------------------------------------------------------------
 .PHONY: soplex
+# Optimization package for solving linear programming problems (LPs)
+# based on an advanced implementation of the primal and dual revised
+# simplex algorithm
 # -----------------------------------------------------------------------------
 SOPLEX_GIT := https://github.com/scipopt/soplex.git
 SOPLEX_SOURCE_DIR := $(BUILD_DEPENDENCIES_SOURCE_DIR)/soplex
@@ -303,6 +310,8 @@ $(SOPLEX):
 
 # -----------------------------------------------------------------------------
 .PHONY: scip
+# Solver for mixed integer programming (MIP) and mixed integer
+# nonlinear programming (MINLP)
 # -----------------------------------------------------------------------------
 SCIP_GIT := https://github.com/scipopt/scip.git
 SCIP_SOURCE_DIR := $(BUILD_DEPENDENCIES_SOURCE_DIR)/scip
@@ -327,10 +336,13 @@ $(SCIP): $(SOPLEX)
 # Gurobi (TODO):
 # - Linux(x86): https://packages.gurobi.com/11.0/gurobi11.0.2_linux64.tar.gz
 # - Linux(arm): https://packages.gurobi.com/11.0/gurobi11.0.2_armlinux64.tar.gz
-# -- macOS: https://packages.gurobi.com/11.0/gurobi11.0.2_macos_universal2.pkg
+# - macOS: https://packages.gurobi.com/11.0/gurobi11.0.2_macos_universal2.pkg
+# - The binaries can be downloaded without a license, but it is needed when
+# the libraries and/or the executable are called
 
 # -----------------------------------------------------------------------------
 .PHONY: scalp
+# Wrapper for different ILP-solvers, such as Gurobi, CPLEX, SCIP and LPSOLVE
 # -----------------------------------------------------------------------------
 SCALP_GIT := https://digidev.digi.e-technik.uni-kassel.de/git/scalp.git
 SCALP_SOURCE_DIR := $(BUILD_DEPENDENCIES_SOURCE_DIR)/scalp
@@ -339,24 +351,27 @@ SCALP_CMAKE_PATCH := $(MKROOT)/tools/scalp_fpc.patch
 SCALP_SCIP_PATCH := $(MKROOT)/tools/find_scip.patch
 
 SCALP += $(SCALP_BINARY_DIR)/lib/libScaLP.so
+scalp: $(SCALP)
 
 SCALP_DEPENDENCIES += $(SCALP_CMAKE_PATCH)
 SCALP_CMAKE_OPTIONS += -DUSE_LPSOLVE=OFF
 
+# -----------------------------------------------
 ifeq (GUROBI, $(filter GUROBI, $(SCALP_BACKEND)))
+# -----------------------------------------------
     SCALP_DEPENDENCIES += $(GUROBI)
     SCALP_CMAKE_OPTIONS += -DUSE_GUROBI=ON
     SCALP_CMAKE_OPTIONS += -DGUROBI_ROOT_DIR=$(GUROBI_ROOT_DIR)
     SCALP += $(SCALP_BINARY_DIR)/lib/libScaLP-Gurobi.so
 endif
+# -------------------------------------------
 ifeq (SCIP, $(filter SCIP, $(SCALP_BACKEND)))
+# -------------------------------------------
     SCALP_DEPENDENCIES += $(SCIP)
     SCALP_CMAKE_OPTIONS += -DUSE_SCIP=ON
     SCALP_CMAKE_OPTIONS += -DSCIP_ROOT_DIR=$(SCIP_BINARY_DIR)
     SCALP += $(SCALP_BINARY_DIR)/lib/libScaLP-SCIP.so
 endif
-
-scalp: $(SCALP)
 
 .ONESHELL:
 $(SCALP): $(SCALP_DEPENDENCIES)
@@ -373,6 +388,8 @@ $(SCALP): $(SCALP_DEPENDENCIES)
 
 # -----------------------------------------------------------------------------
 .PHONY: wcpg
+# Functions for reliable evaluation of the Worst-Case Peak Gain matrix
+# of a discrete-time LTI filter.
 # -----------------------------------------------------------------------------
 WCPG_GIT := https://github.com/fixif/WCPG
 WCPG_SOURCE_DIR := $(BUILD_DEPENDENCIES_SOURCE_DIR)/wcpg
@@ -382,11 +399,14 @@ WCPG += $(WCPG_BINARY_DIR)/lib/libwcpg.so.0.0.9
 WCPG += $(WCPG_BINARY_DIR)/lib/libwcpg.so.0
 WCPG += $(WCPG_BINARY_DIR)/lib/libwcpg.so
 
-ifeq ($(OS_ID), macos) # -----------------------------
-    WCPG_CONFIGURE_FLAGS += CFLAGS="-I/opt/local/opt/lapack/include \
-                                    -L/opt/local/opt/lapack/lib"
-#    WCPG_CONFIGURE_FLAGS += --with-lapack=/usr/local/opt/lapack
-endif # -----------------------------------------------
+ifeq ($(OS_ID), macos) # ------------------------------------
+    # On macOS, for some reason, lapack homebrew installation
+    # can't be found, we have to explicitely set these
+    # additional flags:
+    WCPG_MACOS_FLAGS += -I/usr/local/opt/lapack/include
+    WCPG_MACOS_FLAGS += -I/usr/local/opt/lapack/lib
+    WCPG_CONFIGURE_FLAGS += CFLAGS="$(WCPG_MACOS_FLAGS)"
+endif # -----------------------------------------------------
 
 wcpg: $(WCPG)
 
@@ -402,6 +422,10 @@ $(WCPG):
 
 # -----------------------------------------------------------------------------
 .PHONY: pagsuite
+# optimization tools for the (pipelined) multiple constant multiplication
+# ((P)MCM) problem, i.e., the multiplication of a single variable with
+# multiple constants using bit-shifts, registered adders/subtractors
+# and registers.
 # -----------------------------------------------------------------------------
 PAGSUITE_GIT := https://gitlab.com/kumm/pagsuite.git
 PAGSUITE_SOURCE_DIR := $(BUILD_DEPENDENCIES_SOURCE_DIR)/pagsuite
@@ -427,6 +451,7 @@ $(PAGSUITE): $(SCALP)
 
 # -----------------------------------------------------------------------------
 .PHONY: nvc
+# VHDL compiler and simulator.
 # -----------------------------------------------------------------------------
 NVC := /usr/local/bin/nvc
 NVC_GIT := https://github.com/nickg/nvc.git
@@ -449,16 +474,18 @@ $(NVC):
 # -----------------------------------------------------------------------------
 .PHONY: dependencies
 # -----------------------------------------------------------------------------
-FLOPOCO_DEPENDENCIES += sysdeps
-FLOPOCO_DEPENDENCIES += $(SCALP)
-FLOPOCO_DEPENDENCIES += $(WCPG)
-FLOPOCO_DEPENDENCIES += $(PAGSUITE)
+FLOPOCO_LOCAL_DEPENDENCIES += $(SCALP)
+FLOPOCO_LOCAL_DEPENDENCIES += $(WCPG)
+FLOPOCO_LOCAL_DEPENDENCIES += $(PAGSUITE)
 
 ifeq ($(WITH_NVC), ON)
-    FLOPOCO_DEPENDENCIES += $(NVC)
+    FLOPOCO_LOCAL_DEPENDENCIES += $(NVC)
 endif
 
-dependencies: $(FLOPOCO_DEPENDENCIES)
+dependencies: $(FLOPOCO_LOCAL_DEPENDENCIES)
+
+FLOPOCO_DEPENDENCIES += sysdeps
+FLOPOCO_DEPENDENCIES += $(FLOPOCO_LOCAL_DEPENDENCIES)
 
 # -----------------------------------------------------------------------------
 .PHONY: flopoco
@@ -480,7 +507,7 @@ $(FLOPOCO): $(FLOPOCO_DEPENDENCIES)
 .ONESHELL:
 .PHONY: install
 # -----------------------------------------------------------------------------
-install: $(FLOPOCO)
+install: $(FLOPOCO) sysdeps
 	@cd $(MKROOT)
 	@cmake --build build --target install
 	$(call shell_info, Installing $(B)dependencies$(N) ($(FLOPOCO_DEPENDENCIES)) to $(PREFIX))
