@@ -95,13 +95,15 @@ ifeq (docker, $(filter docker, $(MAKECMDGOALS)))
     endif
 endif
 
-DOCKERFILE := $(MKROOT)/Dockerfile
-FLOPOCO_DOCKER_TAG := flopoco:$(FLOPOCO_VERSION_FULL)-$(DOCKER_IMAGE)
-DOCKER_ARGS += --no-cache
+DOCKERFILE     := $(MKROOT)/Dockerfile
+DOCKER_BRANCH  ?= dev/master
+DOCKER_ARGS    += --no-cache
 
 ifdef DOCKER_PROGRESS_PLAIN
     DOCKER_ARGS += --progress=plain
 endif
+
+FLOPOCO_DOCKER_TAG := flopoco:$(FLOPOCO_VERSION_FULL)-$(DOCKER_IMAGE)
 
 # -------------------------------------------------------------------------------
 ifeq ($(DOCKER_IMAGE), debian)
@@ -111,7 +113,7 @@ define docker_script
     RUN apt update
     RUN yes | apt install git make sudo
     RUN git clone https://gitlab.com/flopoco/flopoco
-    RUN cd flopoco && git checkout dev/cmake && make && make install
+    RUN cd flopoco && git checkout $(DOCKER_BRANCH) && make && make install
 endef
 # -------------------------------------------------------------------------------
 else ifeq ($(DOCKER_IMAGE), ubuntu)
@@ -123,7 +125,7 @@ define docker_script
     RUN yes | apt install git make sudo
     RUN git clone https://gitlab.com/flopoco/flopoco
     RUN cd flopoco \
-    && git checkout dev/cmake \
+    && git checkout $(DOCKER_BRANCH) \
     && make DEBIAN_FRONTEND=noninteractive \
     && make install
 endef
@@ -135,7 +137,7 @@ define docker_script
     RUN yay --noconfirm
     RUN yay --noconfirm -S git make sudo
     RUN git clone https://gitlab.com/flopoco/flopoco
-    RUN cd flopoco && git checkout dev/cmake && make && make install
+    RUN cd flopoco && git checkout $(DOCKER_BRANCH) && make && make install
 endef
 endif
 
@@ -513,7 +515,7 @@ $(FLOPOCO): $(FLOPOCO_DEPENDENCIES)
 .ONESHELL:
 .PHONY: install
 # -----------------------------------------------------------------------------
-install: $(FLOPOCO) sysdeps
+install: $(FLOPOCO)
 	@cd $(MKROOT)
 	@cmake --build build --target install
 	$(call shell_info, Installing $(B)dependencies$(N) ($(FLOPOCO_DEPENDENCIES)) to $(PREFIX))
