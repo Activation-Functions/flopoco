@@ -512,10 +512,10 @@ $(FLOPOCO): $(FLOPOCO_DEPENDENCIES) sysdeps
 	@ln -s $(FLOPOCO) $(MKROOT)
 	$(call shell_info, Building the $(B)HTML documentation$(N) in doc/web)
 	$(MKROOT)/flopoco BuildHTMLDoc
-	$(call shell_info, Generating and installing $(B)bash autocompletion$(N) file)
-	$(MKROOT)/flopoco BuildAutocomplete
 	$(call shell_info, Now running $(B)FloPoCo$(N))
 	$(MKROOT)/flopoco
+	$(call shell_info, Generating and installing $(B)bash autocompletion$(N) file)
+	$(MKROOT)/flopoco BuildAutocomplete
 	$(call shell_ok, If you saw the command-line help of FloPoCo - Welcome!)
 
 # -----------------------------------------------------------------------------
