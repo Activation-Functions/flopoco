@@ -190,8 +190,7 @@ namespace flopoco {
 		TilingStrategy* tilingStrategy;
 
 		// Message to Andreas:
-		// Florent commented out all these methods for you to revive them someday once I have converged on the proper interface.
-		// (still TODO)
+		// Florent commented out all these methods for you to revive them now that I have converged on the proper interface.
 		
 		 if(tilingMethod.compare("heuristicBasicTiling") == 0) {
 			tilingStrategy = new TilingStrategyBasicTiling(
