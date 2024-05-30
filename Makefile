@@ -141,6 +141,14 @@ define docker_script
 endef
 endif
 
+DOCKERFILE := $(MKROOT)/Dockerfile
+FLOPOCO_DOCKER_TAG := flopoco:$(FLOPOCO_VERSION_FULL)-$(DOCKER_IMAGE)
+DOCKER_ARGS += --no-cache
+
+ifdef DOCKER_PROGRESS_PLAIN
+    DOCKER_ARGS += --progress=plain
+endif
+
 $(DOCKERFILE):
 	$(call shell_info, Generating $(B)Dockerfile$(N))
 	@echo '$(call docker_script)' > $(DOCKERFILE)
@@ -510,6 +518,15 @@ $(FLOPOCO): $(FLOPOCO_DEPENDENCIES)
 	       -DPAG_LOCAL=$(PAGSUITE_BINARY_DIR)   \
 	       -DCMAKE_INSTALL_PREFIX=$(PREFIX)
 	@cmake --build build
+	$(call shell_info, Adding 'flopoco' $(B)symlink$(N)' in repository's root directory)
+	@ln -s $(FLOPOCO) $(MKROOT)
+	$(call shell_info, Building the $(B)HTML documentation$(N) in doc/web)
+	$(MKROOT)/flopoco BuildHTMLDoc
+	$(call shell_info, Generating and installing $(B)bash autocompletion$(N) file)
+	$(MKROOT)/flopoco BuildAutocomplete
+	$(call shell_info, Now running $(B)FloPoCo$(N))
+	$(MKROOT)/flopoco
+	$(call shell_ok, If you saw the command-line help of FloPoCo - Welcome!)
 
 # -----------------------------------------------------------------------------
 .ONESHELL:
