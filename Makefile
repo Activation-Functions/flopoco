@@ -325,31 +325,6 @@ sysdeps:
 # for building sollya: autoreconf -fi ./configure and make
 
 # -----------------------------------------------------------------------------
-.PHONY: soplex
-# Optimization package for solving linear programming problems (LPs)
-# based on an advanced implementation of the primal and dual revised
-# simplex algorithm
-# -----------------------------------------------------------------------------
-SOPLEX_GIT := https://github.com/scipopt/soplex.git
-SOPLEX_SOURCE_DIR := $(BUILD_DEPENDENCIES_SOURCE_DIR)/soplex
-
-# /!\ ScaLP looks for soplex in the same 'lib' directory
-SOPLEX_BINARY_DIR := $(BUILD_DEPENDENCIES_BINARY_DIR)/scip
-SOPLEX := $(SOPLEX_BINARY_DIR)/lib/libsoplex.a
-
-soplex: $(SOPLEX)
-
-.ONESHELL:
-$(SOPLEX):
-	$(call shell_info, Fetching and building $(B)SOPLEX$(N) library)
-	@mkdir -p $(SOPLEX_BINARY_DIR)
-	@git clone $(SOPLEX_GIT) $(SOPLEX_SOURCE_DIR)
-	@cd $(SOPLEX_SOURCE_DIR)
-	@cmake -B build -G$(CMAKE_GENERATOR) \
-	       -DCMAKE_INSTALL_PREFIX=$(SOPLEX_BINARY_DIR)
-	@cmake --build build --target install
-
-# -----------------------------------------------------------------------------
 .PHONY: scip
 # Solver for mixed integer programming (MIP) and mixed integer
 # nonlinear programming (MINLP)
@@ -362,13 +337,12 @@ SCIP := $(SCIP_BINARY_DIR)/lib/libscip.$(dylib)
 scip: $(SCIP)
 
 .ONESHELL:
-$(SCIP): $(SOPLEX)
+$(SCIP):
 	$(call shell_info, Fetching and building $(B)SCIP$(N) library)
 	@mkdir -p $(SCIP_BINARY_DIR)
 	@git clone $(SCIP_GIT) $(SCIP_SOURCE_DIR)
 	@cd $(SCIP_SOURCE_DIR)
 	@cmake -B build -G$(CMAKE_GENERATOR)		    \
-	       -DSOPLEX_DIR=$(SOPLEX_BINARY_DIR)	    \
 	       -DAUTOBUILD=ON				    \
 	       -DCMAKE_INSTALL_PREFIX=$(SCIP_BINARY_DIR)
 	@cmake --build build --target install
