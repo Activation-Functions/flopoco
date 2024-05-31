@@ -76,14 +76,13 @@ namespace flopoco
   SNAFU::SNAFU(OperatorPtr parentOp_,
     Target* target_,
     string fIn,
-    int wIn_,
-    int wOut_,
+    int wIn,
+    int wOut,
     string methodIn,
-    double inputScale_,
+    double inputScale,
     int adhocCompression_,
-    bool expensiveSymmetry_)
-      : Operator(parentOp_, target_), wIn(wIn_), wOut(wOut_), inputScale(inputScale_), adhocCompression(static_cast<Compression>(adhocCompression_)),
-        expensiveSymmetry(expensiveSymmetry_)
+    bool expensiveSymmetry)
+      : Operator(parentOp_, target_), adhocCompression(static_cast<Compression>(adhocCompression_))
   {
     // Check sanity of inputs
     if(inputScale <= 0) {
@@ -189,7 +188,7 @@ namespace flopoco
 
     // means "please choose for me"
     if(method == Method::Auto) {
-      // TODO a complex sequence of if then else once the experiments are done
+      // TODO: a complex sequence of if then else once the experiments are done
       method = Method::PlainTable;
     }
 
@@ -227,7 +226,7 @@ namespace flopoco
     addInput("X", wIn);
     addOutput("Y", wOut);
 
-    vhdl << declare(input(0), wIn) << " <= X;" << endl;
+    vhdl << tab << declare(input(0), wIn) << " <= X;" << endl;
 
     params["lsbOut"] = to_string(lsbOut);
 
@@ -255,20 +254,24 @@ namespace flopoco
     }
 
     // Tackle symmetry, the symmetry is considered after reducing the function all the way, i.e. after delta and offset manipulations
-    bool cond = fd.offset != 0.0 || fd.deltaFunction != Delta::None;
-    bool enableSymmetry = fd.parity != Parity::None && (!cond || adhocCompression == Compression::Enabled);
+    const bool cond = fd.offset != 0.0 || fd.deltaFunction != Delta::None;
+    const bool enableSymmetry = fd.parity != Parity::None && (!cond && adhocCompression == Compression::Enabled);
+
+    if(enableSymmetry) {
+      REPORT(LogLevel::DETAIL, "Symmetry enabled.")
+    }
 
     switch(method) {
     case Method::PlainTable: {
       // addComment("This function is correctly rounded");
-      correctlyRounded = adhocCompression == Compression::Enabled;
+      // When using compression, the best we can guarantee is faithful rounding
+      correctlyRounded = adhocCompression == Compression::Disabled;
       break;
     }
     case Method::MultiPartite: {
       break;
     }
     case Method::Horner: {
-      forceRescale = true;
       break;
     }
     case Method::PiecewiseHorner2: {
@@ -310,7 +313,7 @@ namespace flopoco
       auto X = getSignalByName(input(x));
       int w = X->width();
 
-      vhdl << tab << declare(input(s), w) << " <= not(" << input(x) << of(w - 1) << ") & (" << input(x) << range(w - 2, 0) << " when " << input(x)
+      vhdl << tab << declare(input(s), w) << " <= not(" << input(x) << of(w - 1) << ") & " << input(x) << range(w - 2, 0) << " when " << input(x)
            << of(w - 1) << " = '0' else (not(" << input(x) << range(w - 2, 0) << ") + " << X->valueToVHDL(1) << ");" << endl;
     }
 
@@ -327,6 +330,7 @@ namespace flopoco
     params["f"] = *function;
     params["signedIn"] = to_string(signedIn);
     params["lsbIn"] = to_string(lsbIn);
+    params["verbose"] = "3";
     string paramString;
 
     for(const auto& [key, value]: params) {
