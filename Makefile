@@ -79,6 +79,7 @@ else
     CMAKE_BUILD_TYPE := -DCMAKE_BUILD_TYPE=Release
 endif # -------------------------------------------
 
+$(call static_info, $(B)CONFIG$(N): $(CONFIG))
 $(call static_info, $(B)CMAKE_GENERATOR$(N): $(CMAKE_GENERATOR))
 $(call static_info, $(B)PREFIX$(N): $(PREFIX))
 $(call static_info, $(B)NVC building$(N): $(WITH_NVC))
@@ -173,9 +174,20 @@ endef
 else ifeq ($(DOCKER_IMAGE), archlinux)
 # -------------------------------------------------------------------------------
 define docker_script
-    FROM greyltc/archlinux-aur:yay
-    RUN yay --noconfirm
-    RUN yay --noconfirm -S git make sudo
+    FROM archlinux:latest
+    RUN pacman -Syu --noconfirm
+    RUN pacman --noconfirm -S git make sudo
+    RUN git clone https://gitlab.com/flopoco/flopoco
+    RUN cd flopoco && git checkout $(DOCKER_BRANCH) && make && make install
+endef
+# -------------------------------------------------------------------------------
+else ifeq ($(DOCKER_IMAGE), alpine)
+# -------------------------------------------------------------------------------
+define docker_script
+    FROM alpine:latest
+    RUN apk update
+    RUN apk add git make
+    RUN echo '' >> /etc/apk/repositories
     RUN git clone https://gitlab.com/flopoco/flopoco
     RUN cd flopoco && git checkout $(DOCKER_BRANCH) && make && make install
 endef
@@ -252,7 +264,13 @@ else ifeq ($(OS_ID), arch)
     SYSDEPS += flex     # pacman
     SYSDEPS += boost    # pacman
     SYSDEPS += pkgconf  # pacman
-    SYSDEPS += sollya-git # broken
+    SYSDEPS += autoconf # pacman
+    SYSDEPS += libtool  # pacman
+    SYSDEPS += lapack   # pacman
+    SYSDEPS += lapacke  # pacman
+    SYSDEPS += fplll    # pacman
+    SYSDEPS += libxml2  # pacman
+#    SYSDEPS += sollya-git # broken
 
     define sysdeps_cmd
         yay -Syu
@@ -262,8 +280,14 @@ else ifeq ($(OS_ID), arch)
 else ifeq ($(OS_ID), alpine)
 # -----------------------------------------------------------
     SYSDEPS += gcc
+    SYSDEPS += g++
+    SYSDEPS += grep
+    SYSDEPS += patch
+    SYSDEPS += libtbb-dev # for papilo/scip
     SYSDEPS += cmake
     SYSDEPS += automake
+    SYSDEPS += autoconf
+    SYSDEPS += bash
     SYSDEPS += libtool
     SYSDEPS += ninja
     SYSDEPS += gmp-dev
@@ -274,7 +298,9 @@ else ifeq ($(OS_ID), alpine)
     SYSDEPS += gnuplot
     SYSDEPS += pkgconf
     SYSDEPS += libxml2-dev
-    SYSDEPS += libmpfi libmpfi-dev # edge/testing
+    SYSDEPS += libmpfi
+    SYSDEPS += libmpfi-dev # edge/testing
+    SYSDEPS += fplll-dev
 # -----------------------------------------------------------
 else ifeq ($(OS_ID), macos)
 # macOS: homebrew (Anastasia) or macports (Martin)
@@ -296,8 +322,8 @@ else ifeq ($(OS_ID), macos)
     # ---------------------------------------------------------
         SYSDEPS += make         # brew: ok | macports: gmake
         SYSDEPS += pkg-config   # brew: ok | macports: pkgconfig
-        SYSDEPS += sollya       # brew: ok | macports: nope /!\
-        SYSDEPS += ninja        # brew: ok | macports: nope /!\
+        SYSDEPS += sollya       # brew: ok | macports: nope /!/
+        SYSDEPS += ninja        # brew: ok | macports: nope /!/
 
         define sysdeps_cmd
             brew update && brew upgrade
@@ -350,8 +376,9 @@ $(SCIP):
 	@cmake -B build -G$(CMAKE_GENERATOR)		    \
 	       -DAUTOBUILD=ON				    \
 	       -DCMAKE_INSTALL_PREFIX=$(SCIP_BINARY_DIR)    \
+	       -DCMAKE_BUILD_WITH_INSTALL_RPATH=TRUE	    \
 	       $(CMAKE_BUILD_TYPE)
-	@cmake --build build --target install
+	@cmake --build build --target install -j 8
 
 install-scip: $(SCIP)
 	$(call shell_info, Installing $(B)SCIP$(N) libraries ($(SCIP)) in $(PREFIX))
@@ -544,7 +571,7 @@ $(FLOPOCO): $(FLOPOCO_DEPENDENCIES)
 	       -DPAG_LOCAL=$(PAGSUITE_BINARY_DIR)   \
 	       -DCMAKE_INSTALL_PREFIX=$(PREFIX)	    \
 	       $(CMAKE_BUILD_TYPE)
-	@cmake --build build
+	@cmake --build build -j 8
 	$(call shell_info, Adding 'flopoco' $(B)symlink$(N)' in repository's root directory)
 	@ln -s $(FLOPOCO) $(MKROOT)
 	$(call shell_info, Building the $(B)HTML documentation$(N) in doc/web)
