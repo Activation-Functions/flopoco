@@ -68,6 +68,7 @@ ifeq ($(call file_exists, $(RELEASE_FILE_LINUX)), 1)
     OS_VERSION_ID   := $(call get_field,VERSION_ID)
     OS_VERSION      := $(call get_field,VERSION)
     OS_ID           := $(call get_field,ID)
+    dylib           := so
 # ---------------------------------------------------
 else ifeq ($(call file_exists, /usr/bin/sw_vers), 1)
 # ---------------------------------------------------
@@ -76,6 +77,7 @@ else ifeq ($(call file_exists, /usr/bin/sw_vers), 1)
     OS_VERSION_ID   := $(word 4, $(shell /usr/bin/sw_vers))
     OS_VERSION      := $(OS_VERSION_ID)
     OS_PRETTY_NAME  := $(OS_NAME) $(OS_VERSION)
+    dylib           := dylib
 endif
 
 #$(call static_info, OS_PRETTY_NAME = $(OS_PRETTY_NAME))
