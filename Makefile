@@ -1,4 +1,12 @@
 
+# -----------------------------------------------------------------------
+# Note:
+# -----------------------------------------------------------------------
+# - VERSION_MAJOR should be incremented
+#   whenever a big/revolutionary change to FloPoCo has been made.
+# - VERSION_MINOR should be incremented whenever a new operator is added.
+# - VERSION_PATCH when important bugfixes are made.
+# -----------------------------------------------------------------------
 FLOPOCO_VERSION_MAJOR   := 5
 FLOPOCO_VERSION_MINOR   := 0
 FLOPOCO_VERSION_PATCH   := 0
@@ -7,13 +15,19 @@ FLOPOCO_VERSION_FULL    := $(FLOPOCO_VERSION).$(FLOPOCO_VERSION_PATCH)
 FLOPOCO_BRANCH          := $(shell git symbolic-ref --short HEAD)
 FLOPOCO_COMMIT_HASH     := $(shell git rev-parse HEAD)
 
+# Actual (absolute) path to the repository's root Makefile
 MKROOT := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
+
+# Local dependencies build directories:
 BUILD_DEPENDENCIES_DIR := $(MKROOT)/build/dependencies
 BUILD_DEPENDENCIES_SOURCE_DIR := $(BUILD_DEPENDENCIES_DIR)/src
 BUILD_DEPENDENCIES_BINARY_DIR := $(BUILD_DEPENDENCIES_DIR)/bin
 
+# Utilities for parsing OS and distribution version
+# as well as pretty-printing stuff.
 include $(MKROOT)/tools/utilities.mk
 
+# Print FloPoCo version, branch and commit hash:
 $(call static_info, Running $(B)FloPoCo$(N) build script\
     ($(B)v$(FLOPOCO_VERSION_FULL)$(N)) on $(B)$(OS_PRETTY_NAME)$(N))
 
@@ -34,9 +48,21 @@ endif # --------------------------------------
 
 #TODO: detect ninja, or else Unix Makefiles
 CMAKE_GENERATOR ?= Ninja
+
+# GUROBI_HOME can be set as an environment variable in the user's shell
+# resource file (as recommended in the Gurobi installation manual)
+# But it can also be added on-the-fly as a Makefile argument, e.g.:
+# $ make GUROBI_HOME=/opt/gurobi1102/linux64
 GUROBI_ROOT_DIR := $(GUROBI_HOME)
+
+# PREFIX used for system installation of the FloPoCo binaries:
 PREFIX ?= /usr/local
+
+# If ON (default), the script will take care of fetching and building SCIP
+# locally, and integrate it with ScaLP.
 WITH_SCIP ?= ON
+
+# Adds NVC and its dependencies to the build process (OFF by default)
 WITH_NVC ?= OFF
 
 $(call static_info, $(B)CMAKE_GENERATOR$(N): $(CMAKE_GENERATOR))
@@ -64,7 +90,7 @@ $(call static_info, $(B)ScaLP backend(s)$(N): $(SCALP_BACKEND))
 
 # -----------------------------------------------------------------------------xxxxxx
 
-all: flopoco
+all: sysdeps flopoco
 
 # -----------------------------------------------------------------------------
 .PHONY: help
@@ -95,6 +121,16 @@ ifeq (docker, $(filter docker, $(MAKECMDGOALS)))
     endif
 endif
 
+DOCKERFILE     := $(MKROOT)/Dockerfile
+DOCKER_BRANCH  ?= dev/master
+DOCKER_ARGS    += --no-cache
+
+ifdef DOCKER_PROGRESS_PLAIN
+    DOCKER_ARGS += --progress=plain
+endif
+
+FLOPOCO_DOCKER_TAG := flopoco:$(FLOPOCO_VERSION_FULL)-$(DOCKER_IMAGE)
+
 # -------------------------------------------------------------------------------
 ifeq ($(DOCKER_IMAGE), debian)
 # -------------------------------------------------------------------------------
@@ -103,7 +139,7 @@ define docker_script
     RUN apt update
     RUN yes | apt install git make sudo
     RUN git clone https://gitlab.com/flopoco/flopoco
-    RUN cd flopoco && git checkout dev/cmake && make && make install
+    RUN cd flopoco && git checkout $(DOCKER_BRANCH) && make && make install
 endef
 # -------------------------------------------------------------------------------
 else ifeq ($(DOCKER_IMAGE), ubuntu)
@@ -115,7 +151,7 @@ define docker_script
     RUN yes | apt install git make sudo
     RUN git clone https://gitlab.com/flopoco/flopoco
     RUN cd flopoco \
-    && git checkout dev/cmake \
+    && git checkout $(DOCKER_BRANCH) \
     && make DEBIAN_FRONTEND=noninteractive \
     && make install
 endef
@@ -127,7 +163,7 @@ define docker_script
     RUN yay --noconfirm
     RUN yay --noconfirm -S git make sudo
     RUN git clone https://gitlab.com/flopoco/flopoco
-    RUN cd flopoco && git checkout dev/cmake && make && make install
+    RUN cd flopoco && git checkout $(DOCKER_BRANCH) && make && make install
 endef
 endif
 
@@ -148,138 +184,133 @@ docker: $(DOCKERFILE)
 	@docker build $(DOCKER_ARGS) -t $(FLOPOCO_DOCKER_TAG) $(MKROOT)
 	@rm -rf $(DOCKERFILE)
 
-# -----------------------------------------------------------------------------
+# -----------------------------------------------------------
 .PHONY: sysdeps
-# -----------------------------------------------------------------------------
-
+# OS-dependent package dependency lists
 # -----------------------------------------------------------
 ifeq ($(OS_ID), $(filter $(OS_ID), ubuntu debian))
 # -----------------------------------------------------------
-SYSDEPS += git
-SYSDEPS += g++
-SYSDEPS += cmake
-SYSDEPS += ninja-build
-SYSDEPS += libgmp-dev
-SYSDEPS += libmpfi-dev
-SYSDEPS += libmpfr-dev
-SYSDEPS += liblapack-dev liblapacke-dev
-SYSDEPS += libsollya-dev
-SYSDEPS += dh-autoreconf
-SYSDEPS += flex
-SYSDEPS += libboost-all-dev
-SYSDEPS += pkg-config
+    SYSDEPS += git
+    SYSDEPS += g++
+    SYSDEPS += cmake
+    SYSDEPS += ninja-build
+    SYSDEPS += libgmp-dev
+    SYSDEPS += libmpfi-dev
+    SYSDEPS += libmpfr-dev
+    SYSDEPS += liblapack-dev liblapacke-dev
+    SYSDEPS += libsollya-dev
+    SYSDEPS += dh-autoreconf
+    SYSDEPS += flex
+    SYSDEPS += libboost-all-dev
+    SYSDEPS += pkg-config
 
-define sysdeps_cmd
-    $(SUDO) apt update
-    $(SUDO) apt install -y $(SYSDEPS)
-endef
+    define sysdeps_cmd
+        $(SUDO) apt update
+        $(SUDO) apt install -y $(SYSDEPS)
+    endef
 
-NVC_DEPENDENCIES += build-essential
-NVC_DEPENDENCIES += automake
-NVC_DEPENDENCIES += autoconf
-NVC_DEPENDENCIES += flex
-NVC_DEPENDENCIES += llvm-dev
-NVC_DEPENDENCIES += pkg-config
-NVC_DEPENDENCIES += zlib1g-dev
-NVC_DEPENDENCIES += libdw-dev
-NVC_DEPENDENCIES += libffi-dev
-NVC_DEPENDENCIES += libzstd-dev
+    NVC_DEPENDENCIES += build-essential
+    NVC_DEPENDENCIES += automake
+    NVC_DEPENDENCIES += autoconf
+    NVC_DEPENDENCIES += flex
+    NVC_DEPENDENCIES += llvm-dev
+    NVC_DEPENDENCIES += pkg-config
+    NVC_DEPENDENCIES += zlib1g-dev
+    NVC_DEPENDENCIES += libdw-dev
+    NVC_DEPENDENCIES += libffi-dev
+    NVC_DEPENDENCIES += libzstd-dev
 
-define nvcdeps_cmd
-    $(SUDO) apt update
-    yes | $(SUDO) apt install $(NVC_DEPENDENCIES)
-endef
+    define nvcdeps_cmd
+        $(SUDO) apt update
+        yes | $(SUDO) apt install $(NVC_DEPENDENCIES)
+    endef
 
 # -----------------------------------------------------------
 else ifeq ($(OS_ID), arch)
-# Using AUR with docker::
+# Using AUR with docker:
 # docker pull greyltc/archlinux-aur:yay
 # -----------------------------------------------------------
-SYSDEPS += git
-SYSDEPS += gcc
-SYSDEPS += cmake
-SYSDEPS += ninja
-SYSDEPS += gmp
-SYSDEPS += mpfr
-SYSDEPS += mpfi
-SYSDEPS += flex
-SYSDEPS += boost
-SYSDEPS += pkgconf
-SYSDEPS += sollya-git # broken
+    SYSDEPS += git
+    SYSDEPS += gcc
+    SYSDEPS += cmake
+    SYSDEPS += ninja
+    SYSDEPS += gmp
+    SYSDEPS += mpfr
+    SYSDEPS += mpfi
+    SYSDEPS += flex
+    SYSDEPS += boost
+    SYSDEPS += pkgconf
+    SYSDEPS += sollya-git # broken
 
-define sysdeps_cmd
-    yay -Syu
-    yay -S $(SYSDEPS)
-endef
-
+    define sysdeps_cmd
+        yay -Syu
+        yay -S $(SYSDEPS)
+    endef
 # -----------------------------------------------------------
 else ifeq ($(OS_ID), alpine)
 # -----------------------------------------------------------
-SYSDEPS += git
-SYSDEPS += gcc
-SYSDEPS += cmake
-SYSDEPS += automake
-SYSDEPS += libtool
-SYSDEPS += ninja
-SYSDEPS += gmp-dev
-SYSDEPS += mpfr-dev
-SYSDEPS += boost-dev
-SYSDEPS += flex
-SYSDEPS += bison
-SYSDEPS += gnuplot
-SYSDEPS += pkgconf
-SYSDEPS += libxml2-dev
-SYSDEPS += libmpfi libmpfi-dev # edge/testing
+    SYSDEPS += git
+    SYSDEPS += gcc
+    SYSDEPS += cmake
+    SYSDEPS += automake
+    SYSDEPS += libtool
+    SYSDEPS += ninja
+    SYSDEPS += gmp-dev
+    SYSDEPS += mpfr-dev
+    SYSDEPS += boost-dev
+    SYSDEPS += flex
+    SYSDEPS += bison
+    SYSDEPS += gnuplot
+    SYSDEPS += pkgconf
+    SYSDEPS += libxml2-dev
+    SYSDEPS += libmpfi libmpfi-dev # edge/testing
 # -----------------------------------------------------------
 else ifeq ($(OS_ID), macos)
 # macOS: homebrew (Anastasia) or macports (Martin)
-MACOS_PKG_MANAGER ?= brew
+    MACOS_PKG_MANAGER ?= brew
 # -----------------------------------------------------------
-# Common to both package managers (brew & port):
-SYSDEPS += git          # brew: ok | macports: ok
-SYSDEPS += wget         # brew: ok | macports: ok
-SYSDEPS += cmake        # brew: ok | macports: ok
-SYSDEPS += gmp          # brew: ok | macports: ok
-SYSDEPS += mpfr         # brew: ok | macports: ok
-SYSDEPS += mpfi         # brew: ok | macports: ok
-SYSDEPS += boost        # brew: ok | macports: ok
-SYSDEPS += autoconf     # brew: ok | macports: ok
-SYSDEPS += automake     # brew: ok | macports: ok
-SYSDEPS += libtool      # brew: ok | macports: ok
-SYSDEPS += lapack       # brew: ok | macports: ok
-# ---------------------------------------------------------
-ifeq ($(MACOS_PKG_MANAGER), brew)
-# ---------------------------------------------------------
-SYSDEPS += make         # brew: ok | macports: gmake
-SYSDEPS += pkg-config   # brew: ok | macports: pkgconfig
-SYSDEPS += sollya       # brew: ok | macports: nope /!\
-SYSDEPS += ninja        # brew: ok | macports: nope /!\
+    # Common to both package managers (brew & port):
+    SYSDEPS += git          # brew: ok | macports: ok
+    SYSDEPS += wget         # brew: ok | macports: ok
+    SYSDEPS += cmake        # brew: ok | macports: ok
+    SYSDEPS += gmp          # brew: ok | macports: ok
+    SYSDEPS += mpfr         # brew: ok | macports: ok
+    SYSDEPS += mpfi         # brew: ok | macports: ok
+    SYSDEPS += boost        # brew: ok | macports: ok
+    SYSDEPS += autoconf     # brew: ok | macports: ok
+    SYSDEPS += automake     # brew: ok | macports: ok
+    SYSDEPS += libtool      # brew: ok | macports: ok
+    SYSDEPS += lapack       # brew: ok | macports: ok
+    # ---------------------------------------------------------
+    ifeq ($(MACOS_PKG_MANAGER), brew)
+    # ---------------------------------------------------------
+        SYSDEPS += make         # brew: ok | macports: gmake
+        SYSDEPS += pkg-config   # brew: ok | macports: pkgconfig
+        SYSDEPS += sollya       # brew: ok | macports: nope /!\
+        SYSDEPS += ninja        # brew: ok | macports: nope /!\
 
-define sysdeps_cmd
-    brew update && brew upgrade
-    brew install $(SYSDEPS)
-endef
+        define sysdeps_cmd
+            brew update && brew upgrade
+            brew install $(SYSDEPS)
+        endef
+    # ---------------------------------------------------------
+    else ifeq ($(MACOS_PKG_MANAGER), port)
+    # ---------------------------------------------------------
+        SYSDEPS += gmake
+        SYSDEPS += pkgconfig
 
-# ---------------------------------------------------------
-else ifeq ($(MACOS_PKG_MANAGER), port)
-# ---------------------------------------------------------
-SYSDEPS += gmake
-SYSDEPS += pkgconfig
-
-define sysdeps_cmd
-    sudo port selfupdate
-    sudo port install $(SYSDEPS)
-endef
-
-endif # MACOS_PKG_MANAGER
-# -----------------------------------------------------------
-else # Unknown distro, do nothing
-# -----------------------------------------------------------
-define sysdeps_cmd
-    $(call shell_info, Linux distribution could not be identified, skipping...)
-endef
-
-endif
+        define sysdeps_cmd
+            sudo port selfupdate
+            sudo port install $(SYSDEPS)
+        endef
+    endif # MACOS_PKG_MANAGER
+    # -----------------------------------------------------------
+    else # Unknown distro, do nothing
+    # -----------------------------------------------------------
+    define sysdeps_cmd
+        $(call shell_info, Linux distribution could not be identified, skipping...)
+    endef
+endif # OS_ID
 
 sysdeps:
 	$(call shell_info, Updating $(OS_ID) system $(B)dependencies$(N): $(SYSDEPS))
@@ -321,7 +352,9 @@ $(SOPLEX):
 SCIP_GIT := https://github.com/scipopt/scip.git
 SCIP_SOURCE_DIR := $(BUILD_DEPENDENCIES_SOURCE_DIR)/scip
 SCIP_BINARY_DIR := $(BUILD_DEPENDENCIES_BINARY_DIR)/scip
-SCIP := $(SCIP_BINARY_DIR)/lib/libscip.so
+SCIP := $(SCIP_BINARY_DIR)/lib/libscip.$(dylib)
+
+scip: $(SCIP)
 
 .ONESHELL:
 $(SCIP): $(SOPLEX)
@@ -334,6 +367,10 @@ $(SCIP): $(SOPLEX)
 	       -DAUTOBUILD=ON				    \
 	       -DCMAKE_INSTALL_PREFIX=$(SCIP_BINARY_DIR)
 	@cmake --build build --target install
+
+install-scip: $(SCIP)
+	$(call shell_info, Installing $(B)SCIP$(N) libraries ($(SCIP)) in $(PREFIX))
+	@cp $(SCIP) $(PREFIX)/lib
 
 # -----------------------------------------------------------------------------
 .PHONY: gurobi
@@ -357,7 +394,7 @@ SCALP_FIND_GUROBI_PATCH := $(MKROOT)/tools/scalp_findgurobi.patch
 SCALP_FIND_CPLEX_PATCH  := $(MKROOT)/tools/scalp_findcplex.patch
 SCALP_FIND_SCIP_PATCH   := $(MKROOT)/tools/scalp_findscip.patch
 
-SCALP += $(SCALP_BINARY_DIR)/lib/libScaLP.so
+SCALP += $(SCALP_BINARY_DIR)/lib/libScaLP.$(dylib)
 scalp: $(SCALP)
 
 SCALP_DEPENDENCIES += $(SCALP_CMAKE_PATCH)
@@ -368,14 +405,14 @@ ifeq (GUROBI, $(filter GUROBI, $(SCALP_BACKEND)))
 # -----------------------------------------------
     SCALP_DEPENDENCIES += $(GUROBI)
     SCALP_CMAKE_OPTIONS += -DGUROBI_ROOT_DIR=$(GUROBI_ROOT_DIR)
-    SCALP += $(SCALP_BINARY_DIR)/lib/libScaLP-Gurobi.so
+    SCALP += $(SCALP_BINARY_DIR)/lib/libScaLP-Gurobi.$(dylib)
 endif
 # -------------------------------------------
 ifeq (SCIP, $(filter SCIP, $(SCALP_BACKEND)))
 # -------------------------------------------
     SCALP_DEPENDENCIES += $(SCIP)
     SCALP_CMAKE_OPTIONS += -DSCIP_ROOT_DIR=$(SCIP_BINARY_DIR)
-    SCALP += $(SCALP_BINARY_DIR)/lib/libScaLP-SCIP.so
+    SCALP += $(SCALP_BINARY_DIR)/lib/libScaLP-SCIP.$(dylib)
 endif
 
 .ONESHELL:
@@ -392,6 +429,10 @@ $(SCALP): $(SCALP_DEPENDENCIES)
 	       $(SCALP_CMAKE_OPTIONS)
 	@cmake --build build --target install
 
+install-scalp: $(SCALP)
+	$(call shell_info, Installing $(B)SCALP$(N) libraries ($(SCALP)) in $(PREFIX))
+	@cp $(SCALP) $(PREFIX)/lib
+
 # -----------------------------------------------------------------------------
 .PHONY: wcpg
 # Functions for reliable evaluation of the Worst-Case Peak Gain matrix
@@ -401,9 +442,9 @@ WCPG_GIT := https://github.com/fixif/WCPG
 WCPG_SOURCE_DIR := $(BUILD_DEPENDENCIES_SOURCE_DIR)/wcpg
 WCPG_BINARY_DIR := $(BUILD_DEPENDENCIES_BINARY_DIR)/wcpg
 
-WCPG += $(WCPG_BINARY_DIR)/lib/libwcpg.so.0.0.9
-WCPG += $(WCPG_BINARY_DIR)/lib/libwcpg.so.0
-WCPG += $(WCPG_BINARY_DIR)/lib/libwcpg.so
+WCPG += $(WCPG_BINARY_DIR)/lib/libwcpg.$(dylib).0.0.9
+WCPG += $(WCPG_BINARY_DIR)/lib/libwcpg.$(dylib).0
+WCPG += $(WCPG_BINARY_DIR)/lib/libwcpg.$(dylib)
 
 ifeq ($(OS_ID), macos) # ------------------------------------
     # On macOS, for some reason, lapack homebrew installation
@@ -427,9 +468,13 @@ $(WCPG):
 	@./configure --prefix=$(WCPG_BINARY_DIR) $(WCPG_CONFIGURE_FLAGS)
 	@make -j8 install
 
+install-wcpg: $(WCPG)
+	$(call shell_info, Installing $(B)WCPG$(N) libraries ($(WCPG)) in $(PREFIX))
+	@cp $(WCPG) $(PREFIX)/lib
+
 # -----------------------------------------------------------------------------
 .PHONY: pagsuite
-# optimization tools for the (pipelined) multiple constant multiplication
+# Optimization tools for the (pipelined) multiple constant multiplication
 # ((P)MCM) problem, i.e., the multiplication of a single variable with
 # multiple constants using bit-shifts, registered adders/subtractors
 # and registers.
@@ -437,11 +482,11 @@ $(WCPG):
 PAGSUITE_GIT := https://gitlab.com/kumm/pagsuite.git
 PAGSUITE_SOURCE_DIR := $(BUILD_DEPENDENCIES_SOURCE_DIR)/pagsuite
 PAGSUITE_BINARY_DIR := $(BUILD_DEPENDENCIES_BINARY_DIR)/pagsuite
-PAGSUITE += $(PAGSUITE_BINARY_DIR)/lib/libpag.so
-PAGSUITE += $(PAGSUITE_BINARY_DIR)/lib/libpag.so.0
-PAGSUITE += $(PAGSUITE_BINARY_DIR)/lib/libpag.so.2.1.0
-PAGSUITE += $(PAGSUITE_BINARY_DIR)/lib/librpag.so
-PAGSUITE += $(PAGSUITE_BINARY_DIR)/lib/liboscm.so
+PAGSUITE += $(PAGSUITE_BINARY_DIR)/lib/libpag.$(dylib)
+PAGSUITE += $(PAGSUITE_BINARY_DIR)/lib/libpag.$(dylib).0
+PAGSUITE += $(PAGSUITE_BINARY_DIR)/lib/libpag.$(dylib).2.1.0
+PAGSUITE += $(PAGSUITE_BINARY_DIR)/lib/librpag.$(dylib)
+PAGSUITE += $(PAGSUITE_BINARY_DIR)/lib/liboscm.$(dylib)
 
 pagsuite: $(PAGSUITE)
 
@@ -455,6 +500,10 @@ $(PAGSUITE): $(SCALP)
 	       -DSCALP_PREFIX_PATH=$(SCALP_BINARY_DIR)		\
 	       -DCMAKE_INSTALL_PREFIX=$(PAGSUITE_BINARY_DIR)
 	@cmake --build build --target install
+
+install-pagsuite: $(PAGSUITE)
+	$(call shell_info, Installing $(B)PAGSuite$(N) libraries ($(PAGSUITE)) in $(PREFIX))
+	@cp $(PAGSUITE) $(PREFIX)/lib
 
 # -----------------------------------------------------------------------------
 .PHONY: nvc
@@ -481,17 +530,15 @@ $(NVC):
 # -----------------------------------------------------------------------------
 .PHONY: dependencies
 # -----------------------------------------------------------------------------
-FLOPOCO_LOCAL_DEPENDENCIES += $(SCALP)
-FLOPOCO_LOCAL_DEPENDENCIES += $(WCPG)
-FLOPOCO_LOCAL_DEPENDENCIES += $(PAGSUITE)
+FLOPOCO_DEPENDENCIES += $(SCALP)
+FLOPOCO_DEPENDENCIES += $(WCPG)
+FLOPOCO_DEPENDENCIES += $(PAGSUITE)
 
 ifeq ($(WITH_NVC), ON)
-    FLOPOCO_LOCAL_DEPENDENCIES += $(NVC)
+    FLOPOCO_DEPENDENCIES += $(NVC)
 endif
 
-dependencies: $(FLOPOCO_LOCAL_DEPENDENCIES)
-
-FLOPOCO_DEPENDENCIES += $(FLOPOCO_LOCAL_DEPENDENCIES)
+dependencies: $(FLOPOCO_DEPENDENCIES)
 
 # -----------------------------------------------------------------------------
 .PHONY: flopoco
@@ -500,7 +547,7 @@ FLOPOCO_DEPENDENCIES += $(FLOPOCO_LOCAL_DEPENDENCIES)
 FLOPOCO := $(MKROOT)/build/code/FloPoCoBin/flopoco
 flopoco: $(FLOPOCO)
 
-$(FLOPOCO): $(FLOPOCO_DEPENDENCIES) sysdeps
+$(FLOPOCO): $(FLOPOCO_DEPENDENCIES)
 	$(call shell_info, Now building $(B)FloPoCo$(N))
 	@cmake -B build -G$(CMAKE_GENERATOR)	    \
 	       -DWCPG_LOCAL=$(WCPG_BINARY_DIR)	    \
@@ -522,7 +569,7 @@ $(FLOPOCO): $(FLOPOCO_DEPENDENCIES) sysdeps
 .ONESHELL:
 .PHONY: install
 # -----------------------------------------------------------------------------
-install: $(FLOPOCO) sysdeps
+install: $(FLOPOCO)
 	@cd $(MKROOT)
 	@cmake --build build --target install
 	$(call shell_info, Installing $(B)dependencies$(N) ($(FLOPOCO_DEPENDENCIES)) to $(PREFIX))
