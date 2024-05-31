@@ -180,11 +180,14 @@ namespace flopoco
     f = new FixFunction(base, true, lsbIn, lsbOut);
     correctlyRounded = false;  // default is faithful
 
-    // Cheat on the signedIn value, by exploiting symmetry to the max
-    signedIn = false;  // We can exploit symetry on all the delta functions
-
-    // When compression is enabled, compute the approximation of the delta function
-    function = adhocCompression == Compression::Enabled ? &delta : &base;
+    if(adhocCompression == Compression::Enabled) {
+      signedIn = false;        // We known how to exploit the symmetries
+      function = &delta;       // The function to really approximate is the delta one, the rest is only tricks
+    } else {
+      // Respect the whishes of the user
+      signedIn = true;
+      function = &base;
+    }
 
     // means "please choose for me"
     if(method == Method::Auto) {
