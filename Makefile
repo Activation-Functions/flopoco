@@ -1,4 +1,8 @@
 
+ifeq ($(shell expr $(MAKE_VERSION) \< 3.82), 1)
+    $(error MAKE_VERSION should be at least >= 3.82 ($(MAKE_VERSION)))
+endif
+
 # -----------------------------------------------------------------------
 # Note:
 # -----------------------------------------------------------------------
@@ -7,6 +11,7 @@
 # - VERSION_MINOR should be incremented whenever a new operator is added.
 # - VERSION_PATCH when important bugfixes are made.
 # -----------------------------------------------------------------------
+
 FLOPOCO_VERSION_MAJOR   := 5
 FLOPOCO_VERSION_MINOR   := 0
 FLOPOCO_VERSION_PATCH   := 0
@@ -421,9 +426,11 @@ $(SCALP): $(SCALP_DEPENDENCIES)
 	@mkdir -p $(SCALP_BINARY_DIR)
 	@git clone $(SCALP_GIT) $(SCALP_SOURCE_DIR)
 	@cd $(SCALP_SOURCE_DIR)
+# temporary: ------------------------------------------------------------------
 	@patch -p0 -f CMakeExtensions/FindCPLEX.cmake $(SCALP_FIND_CPLEX_PATCH)
 	@patch -p0 -f CMakeExtensions/FindGurobi.cmake $(SCALP_FIND_GUROBI_PATCH)
 	@patch -p0 -f CMakeExtensions/FindSCIP.cmake $(SCALP_FIND_SCIP_PATCH)
+# -----------------------------------------------------------------------------
 	@cmake -B build -G$(CMAKE_GENERATOR)		    \
 	       -DCMAKE_INSTALL_PREFIX=$(SCALP_BINARY_DIR)   \
 	       $(SCALP_CMAKE_OPTIONS)
