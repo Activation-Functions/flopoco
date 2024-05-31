@@ -70,6 +70,15 @@ WITH_SCIP ?= ON
 # Adds NVC and its dependencies to the build process (OFF by default)
 WITH_NVC ?= OFF
 
+# Builds in RELEASE mode by default, otherwise, user can set it to 'DEBUG'
+CONFIG ?= RELEASE
+
+ifeq ($(CONFIG), DEBUG) # -------------------------
+    CMAKE_BUILD_TYPE := -DCMAKE_BUILD_TYPE=Debug
+else
+    CMAKE_BUILD_TYPE := -DCMAKE_BUILD_TYPE=Release
+endif # -------------------------------------------
+
 $(call static_info, $(B)CMAKE_GENERATOR$(N): $(CMAKE_GENERATOR))
 $(call static_info, $(B)PREFIX$(N): $(PREFIX))
 $(call static_info, $(B)NVC building$(N): $(WITH_NVC))
@@ -195,7 +204,6 @@ docker: $(DOCKERFILE)
 # -----------------------------------------------------------
 ifeq ($(OS_ID), $(filter $(OS_ID), ubuntu debian))
 # -----------------------------------------------------------
-    SYSDEPS += git
     SYSDEPS += g++
     SYSDEPS += cmake
     SYSDEPS += ninja-build
@@ -235,16 +243,15 @@ else ifeq ($(OS_ID), arch)
 # Using AUR with docker:
 # docker pull greyltc/archlinux-aur:yay
 # -----------------------------------------------------------
-    SYSDEPS += git
-    SYSDEPS += gcc
-    SYSDEPS += cmake
-    SYSDEPS += ninja
-    SYSDEPS += gmp
-    SYSDEPS += mpfr
-    SYSDEPS += mpfi
-    SYSDEPS += flex
-    SYSDEPS += boost
-    SYSDEPS += pkgconf
+    SYSDEPS += gcc      # pacman
+    SYSDEPS += cmake    # pacman
+    SYSDEPS += ninja    # pacman
+    SYSDEPS += gmp      # pacman
+    SYSDEPS += mpfr     # pacman
+    SYSDEPS += mpfi     # pacman
+    SYSDEPS += flex     # pacman
+    SYSDEPS += boost    # pacman
+    SYSDEPS += pkgconf  # pacman
     SYSDEPS += sollya-git # broken
 
     define sysdeps_cmd
@@ -254,7 +261,6 @@ else ifeq ($(OS_ID), arch)
 # -----------------------------------------------------------
 else ifeq ($(OS_ID), alpine)
 # -----------------------------------------------------------
-    SYSDEPS += git
     SYSDEPS += gcc
     SYSDEPS += cmake
     SYSDEPS += automake
@@ -275,7 +281,6 @@ else ifeq ($(OS_ID), macos)
     MACOS_PKG_MANAGER ?= brew
 # -----------------------------------------------------------
     # Common to both package managers (brew & port):
-    SYSDEPS += git          # brew: ok | macports: ok
     SYSDEPS += wget         # brew: ok | macports: ok
     SYSDEPS += cmake        # brew: ok | macports: ok
     SYSDEPS += gmp          # brew: ok | macports: ok
@@ -344,7 +349,8 @@ $(SCIP):
 	@cd $(SCIP_SOURCE_DIR)
 	@cmake -B build -G$(CMAKE_GENERATOR)		    \
 	       -DAUTOBUILD=ON				    \
-	       -DCMAKE_INSTALL_PREFIX=$(SCIP_BINARY_DIR)
+	       -DCMAKE_INSTALL_PREFIX=$(SCIP_BINARY_DIR)    \
+	       $(CMAKE_BUILD_TYPE)
 	@cmake --build build --target install
 
 install-scip: $(SCIP)
@@ -378,6 +384,7 @@ scalp: $(SCALP)
 
 SCALP_DEPENDENCIES += $(SCALP_CMAKE_PATCH)
 SCALP_CMAKE_OPTIONS += -DUSE_LPSOLVE=OFF
+SCALP_CMAKE_OPTIONS += $(CMAKE_BUILD_TYPE)
 
 # -----------------------------------------------
 ifeq (GUROBI, $(filter GUROBI, $(SCALP_BACKEND)))
@@ -433,7 +440,7 @@ ifeq ($(OS_ID), macos) # ------------------------------------
     # additional flags:
     WCPG_MACOS_FLAGS += -I/usr/local/opt/lapack/include
     WCPG_MACOS_FLAGS += -L/usr/local/opt/lapack/lib
-    WCPG_CONFIGURE_FLAGS += --with-lapack=/usr/local/opt/lapack"
+    WCPG_CONFIGURE_FLAGS += --with-lapack=/usr/local/opt/lapack
     WCPG_CONFIGURE_FLAGS += CFLAGS="$(WCPG_MACOS_FLAGS)"
 endif # -----------------------------------------------------
 
@@ -479,7 +486,8 @@ $(PAGSUITE): $(SCALP)
 	@cd $(PAGSUITE_SOURCE_DIR)
 	@cmake -B build -G$(CMAKE_GENERATOR)			\
 	       -DSCALP_PREFIX_PATH=$(SCALP_BINARY_DIR)		\
-	       -DCMAKE_INSTALL_PREFIX=$(PAGSUITE_BINARY_DIR)
+	       -DCMAKE_INSTALL_PREFIX=$(PAGSUITE_BINARY_DIR)	\
+	       $(CMAKE_BUILD_TYPE)
 	@cmake --build build --target install
 
 install-pagsuite: $(PAGSUITE)
@@ -534,7 +542,8 @@ $(FLOPOCO): $(FLOPOCO_DEPENDENCIES)
 	       -DWCPG_LOCAL=$(WCPG_BINARY_DIR)	    \
 	       -DSCALP_LOCAL=$(SCALP_BINARY_DIR)    \
 	       -DPAG_LOCAL=$(PAGSUITE_BINARY_DIR)   \
-	       -DCMAKE_INSTALL_PREFIX=$(PREFIX)
+	       -DCMAKE_INSTALL_PREFIX=$(PREFIX)	    \
+	       $(CMAKE_BUILD_TYPE)
 	@cmake --build build
 	$(call shell_info, Adding 'flopoco' $(B)symlink$(N)' in repository's root directory)
 	@ln -s $(FLOPOCO) $(MKROOT)
