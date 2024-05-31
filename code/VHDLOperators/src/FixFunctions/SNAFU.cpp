@@ -181,11 +181,9 @@ namespace flopoco
     correctlyRounded = false;  // default is faithful
 
     if(adhocCompression == Compression::Enabled) {
-      signedIn = false;        // We known how to exploit the symmetries
       function = &delta;       // The function to really approximate is the delta one, the rest is only tricks
     } else {
       // Respect the whishes of the user
-      signedIn = true;
       function = &base;
     }
 
@@ -290,6 +288,8 @@ namespace flopoco
 
     // If we inted on using symmetry, only send the absolute value (modulo -1) in the operator
     if(enableSymmetry) {
+      signedIn = false;  // We known how to exploit the symmetries
+
       // Compute the absolute value of X
       size_t x = in;
       size_t a = ++in;
