@@ -27,7 +27,7 @@ make_squid:
     - squid
   before_script:
     - apt update
-    - apt install -y make sudo
+    - apt install -y git make sudo
   script:
     - make
   only:
