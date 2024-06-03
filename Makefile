@@ -363,12 +363,12 @@ sysdeps:
 SCIP_GIT := https://github.com/scipopt/scip.git
 SCIP_SOURCE_DIR := $(BUILD_DEPENDENCIES_SOURCE_DIR)/scip
 SCIP_BINARY_DIR := $(BUILD_DEPENDENCIES_BINARY_DIR)/scip
-SCIP := $(SCIP_BINARY_DIR)/lib/libscip.$(dylib)
+SCIP_LIBRARIES := $(SCIP_BINARY_DIR)/lib/libscip.$(dylib)
 
-scip: $(SCIP)
+scip: $(SCIP_LIBRARIES)
 
 .ONESHELL:
-$(SCIP):
+$(SCIP_LIBRARIES):
 	$(call shell_info, Fetching and building $(B)SCIP$(N) library)
 	@mkdir -p $(SCIP_BINARY_DIR)
 	@git clone $(SCIP_GIT) $(SCIP_SOURCE_DIR)
@@ -380,9 +380,9 @@ $(SCIP):
 	       $(CMAKE_BUILD_TYPE)
 	@cmake --build build --target install -j 8
 
-install-scip: $(SCIP)
-	$(call shell_info, Installing $(B)SCIP$(N) libraries ($(SCIP)) in $(PREFIX))
-	@cp $(SCIP) $(PREFIX)/lib
+install-scip: $(SCIP_LIBRARIES)
+	$(call shell_info, Installing $(B)SCIP$(N) libraries ($(SCIP_LIBRARIES)) in $(PREFIX))
+	@cp $(SCIP_LIBRARIES) $(PREFIX)/lib
 
 # -----------------------------------------------------------------------------
 .PHONY: gurobi
@@ -406,10 +406,13 @@ SCALP_FIND_GUROBI_PATCH := $(MKROOT)/tools/scalp_findgurobi.patch
 SCALP_FIND_CPLEX_PATCH  := $(MKROOT)/tools/scalp_findcplex.patch
 SCALP_FIND_SCIP_PATCH   := $(MKROOT)/tools/scalp_findscip.patch
 
-SCALP += $(SCALP_BINARY_DIR)/lib/libScaLP.$(dylib)
-scalp: $(SCALP)
+SCALP_LIBRARIES += $(SCALP_BINARY_DIR)/lib/libScaLP.$(dylib)
+scalp: $(SCALP_LIBRARIES)
 
-SCALP_DEPENDENCIES += $(SCALP_CMAKE_PATCH)
+SCALP_DEPENDENCIES += $(SCALP_FIND_GUROBI_PATCH)
+SCALP_DEPENDENCIES += $(SCALP_FIND_CPLEX_PATCH)
+SCALP_DEPENDENCIES += $(SCALP_FIND_SCIP_PATCH)
+
 SCALP_CMAKE_OPTIONS += -DUSE_LPSOLVE=OFF
 SCALP_CMAKE_OPTIONS += $(CMAKE_BUILD_TYPE)
 
@@ -418,18 +421,18 @@ ifeq (GUROBI, $(filter GUROBI, $(SCALP_BACKEND)))
 # -----------------------------------------------
     SCALP_DEPENDENCIES += $(GUROBI)
     SCALP_CMAKE_OPTIONS += -DGUROBI_ROOT_DIR=$(GUROBI_ROOT_DIR)
-    SCALP += $(SCALP_BINARY_DIR)/lib/libScaLP-Gurobi.$(dylib)
+    SCALP_LIBRARIES += $(SCALP_BINARY_DIR)/lib/libScaLP-Gurobi.$(dylib)
 endif
 # -------------------------------------------
 ifeq (SCIP, $(filter SCIP, $(SCALP_BACKEND)))
 # -------------------------------------------
-    SCALP_DEPENDENCIES += $(SCIP)
+    SCALP_DEPENDENCIES += scip
     SCALP_CMAKE_OPTIONS += -DSCIP_ROOT_DIR=$(SCIP_BINARY_DIR)
-    SCALP += $(SCALP_BINARY_DIR)/lib/libScaLP-SCIP.$(dylib)
+    SCALP_LIBRARIES += $(SCALP_BINARY_DIR)/lib/libScaLP-SCIP.$(dylib)
 endif
 
 .ONESHELL:
-$(SCALP): $(SCALP_DEPENDENCIES)
+$(SCALP_LIBRARIES): $(SCALP_DEPENDENCIES)
 	$(call shell_info, Fetching and building $(B)ScaLP$(N) library)
 	@mkdir -p $(SCALP_BINARY_DIR)
 	@git clone $(SCALP_GIT) $(SCALP_SOURCE_DIR)
@@ -444,9 +447,9 @@ $(SCALP): $(SCALP_DEPENDENCIES)
 	       $(SCALP_CMAKE_OPTIONS)
 	@cmake --build build --target install
 
-install-scalp: $(SCALP)
-	$(call shell_info, Installing $(B)SCALP$(N) libraries ($(SCALP)) in $(PREFIX))
-	@cp $(SCALP) $(PREFIX)/lib
+install-scalp: $(SCALP_LIBRARIES)
+	$(call shell_info, Installing $(B)SCALP$(N) libraries ($(SCALP_LIBRARIES)) in $(PREFIX))
+	@cp $(SCALP_LIBRARIES) $(PREFIX)/lib
 
 # -----------------------------------------------------------------------------
 .PHONY: wcpg
@@ -457,9 +460,9 @@ WCPG_GIT := https://github.com/fixif/WCPG
 WCPG_SOURCE_DIR := $(BUILD_DEPENDENCIES_SOURCE_DIR)/wcpg
 WCPG_BINARY_DIR := $(BUILD_DEPENDENCIES_BINARY_DIR)/wcpg
 
-WCPG += $(WCPG_BINARY_DIR)/lib/libwcpg.$(dylib).0.0.9
-WCPG += $(WCPG_BINARY_DIR)/lib/libwcpg.$(dylib).0
-WCPG += $(WCPG_BINARY_DIR)/lib/libwcpg.$(dylib)
+WCPG_LIBRARIES += $(WCPG_BINARY_DIR)/lib/libwcpg.$(dylib).0.0.9
+WCPG_LIBRARIES += $(WCPG_BINARY_DIR)/lib/libwcpg.$(dylib).0
+WCPG_LIBRARIES += $(WCPG_BINARY_DIR)/lib/libwcpg.$(dylib)
 
 ifeq ($(OS_ID), macos) # ------------------------------------
     # On macOS, for some reason, lapack homebrew installation
@@ -471,10 +474,10 @@ ifeq ($(OS_ID), macos) # ------------------------------------
     WCPG_CONFIGURE_FLAGS += CFLAGS="$(WCPG_MACOS_FLAGS)"
 endif # -----------------------------------------------------
 
-wcpg: $(WCPG)
+wcpg: $(WCPG_LIBRARIES)
 
 .ONESHELL:
-$(WCPG):
+$(WCPG_LIBRARIES):
 	$(call shell_info, Fetching and building $(B)WCPG$(N) library)
 	@mkdir -p $(WCPG_BINARY_DIR)
 	@git clone $(WCPG_GIT) $(WCPG_SOURCE_DIR)
@@ -483,9 +486,9 @@ $(WCPG):
 	@./configure --prefix=$(WCPG_BINARY_DIR) $(WCPG_CONFIGURE_FLAGS)
 	@make -j8 install
 
-install-wcpg: $(WCPG)
-	$(call shell_info, Installing $(B)WCPG$(N) libraries ($(WCPG)) in $(PREFIX))
-	@cp $(WCPG) $(PREFIX)/lib
+install-wcpg: $(WCPG_LIBRARIES)
+	$(call shell_info, Installing $(B)WCPG$(N) libraries ($(WCPG_LIBRARIES)) in $(PREFIX)/lib)
+	@cp $(WCPG_LIBRARIES) $(PREFIX)/lib
 
 # -----------------------------------------------------------------------------
 .PHONY: pagsuite
@@ -497,16 +500,16 @@ install-wcpg: $(WCPG)
 PAGSUITE_GIT := https://gitlab.com/kumm/pagsuite.git
 PAGSUITE_SOURCE_DIR := $(BUILD_DEPENDENCIES_SOURCE_DIR)/pagsuite
 PAGSUITE_BINARY_DIR := $(BUILD_DEPENDENCIES_BINARY_DIR)/pagsuite
-PAGSUITE += $(PAGSUITE_BINARY_DIR)/lib/libpag.$(dylib)
-PAGSUITE += $(PAGSUITE_BINARY_DIR)/lib/libpag.$(dylib).0
-PAGSUITE += $(PAGSUITE_BINARY_DIR)/lib/libpag.$(dylib).2.1.0
-PAGSUITE += $(PAGSUITE_BINARY_DIR)/lib/librpag.$(dylib)
-PAGSUITE += $(PAGSUITE_BINARY_DIR)/lib/liboscm.$(dylib)
+PAGSUITE_LIBRARIES += $(PAGSUITE_BINARY_DIR)/lib/libpag.$(dylib)
+PAGSUITE_LIBRARIES += $(PAGSUITE_BINARY_DIR)/lib/libpag.$(dylib).0
+PAGSUITE_LIBRARIES += $(PAGSUITE_BINARY_DIR)/lib/libpag.$(dylib).2.1.0
+PAGSUITE_LIBRARIES += $(PAGSUITE_BINARY_DIR)/lib/librpag.$(dylib)
+PAGSUITE_LIBRARIES += $(PAGSUITE_BINARY_DIR)/lib/liboscm.$(dylib)
 
-pagsuite: $(PAGSUITE)
+pagsuite: $(PAGSUITE_LIBRARIES)
 
 .ONESHELL:
-$(PAGSUITE): $(SCALP)
+$(PAGSUITE_LIBRARIES): scalp
 	$(call shell_info, Fetching and building $(B)PAGSuite$(N) library)
 	@mkdir -p $(PAGSUITE_BINARY_DIR)
 	@git clone $(PAGSUITE_GIT) $(PAGSUITE_SOURCE_DIR)
@@ -517,9 +520,9 @@ $(PAGSUITE): $(SCALP)
 	       $(CMAKE_BUILD_TYPE)
 	@cmake --build build --target install
 
-install-pagsuite: $(PAGSUITE)
-	$(call shell_info, Installing $(B)PAGSuite$(N) libraries ($(PAGSUITE)) in $(PREFIX))
-	@cp $(PAGSUITE) $(PREFIX)/lib
+install-pagsuite: $(PAGSUITE_LIBRARIES)
+	$(call shell_info, Installing $(B)PAGSuite$(N) libraries ($(PAGSUITE_LIBRARIES)) in $(PREFIX))
+	@cp $(PAGSUITE_LIBRARIES) $(PREFIX)/lib
 
 # -----------------------------------------------------------------------------
 .PHONY: nvc
@@ -546,9 +549,11 @@ $(NVC):
 # -----------------------------------------------------------------------------
 .PHONY: dependencies
 # -----------------------------------------------------------------------------
-FLOPOCO_DEPENDENCIES += $(SCALP)
-FLOPOCO_DEPENDENCIES += $(WCPG)
-FLOPOCO_DEPENDENCIES += $(PAGSUITE)
+
+# PAGSuite needs scalp anyway.
+#FLOPOCO_DEPENDENCIES += scalp
+FLOPOCO_DEPENDENCIES += wcpg
+FLOPOCO_DEPENDENCIES += pagsuite
 
 ifeq ($(WITH_NVC), ON)
     FLOPOCO_DEPENDENCIES += $(NVC)
