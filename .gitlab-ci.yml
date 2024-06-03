@@ -1,3 +1,8 @@
+
+stages:
+  - build
+  - deploy
+
 pages:
   stage: deploy
   script:
@@ -15,11 +20,15 @@ pages:
       - master
     changes:
       - doc/web/**/*
-make:
+
+make_squid:
   stage: build
-  script:
+  tags:
+    - squid
+  before_script:
     - apt update
-    - yes | apt install git make sudo
+    - apt install -y make sudo
+  script:
     - make
   only:
     refs:
