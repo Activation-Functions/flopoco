@@ -1,0 +1,133 @@
+diff --git a/CMakeExtensions/FindCPLEX.cmake b/CMakeExtensions/FindCPLEX.cmake
+index 05ea21d..1a0895b 100644
+--- a/CMakeExtensions/FindCPLEX.cmake
++++ b/CMakeExtensions/FindCPLEX.cmake
+@@ -11,10 +11,9 @@ if(NOT CPLEX_ROOT_DIR)
+     message(STATUS "CPLEX Root Dir not set by user.")
+ else()
+     message(STATUS "CPLEX Root Dir set by user: " ${CPLEX_ROOT_DIR})
++    STRING(REGEX MATCH "[0-9]+" CPLEX_VERSION ${CPLEX_ROOT_DIR})
+ endif()
+ 
+-STRING(REGEX MATCH "[0-9]+" CPLEX_VERSION ${CPLEX_ROOT_DIR})
+-
+ if (WIN32)
+     execute_process(COMMAND cmd /C set CPLEX_STUDIO_DIR OUTPUT_VARIABLE CPLEX_STUDIO_DIR_VAR ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
+ 
+diff --git a/CMakeExtensions/FindGurobi.cmake b/CMakeExtensions/FindGurobi.cmake
+index 00c0f76..3944c18 100644
+--- a/CMakeExtensions/FindGurobi.cmake
++++ b/CMakeExtensions/FindGurobi.cmake
+@@ -10,6 +10,10 @@ if(NOT GUROBI_ROOT_DIR)
+     message(STATUS "Gurobi Root Dir not set by user.")
+ else ()
+     message(STATUS "Gurobi Root Dir set by user: " ${GUROBI_ROOT_DIR})
++    # Finds out which Gurobi Version is linked:
++    string(REGEX MATCH "[0-9]+" GUROBI_VERSION "${GUROBI_ROOT_DIR}")
++    string(SUBSTRING ${GUROBI_VERSION} 0 2 GUROBI_VERSION_SHORT_1)
++    string(SUBSTRING ${GUROBI_VERSION} 0 3 GUROBI_VERSION_SHORT_2)
+ endif()
+ 
+ unset(GUROBI_CPP_INCLUDE_DIR CACHE)
+@@ -17,11 +21,6 @@ unset(GUROBI_C_INCLUDE_DIR CACHE)
+ unset(GUROBI_CPP_LIBRARY CACHE)
+ unset(GUROBI_C_LIBRARY CACHE)
+ 
+-# Finds out which Gurobi Version is linked:
+-string(REGEX MATCH "[0-9]+" GUROBI_VERSION "${GUROBI_ROOT_DIR}")
+-string(SUBSTRING ${GUROBI_VERSION} 0 2 GUROBI_VERSION_SHORT_1)
+-string(SUBSTRING ${GUROBI_VERSION} 0 3 GUROBI_VERSION_SHORT_2)
+-
+ find_path(GUROBI_CPP_INCLUDE_DIR gurobi_c++.h
+         HINTS ${GUROBI_ROOT_DIR}/include
+         $ENV{GUROBI_HOME}
+diff --git a/CMakeExtensions/FindSCIP.cmake b/CMakeExtensions/FindSCIP.cmake
+index 55fc5ec..ae29a9e 100644
+--- a/CMakeExtensions/FindSCIP.cmake
++++ b/CMakeExtensions/FindSCIP.cmake
+@@ -5,7 +5,6 @@
+ unset(SCIP_LIBRARY CACHE)
+ #set(SCIP_INCLUDE_DIRS "" CACHE STRING "the paths to the scip headers")
+ unset(SCIP_INCLUDE_DIR CACHE)
+-unset(SOPLEX_LIBRARY CACHE)
+ unset(Z_LIBRARY CACHE)
+ 
+ if(NOT SCIP_ROOT_DIR)
+@@ -20,24 +19,21 @@ find_path(SCIP_INCLUDE_DIR scip/scip.h
+ #message(STATUS "SCIP Headers: ${SCIP_INCLUDE_DIR}")
+ 
+ find_library(SCIP_LIBRARY scip
+-        HINTS ${SCIP_ROOT_DIR}/lib64
+-        )
++     HINTS ${SCIP_ROOT_DIR}/lib64
++           ${SCIP_ROOT_DIR}/lib
++)
+ #message(STATUS "SCIP Library: ${SCIP_LIBRARY}")
+ 
+-find_library(SOPLEX_LIBRARY soplex
+-        HINTS ${SCIP_ROOT_DIR}/lib64
+-        )
+-#message(STATUS "Soplex Library: ${SOPLEX_LIBRARY}")
+-
+ find_library(Z_LIBRARY z
+-        HINTS ${SCIP_ROOT_DIR}/lib64
+-        )
++    HINTS ${SCIP_ROOT_DIR}/lib64
++          ${SCIP_ROOT_DIR}/lib
++)
+ #message(STATUS "Z Library: ${Z_LIBRARY}")
+ 
+ include(FindPackageHandleStandardArgs)
+ find_package_handle_standard_args(SCIP
+         DEFAULT_MSG
+-        SCIP_LIBRARY SOPLEX_LIBRARY Z_LIBRARY
++        SCIP_LIBRARY Z_LIBRARY
+         SCIP_INCLUDE_DIR )
+ 
+ #message(STATUS "SCIP_FOUND: " ${SCIP_FOUND})
+@@ -46,7 +42,7 @@ IF (SCIP_FOUND)
+     message(STATUS "Found SCIP")
+     set(USE_SCIP ON CACHE BOOL "Switching SCIP on")
+     SET(SCIP_INCLUDE_DIRS ${SCIP_INCLUDE_DIR})
+-    SET(SCIP_LIBRARIES ${SCIP_LIBRARY} ${SCIP90_LIBRARY} ${SOPLEX_LIBRARY} ${Z_LIBRARY})
++    SET(SCIP_LIBRARIES ${SCIP_LIBRARY} ${SCIP90_LIBRARY} ${Z_LIBRARY})
+     IF (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+     ENDIF (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+ ELSE()
+@@ -54,4 +50,4 @@ ELSE()
+     message(STATUS "Switching SCIP off")
+ ENDIF (SCIP_FOUND)
+ 
+-mark_as_advanced(SCIP_INCLUDE_DIR SCIP_LIBRARY SOPLEX_LIBRARY Z_LIBRARY)
+\ No newline at end of file
++mark_as_advanced(SCIP_INCLUDE_DIR SCIP_LIBRARY Z_LIBRARY)
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 20de4bd..192dd54 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -3,6 +3,7 @@ cmake_minimum_required (VERSION 3.5)
+ project (ScaLP)
+ 
+ set(CMAKE_MACOSX_RPATH 1)
++set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+ 
+ # Syntax errors are fatal
+ cmake_policy(SET CMP0010 NEW)
+@@ -68,7 +69,7 @@ include_directories ("${PROJECT_SOURCE_DIR}/src")
+ # Execute Options #
+ ###################
+ # Deactivate C++11-abi?
+-if(OLD_CXX_ABI) 
++if(OLD_CXX_ABI)
+   add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
+ endif()
+ 
+@@ -119,6 +120,8 @@ add_library(ScaLP ${LIBRARY_TYPE}
+   ${PARSER_SOURCES}
+ )
+ 
++set_target_properties(ScaLP PROPERTIES INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/lib)
++
+ #####################
+ # Backend-Libraries #
+ #####################

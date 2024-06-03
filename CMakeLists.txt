@@ -25,8 +25,9 @@ cmake_policy(SET CMP0115 NEW) # Allow source file extension deduction
 # Add module to find custom dependencies
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 list(APPEND CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/lib)
-
 message(STATUS "CMAKE_INSTALL_RPATH: ${CMAKE_INSTALL_RPATH}")
+
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 #Compilation flags
 string(APPEND CMAKE_CXX_FLAGS_DEBUG_INIT "-Wall")
