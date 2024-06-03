@@ -588,11 +588,12 @@ $(FLOPOCO): $(FLOPOCO_DEPENDENCIES)
 .ONESHELL:
 .PHONY: install
 # -----------------------------------------------------------------------------
-install: $(FLOPOCO)
+install: $(FLOPOCO) install-pagsuite	\
+		    install-wcpg	\
+		    install-scalp	\
+		    install-scip
 	@cd $(MKROOT)
 	@cmake --build build --target install
-	$(call shell_info, Installing $(B)dependencies$(N) ($(FLOPOCO_DEPENDENCIES)) to $(PREFIX))
-	@cp $(FLOPOCO_DEPENDENCIES) $(PREFIX)/lib
 
 # -----------------------------------------------------------------------------
 .ONESHELL:
