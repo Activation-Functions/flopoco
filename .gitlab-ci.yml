@@ -18,6 +18,8 @@ pages:
 make:
   stage: build
   script:
+    - apt update
+    - yes | apt install git make sudo
     - make
   only:
     refs:
