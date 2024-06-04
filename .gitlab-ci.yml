@@ -39,7 +39,7 @@ build_squid_macos:
   tags:
     - macos
   script:
-    - make
+    - gmake
   only:
     refs:
     - dev/buildscript
