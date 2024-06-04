@@ -21,7 +21,7 @@ pages:
     changes:
       - doc/web/**/*
 
-make_squid:
+build_squid_linux:
   stage: build
   tags:
     - squid
@@ -34,3 +34,12 @@ make_squid:
     refs:
     - dev/buildscript
 
+build_squid_macos:
+  stage: build
+  tags:
+    - macos
+  script:
+    - make
+  only:
+    refs:
+    - dev/buildscript
