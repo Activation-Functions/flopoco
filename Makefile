@@ -562,7 +562,7 @@ dependencies: $(FLOPOCO_DEPENDENCIES)
 .PHONY: flopoco
 # -----------------------------------------------------------------------------
 
-FLOPOCO := $(MKROOT)/build/code/FloPoCoBin/flopoco
+FLOPOCO := $(MKROOT)/build/bin/flopoco
 flopoco: $(FLOPOCO)
 
 $(FLOPOCO): $(FLOPOCO_DEPENDENCIES)
@@ -575,7 +575,7 @@ $(FLOPOCO): $(FLOPOCO_DEPENDENCIES)
 	       $(CMAKE_BUILD_TYPE)
 	@cmake --build build -j 8
 	$(call shell_info, Adding 'flopoco' $(B)symlink$(N)' in repository's root directory)
-	@ln -s $(FLOPOCO) $(MKROOT)
+	@ln -fs $(FLOPOCO) $(MKROOT)
 	$(call shell_info, Building the $(B)HTML documentation$(N) in doc/web)
 	$(MKROOT)/flopoco BuildHTMLDoc
 	$(call shell_info, Now running $(B)FloPoCo$(N))
