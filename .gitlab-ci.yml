@@ -21,10 +21,10 @@ pages:
     changes:
       - doc/web/**/*
 
-build_squid_linux:
+build_squid_debian:
   stage: build
   tags:
-    - squid
+    - debian
   before_script:
     - apt update
     - apt install -y git make sudo
