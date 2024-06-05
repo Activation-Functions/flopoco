@@ -52,7 +52,7 @@ ifneq ($(CONFIG), docker) # ------------------
 endif # --------------------------------------
 
 ifeq ($(shell which ninja),)
-    CMAKE_GENERATOR ?= Unix Makefiles
+    CMAKE_GENERATOR ?= "Unix Makefiles"
 else
     CMAKE_GENERATOR ?= Ninja
 endif
