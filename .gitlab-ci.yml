@@ -29,7 +29,7 @@ build_squid_debian:
     - apt update
     - apt install -y git make sudo
   script:
-    - make
+    - make sysdeps flopoco
   only:    
     - merge_requests
     - dev/master
@@ -39,7 +39,7 @@ build_squid_macos:
   tags:
     - macos
   script:
-    - gmake
+    - gmake sysdeps flopoco
   only:
     - merge_requests
     - dev/master
