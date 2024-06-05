@@ -31,8 +31,10 @@ build_squid_debian:
   script:
     - make sysdeps flopoco
   only:    
-    - merge_requests
-    - dev/master
+    refs:
+      - merge_requests
+    variables:
+      - $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "dev/master"
 
 build_squid_macos:
   stage: build
@@ -41,5 +43,7 @@ build_squid_macos:
   script:
     - gmake sysdeps flopoco
   only:
+    refs:
     - merge_requests
-    - dev/master
+    variables:
+    - $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "dev/master"
