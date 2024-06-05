@@ -30,8 +30,8 @@ build_squid_debian:
     - apt install -y git make sudo
   script:
     - make
-  only:
-    refs:
+  only:    
+    - merge_requests
     - dev/master
 
 build_squid_macos:
@@ -41,5 +41,5 @@ build_squid_macos:
   script:
     - gmake
   only:
-    refs:
+    - merge_requests
     - dev/master
