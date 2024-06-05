@@ -51,8 +51,11 @@ ifneq ($(CONFIG), docker) # ------------------
     SUDO := sudo
 endif # --------------------------------------
 
-#TODO: detect ninja, or else Unix Makefiles
-CMAKE_GENERATOR ?= Ninja
+ifeq ($(shell which ninja),)
+    CMAKE_GENERATOR ?= "Unix Makefiles"
+else
+    CMAKE_GENERATOR ?= Ninja
+endif
 
 # GUROBI_HOME can be set as an environment variable in the user's shell
 # resource file (as recommended in the Gurobi installation manual)
