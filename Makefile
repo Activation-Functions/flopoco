@@ -168,7 +168,10 @@ define docker_script
     RUN apt update
     RUN yes | apt install git make sudo
     RUN git clone https://gitlab.com/flopoco/flopoco
-    RUN cd flopoco && git checkout $(DOCKER_BRANCH) && make && make install
+    RUN cd flopoco \
+     && git checkout $(DOCKER_BRANCH) \
+     && make sysdeps flopoco \
+     && make install
 endef
 # -------------------------------------------------------------------------------
 else ifeq ($(DOCKER_IMAGE), ubuntu)
@@ -180,9 +183,9 @@ define docker_script
     RUN yes | apt install git make sudo
     RUN git clone https://gitlab.com/flopoco/flopoco
     RUN cd flopoco \
-    && git checkout $(DOCKER_BRANCH) \
-    && make DEBIAN_FRONTEND=noninteractive \
-    && make install
+     && git checkout $(DOCKER_BRANCH) \
+     && make sysdeps flopoco DEBIAN_FRONTEND=noninteractive \
+     && make install
 endef
 # -------------------------------------------------------------------------------
 else ifeq ($(DOCKER_IMAGE), archlinux)
@@ -192,7 +195,10 @@ define docker_script
     RUN pacman -Syu --noconfirm
     RUN pacman --noconfirm -S git make sudo
     RUN git clone https://gitlab.com/flopoco/flopoco
-    RUN cd flopoco && git checkout $(DOCKER_BRANCH) && make && make install
+    RUN cd flopoco \
+     && git checkout $(DOCKER_BRANCH) \
+     && make sysdeps flopoco \
+     && make install
 endef
 # -------------------------------------------------------------------------------
 else ifeq ($(DOCKER_IMAGE), alpine)
@@ -203,7 +209,10 @@ define docker_script
     RUN apk add git make
     RUN echo '' >> /etc/apk/repositories
     RUN git clone https://gitlab.com/flopoco/flopoco
-    RUN cd flopoco && git checkout $(DOCKER_BRANCH) && make && make install
+    RUN cd flopoco \
+     && git checkout $(DOCKER_BRANCH) \
+     && make sysdeps flopoco \
+     && make install
 endef
 endif
 
