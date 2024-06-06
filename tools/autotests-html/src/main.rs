@@ -2,7 +2,7 @@ use std::fs;
 use build_html::{Html, HtmlContainer, TableCell, TableCellType, TableRow};
 use serde::{Serialize, Deserialize, Deserializer};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Default, Debug, Serialize, Deserialize)]
 struct OperatorResults {
     #[serde(rename(deserialize = "Operator Name"))]
     id: String,
@@ -41,7 +41,55 @@ fn create_cell(txt: impl ToString, color: &str) -> TableCell {
         )
 }
 
+fn add_html_row(op: &OperatorResults, table: &mut build_html::Table) {
+    // For each row:
+    let mut c0 = TableCell::new(TableCellType::Data)
+        .with_paragraph(&op.id);
+    let mut c1 = TableCell::new(TableCellType::Data)
+        .with_paragraph(op.ntests);
+    let mut c2 = TableCell::new(TableCellType::Data)
+        .with_paragraph(op.gen);
+    let mut c3 = TableCell::new(TableCellType::Data)
+        .with_paragraph(op.sim);
+    if op.ntests > 0 {
+        // If autotests are available
+        let mut gen_ok = false;
+        let mut sim_ok = false;
+        if op.gen == op.ntests {
+            // If all generation tests succeed:
+            c2 = create_cell(op.gen, "green");
+            gen_ok = true;
+        } else {
+            c2 = create_cell(op.gen, "red");
+        }
+        if op.sim == op.ntests {
+            // If all simulation tests succeed:
+            c3 = create_cell(op.sim, "green");
+            sim_ok = true;
+        } else {
+            c3 = create_cell(op.sim, "red");
+        }
+        if gen_ok && sim_ok {
+            // If both Generation and Simulation are OK,
+            // Highlight very cell in green
+            c0 = create_cell(&op.id, "green");
+        } else {
+            // Otherwise, set to red
+            c0 = create_cell(&op.id, "red");
+        }
+    }
+    table.add_custom_body_row(
+        TableRow::new()
+            .with_cell(c0)
+            .with_cell(c1)
+            .with_cell(c2)
+            .with_cell(c3)
+    );
+}
+
 fn main() {
+    let mut global = OperatorResults::default();
+    global.id = String::from("Total");
     let mut html_table = build_html::Table::new();
     // Read .csv file as String, from current directory:
     let csv = fs::read_to_string("summary.csv")
@@ -61,53 +109,13 @@ fn main() {
         Err(..) => ()
     }
     for record in reader.deserialize() {
-        // For each row:
         let op: OperatorResults = record.unwrap();
-        let mut c0 = TableCell::new(TableCellType::Data)
-            .with_paragraph(&op.id);
-        let mut c1 = TableCell::new(TableCellType::Data)
-            .with_paragraph(op.ntests);
-        let mut c2 = TableCell::new(TableCellType::Data)
-            .with_paragraph(op.gen);
-        let mut c3 = TableCell::new(TableCellType::Data)
-            .with_paragraph(op.sim);
-        if op.ntests > 0 {
-            // If autotests are available
-            let mut gen_ok = false;
-            let mut sim_ok = false;
-            if op.gen == op.ntests {
-                // If all generation tests succeed:
-                c2 = create_cell(op.gen, "green");
-                gen_ok = true;
-            } else {
-                c2 = create_cell(op.gen, "red");
-            }
-            if op.sim == op.ntests {
-                // If all simulation tests succeed:
-                c3 = create_cell(op.sim, "green");
-                sim_ok = true;
-            } else {
-                c3 = create_cell(op.sim, "red");
-            }
-            if gen_ok && sim_ok {
-                // If both Generation and Simulation are OK,
-                // Highlight very cell in green
-                c0 = create_cell(op.id, "green");
-                c1 = create_cell(op.ntests, "green");
-            } else {
-                // Otherwise, set to red
-                c0 = create_cell(op.id, "red");
-                c1 = create_cell(op.ntests, "red");
-            }
-        }
-        html_table.add_custom_body_row(
-            TableRow::new()
-                .with_cell(c0)
-                .with_cell(c1)
-                .with_cell(c2)
-                .with_cell(c3)
-        );
+        add_html_row(&op, &mut html_table);
+        global.ntests += op.ntests;
+        global.gen += op.gen;
+        global.sim += op.sim;
     }
+    add_html_row(&global, &mut html_table);
     let html = html_table.to_html_string();
     fs::write("autotests.html", &html).expect("Could not write HTML output");
     println!("'autotests.html' successfully generated!");
