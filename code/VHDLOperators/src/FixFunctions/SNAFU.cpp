@@ -413,7 +413,14 @@ namespace flopoco
            << " when X = " << getSignalByName("X")->valueToVHDL(mpz_class(1) << wIn - 1) << " else " << output(f) << ";" << endl;
     }
 
-    vhdl << tab << "Y <= " + output(out) + ";" << endl;
+    vhdl << tab << "Y <= " << output(out);
+
+    if(af == SiLU_P || af == GeLU_P) {
+      // FIXME: WTF ??????
+      vhdl << " + (" << zg(wOut - 1) << " & not(X" << of(wIn - 1) << "))";
+    }
+
+    vhdl << ";" << endl;
   }
 
 
