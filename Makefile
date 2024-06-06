@@ -47,15 +47,17 @@ endif # --------------------------------------
 
 $(call static_info, $(B)Make targets$(N): $(MAKECMDGOALS))
 
-ifneq ($(CONFIG), docker) # ------------------
+ifneq ($(CONFIG), docker) # -----------
+    # don't sudo in docker environments
     SUDO := sudo
-endif # --------------------------------------
+endif # -------------------------------
 
-ifeq ($(shell which ninja),)
+# Detect if ninja is available, otherwise, use Makefiles:
+ifeq ($(shell which ninja),) # --------
     CMAKE_GENERATOR ?= "Unix Makefiles"
-else
+else # --------------------------------
     CMAKE_GENERATOR ?= Ninja
-endif
+endif # -------------------------------
 
 # GUROBI_HOME can be set as an environment variable in the user's shell
 # resource file (as recommended in the Gurobi installation manual)
@@ -63,7 +65,12 @@ endif
 # $ make GUROBI_HOME=/opt/gurobi1102/linux64
 GUROBI_ROOT_DIR := $(GUROBI_HOME)
 
-# PREFIX used for system installation of the FloPoCo binaries:
+# By default, install a symlink of 'flopoco' binary in $(PREFIX)
+# when '$ make install' is used.
+# Otherwise, install all libraries and binaries in $(PREFIX)
+INSTALL_TYPE ?= symlink
+
+# PREFIX used for system installation of the FloPoCo binaries/symlink:
 PREFIX ?= /usr/local
 
 # If ON (default), the script will take care of fetching and building SCIP
@@ -84,6 +91,7 @@ endif # -------------------------------------------
 
 $(call static_info, $(B)CONFIG$(N): $(CONFIG))
 $(call static_info, $(B)CMAKE_GENERATOR$(N): $(CMAKE_GENERATOR))
+$(call static_info, $(B)INSTALL_TYPE$(N): $(INSTALL_TYPE))
 $(call static_info, $(B)PREFIX$(N): $(PREFIX))
 $(call static_info, $(B)NVC building$(N): $(WITH_NVC))
 
@@ -124,11 +132,14 @@ clean:
 
 # -----------------------------------------------------------------------------
 .PHONY: docker
+# Build docker images with the minimum required to run flopoco
+# flopoco binary will be installed system-wide.
 # -----------------------------------------------------------------------------
 
 DOCKER_IMAGE ?= debian
 DOCKER_IMAGE_SUPPORTED := ubuntu debian archlinux alpine
 
+# Check if the selected image is implemented in this script:
 ifeq (docker, $(filter docker, $(MAKECMDGOALS)))
     ifneq ($(DOCKER_IMAGE), $(filter $(DOCKER_IMAGE), $(DOCKER_IMAGE_SUPPORTED)))
         $(call static_error, Unsupported $(B)DOCKER_IMAGE$(N) $(DOCKER_IMAGE))
@@ -142,12 +153,12 @@ endif
 DOCKERFILE     := $(MKROOT)/Dockerfile
 DOCKER_BRANCH  ?= dev/master
 DOCKER_ARGS    += --no-cache
-
-ifdef DOCKER_PROGRESS_PLAIN
-    DOCKER_ARGS += --progress=plain
-endif
-
 FLOPOCO_DOCKER_TAG := flopoco:$(FLOPOCO_VERSION_FULL)-$(DOCKER_IMAGE)
+
+ifdef DOCKER_PROGRESS_PLAIN # --------------------------
+    # Display the full log of the image building process
+    DOCKER_ARGS += --progress=plain
+endif # ------------------------------------------------
 
 # -------------------------------------------------------------------------------
 ifeq ($(DOCKER_IMAGE), debian)
@@ -157,7 +168,10 @@ define docker_script
     RUN apt update
     RUN yes | apt install git make sudo
     RUN git clone https://gitlab.com/flopoco/flopoco
-    RUN cd flopoco && git checkout $(DOCKER_BRANCH) && make && make install
+    RUN cd flopoco \
+     && git checkout $(DOCKER_BRANCH) \
+     && make sysdeps flopoco \
+     && make install
 endef
 # -------------------------------------------------------------------------------
 else ifeq ($(DOCKER_IMAGE), ubuntu)
@@ -169,9 +183,9 @@ define docker_script
     RUN yes | apt install git make sudo
     RUN git clone https://gitlab.com/flopoco/flopoco
     RUN cd flopoco \
-    && git checkout $(DOCKER_BRANCH) \
-    && make DEBIAN_FRONTEND=noninteractive \
-    && make install
+     && git checkout $(DOCKER_BRANCH) \
+     && make sysdeps flopoco DEBIAN_FRONTEND=noninteractive \
+     && make install
 endef
 # -------------------------------------------------------------------------------
 else ifeq ($(DOCKER_IMAGE), archlinux)
@@ -181,7 +195,10 @@ define docker_script
     RUN pacman -Syu --noconfirm
     RUN pacman --noconfirm -S git make sudo
     RUN git clone https://gitlab.com/flopoco/flopoco
-    RUN cd flopoco && git checkout $(DOCKER_BRANCH) && make && make install
+    RUN cd flopoco \
+     && git checkout $(DOCKER_BRANCH) \
+     && make sysdeps flopoco \
+     && make install
 endef
 # -------------------------------------------------------------------------------
 else ifeq ($(DOCKER_IMAGE), alpine)
@@ -192,22 +209,21 @@ define docker_script
     RUN apk add git make
     RUN echo '' >> /etc/apk/repositories
     RUN git clone https://gitlab.com/flopoco/flopoco
-    RUN cd flopoco && git checkout $(DOCKER_BRANCH) && make && make install
+    RUN cd flopoco \
+     && git checkout $(DOCKER_BRANCH) \
+     && make sysdeps flopoco \
+     && make install
 endef
 endif
 
-DOCKERFILE := $(MKROOT)/Dockerfile
-FLOPOCO_DOCKER_TAG := flopoco:$(FLOPOCO_VERSION_FULL)-$(DOCKER_IMAGE)
-DOCKER_ARGS += --no-cache
-
-ifdef DOCKER_PROGRESS_PLAIN
-    DOCKER_ARGS += --progress=plain
-endif
-
+# First, generate the dockerfile, by calling the distro-dependent
+# 'docker_script' macro
 $(DOCKERFILE):
 	$(call shell_info, Generating $(B)Dockerfile$(N))
 	@echo '$(call docker_script)' > $(DOCKERFILE)
 
+# Build from the generated Dockerfile,
+# remove Dockerfile afterwards
 docker: $(DOCKERFILE)
 	$(call shell_info, Building docker image $(B)$(FLOPOCO_DOCKER_TAG)$(N))
 	@docker build $(DOCKER_ARGS) -t $(FLOPOCO_DOCKER_TAG) $(MKROOT)
@@ -215,7 +231,10 @@ docker: $(DOCKERFILE)
 
 # -----------------------------------------------------------
 .PHONY: sysdeps
-# OS-dependent package dependency lists
+# OS-dependent 'package-manager' dependency lists
+# This is used for building docker images, and for the CI
+# but it can be also directly called by the user, if the
+# OS is supported: $ make sysdeps flopoco
 # -----------------------------------------------------------
 ifeq ($(OS_ID), $(filter $(OS_ID), ubuntu debian))
 # -----------------------------------------------------------
@@ -274,8 +293,7 @@ else ifeq ($(OS_ID), arch)
     SYSDEPS += lapacke  # pacman
     SYSDEPS += fplll    # pacman
     SYSDEPS += libxml2  # pacman
-#    SYSDEPS += sollya-git # broken
-
+#    SYSDEPS += sollya-git # AUR, broken (?)
     define sysdeps_cmd
         yay -Syu
         yay -S $(SYSDEPS)
@@ -304,10 +322,10 @@ else ifeq ($(OS_ID), alpine)
     SYSDEPS += libxml2-dev
     SYSDEPS += libmpfi
     SYSDEPS += libmpfi-dev # edge/testing
-    SYSDEPS += fplll-dev
+    SYSDEPS += fplll-dev # not recognized correctly (TODO)
 # -----------------------------------------------------------
 else ifeq ($(OS_ID), macos)
-# macOS: homebrew (Anastasia) or macports (Martin)
+    # macOS: homebrew (default) or macports
     MACOS_PKG_MANAGER ?= brew
 # -----------------------------------------------------------
     # Common to both package managers (brew & port):
@@ -356,8 +374,7 @@ sysdeps:
 	$(call shell_info, Updating $(OS_ID) system $(B)dependencies$(N): $(SYSDEPS))
 	$(call sysdeps_cmd)
 
-# build fplll manually ?
-# for building sollya: autoreconf -fi ./configure and make
+# Note: for building sollya: autoreconf -fi ./configure and make
 
 # -----------------------------------------------------------------------------
 .PHONY: scip
@@ -439,9 +456,9 @@ $(SCALP_LIBRARIES): $(SCALP_DEPENDENCIES)
 	@mkdir -p $(SCALP_BINARY_DIR)
 	@git clone $(SCALP_GIT) $(SCALP_SOURCE_DIR)
 	@cd $(SCALP_SOURCE_DIR)
-# temporary: ------------------------------------------------------------------
+# temporary: ------------------------------------------------
 	@git apply $(SCALP_PATCH)
-# -----------------------------------------------------------------------------
+# -----------------------------------------------------------
 	@cmake -B build -G$(CMAKE_GENERATOR)		    \
 	       -DCMAKE_INSTALL_PREFIX=$(SCALP_BINARY_DIR)   \
 	       $(SCALP_CMAKE_OPTIONS)
@@ -591,12 +608,18 @@ $(FLOPOCO): $(FLOPOCO_DEPENDENCIES)
 .ONESHELL:
 .PHONY: install
 # -----------------------------------------------------------------------------
+ifeq ($(INSTALL_TYPE), symlink) # ---------------------------------------------
+install: $(FLOPOCO)
+	$(call shell_info, Installing $(B)flopoco symlink$(N) in $(PREFIX))
+	@ln -fs $(FLOPOCO) $(PREFIX)/bin
+else # ------------------------------------------------------------------------
 install: $(FLOPOCO) install-pagsuite	\
 		    install-wcpg	\
 		    install-scalp	\
 		    install-scip
 	@cd $(MKROOT)
 	@cmake --build build --target install
+endif
 
 # -----------------------------------------------------------------------------
 .ONESHELL:
