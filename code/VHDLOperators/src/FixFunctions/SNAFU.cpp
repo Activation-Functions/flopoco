@@ -30,13 +30,17 @@ using namespace std;
 #define LARGE_PREC 1000  // 1000 bits should be enough for everybody
 
 // Mux definition for the ReLU
-static inline const string relu(int wIn, int wOut, bool derivative = false)
+static inline const string relu(int wIn, int wOut, bool derivative = false, bool rescale = false)
 {
   std::ostringstream s;
   s << zg(wOut) << " when X" << of(wIn - 1) << " = '1' else '0' & ";
 
   if(derivative) {
-    s << og(wIn - 1);
+    if(rescale) {
+      s << zg(1) << " & " << og(wIn - 2);
+    } else {
+      s << og(wIn - 1);
+    }
   } else {
     s << "X" << range(wIn - 2, 0);
   }
@@ -199,17 +203,15 @@ namespace flopoco
 
     REPORT(LogLevel::MESSAGE, "Method is " << methodIn);
 
-    REPORT(LogLevel::MESSAGE, "To plot the function with its delta function, copy-paste the following lines in Sollya:");
-    REPORT(LogLevel::MESSAGE, "\tf = " << base << ";");
-
     if(adhocCompression == Compression::Enabled) {
-      REPORT(LogLevel::MESSAGE, "\tdeltaf = " << delta << ";");
       REPORT(LogLevel::MESSAGE,
-        "\trelu = "
-          << ""
-          << ";" << endl
-          << "  plot(deltaf, [-1;1]); " << endl
-          << "  plot(f,relu,-deltaf, [-1;1]); ");
+        "To plot the function with its delta function,"
+          << " copy-paste the following lines in Sollya:" << endl
+          << "\tf = " << base << ";" << endl
+          << "\tdeltaf = " << delta << ";" << endl
+          << "\trelu = " << deltaTo << ";" << endl
+          << "\tplot(deltaf, [-1;1]); " << endl
+          << "\tplot(f,relu,-deltaf, [-1;1]);");
     } else {
       REPORT(LogLevel::MESSAGE,
         "To plot the function being implemented, copy-paste the following two lines in Sollya" << endl
@@ -250,15 +252,18 @@ namespace flopoco
 
       // Declare the ReLU signal, when the function is a derivative, we use ReLU_P instead
       // TODO: verify that it really works with different inputScales
-      vhdl << tab << declare("ReLU", wOut) << " <= " << relu(wIn, wOut, fd.deltaFunction == Delta::ReLU_P);
+      // FIXME: It is sure to not work when inputScale is not a power of two
+      vhdl << tab << declare("ReLU", wOut) << " <= " << relu(wIn, wOut, fd.deltaFunction == Delta::ReLU_P, fd.scaleFactor > 1.0);
     }
 
     // Tackle symmetry, the symmetry is considered after reducing the function all the way, i.e. after delta and offset manipulations
-    const bool cond = fd.offset != 0.0 || fd.deltaFunction != Delta::None;
+    const bool cond = fd.offset != 0.0 || fd.deltaFunction == Delta::None;
     const bool enableSymmetry = fd.parity != Parity::None && (!cond && adhocCompression == Compression::Enabled);
 
     if(enableSymmetry) {
-      REPORT(LogLevel::DETAIL, "Symmetry enabled.")
+      REPORT(LogLevel::MESSAGE, "Symmetry enabled.")
+    } else {
+      REPORT(LogLevel::MESSAGE, "Symmetry disabled.")
     }
 
     switch(method) {
@@ -345,6 +350,25 @@ namespace flopoco
       "X => " + input(in),
       "Y => " + output(out));
 
+    // Extends the signal to the full width
+    if(adhocCompression == Compression::Enabled) {
+      size_t c = out;
+      size_t y = ++out;
+
+      auto C = getSignalByName(output(c));
+
+      vhdl << tab << declare("E", wOut - C->width());
+      auto E = getSignalByName("E");
+
+      if(fd.signedDelta) {
+        vhdl << " <= " << E->valueToVHDL(0) << " when " << output(c) << of(C->width() - 1) << " = '0' else " << E->valueToVHDL(-1) << ";" << endl;
+      } else {
+        vhdl << " <= " << E->valueToVHDL(0) << ";" << endl;
+      }
+
+      vhdl << tab << declare(output(y), wOut) << " <= E & " << output(c) << ";" << endl;
+    }
+
     if(enableSymmetry && fd.parity == Parity::Odd) {
       // Reconstruct the function based on the required symmetry, this is only required for odd functions
       const size_t a = out;
@@ -366,23 +390,12 @@ namespace flopoco
 
       auto D = getSignalByName(output(d));
 
-      // Create the signed extension of the delta result
-      addComment("Create the sign extension");
-      vhdl << tab << declare("E", wOut - D->width());
-      auto E = getSignalByName("E");
-
-      if(fd.signedDelta) {
-        vhdl << " <= " << E->valueToVHDL(0) << " when " << output(d) << of(D->width() - 1) << " = '0' else " << E->valueToVHDL(-1) << ";" << endl;
-      } else {
-        vhdl << " <= " << E->valueToVHDL(0) << ";" << endl;
-      }
-
       if(af == ELU) {
         // Special case, when X is positive, then it is identical to the ReLU
-        vhdl << tab << declare(output(f), wOut) << " <= ReLU when X" << of(wIn - 1) << " = '0' else ReLU - (E & " + output(d) + ");" << endl;
+        vhdl << tab << declare(output(f), wOut) << " <= ReLU when X" << of(wIn - 1) << " = '0' else ReLU - (" + output(d) + ");" << endl;
       } else {
         // if all went well deltaOut should have fewer bits so we need to pad with zeroes
-        vhdl << tab << declare(output(f), wOut) << " <= ReLU - (E & " + output(d) + ");" << endl;
+        vhdl << tab << declare(output(f), wOut) << " <= ReLU - (" + output(d) + ");" << endl;
       }
     }
 
