@@ -240,10 +240,10 @@ static const map<ActivationFunction, FunctionData> activationFunction = {
     FunctionData{
       .name = "ReLU_P",
       .longName = "Derivative Rectified Linear Unit",
-      .formula = "1/(1+exp(-1b256*X))",  // Here we use a quasi-threshold function
-      .signedOut = false,                // output unsigned
-      .slightRescale = true,             // output touches 1 and needs to be slightly rescaled
-      .scaleFactor = 1.0,                // Function is a derivative, so we need to take into account the inputScale
+      .formula = "1/(1+exp(-1b256*(X+1b-5)))",  // Here we use a quasi-threshold function
+      .signedOut = false,                       // output unsigned
+      .slightRescale = true,                    // output touches 1 and needs to be slightly rescaled
+      .scaleFactor = 1.0,                       // Function is a derivative, so we need to take into account the inputScale
       .derivative = true,
     }},
   {ELU_P,
