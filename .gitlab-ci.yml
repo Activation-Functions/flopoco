@@ -30,6 +30,8 @@ build_squid_debian:
     - apt install -y git make sudo
   script:
     - make sysdeps flopoco
+    - make install
+    - flopoco
   only:    
     refs:
       - merge_requests
@@ -42,6 +44,8 @@ build_squid_macos:
     - macos
   script:
     - gmake sysdeps flopoco
+    # Ideally, we would need to test the install step
+    # but on our current runner, it would require having sudo...
   only:
     refs:
     - merge_requests
