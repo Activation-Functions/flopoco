@@ -521,8 +521,8 @@ namespace flopoco {
                         lsbOut(int): output least significant bit;\
                         H(real)=0: worst-case peak gain. if 0, it will be computed by the WCPG library;\
                         Heps(real)=0: worst-case peak gain of the feedback loop. if 0, it will be computed by the WCPG library;\
-                        coeffa(string): colon-separated list of real coefficients using Sollya syntax. Example: coeffa=\"1.234567890123:sin(3*pi/8)\";\
-                        coeffb(string): colon-separated list of real coefficients using Sollya syntax. Example: coeffb=\"1.234567890123:sin(3*pi/8)\";\
+                        coeffa(string): coefficients of the transfer function denominator, a colon-separated list of reals using Sollya syntax. Example: coeffa=\"1.234567890123:sin(3*pi/8)\";\
+                        coeffb(string): coefficients of the transfer function denominator, a colon-separated list of reals using Sollya syntax. Example: coeffb=\"1.234567890123:sin(3*pi/8)\";\
                         buildWorstCaseTestBench(bool)=false: if true, the TestBench for this IIR will begin with a stimulation by the worst-case input signal",
 	    ""};
 }
