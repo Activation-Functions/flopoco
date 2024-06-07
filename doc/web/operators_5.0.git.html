@@ -846,8 +846,8 @@
 <dt> <code class="parametername">lsbOut</code>  (<code class="parametertype">int</code>) </dt><dd>output least significant bit</dd>
 <span class="optionalparam"> <dt> <code class="parametername">H</code>  (<code class="parametertype">real</code>)   (optional, default value is 0)</dt><dd>worst-case peak gain. if 0, it will be computed by the WCPG library</dd> </span>
 <span class="optionalparam"> <dt> <code class="parametername">Heps</code>  (<code class="parametertype">real</code>)   (optional, default value is 0)</dt><dd>worst-case peak gain of the feedback loop. if 0, it will be computed by the WCPG library</dd> </span>
-<dt> <code class="parametername">coeffa</code>  (<code class="parametertype">string</code>) </dt><dd>colon-separated list of real coefficients using Sollya syntax. Example: coeffa="1.234567890123:sin(3*pi/8)"</dd>
-<dt> <code class="parametername">coeffb</code>  (<code class="parametertype">string</code>) </dt><dd>colon-separated list of real coefficients using Sollya syntax. Example: coeffb="1.234567890123:sin(3*pi/8)"</dd>
+<dt> <code class="parametername">coeffa</code>  (<code class="parametertype">string</code>) </dt><dd>coefficients of the transfer function denominator, a colon-separated list of reals using Sollya syntax. Example: coeffa="1.234567890123:sin(3*pi/8)"</dd>
+<dt> <code class="parametername">coeffb</code>  (<code class="parametertype">string</code>) </dt><dd>coefficients of the transfer function denominator, a colon-separated list of reals using Sollya syntax. Example: coeffb="1.234567890123:sin(3*pi/8)"</dd>
 <span class="optionalparam"> <dt> <code class="parametername">buildWorstCaseTestBench</code>  (<code class="parametertype">bool</code>)   (optional, default value is false)</dt><dd>if true, the TestBench for this IIR will begin with a stimulation by the worst-case input signal</dd> </span>
 </dl></dd>
 </dl>
