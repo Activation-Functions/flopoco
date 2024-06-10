@@ -83,5 +83,10 @@ autotests_debian:
     script:
       - make sysdeps nvc
       - ./flopoco autotest operator=all testlevel=0
-    allow_failure: true
+      # Find 'summary.csv' file in /tmp and copy to repository's root
+      - find /tmp -name "summary.csv" -exec cp {} . \;
+    artifacts:
+      paths:
+        - summary.csv
+  # allow_failure: true
 
