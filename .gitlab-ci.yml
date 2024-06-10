@@ -53,7 +53,7 @@ build_squid_macos:
     variables:
     - $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "dev/master"
 
-  autotests_debian:
+autotests_debian:
     stage: test
     tags:
       - debian
