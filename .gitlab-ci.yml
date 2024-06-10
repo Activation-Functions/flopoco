@@ -101,7 +101,7 @@ autotests_debian_deploy:
       - apt install -y git make sudo cargo
     script:
       - cargo install --path tools/autotests-html
-      - autotests-html
+      - /root/.cargo/bin/autotests-html
       - cp autotests.html doc/web
     artifacts:
       paths:
