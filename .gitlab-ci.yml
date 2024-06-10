@@ -67,8 +67,9 @@ autotests_debian_build:
       - make install
       - flopoco
     artifacts:
-      - flopoco
-      - build/*
+      paths:
+        - flopoco
+        - build/
 
 autotests_debian:
     stage: test
