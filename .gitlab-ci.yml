@@ -53,7 +53,6 @@ build_squid_macos:
     variables:
     - $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "dev/master"
 
-
 autotests_debian_build:
     stage: build
     tags:
@@ -67,6 +66,9 @@ autotests_debian_build:
       - make sysdeps flopoco
       - make install
       - flopoco
+    artifacts:
+      - flopoco
+      - build/*
 
 autotests_debian:
     stage: test
@@ -74,7 +76,11 @@ autotests_debian:
       - debian
     only:
       - dev/autotests
+    before_script:
+      - apt update
+      - apt install -y git make sudo
     script:
+      - make sysdeps
       - make test
     allow_failure: true
 
