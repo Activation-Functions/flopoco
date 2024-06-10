@@ -81,7 +81,7 @@ autotests_debian:
       - apt update
       - apt install -y git make sudo
     script:
-      - make sysdeps
-      - make test
+      - make sysdeps nvc
+      - ./flopoco autotest operator=all testlevel=0
     allow_failure: true
 
