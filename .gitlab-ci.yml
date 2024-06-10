@@ -1,6 +1,7 @@
 
 stages:
   - build
+  - test
   - deploy
 
 pages:
@@ -51,3 +52,14 @@ build_squid_macos:
     - merge_requests
     variables:
     - $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "dev/master"
+
+  autotests_debian:
+    stage: test
+    tags:
+      - debian
+    only:
+      - dev/autotests
+    script:
+      - make test
+    allow_failure: true
+
