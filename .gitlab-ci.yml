@@ -69,7 +69,9 @@ autotests_debian_build:
     artifacts:
       paths:
         - flopoco
-        - build/
+        - build/bin
+        - build/lib
+        - build/dependencies/bin
 
 autotests_debian:
     stage: test
