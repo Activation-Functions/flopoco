@@ -271,7 +271,7 @@ namespace flopoco{
 
         ui.parseInt( args, "wIn", &wIn );
 		    ui.parseInt( args, "constant", &constant );
-		    ui.parseInt( args, "epsilon", &epsilon );
+		    ui.parseInt( args, "errorBudget", &epsilon );
         ui.parseBoolean(args, "signed", &isSigned);
 
         return new IntConstMultShiftAddOpt(parentOp, target, wIn, constant, isSigned, epsilon);
@@ -285,7 +285,7 @@ namespace flopoco{
                             "wIn(int): Input word size; \
                             constant(int): constant; \
                             signed(bool)=true: signedness of input and output; \
-                            epsilon(int)=0: Allowable error for truncated constant multipliers;",
+                            errorBudget(int)=0: Allowable error for truncated constant multipliers;",
                             "Nope."
     };
 

@@ -361,7 +361,7 @@ namespace flopoco {
 			epsilon = abs(y);
 			//cout << "k=" << k << " yi=" << y << endl;
 			if(k>=300000){
-				REPORT(LogLevel::MESSAGE, "computeImpulseResponse: giving up for k=" <<k << " with epsilon still at " << epsilon << ", it seems hopeless");
+				REPORT(LogLevel::MESSAGE, "computeImpulseResponse: giving up for k=" <<k << " with errorBudget still at " << epsilon << ", it seems hopeless");
 				epsilon=0;
 			}
 		}

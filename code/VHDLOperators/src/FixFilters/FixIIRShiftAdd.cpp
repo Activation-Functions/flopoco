@@ -1812,7 +1812,7 @@ namespace flopoco
     // simulate the filter on an impulsion for long enough, until
     // double threshold = 0.5/(1<<-lsbOut);
     double threshold = 0; //soyons fous
-    double epsilon = 1e15; // initialize with a large value
+    double errorBudget = 1e15; // initialize with a large value
     uint64_t k;
     //initialize the ui and yi
     for (uint32_t i = 0; i < n + m; i++)
@@ -1826,7 +1826,7 @@ namespace flopoco
     k = 0;
     int storageOffset = n + m;
 
-    while (epsilon > threshold)
+    while (errorBudget > threshold)
     {
       // make room
       ui.push_back(0);
@@ -1845,12 +1845,12 @@ namespace flopoco
       k++;
       yi[storageOffset + k] = y;
 
-      epsilon = abs(y);
+      errorBudget = abs(y);
       //cout << "k=" << k << " yi=" << y << endl;
       if (k >= 300000)
       {
-        REPORT(LogLevel::MESSAGE, "computeImpulseResponse: giving up for k=" << k << " with epsilon still at " << epsilon << ", it seems hopeless");
-        epsilon = 0;
+        REPORT(LogLevel::MESSAGE, "computeImpulseResponse: giving up for k=" << k << " with errorBudget still at " << errorBudget << ", it seems hopeless");
+        errorBudget = 0;
       }
     }
     vanishingK = k;

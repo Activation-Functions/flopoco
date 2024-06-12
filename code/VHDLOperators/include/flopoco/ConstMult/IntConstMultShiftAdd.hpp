@@ -27,7 +27,7 @@ namespace flopoco
       int wIn_,
       string graphStr,
       bool isSigned = true,
-      int epsilon_ = 0,
+      int errorBudget_ = 0,
       string truncations = ""
     );
 
@@ -55,7 +55,7 @@ namespace flopoco
   protected:
     int wIn;
     bool isSigned;
-    double epsilon;
+    double errorBudget;
     int wSel;
 
     bool isTruncated; //if true, the operator is truncated truncated
