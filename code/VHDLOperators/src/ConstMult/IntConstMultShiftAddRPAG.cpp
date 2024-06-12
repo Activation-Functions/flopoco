@@ -149,7 +149,7 @@ namespace flopoco{
       int wIn, epsilon;
 
       ui.parseStrictlyPositiveInt( args, "wIn", &wIn );
-      ui.parsePositiveInt( args, "epsilon", &epsilon );
+      ui.parsePositiveInt( args, "errorBudget", &epsilon );
 
       string constListStr;
       ui.parseString(args, "constants", &constListStr);
@@ -200,7 +200,7 @@ namespace flopoco{
                             "wIn(int): Input word size; \
                             constants(string): list of constants; \
                             signed(bool)=true: signedness of input and output; \
-                            epsilon(int)=0: Allowable error for truncated constant multipliers;",
+                            errorBudget(int)=0: Allowable error for truncated constant multipliers;",
 	"Nope."};
 }
 #endif //defined(HAVE_PAGLIB) && defined(HAVE_RPAGLIB)

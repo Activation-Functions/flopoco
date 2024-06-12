@@ -398,10 +398,10 @@ namespace flopoco {
 #endif
     tc->addExpectedOutput ("Y", signedToBitVector(y, wOut));
 
-    if(epsilon > 0)
+    if(errorBudget > 0)
     {
       //Probably not the most efficient way for large epsilons...
-      for(int e=1; e <= epsilon; e++)
+      for(int e=1; e <= errorBudget; e++)
       {
         tc->addExpectedOutput("Y", signedToBitVector(y+e, wOut));
         tc->addExpectedOutput("Y", signedToBitVector(y-e, wOut));
@@ -409,7 +409,7 @@ namespace flopoco {
     }
 #else
 #ifdef DEBUG
-//    cout << "!!! the new interface !!! [" << y-epsilon << " " << y+epsilon<< "]" <<endl;
+//    cout << "!!! the new interface !!! [" << y-errorBudget << " " << y+errorBudget<< "]" <<endl;
 #endif
     if(wOut != wOutFull)
     {
@@ -422,8 +422,8 @@ namespace flopoco {
     if(epsilon > 0)
     {
       tc->addExpectedOutputInterval("Y",  y - epsilon, y + epsilon, TestCase::signed_interval); // <- this is one that should work
-//      tc->addExpectedOutputInterval("Y", signedToBitVector(y - epsilon, wOut), signedToBitVector(y + epsilon, wOut), TestCase::signed_interval);
-//      tc->addExpectedOutputInterval("Y", signedToBitVector(y - epsilon, wOut), signedToBitVector(y + epsilon, wOut), TestCase::unsigned_interval);
+//      tc->addExpectedOutputInterval("Y", signedToBitVector(y - errorBudget, wOut), signedToBitVector(y + errorBudget, wOut), TestCase::signed_interval);
+//      tc->addExpectedOutputInterval("Y", signedToBitVector(y - errorBudget, wOut), signedToBitVector(y + errorBudget, wOut), TestCase::unsigned_interval);
     }
     else
     {
@@ -466,14 +466,14 @@ namespace flopoco {
       testStateList.push_back(paramList);
       paramList.clear();
 
-      //The toy filter from Asilomar'23, fully truncated to epsilon=64:
+      //The toy filter from Asilomar'23, fully truncated to errorBudget=64:
       //./flopoco verbose=2 frequency=1 outputFile=filter_toy_-1_odd.vhdl IntFIRTransposed Win=8 coeff=-4:-4:5:20:24:20:5:-4:-4 graph="{{'O',[4],1,[1],0,2},{'O',[5],1,[5],1,0},{'O',[20],1,[5],1,2},{'O',[24],1,[3],1,3},{'A',[3],1,[1],0,1,[1],0,0},{'A',[5],1,[1],0,2,[1],0,0}}" graph_truncations="3,1:0,0|5,1:0,0" sa_truncations="0,0|2,2|4,0|0,4|0,4|0,4|4,0|0,2|0,2" wOut=8 Testbench n=1000
       paramList.push_back(make_pair("wIn", "8"));
       paramList.push_back(make_pair("coeff", "-4:-4:5:20:24:20:5:-4:-4"));
       paramList.push_back(make_pair("graph", "{{'O',[4],1,[1],0,2},{'O',[5],1,[5],1,0},{'O',[20],1,[5],1,2},{'O',[24],1,[3],1,3},{'A',[3],1,[1],0,1,[1],0,0},{'A',[5],1,[1],0,2,[1],0,0}}"));
       paramList.push_back(make_pair("graph_truncations", "3,1:0,0|5,1:0,0"));
       paramList.push_back(make_pair("sa_truncations", "0,0|2,2|4,0|0,4|0,4|0,4|4,0|0,2|0,2"));
-      paramList.push_back(make_pair("epsilon", "64"));
+      paramList.push_back(make_pair("errorBudget", "64"));
       testStateList.push_back(paramList);
       paramList.clear();
 
@@ -498,42 +498,42 @@ namespace flopoco {
       testStateList.push_back(paramList);
       paramList.clear();
 
-      //The toy filter from Asilomar'23, fully truncated to epsilon=16:
-      //./flopoco verbose=2 outputFile=filter_toy_4_odd.vhdl frequency=1 IntFIRTransposed Win=8 coeff=-4:-4:5:20:24:20:5:-4:-4 graph="{{'O',[4],1,[1],0,2},{'O',[5],1,[5],1,0},{'O',[20],1,[5],1,2},{'O',[24],1,[3],1,3},{'A',[5],1,[1],0,2,[1],0,0},{'A',[3],1,[1],0,1,[1],0,0}}" graph_truncations="5,1:0,0|3,1:0,0" sa_truncations="0,0|2,2|3,1|0,3|0,3|0,3|0,2|0,2|0,2" epsilon=16 Testbench n=1000
+      //The toy filter from Asilomar'23, fully truncated to errorBudget=16:
+      //./flopoco verbose=2 outputFile=filter_toy_4_odd.vhdl frequency=1 IntFIRTransposed Win=8 coeff=-4:-4:5:20:24:20:5:-4:-4 graph="{{'O',[4],1,[1],0,2},{'O',[5],1,[5],1,0},{'O',[20],1,[5],1,2},{'O',[24],1,[3],1,3},{'A',[5],1,[1],0,2,[1],0,0},{'A',[3],1,[1],0,1,[1],0,0}}" graph_truncations="5,1:0,0|3,1:0,0" sa_truncations="0,0|2,2|3,1|0,3|0,3|0,3|0,2|0,2|0,2" errorBudget=16 Testbench n=1000
       paramList.push_back(make_pair("wIn", "8"));
       paramList.push_back(make_pair("coeff", "-4:-4:5:20:24:20:5:-4:-4"));
       paramList.push_back(make_pair("graph", "{{'O',[4],1,[1],0,2},{'O',[5],1,[5],1,0},{'O',[20],1,[5],1,2},{'O',[24],1,[3],1,3},{'A',[3],1,[1],0,1,[1],0,0},{'A',[5],1,[1],0,2,[1],0,0}}"));
       paramList.push_back(make_pair("graph_truncations", "3,1:0,0|5,1:0,0"));
       paramList.push_back(make_pair("sa_truncations", "0,0|2,2|3,1|0,3|0,3|0,3|0,2|0,2|0,2"));
-      paramList.push_back(make_pair("epsilon", "16"));
+      paramList.push_back(make_pair("errorBudget", "16"));
       testStateList.push_back(paramList);
       paramList.clear();
 
-      //The toy filter from Asilomar'23, fully truncated to epsilon=256:
-      //./flopoco verbose=2 outputFile=filter_toy_8_odd.vhdl frequency=1 IntFIRTransposed Win=8 coeff=-4:-4:5:20:24:20:5:-4:-4 graph="{{'O',[4],1,[1],0,2},{'O',[5],1,[5],1,0},{'O',[20],1,[5],1,2},{'O',[24],1,[3],1,3},{'A',[3],1,[1],0,1,[1],0,0},{'A',[5],1,[1],0,2,[1],0,0}}" graph_truncations="3,1:0,0|5,1:0,0" sa_truncations="0,0|2,2|6,1|3,5|0,6|0,5|0,6|0,2|0,2" epsilon=256 Testbench n=1000
+      //The toy filter from Asilomar'23, fully truncated to errorBudget=256:
+      //./flopoco verbose=2 outputFile=filter_toy_8_odd.vhdl frequency=1 IntFIRTransposed Win=8 coeff=-4:-4:5:20:24:20:5:-4:-4 graph="{{'O',[4],1,[1],0,2},{'O',[5],1,[5],1,0},{'O',[20],1,[5],1,2},{'O',[24],1,[3],1,3},{'A',[3],1,[1],0,1,[1],0,0},{'A',[5],1,[1],0,2,[1],0,0}}" graph_truncations="3,1:0,0|5,1:0,0" sa_truncations="0,0|2,2|6,1|3,5|0,6|0,5|0,6|0,2|0,2" errorBudget=256 Testbench n=1000
       paramList.push_back(make_pair("wIn", "8"));
       paramList.push_back(make_pair("coeff", "-4:-4:5:20:24:20:5:-4:-4"));
       paramList.push_back(make_pair("graph", "{{'O',[4],1,[1],0,2},{'O',[5],1,[5],1,0},{'O',[20],1,[5],1,2},{'O',[24],1,[3],1,3},{'A',[3],1,[1],0,1,[1],0,0},{'A',[5],1,[1],0,2,[1],0,0}}"));
       paramList.push_back(make_pair("graph_truncations", "3,1:0,0|5,1:0,0"));
       paramList.push_back(make_pair("sa_truncations", "0,0|2,2|6,1|3,5|0,6|0,5|0,6|0,2|0,2"));
-      paramList.push_back(make_pair("epsilon", "256"));
+      paramList.push_back(make_pair("errorBudget", "256"));
       testStateList.push_back(paramList);
       paramList.clear();
     }
     if(testLevel >= TestLevel::SUBSTANTIAL)
     {
-      //Filter S2 from Asilomar'23, fully truncated to epsilon=256:
+      //Filter S2 from Asilomar'23, fully truncated to errorBudget=256:
       //./flopoco verbose=2 frequency=1 outputFile=filter_S2_4_wout17.vhdl IntFIRTransposed Win=8 coeff=0:0:0:-2:-5:-10:-16:-23:-32:-40:-50:-58:-64:-64:-61:-50:-29:0:38:86:143:206:274:344:412:476:532:576:608:624:624:608:576:532:476:412:344:274:206:143:86:38:0:-29:-50:-61:-64:-64:-58:-50:-40:-32:-23:-16:-10:-5:-2:0:0:0 graph="{{'O',[2],5,[1],0,1},{'O',[5],5,[5],1,0},{'O',[10],5,[5],1,1},{'O',[16],5,[1],0,4},{'O',[23],5,[23],5,0},{'O',[32],5,[1],0,5},{'O',[40],5,[5],1,3},{'O',[50],5,[25],2,1},{'O',[58],5,[29],2,1},{'O',[64],5,[1],0,6},{'O',[61],5,[61],3,0},{'O',[29],5,[29],2,0},{'O',[38],5,[19],2,1},{'O',[86],5,[43],3,1},{'O',[143],5,[143],5,0},{'O',[206],5,[103],4,1},{'O',[274],5,[137],2,1},{'O',[344],5,[43],3,3},{'O',[412],5,[103],4,2},{'O',[476],5,[119],4,2},{'O',[532],5,[133],2,2},{'O',[576],5,[9],1,6},{'O',[608],5,[19],2,5},{'O',[624],5,[39],3,4},{'A',[9],1,[1],0,3,[1],0,0},{'A',[3],1,[1],0,1,[1],0,0},{'A',[5],1,[1],0,2,[1],0,0},{'A',[29],2,[3],1,3,[5],1,0},{'A',[19],2,[1],0,4,[3],1,0},{'A',[133],2,[1],0,7,[5],1,0},{'A',[39],3,[5],1,2,[19],2,0},{'A',[119],4,[5],1,4,[39],3,0},{'A',[23],5,[-3],1,5,[119],4,0},{'A',[43],3,[3],1,3,[19],2,0},{'A',[25],2,[1],0,4,[9],1,0},{'A',[103],4,[1],0,6,[39],3,0},{'A',[61],3,[1],0,5,[29],2,0},{'A',[143],5,[5],1,3,[103],4,0},{'A',[137],2,[1],0,7,[9],1,0}}" graph_truncations="9,1:0,0|3,1:0,0|5,1:0,0|29,2:0,0|19,2:0,0|133,2:0,0|39,3:0,0|119,4:0,0|23,5:0,0|43,3:0,0|25,2:0,0|103,4:0,0|61,3:0,0|143,5:0,0|137,2:0,0" sa_truncations="0,0|0,0|0,0|0,2|0,0|0,1|0,4|0,0|0,5|0,3|0,1|0,1|0,6|0,6|0,0|0,1|0,0|0,0|0,2|0,1|0,1|0,1|0,1|0,3|0,2|0,2|0,2|0,6|0,5|0,4|0,4|0,5|0,6|0,2|0,2|0,2|0,3|0,1|0,2|0,2|0,2|0,2|0,0|1,0|0,1|0,0|0,6|0,6|0,1|0,1|0,3|0,5|0,0|0,4|0,1|0,0|0,1|0,0|0,0|0,0" wOut=17
       paramList.push_back(make_pair("wIn", "8"));
       paramList.push_back(make_pair("coeff", "0:0:0:-2:-5:-10:-16:-23:-32:-40:-50:-58:-64:-64:-61:-50:-29:0:38:86:143:206:274:344:412:476:532:576:608:624:624:608:576:532:476:412:344:274:206:143:86:38:0:-29:-50:-61:-64:-64:-58:-50:-40:-32:-23:-16:-10:-5:-2:0:0:0"));
       paramList.push_back(make_pair("graph", "{{'O',[2],5,[1],0,1},{'O',[5],5,[5],1,0},{'O',[10],5,[5],1,1},{'O',[16],5,[1],0,4},{'O',[23],5,[23],5,0},{'O',[32],5,[1],0,5},{'O',[40],5,[5],1,3},{'O',[50],5,[25],2,1},{'O',[58],5,[29],2,1},{'O',[64],5,[1],0,6},{'O',[61],5,[61],3,0},{'O',[29],5,[29],2,0},{'O',[38],5,[19],2,1},{'O',[86],5,[43],3,1},{'O',[143],5,[143],5,0},{'O',[206],5,[103],4,1},{'O',[274],5,[137],2,1},{'O',[344],5,[43],3,3},{'O',[412],5,[103],4,2},{'O',[476],5,[119],4,2},{'O',[532],5,[133],2,2},{'O',[576],5,[9],1,6},{'O',[608],5,[19],2,5},{'O',[624],5,[39],3,4},{'A',[9],1,[1],0,3,[1],0,0},{'A',[3],1,[1],0,1,[1],0,0},{'A',[5],1,[1],0,2,[1],0,0},{'A',[29],2,[3],1,3,[5],1,0},{'A',[19],2,[1],0,4,[3],1,0},{'A',[133],2,[1],0,7,[5],1,0},{'A',[39],3,[5],1,2,[19],2,0},{'A',[119],4,[5],1,4,[39],3,0},{'A',[23],5,[-3],1,5,[119],4,0},{'A',[43],3,[3],1,3,[19],2,0},{'A',[25],2,[1],0,4,[9],1,0},{'A',[103],4,[1],0,6,[39],3,0},{'A',[61],3,[1],0,5,[29],2,0},{'A',[143],5,[5],1,3,[103],4,0},{'A',[137],2,[1],0,7,[9],1,0}}"));
       paramList.push_back(make_pair("graph_truncations", "9,1:0,0|3,1:0,0|5,1:0,0|29,2:0,0|19,2:0,0|133,2:0,0|39,3:0,0|119,4:0,0|23,5:0,0|43,3:0,0|25,2:0,0|103,4:0,0|61,3:0,0|143,5:0,0|137,2:0,0"));
       paramList.push_back(make_pair("sa_truncations", "0,0|0,0|0,0|0,2|0,0|0,1|0,4|0,0|0,5|0,3|0,1|0,1|0,6|0,6|0,0|0,1|0,0|0,0|0,2|0,1|0,1|0,1|0,1|0,3|0,2|0,2|0,2|0,6|0,5|0,4|0,4|0,5|0,6|0,2|0,2|0,2|0,3|0,1|0,2|0,2|0,2|0,2|0,0|1,0|0,1|0,0|0,6|0,6|0,1|0,1|0,3|0,5|0,0|0,4|0,1|0,0|0,1|0,0|0,0|0,0"));
-      paramList.push_back(make_pair("epsilon", "256"));
+      paramList.push_back(make_pair("errorBudget", "256"));
       testStateList.push_back(paramList);
       paramList.clear();
 
-      //Filter S2 from Asilomar'23, fully truncated and faithfully rounded to wOut=17 output bits (epsilon=256):
+      //Filter S2 from Asilomar'23, fully truncated and faithfully rounded to wOut=17 output bits (errorBudget=256):
       //./flopoco verbose=2 frequency=1 outputFile=filter_S2_4_wout17.vhdl IntFIRTransposed Win=8 coeff=0:0:0:-2:-5:-10:-16:-23:-32:-40:-50:-58:-64:-64:-61:-50:-29:0:38:86:143:206:274:344:412:476:532:576:608:624:624:608:576:532:476:412:344:274:206:143:86:38:0:-29:-50:-61:-64:-64:-58:-50:-40:-32:-23:-16:-10:-5:-2:0:0:0 graph="{{'O',[2],5,[1],0,1},{'O',[5],5,[5],1,0},{'O',[10],5,[5],1,1},{'O',[16],5,[1],0,4},{'O',[23],5,[23],5,0},{'O',[32],5,[1],0,5},{'O',[40],5,[5],1,3},{'O',[50],5,[25],2,1},{'O',[58],5,[29],2,1},{'O',[64],5,[1],0,6},{'O',[61],5,[61],3,0},{'O',[29],5,[29],2,0},{'O',[38],5,[19],2,1},{'O',[86],5,[43],3,1},{'O',[143],5,[143],5,0},{'O',[206],5,[103],4,1},{'O',[274],5,[137],2,1},{'O',[344],5,[43],3,3},{'O',[412],5,[103],4,2},{'O',[476],5,[119],4,2},{'O',[532],5,[133],2,2},{'O',[576],5,[9],1,6},{'O',[608],5,[19],2,5},{'O',[624],5,[39],3,4},{'A',[9],1,[1],0,3,[1],0,0},{'A',[3],1,[1],0,1,[1],0,0},{'A',[5],1,[1],0,2,[1],0,0},{'A',[29],2,[3],1,3,[5],1,0},{'A',[19],2,[1],0,4,[3],1,0},{'A',[133],2,[1],0,7,[5],1,0},{'A',[39],3,[5],1,2,[19],2,0},{'A',[119],4,[5],1,4,[39],3,0},{'A',[23],5,[-3],1,5,[119],4,0},{'A',[43],3,[3],1,3,[19],2,0},{'A',[25],2,[1],0,4,[9],1,0},{'A',[103],4,[1],0,6,[39],3,0},{'A',[61],3,[1],0,5,[29],2,0},{'A',[143],5,[5],1,3,[103],4,0},{'A',[137],2,[1],0,7,[9],1,0}}" graph_truncations="9,1:0,0|3,1:0,0|5,1:0,0|29,2:0,0|19,2:0,0|133,2:0,0|39,3:0,0|119,4:0,0|23,5:0,0|43,3:0,0|25,2:0,0|103,4:0,0|61,3:0,0|143,5:0,0|137,2:0,0" sa_truncations="0,0|0,0|0,0|0,2|0,0|0,1|0,4|0,0|0,5|0,3|0,1|0,1|0,6|0,6|0,0|0,1|0,0|0,0|0,2|0,1|0,1|0,1|0,1|0,3|0,2|0,2|0,2|0,6|0,5|0,4|0,4|0,5|0,6|0,2|0,2|0,2|0,3|0,1|0,2|0,2|0,2|0,2|0,0|1,0|0,1|0,0|0,6|0,6|0,1|0,1|0,3|0,5|0,0|0,4|0,1|0,0|0,1|0,0|0,0|0,0" wOut=17
       paramList.push_back(make_pair("wIn", "8"));
       paramList.push_back(make_pair("coeff", "0:0:0:-2:-5:-10:-16:-23:-32:-40:-50:-58:-64:-64:-61:-50:-29:0:38:86:143:206:274:344:412:476:532:576:608:624:624:608:576:532:476:412:344:274:206:143:86:38:0:-29:-50:-61:-64:-64:-58:-50:-40:-32:-23:-16:-10:-5:-2:0:0:0"));
@@ -582,7 +582,7 @@ namespace flopoco {
     }
 
     int epsilon;
-    ui.parseInt(args, "epsilon", &epsilon);
+    ui.parseInt(args, "errorBudget", &epsilon);
 
     OperatorPtr tmpOp = new IntFIRTransposed(parentOp, target, wIn, wOut, coeffsInt, adder_graph, graph_truncations, sa_truncations, epsilon);
 
@@ -599,7 +599,7 @@ namespace flopoco {
                   wOut(int)=-1: output word size in bits, -1 means automatic determination without truncation, if wOut is less then necessary it will be rounded;\
                  coeff(string): colon-separated list of integer coefficients. Example: coeff=\"123:321:123\";\
                  graph(string)=\"\": Realization string of the adder graph;\
-                 epsilon(int)=0: Allowable error for truncated constant multipliers (currently only used to check error for given truncations in testbench); \
+                 errorBudget(int)=0: Allowable error for truncated constant multipliers (currently only used to check error for given truncations in testbench); \
                  graph_truncations(string)=\"\": provides the truncations for intermediate values of the adder graph (format: const1,stage:trunc_input_0,trunc_input_1,...|const2,stage:trunc_input_0,trunc_input_1,...)\";\
                  sa_truncations(string)=\"\": provides the truncations for the strucutal adder (format: sa_1_trunc_input_0,sa_1_trunc_input_1|...|sa_2_trunc_input_0,sa_2_trunc_input_1,...|...)",
 	    ""
