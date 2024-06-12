@@ -106,7 +106,7 @@ namespace flopoco {
                 for(size_t i{0u}; i < edges.size(); ++i)
                 {
                     stringstream vN;
-                    vN << "epsilon_" << (int)i;
+                    vN << "errorBudget_" << (int)i;
                     edgeError[i] = ScaLP::newIntegerVariable(vN.str());
                     if (bigM < edges[i].wEdge)
                         bigM = edges[i].wEdge;
@@ -204,7 +204,7 @@ namespace flopoco {
                         ++adderCount;
                     }
                     if(is_a<output_node_t>(*edges[i].nodes.second)) {
-                        s << ( pow(2, edges[i].shift) * edgeError[i] <= epsilon_ );
+                        s << ( pow(2, edges[i].shift) * edgeError[i] <= errorBudget_ );
                     }
                 }
 

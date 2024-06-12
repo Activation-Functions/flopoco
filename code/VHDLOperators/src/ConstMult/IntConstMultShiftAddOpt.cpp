@@ -40,7 +40,7 @@ using namespace PAGSuite;
 
 namespace flopoco{
 
-    IntConstMultShiftAddOpt::IntConstMultShiftAddOpt(Operator* parentOp, Target* target, int wIn, int coeff, bool isSigned, int epsilon)  : IntConstMultShiftAdd(parentOp, target, wIn, "", isSigned, epsilon)
+    IntConstMultShiftAddOpt::IntConstMultShiftAddOpt(Operator* parentOp, Target* target, int wIn, int coeff, bool isSigned, int errorBudget)  : IntConstMultShiftAdd(parentOp, target, wIn, "", isSigned, errorBudget)
     {
 		srcFileName="IntConstMultShiftAddOpt";
 
@@ -85,7 +85,7 @@ namespace flopoco{
 				"adder_graph=" << adderGraphComplete.str()
                 );
 
-		ProcessIntConstMultShiftAdd(target,adderGraphComplete.str(),"",epsilon);
+		ProcessIntConstMultShiftAdd(target, adderGraphComplete.str(), "", errorBudget);
 
         ostringstream name;
         name << "IntConstMultShiftAddOpt_" << coeff << "_" << wIn;
@@ -266,15 +266,15 @@ namespace flopoco{
 
     OperatorPtr flopoco::IntConstMultShiftAddOpt::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui)
     {
-        int wIn, constant, epsilon;
+        int wIn, constant, errorBudget;
         bool isSigned;
 
         ui.parseInt( args, "wIn", &wIn );
 		    ui.parseInt( args, "constant", &constant );
-		    ui.parseInt( args, "errorBudget", &epsilon );
+		    ui.parseInt( args, "errorBudget", &errorBudget );
         ui.parseBoolean(args, "signed", &isSigned);
 
-        return new IntConstMultShiftAddOpt(parentOp, target, wIn, constant, isSigned, epsilon);
+        return new IntConstMultShiftAddOpt(parentOp, target, wIn, constant, isSigned, errorBudget);
     }
 
 	template<>
