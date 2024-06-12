@@ -64,7 +64,7 @@ namespace flopoco
 //    bool RPAGused;
 //    int emu_conf;
 
-    void ProcessIntConstMultShiftAdd(Target* target, string graphStr, string truncations="", int epsilon=0);
+    void ProcessIntConstMultShiftAdd(Target* target, string graphStr, string truncations="", int errorBudget=0);
 
     void parseTruncation(string truncationList);
     void parseTruncationRecord(string record);

@@ -84,7 +84,7 @@ namespace flopoco {
     ProcessIntConstMultShiftAdd(target, graphStr, truncations, errorBudget_);
   };
 
-  void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(Target* target, string graphStr, string truncations, int epsilon)
+  void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(Target* target, string graphStr, string truncations, int errorBudget)
   {
     if(graphStr.empty()) return; //in case the realization string is not defined, don't further process it.
 
@@ -128,7 +128,7 @@ namespace flopoco {
         adder_graph.print_graph();
 
       isTruncated=false;
-      if(!truncations.empty() || (epsilon > 0))
+      if(!truncations.empty() || (errorBudget > 0))
       {
         isTruncated=true;
         if(!truncations.empty())
@@ -137,12 +137,12 @@ namespace flopoco {
 
           parseTruncation(truncations);
         }
-        if(epsilon > 0)
+        if(errorBudget > 0)
         {
-          REPORT(LogLevel::DETAIL,  "Found non-zero errorBudget=" << epsilon << ", computing word sizes of truncated MCM");
+          REPORT(LogLevel::DETAIL,  "Found non-zero errorBudget=" << errorBudget << ", computing word sizes of truncated MCM");
 
 #if defined(HAVE_PAGLIB) && defined(HAVE_SCALP)
-          WordLengthCalculator wlc = WordLengthCalculator(adder_graph, wIn, epsilon, target);
+          WordLengthCalculator wlc = WordLengthCalculator(adder_graph, wIn, errorBudget, target);
           wordSizeMap = wlc.optimizeTruncation();
 
           REPORT(LogLevel::DETAIL, "Finished computing word sizes of truncated MCM");
