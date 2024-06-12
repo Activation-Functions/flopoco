@@ -951,7 +951,7 @@ namespace flopoco {
         tc->addExpectedOutput(outputName, outputValue_mpz, isSigned);
         if(errorBudget > 0)
         {
-          //Probably not the most efficient way for large epsilons...
+          //Probably not the most efficient way for a large error budget...
           for(int e=1; e <= errorBudget; e++)
           {
             tc->addExpectedOutput(outputName, outputValue+e);
@@ -1355,19 +1355,19 @@ namespace flopoco {
 		int wIn, sync_every = 0;
 		std::string adder_graph, truncations;
     bool isSigned;
-		int epsilon;
+		int errorBudget;
 
 		ui.parseInt(args, "wIn", &wIn);
 		ui.parseString(args, "graph", &adder_graph);
     ui.parseBoolean(args, "signed", &isSigned);
 		ui.parseString( args, "truncations", &truncations);
-		ui.parseInt(args, "errorBudget", &epsilon);
+		ui.parseInt(args, "errorBudget", &errorBudget);
 
 		if (truncations == "\"\"") {
 			truncations = "";
 		}
 
-		return new IntConstMultShiftAdd(parentOp, target, wIn, adder_graph, isSigned, epsilon, truncations);
+		return new IntConstMultShiftAdd(parentOp, target, wIn, adder_graph, isSigned, errorBudget, truncations);
 	}
 
 
