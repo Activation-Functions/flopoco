@@ -44,13 +44,15 @@ namespace flopoco {
 												 int msbX_, int lsbX_,
 												 int msbY_, int lsbY_,
 												 int msbA_, int lsbA_,
-												 int msbOut_, int lsbOut_)
+												 int msbOut_, int lsbOut_,
+												 bool correctlyRounded_)
 		: Operator (parentOp_, target_),
 			signedIO(signedIO_),
 			msbX(msbX_), lsbX(lsbX_),
 			msbY(msbY_), lsbY(lsbY_),
 			msbA(msbA_), lsbA(lsbA_),
-			msbOut(msbOut_), lsbOut(lsbOut_)
+			msbOut(msbOut_), lsbOut(lsbOut_),
+			correctlyRounded(correctlyRounded_)
 		{
 			srcFileName="FixMultAdd";
 			setCopyrightString ( "Florent de Dinechin, Matei Istoan, 2012-2014, 2024" );
@@ -106,45 +108,40 @@ namespace flopoco {
 			addInput ("X",  wX);
 			addInput ("Y",  wY);
 			addInput ("A",  wA);
+			addOutput("R",  wOut);
+			// We cast all the inputs to fixed point, it makes life easier. Honest.
+			vhdl << declareFixPoint("XX", signedIO, msbX, lsbX) << " <= " << typecast << "(X);" << endl;
+			vhdl << declareFixPoint("YY", signedIO, msbY, lsbY) << " <= " << typecast << "(Y);" << endl;
+			vhdl << declareFixPoint("AA", signedIO, msbA, lsbA) << " <= " << typecast << "(A);" << endl;
 
 			// Declaring the output
 			if(lsbPfull >= lsbOut && lsbA>=lsbOut) 			// Easy case when multiplier and addend need no truncation
 				{
 					isExact=true;
 					isCorrectlyRounded=true; // no rounding will ever happen
-					isFaithfullyRounded=true;// no rounding will ever happen
-					addOutput("R",  wOut); 
 				}
-			else{ /////////////////// lsbPfull < lsbOut so we build a truncated multiplier
+			else{ // lsbPfull < lsbOut or lsbPfull < lsbOut: the FMA can not be exact.
+				//It can still be either correctly rounded, either faithful
 				isExact=false;
-				isCorrectlyRounded=false; //
-				isFaithfullyRounded=true;// 
-				addOutput("R",  wOut, 2); 
+				isCorrectlyRounded=correctlyRounded; //
 			}
 
-			// We cast all the inputs to fixed point, it makes life easier. Honest.
-			vhdl << declareFixPoint("XX", signedIO, msbX, lsbX) << " <= " << typecast << "(X);" << endl;
-			vhdl << declareFixPoint("YY", signedIO, msbY, lsbY) << " <= " << typecast << "(Y);" << endl;
-			vhdl << declareFixPoint("AA", signedIO, msbA, lsbA) << " <= " << typecast << "(A);" << endl;
-
-
-
+			// Error analysis cases. lsbAdd is the size of the eventual adder.
+			int lsbAdd = lsbOut-2; // works in any case, ie if both addend and product are truncated to lsbAdd
+			if((lsbPfull<lsbOut-1 && lsbA>=lsbOut-1)  || (lsbPfull>=lsbOut-1 && lsbA<lsbOut-1) ) 	 
+				{
+					lsbAdd=lsbOut-1; 		// only one will be truncated with this lsbAdd
+				}
+			else if(lsbPfull>=lsbOut && lsbA>=lsbOut) // nobody needs truncation  
+				{
+					lsbAdd=min(lsbPfull,lsbA);
+				}
+						
 
 			if(getTarget()->plainVHDL())  // mostly to debug emulate() and interface
 				{
 					//For plainVHDL we even sometimes round to the nearest because we are lazy
 
-					// Error analysis cases. lsbAdd is the size of the eventual adder.
-					int lsbAdd = lsbOut-2; // works in any case, ie if both addend and product are truncated to lsbAdd
-					if((lsbPfull<lsbOut-1 && lsbA>=lsbOut-1)  || (lsbPfull>=lsbOut-1 && lsbA<lsbOut-1) ) 	 
-						{
-							lsbAdd=lsbOut-1; 		// only one will be truncated with this lsbAdd
-						}
-					else if(lsbPfull>=lsbOut && lsbA>=lsbOut) // nobody needs truncation  
-						{
-							lsbAdd=min(lsbPfull,lsbA);
-						}
-						
 					vhdl << declareFixPoint("Pfull", signedIO, msbP, lsbPfull) << " <= XX*YY;" << endl;
 					// Now we have to possibly truncate and possibly extend both A and Pfull
 					// Ptrunc and Atrunc manage the LSBs: either truncate with a range, or zero-extend to the right 
@@ -329,7 +326,7 @@ namespace flopoco {
 
 	
 	OperatorPtr FixMultAdd::parseArguments(OperatorPtr parentOp, Target *target, std::vector<std::string> &args, UserInterface& ui) {
-		bool signedIO;
+		bool signedIO,correctlyRounded;
 		int msbX, lsbX, msbY, lsbY, msbA, lsbA, msbOut, lsbOut;
 		ui.parseBoolean(args, "signedIO", &signedIO);
 		ui.parseInt(args, "msbX", &msbX);
@@ -340,12 +337,14 @@ namespace flopoco {
 		ui.parseInt(args, "lsbA", &lsbA);
 		ui.parseInt(args, "msbOut", &msbOut);
 		ui.parseInt(args, "lsbOut", &lsbOut);
+		ui.parseBoolean(args, "correctlyRounded", &correctlyRounded);
 		return new FixMultAdd(parentOp,target,
 													signedIO,
 													msbX, lsbX,
 													msbY, lsbY,
 													msbA, lsbA,
-													msbOut, lsbOut);
+													msbOut, lsbOut,
+													correctlyRounded);
 	}
 
 
@@ -429,7 +428,8 @@ namespace flopoco {
 		   msbA(int): position of the MSB of addend A;\
 		   lsbA(int): position of the LSB of addend A;\
        msbOut(int): position of the MSB of output;\
-		   lsbOut(int): position of the LSB of output", // This string will be parsed
+		   lsbOut(int): position of the LSB of output;\
+			 correctlyRounded(bool)=false: if true no attempt to truncate the product will be made, if false optimize for a faithful result", // This string will be parsed
 	    ""};
 
 
