@@ -49,7 +49,7 @@ namespace flopoco{
 		}
 		setCombinatorial();
 		addInput("X", wI);
-		addOutput("R", wO+1, 2);  // faithful rounding
+		addOutput("R", wO+1);  // faithful rounding
 
 		genVHDL();
 	}

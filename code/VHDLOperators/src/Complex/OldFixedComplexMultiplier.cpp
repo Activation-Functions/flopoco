@@ -34,8 +34,8 @@ namespace flopoco{
 		addInput("Yr", 		wI, true);
 		addInput("Yi", 		wI, true);
 
-		addOutput("Zi",   wO, 2);
-		addOutput("Zr",   wO, 2);
+		addOutput("Zi",   wO);
+		addOutput("Zr",   wO);
 
 		if(!threeMultiplications){
 			IntMultiplier* multiplyOperator = new IntMultiplier(target, wI, wI, wO, signedOperator, ratio, inDelayMap("Xi",getCriticalPath()), enableSuperTiles);

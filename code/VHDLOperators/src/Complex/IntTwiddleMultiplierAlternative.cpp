@@ -36,8 +36,8 @@ namespace flopoco{
 
 		addInput("Xi", 		w, true);
 		addInput("Xr", 		w, true);
-		addOutput("Zi",   2*w, 2);
-		addOutput("Zr",   2*w, 2);
+		addOutput("Zi",   2*w);
+		addOutput("Zr",   2*w);
 		
 		
 		if(twiddleExponent == 0){
