@@ -26,10 +26,10 @@ namespace flopoco{
 		addInput("Xr", 		   w, true);
 		addInput("Yi", 		   w, true);
 		addInput("Yr", 		   w, true);
-		addOutput("ZAddi",   2*w, 2);
-		addOutput("ZAddr",   2*w, 2);
-		addOutput("ZSubi",   2*w, 2);
-		addOutput("ZSubr",   2*w, 2);
+		addOutput("ZAddi",   2*w);
+		addOutput("ZAddr",	 2*w);
+		addOutput("ZSubi",	 2*w);
+		addOutput("ZSubr",	 2*w);
 		
 		IntTwiddleMultiplier* twiddleMultiplier = new IntTwiddleMultiplier(target, wI, wF, twiddleExponent, n, signedOperator);
 		oplist.push_back(twiddleMultiplier);

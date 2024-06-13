@@ -28,7 +28,7 @@ namespace flopoco{
 		addInput("SinCosbar");		// 0 for cosine 1 for sine
 
 		// declaring output
-		addOutput("SorC",1+w,2);
+		addOutput("SorC",1+w);
 
 		// TODO free scale in the destructor
 		mpfr_init2(scale, 10*w);

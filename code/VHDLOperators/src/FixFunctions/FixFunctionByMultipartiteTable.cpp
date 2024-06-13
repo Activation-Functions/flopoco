@@ -98,7 +98,7 @@ namespace flopoco
 		int wX=-lsbIn_;
 		addInput("X", wX);
 		int outputSize = f->wOut; // TODO finalRounding would impact this line
-		addOutput("Y" ,outputSize , 2);
+		addOutput("Y" ,outputSize);
 		useNumericStd();
 
 

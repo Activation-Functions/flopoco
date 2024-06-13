@@ -67,7 +67,7 @@ namespace flopoco{
 
 		addInput("X"  , -lsbIn + (signedIn?1:0));
 		int outputSize = f->msbOut-lsbOut+1;
-		addOutput("Y" ,outputSize , 2);
+		addOutput("Y" ,outputSize);
 		useNumericStd();
 
 		if(f->signedIn)

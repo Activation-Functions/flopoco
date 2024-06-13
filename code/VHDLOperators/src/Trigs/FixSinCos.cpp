@@ -47,8 +47,8 @@ namespace flopoco{
 
 		// declaring inputs and outputs
 		addInput("X", -lsb+1);
-		addOutput("S", -lsb+1, 2);
-		addOutput("C", -lsb+1, 2);
+		addOutput("S", -lsb+1);
+		addOutput("C", -lsb+1);
 	};
 
 
