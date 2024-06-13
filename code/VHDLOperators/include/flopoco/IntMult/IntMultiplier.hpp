@@ -95,8 +95,15 @@
 			     the error actually achieved,
 					 an LSB to which all the tiles should be truncated (for the fillBitHeap method of IntMultiplier) 
 					 
-			
- */
+		Why errorBudget is a strict bound  (|truncationError| must be < errorBudget ?)
+		It makes for a simpler interface to impose a strict bound, since it is often a power of two and removing the epsilon may be cumbersome
+		Besides, it is slightly safer.
+		Note that the final rounding error can reach -0.5 ulp but cannot reach 0.5 ulp.
+		However it is dangerous to bet on this as the truncation error can also be compensated by the constant to reach -0.5ulp.
+		We remind that correct rounding is an error <=0.5 ulp, but faithful rounding is an error < 1ulp.
+		This ensures that when the result is exactly representable, the operator returns it, which is nice.
+		It also ensures that any result can be rounded to at most two values.
+*/
 
 
 namespace flopoco {
@@ -160,7 +167,7 @@ namespace flopoco {
          * @brief Checks if a tiling for a truncated multiplier meets the error budget as required for faithfulness
          * @param solution list of the placed tiles with their parametrization and anchor point
          * @param guardBits the number of bits below the output LSB that we need to keep in the summation
-         * @param errorBudget maximal permissible weight of the sum of the omitted partial products (as they would appear in an array multiplier)
+         * @param errorBudget strict (excluded) bound on |truncationError|, counted in ulps of the exact product
          * @param constant to recenter the truncation error around 0 since it can otherwise only be negative, since there are only partial products left out. This allows a larger error, so more products can be omitted
          * @param wX width (input word size) in x-direction of multiplier
          * @param wY height (input word size) in y-direction of multiplier

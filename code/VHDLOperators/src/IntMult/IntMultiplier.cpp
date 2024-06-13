@@ -440,7 +440,7 @@ namespace flopoco {
 			wcSumOfTruncatedBits += weightOfNextBitToBeRemoved;
 			mpz_class tentativeMinError = -errorCenteringConstant; // when all truncated bits are 0; and by construction errorCenteringConstant < errorBudget
 			mpz_class tentativeMaxError = wcSumOfTruncatedBits-errorCenteringConstant;
-			if (tentativeMaxError<=errorBudget) { // one bit in col actualLSB can be removed 
+			if (tentativeMaxError<errorBudget) { // one bit in col actualLSB can be removed 
 				colHeight--;
 				// cerr << "computeTruncMultParams: removing bit " <<k<< " in actualLSB " << actualLSB << ", current error=" << error << endl;
 				if(0==colHeight) { // we have removed all the bits of this column
