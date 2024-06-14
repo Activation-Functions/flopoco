@@ -128,43 +128,47 @@ namespace flopoco {
 					lsbAdd=min(lsbPfull,lsbA);
 					multUlpErrorBudget=0;
 				}
-			else { // lsbPfull < lsbOut or lsbPfull < lsbOut: the FMA can not be exact.
+			else { // lsbPfull < lsbOut or lsbPA < lsbOut: the FMA can not be exact.
 				//It can still be either correctly rounded, either faithful
 				isExact=false;
 				isCorrectlyRounded=correctlyRounded; //
-
-				if(lsbPfull<lsbOut-1 && lsbA>=lsbOut-1) 	 // product truncated, addend untruncated
+				if(correctlyRounded) 
+					{ // to get correct rounding we need to keep all the bits
+						lsbAdd=min(lsbPfull,lsbA);
+						multUlpErrorBudget = 0;
+					}
+				else // the user asked for a faithful product so we may truncate either A or P or both
 					{
-						if(correctlyRounded) 
-							{
-								lsbAdd=lsbPfull;
-								multUlpErrorBudget = 0;
-							}
-						else // the user asked for a faithful product
-							{
+						if(lsbPfull<lsbOut-1 && lsbA>=lsbOut-1) 	 // product truncated, addend untruncated
+							{ // only one truncation error so we can achieve faithful rounding without any guard bit
 								lsbAdd = lsbOut-1;
 								multUlpErrorBudget = mpz_class(1) << (lsbOut-1-lsbPfull); // one half-ulp
 							}
-					}
-				else if(lsbPfull>=lsbOut-1 && lsbA<lsbOut-1)  // product untruncated, addend truncated
-					{
-						multUlpErrorBudget = 0; // since product untruncated
-						if(correctlyRounded) 
+						else if(lsbPfull>=lsbOut-1 && lsbA<lsbOut-1)  // product untruncated, addend truncated
 							{
-								lsbAdd=lsbA; 		
+								lsbAdd = lsbOut-1; // truncate the addend
+								multUlpErrorBudget = 0; // since product untruncated
 							}
-						else // the user asked for a faithful product
+						else // both product and addend truncated
 							{
-								lsbAdd=lsbOut-1; 		
+								lsbAdd=lsbOut-2; 		
+								multUlpErrorBudget = mpz_class(1) << (lsbOut-2-lsbPfull); // one half-ulp
 							}
 					}
-				else // both product and addend truncated
-					{
-						lsbAdd=lsbOut-2; 		
-						multUlpErrorBudget = mpz_class(1) << (lsbOut-2-lsbPfull); // one half-ulp
-					}
-			}	
+			}
+			int lsbAtrunc;
+			if(lsbA<lsbAdd)
+				{ 
+					vhdl << declareFixPoint("Atrunc", signedIO, msbA, lsbAdd) << " <= AA "<< range(msbA-lsbA,lsbAdd-lsbA) << ";" << endl;
+					lsbAtrunc=lsbAdd;
+				}
+			else
+				{ 
+					vhdl << declareFixPoint("Atrunc", signedIO, msbA, lsbA) << " <= AA; -- not truncated actually" << endl;
+					lsbAtrunc=lsbA;
+				}
 
+			cerr << "********************" << multUlpErrorBudget << " lsbAdd=" << lsbAdd<< " lsbA=" << lsbA<< endl;
 			
 			if(getTarget()->plainVHDL())  // mostly to debug emulate() and interface
 				{
@@ -173,31 +177,35 @@ namespace flopoco {
 					vhdl << declareFixPoint("Pfull", signedIO, msbP, lsbPfull) << " <= XX*YY;" << endl;
 					// Now we have to possibly truncate and possibly extend both A and Pfull
 					// Ptrunc and Atrunc manage the LSBs: either truncate with a range, or zero-extend to the right 
-					vhdl << declareFixPoint("Ptrunc", signedIO, msbP, lsbAdd) << " <= Pfull" << (lsbAdd>lsbPfull? range(msbP-lsbPfull, lsbAdd-lsbPfull) : "") << (lsbAdd<lsbPfull? " & "+zg(lsbPfull-lsbAdd): "") << ";" << endl;
+					vhdl << declareFixPoint("Ptrunc", signedIO, msbP, lsbAdd) << " <= Pfull" << (lsbAdd>lsbPfull? range(msbP-lsbPfull, lsbAdd-lsbPfull) : "") << (lsbAdd<lsbPfull? " & " + zg(lsbPfull-lsbAdd): "") << ";" << endl;
 					int newSizeP = msbOut-lsbAdd+1;
 					vhdl << declareFixPoint("Pext", signedIO, msbOut, lsbAdd) << " <= " << (signedIO ? signExtend("Ptrunc",  newSizeP) : zeroExtend("Ptrunc", newSizeP))<< ";" << endl;
 
-					vhdl << declareFixPoint("Atrunc", signedIO, msbA, lsbAdd) << " <= AA" << (lsbAdd>lsbA? range(msbA-lsbA,lsbAdd-lsbA): "") << (lsbAdd<lsbA? " & "+zg(lsbA-lsbAdd): "") << ";" << endl;
-					int newSizeA = msbOut-lsbAdd+1;
-					vhdl << declareFixPoint("Aext", signedIO, msbOut, lsbAdd) << " <= " << (signedIO ? signExtend("Atrunc",  newSizeA) : zeroExtend("Atrunc", newSizeA))<< ";" << endl;
-
-					if (lsbAdd==lsbOut-1)
+					//					vhdl << declareFixPoint("Atrunc", signedIO, msbA, lsbAdd) << " <= AA" << (lsbAdd>lsbA? range(msbA-lsbA,lsbAdd-lsbA): "") << (lsbAdd<lsbA? " & "+zg(lsbA-lsbAdd): "") << ";" << endl;
+					vhdl << declareFixPoint("Aext", signedIO, msbOut, lsbAdd) << " <= " << (signedIO ? signExtend("Atrunc",  msbOut-lsbAtrunc+1) : zeroExtend("Atrunc", msbOut-lsbAtrunc+1)) <<  (lsbAdd<lsbA?" & " + zg(lsbA-lsbAdd): "") << ";" << endl;
+					if (lsbAdd>lsbOut) // we are probably in the exact caxe
+						{
+							vhdl << declareFixPoint("RR", signedIO, msbOut, lsbOut) << " <= (Aext+Pext) & "<< zg(lsbAdd-lsbOut) <<";" << endl;
+						}
+					else if (lsbAdd==lsbOut) // idem
+						{
+						vhdl << declareFixPoint("RR", signedIO, msbOut, lsbOut) << " <= Aext+Pext;" << endl;
+						}
+					else if (lsbAdd==lsbOut-1)
 						{// we may add the rounding bit for free
 							vhdl << declareFixPoint("Sum", signedIO, msbOut, lsbOut-1) << " <= Aext+Pext + to_" << typecast << "(1, Sum'length); -- rounding bit" << endl;
 							vhdl << declareFixPoint("RR", signedIO, msbOut, lsbOut) << " <= Sum" << range(msbOut-lsbOut+1, 1) << "; --1" << endl;
 						}
-					if (lsbAdd==lsbOut-2)
+					else if (lsbAdd==lsbOut-2 && ! correctlyRounded)
 						{// We add half a rounding bit, better than nothing but adding the rounding bit at the proper place would be more expensive 
 							vhdl << declareFixPoint("Sum", signedIO, msbOut, lsbOut-2) << " <= Aext+Pext + to_" << typecast << "(1, Sum'length); --half rounding bit but it is already good" << endl;
-							vhdl << declareFixPoint("RR", signedIO, msbOut, lsbOut) << " <= Sum" << range(msbOut-lsbOut+2, 2) << "; --2" << endl;
+							vhdl << declareFixPoint("RR", signedIO, msbOut, lsbOut) << " <= Sum" << range(msbOut-lsbOut+2, 2) << ";" << endl;
 						}
-					if (lsbAdd==lsbOut)
-						{// We add half a rounding bit, better than nothing but adding the rounding bit at the proper place would be more expensive 
-							vhdl << declareFixPoint("RR", signedIO, msbOut, lsbOut) << " <= Aext+Pext;" << endl;
-						}
-					if (lsbAdd>lsbOut)						
+					else
 						{
-							vhdl << declareFixPoint("RR", signedIO, msbOut, lsbOut) << " <= (Aext+Pext) & "<< zg(lsbAdd-lsbOut) <<";" << endl;
+							vhdl << declareFixPoint("Sum0", signedIO, msbOut, lsbAdd) << " <= Aext+Pext;" << endl;
+							vhdl << declareFixPoint("Sum", signedIO, msbOut, lsbOut-1) << " <= Sum0" << range(msbOut-lsbAdd, lsbOut-1-lsbAdd)<< " + to_" << typecast << "(1, Sum'length); -- rounding bit" << endl;
+							vhdl << declareFixPoint("RR", signedIO, msbOut, lsbOut) << " <= Sum" << range(msbOut+2, 1) << ";" << endl;
 						}
 				}
 
@@ -208,7 +216,7 @@ namespace flopoco {
 					int lsbBH = min(lsbPfull, lsbA); // we will never create bits lower than that; some of these columns may remain empty
 					BitHeap bh(this, msbOut, lsbBH);
 					IntMultiplier::addToExistingBitHeap(&bh,  "XX", "YY", multUlpErrorBudget, lsbPfull); 
-					bh.addSignal("AA", 0);
+					bh.addSignal("Atrunc", 0);
 					if(!isExact) {
 						bh.addConstantOneBit(lsbOut-1); // the round bit
 					}
@@ -288,7 +296,8 @@ namespace flopoco {
 			mpfr_mul_2si (r, r, -lsbOut, MPFR_RNDN); // scaling back to integer: no rounding here
 			// I cannot use RNDN because it rounds to nearest even and I want round to nearest up
 			mpfr_set_d (a, 0.5, MPFR_RNDN); // recycling a to hold the rounding bit; no rounding here 
-			mpfr_add(r, r, a, MPFR_RNDN);
+			if(!isExact)
+				mpfr_add(r, r, a, MPFR_RNDN);
 			mpz_class rz;
 			mpfr_get_z (rz.get_mpz_t(), r, MPFR_RNDD); 			// this is where rounding happens
 			// emulate over/underflow
