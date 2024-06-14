@@ -114,7 +114,6 @@ namespace flopoco {
 			vhdl << declareFixPoint("YY", signedIO, msbY, lsbY) << " <= " << typecast << "(Y);" << endl;
 			vhdl << declareFixPoint("AA", signedIO, msbA, lsbA) << " <= " << typecast << "(A);" << endl;
 
-
 			// Error analysis cases. lsbAdd is the LSB of the eventual adder in the plainVHDL case.
 			// We simply (but painfully) enumerate the various alignment cases
 			// The objective is simply to set up these two variables:
@@ -152,7 +151,10 @@ namespace flopoco {
 						else // both product and addend truncated
 							{
 								lsbAdd=lsbOut-2; 		
-								multUlpErrorBudget = mpz_class(1) << (lsbOut-2-lsbPfull); // one half-ulp
+								if(lsbOut-2-lsbPfull >= 0)
+									multUlpErrorBudget = mpz_class(1) << (lsbOut-2-lsbPfull); // one half-ulp
+								else // the case lsbPfull=lsbOut-1 
+									multUlpErrorBudget = 0; // one half-ulp
 							}
 					}
 			}
@@ -168,7 +170,8 @@ namespace flopoco {
 					lsbAtrunc=lsbA;
 				}
 
-			cerr << "********************" << multUlpErrorBudget << " lsbAdd=" << lsbAdd<< " lsbA=" << lsbA<< endl;
+			REPORT(LogLevel::DEBUG, "lsbAdd="<<lsbAdd);
+
 			
 			if(getTarget()->plainVHDL())  // mostly to debug emulate() and interface
 				{
@@ -199,13 +202,13 @@ namespace flopoco {
 					else if (lsbAdd==lsbOut-2 && ! correctlyRounded)
 						{// We add half a rounding bit, better than nothing but adding the rounding bit at the proper place would be more expensive 
 							vhdl << declareFixPoint("Sum", signedIO, msbOut, lsbOut-2) << " <= Aext+Pext + to_" << typecast << "(1, Sum'length); --half rounding bit but it is already good" << endl;
-							vhdl << declareFixPoint("RR", signedIO, msbOut, lsbOut) << " <= Sum" << range(msbOut-lsbOut+2, 2) << ";" << endl;
+							vhdl << declareFixPoint("RR", signedIO, msbOut, lsbOut) << " <= Sum" << range(msbOut-lsbOut+2, 2) << "; -- case 2" << endl;
 						}
 					else
 						{
 							vhdl << declareFixPoint("Sum0", signedIO, msbOut, lsbAdd) << " <= Aext+Pext;" << endl;
 							vhdl << declareFixPoint("Sum", signedIO, msbOut, lsbOut-1) << " <= Sum0" << range(msbOut-lsbAdd, lsbOut-1-lsbAdd)<< " + to_" << typecast << "(1, Sum'length); -- rounding bit" << endl;
-							vhdl << declareFixPoint("RR", signedIO, msbOut, lsbOut) << " <= Sum" << range(msbOut+2, 1) << ";" << endl;
+							vhdl << declareFixPoint("RR", signedIO, msbOut, lsbOut) << " <= Sum" << range(msbOut-lsbOut+1, 1) << "; -- case 3" << endl;
 						}
 				}
 
@@ -221,7 +224,12 @@ namespace flopoco {
 						bh.addConstantOneBit(lsbOut-1); // the round bit
 					}
 					bh.startCompression();
-					vhdl << tab << declareFixPoint("RR", signedIO, msbOut, lsbOut) << " <= " << typecast << "(" << bh.getSumName() << range(msbOut-lsbBH, lsbOut-lsbBH) << ");" << endl;
+
+					vhdl << tab << declareFixPoint("RR", signedIO, msbOut, lsbOut) << " <= " << typecast << "("
+							 << (bh.msb<msbOut? rangeAssign(msbOut-1,bh.msb,(signedIO?bh.getSumName()+of(bh.msb-lsbBH):"0")) +" & " : "") // possible left padding
+							 << bh.getSumName() << range(msbOut-lsbBH, lsbOut-lsbBH)
+							 << (lsbOut<bh.lsb? " & " + zg(bh.lsb-lsbOut) : "")  // possible right padding
+							 << ");" << endl;
 					
 				}
 			vhdl << "R <= std_logic_vector(RR);  " << endl;
@@ -233,12 +241,6 @@ namespace flopoco {
 
 	FixMultAdd::~FixMultAdd()
 	{
-		if(mult)
-			delete mult;
-#if 0 // Plug me back some day !
-		if(plotter)
-			delete plotter;
-#endif
 	}
 
 
@@ -402,17 +404,30 @@ namespace flopoco {
       params = {
 				{3,0, 3,0, 10,0, 11,0}, // all exact integer without overflow
 				{3,0, 3,0, 10,0, 10,0}, // all exact integer with overflow
-				{3,-3, 3,-3, 10,0, 11,0}, // truncated mult, exact integer without overflow, result integer
-				{3,-3, 3,-3, 10,0, 11,-1}, // truncated mult, exact addend, result half-integer
-				{3,-3, 3,-3, 8,-2, 11,-1}, // truncated mult, truncated addend, result half-integer
-				{3,0, 3,0, 8,-3, 11,-1}, // exact mult, truncated addend, result half-integer
-				{3,-1, 3,0, 8,-3, 11,-1}, // exact mult, truncated addend, result half-integer
 				{3,-1, 3,0, 8,-3, 11,-1}, // truncated mult, truncated addend, result half-integer
 				{3,-3, 3,-3, 8,-4, 11,0}, // truncated mult, truncated addend, result integer
 			};
     }
     else if(testLevel == TestLevel::SUBSTANTIAL)
-    { // The substantial unit tests
+    { // The substantial unit tests, added during development and debug
+      params = {
+				{3,0, 3,0, 10,0, 11,0}, // all exact integer without overflow
+				{3,0, 3,0, 10,0, 10,0}, // all exact integer with overflow
+				{3,-3, 3,-3, 10,0, 11,0}, // truncated mult, exact addend, no overflow
+				{3,-3, 3,-3, 10,0, 11,-2}, // truncated mult, exact addend, 
+				{3,-3, 3,-3, 10,0, 11,-4}, // truncated mult, exact addend, 
+				{3,-3, 3,-3, 10,0, 11,-5}, // truncated mult, exact addend, 
+				{3,-3, 3,-3, 10,0, 11,-6}, // all exact again, 
+				{3,-3, 3,-3, 10,-7, 11,-6}, // now grow the addend, 
+				{3,-3, 3,-3, 10,-8, 11,-6}, 
+				{3,-3, 3,-3, 10,-9, 11,-6}, 
+				// we should try a few smaller and larger mults
+				{3,0, 2,0, 8,1, 9,0}, 
+				{3,0, 2,0, 8,1, 9,1}, 
+				{3,0, 2,0, 8,1, 9,2}, 
+				{3,0, 2,0, 8,1, 9,-1}, 
+				{3,0, 2,0, 8,1, 9,-2}, 
+			};
     }
     else if(testLevel >= TestLevel::EXHAUSTIVE)
     { // The substantial unit tests
