@@ -29,6 +29,27 @@ using namespace std;
 
 #define LARGE_PREC 1000  // 1000 bits should be enough for everybody
 
+// Definition of a ReLU specific to the function data
+static inline const string relu_fd(int wIn, int wOut, FunctionData& fd)
+{
+  // Base case, we return 0 for all negative values
+  string s = zg(wOut) + " when X" + of(wIn - 1) + " = '1' else ";
+
+  // If the deltaTo function is the simple ReLU, return X for positive values
+  if(fd.deltaFunction == Delta::ReLU) {
+    return s + "X;\n";
+  }
+
+  // If we need to do a slight rescale of the function, the ReLU is all ones
+  if(fd.slightRescale) {
+    return s + zg(1) + " & " + og(wOut - 1) + ";\n";
+  }
+
+  // If we don't rescale, it means that we don't hit a power of two
+
+  return s + "(\"01\" & " + zg(wOut - 2) + ");\n";
+};
+
 // Mux definition for the ReLU
 static inline const string relu(int wIn, int wOut, bool derivative = false, bool rescale = false)
 {
@@ -253,7 +274,7 @@ namespace flopoco
       // Declare the ReLU signal, when the function is a derivative, we use ReLU_P instead
       // TODO: verify that it really works with different inputScales
       // FIXME: It is sure to not work when inputScale is not a power of two
-      vhdl << tab << declare("ReLU", wOut) << " <= " << relu(wIn, wOut, fd.deltaFunction == Delta::ReLU_P, fd.scaleFactor > 1.0);
+      vhdl << tab << declare("ReLU", wOut) << " <= " << relu_fd(wIn, wOut, fd);
     }
 
     // Tackle symmetry, the symmetry is considered after reducing the function all the way, i.e. after delta and offset manipulations
@@ -414,11 +435,6 @@ namespace flopoco
     }
 
     vhdl << tab << "Y <= " << output(out);
-
-    if(af == SiLU_P || af == GeLU_P) {
-      // FIXME: WTF ??????
-      vhdl << " + (" << zg(wOut - 1) << " & not(X" << of(wIn - 1) << "))";
-    }
 
     vhdl << ";" << endl;
   }
