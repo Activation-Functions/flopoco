@@ -117,7 +117,7 @@ namespace flopoco{
       for(auto c:constantList) // test various constants
       {
         paramList.push_back(make_pair("wIn",  to_string(wIn)));
-        paramList.push_back(make_pair("constant", c));
+        paramList.push_back(make_pair("constants", c));
         testStateList.push_back(paramList);
         paramList.clear();
       }
@@ -130,7 +130,7 @@ namespace flopoco{
 				for(auto c:constantList) // test various constants
 				{
 					paramList.push_back(make_pair("wIn",  to_string(wIn)));
-					paramList.push_back(make_pair("constant", c));
+					paramList.push_back(make_pair("constants", c));
 					testStateList.push_back(paramList);
 					paramList.clear();
 				}
