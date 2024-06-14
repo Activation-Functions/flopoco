@@ -34,14 +34,8 @@ namespace flopoco{
 
 		addInput("Xi", 		w, true);
 		addInput("Xr", 		w, true);
-		if((twiddleExponent==0) || ((double)twiddleExponent == (double)n/4.0))
-			addOutput("Zi",   w, 2);
-		else
-			addOutput("Zi",   2*w, 2);
-		if((twiddleExponent==0) || ((double)twiddleExponent == (double)n/4.0))
-			addOutput("Zr",   w, 2);
-		else
-			addOutput("Zr",   2*w, 2);
+		addOutput("Zi",   2*w);
+		addOutput("Zr",   2*w);
 		
 		
 		if(twiddleExponent == 0){

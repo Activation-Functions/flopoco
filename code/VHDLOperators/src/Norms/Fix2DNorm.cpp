@@ -19,7 +19,7 @@ namespace flopoco {
 
 		addInput  ("X", wIn);
 		addInput  ("Y", wIn);
-		addOutput ("R", wOut, 2);
+		addOutput ("R", wOut);
 	}
 
 

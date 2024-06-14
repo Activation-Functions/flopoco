@@ -27,8 +27,8 @@ namespace flopoco{
 			addInput(join("X", i, "r"), w, true);
 		}
 		for(int i=0; i<n; i++){
-			addOutput(join("Z", i, "i"),   2*w, 2);
-			addOutput(join("Z", i, "r"),   2*w, 2);
+			addOutput(join("Z", i, "i"),   2*w);
+			addOutput(join("Z", i, "r"),	 2*w);
 		}
 
 		nrGroups = pow(2, k);

@@ -43,7 +43,7 @@ namespace flopoco {
 		// man atan2 says "atan2(y,x) is atan(y/x)" so we will provide the inputs in the same order...
 		addInput ("X",  wIn);
 		addInput ("Y",  wIn);
-		addOutput("A",  wOut, 2 /*number of possible output values*/);
+		addOutput("A",  wOut);
 
 		// everybody needs many digits of Pi (used by emulate etc)
 		mpfr_init2(constPi, 10*(wIn+wOut));

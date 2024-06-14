@@ -29,8 +29,8 @@ namespace flopoco{
 			addInput(join("X", i, "r"), w, true);
 		}
 		for(int i=0; i<n; i++){
-			addOutput(join("Z", i, "i"),   w, 2);
-			addOutput(join("Z", i, "r"),   w, 2);
+			addOutput(join("Z", i, "i"),   w);
+			addOutput(join("Z", i, "r"),	 w);
 		}
 		
 		for(int i=0; i<stages; i++){

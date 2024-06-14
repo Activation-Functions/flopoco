@@ -50,8 +50,8 @@ namespace flopoco{
 
 	
 #if 1
-		addOutput("Zi",   wO, 2);
-		addOutput("Zr",   wO, 2);
+		addOutput("Zi",   wO);
+		addOutput("Zr",   wO);
 
 		// we compute the two products faithfully on wO bits
 		// we add them, we obtain wO+1 bits
