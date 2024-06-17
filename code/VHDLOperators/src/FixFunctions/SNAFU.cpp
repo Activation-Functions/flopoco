@@ -372,23 +372,22 @@ namespace flopoco
       "X => " + input(in),
       "Y => " + output(out));
 
-    // Extends the signal to the full width
-    if(adhocCompression == Compression::Enabled) {
-      size_t c = out;
-      size_t y = ++out;
+    // Extends the signal to the full width if necessary
+    auto C = getSignalByName(output(out));
 
-      auto C = getSignalByName(output(c));
+    if(C->width() < wOut) {
+      size_t y = ++out;
 
       vhdl << tab << declare("E", wOut - C->width());
       auto E = getSignalByName("E");
 
-      if(fd.signedDelta) {
-        vhdl << " <= " << E->valueToVHDL(0) << " when " << output(c) << of(C->width() - 1) << " = '0' else " << E->valueToVHDL(-1) << ";" << endl;
+      if((adhocCompression == Compression::Enabled && fd.signedDelta) || (adhocCompression == Compression::Disabled && fd.signedOut)) {
+        vhdl << " <= " << E->valueToVHDL(0) << " when " << C->getName() << of(C->width() - 1) << " = '0' else " << E->valueToVHDL(-1) << ";" << endl;
       } else {
         vhdl << " <= " << E->valueToVHDL(0) << ";" << endl;
       }
 
-      vhdl << tab << declare(output(y), wOut) << " <= E & " << output(c) << ";" << endl;
+      vhdl << tab << declare(output(y), wOut) << " <= E & " << C->getName() << ";" << endl;
     }
 
     if(enableSymmetry && fd.parity == Parity::Odd) {
