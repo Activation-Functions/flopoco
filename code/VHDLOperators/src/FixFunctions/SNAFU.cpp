@@ -146,8 +146,8 @@ namespace flopoco
     // adhocCompression is to use the difference to a known function to obtain smaller output values
     if((adhocCompression == Compression::Enabled) && (fd.deltaFunction == Delta::None)) {
       // the user asked to compress a function that is not compressible
-      REPORT(LogLevel::MESSAGE, fd.longName << " has no simple delta to a fast function (ReLU or ReLU')." << endl);
-      adhocCompression = Compression::Disabled;
+      REPORT(LogLevel::MESSAGE, fd.longName << " has no simple delta to a fast function (ReLU or ReLU'), attempting to compress anyway." << endl);
+      // adhocCompression = Compression::Disabled;
     }
 
     if(adhocCompression == Compression::Auto) {
@@ -204,8 +204,9 @@ namespace flopoco
     f = new FixFunction(base, true, lsbIn, lsbOut);
     correctlyRounded = false;  // default is faithful
 
-    if(adhocCompression == Compression::Enabled) {
-      function = &delta;       // The function to really approximate is the delta one, the rest is only tricks
+    // Only compute the delta function if one is defined
+    if(adhocCompression == Compression::Enabled && fd.deltaFunction != Delta::None) {
+      function = &delta;  // The function to really approximate is the delta one, the rest is only tricks
     } else {
       // Respect the whishes of the user
       function = &base;
@@ -266,7 +267,7 @@ namespace flopoco
       return;
     }
 
-    if(adhocCompression == Compression::Enabled) {
+    if(adhocCompression == Compression::Enabled && fd.deltaFunction != Delta::None) {
       if(wIn != wOut) {
         throw(string("Too lazy so far to support wIn<>wOut in case of ad-hoc compression "));
       };
@@ -279,7 +280,7 @@ namespace flopoco
 
     // Tackle symmetry, the symmetry is considered after reducing the function all the way, i.e. after delta and offset manipulations
     const bool cond = fd.offset != 0.0 || fd.deltaFunction == Delta::None;
-    const bool enableSymmetry = fd.parity != Parity::None && (!cond && adhocCompression == Compression::Enabled);
+    const bool enableSymmetry = fd.parity != Parity::None && (!cond || adhocCompression == Compression::Enabled);
 
     if(enableSymmetry) {
       REPORT(LogLevel::MESSAGE, "Symmetry enabled.")
@@ -298,6 +299,7 @@ namespace flopoco
       break;
     }
     case Method::Horner: {
+      // FIXME: Make Horner work
       break;
     }
     case Method::PiecewiseHorner2: {
@@ -315,7 +317,7 @@ namespace flopoco
       break;
     };
 
-    // If we inted on using symmetry, only send the absolute value (modulo -1) in the operator
+    // If we intend on using symmetry, only send the absolute value (modulo -1) in the operator
     if(enableSymmetry) {
       signedIn = false;  // We known how to exploit the symmetries
 
@@ -356,7 +358,6 @@ namespace flopoco
     params["f"] = *function;
     params["signedIn"] = to_string(signedIn);
     params["lsbIn"] = to_string(lsbIn);
-    params["verbose"] = "3";
     string paramString;
 
     for(const auto& [key, value]: params) {
@@ -404,7 +405,7 @@ namespace flopoco
       // TODO: Take into account potential offsets
     }
 
-    if(adhocCompression == Compression::Enabled) {
+    if(adhocCompression == Compression::Enabled && fd.deltaFunction != Delta::None) {
       // Reconstruct the function
       size_t d = out;
       size_t f = ++out;
