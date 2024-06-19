@@ -71,19 +71,19 @@ static inline const string relu(int wIn, int wOut, bool derivative = false, bool
   return s.str();
 }
 
-static inline string _replace(string s, const string x, const string r, const size_t c = 1)
+static inline void _replace(string& s, const string x, const string r, const size_t c = 1)
 {
   size_t pos;
   while((pos = s.find(x)) != string::npos) {
     s.replace(pos, c, r);
   }
-  return s;
 }
 
 // Replace X with r, assuming future Xs are symbolized by @ in r
-static inline string replaceX(string s, const string r)
+static inline void replaceX(string& s, const string r)
 {
-  return _replace(_replace(s, "X", r), "@", "X");
+  _replace(s, "X", r);
+  _replace(s, "@", "X");
 }
 
 static inline string input(size_t n)
@@ -184,13 +184,13 @@ namespace flopoco
 
     // Disable the threshold part when we exploit symmetry
     if(enableSymmetry) {
-      base = _replace(base, "exp(-1b256*X)", "0", 13);
-      deltaTo = _replace(deltaTo, "exp(-1b256*X)", "0", 13);
+      _replace(base, "exp(-1b256*X)", "0", 13);
+      _replace(deltaTo, "exp(-1b256*X)", "0", 13);
     }
 
     // Scale the input accordingly
-    base = replaceX(base, scaleString);
-    deltaTo = replaceX(deltaTo, scaleString);
+    replaceX(base, scaleString);
+    replaceX(deltaTo, scaleString);
 
     // Rescale if necessary to avoid touching the limit
     if(fd.slightRescale) {
@@ -204,8 +204,9 @@ namespace flopoco
       deltaTo = to_string(inputScale) + "*(" + deltaTo + ")";
     }
 
-    if(af == ELU) {                               // ELU is a special case, the only complicated part is on the negative values
-      delta = "-(" + replaceX(base, "-@") + ")";  // Thus, we need to flip ths function, to go to [0,1)
+    if(af == ELU) {
+      replaceX(base, "-@");       // ELU is a special case, the only complicated part is on the negative values
+      delta = "-(" + base + ")";  // Thus, we need to flip ths function, to go to [0,1)
     } else {
       delta = "(" + deltaTo + ")-(" + base + ")";
     }
@@ -338,8 +339,8 @@ namespace flopoco
     } else if(forceRescale) {  // This is incompatible with the exploitation of symmetry
       // The original input is in [-1,1) but for technical reasons, we need to set it in [0,1)
 
-      *function = replaceX(*function, "((@+1)/2)");  // Mathematical rescaling of the function
-      lsbIn--;                                       // lsbIn needs to be updated as we shift everything 1 bit
+      replaceX(*function, "((@+1)/2)");  // Mathematical rescaling of the function
+      lsbIn--;                           // lsbIn needs to be updated as we shift everything 1 bit
       signedIn = false;
 
       const size_t x = in;
