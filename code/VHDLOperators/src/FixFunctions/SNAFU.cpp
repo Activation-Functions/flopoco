@@ -71,11 +71,11 @@ static inline const string relu(int wIn, int wOut, bool derivative = false, bool
   return s.str();
 }
 
-static inline string _replace(string s, const string x, const string r)
+static inline string _replace(string s, const string x, const string r, const size_t c = 1)
 {
   size_t pos;
   while((pos = s.find(x)) != string::npos) {
-    s.replace(pos, 1, r);
+    s.replace(pos, c, r);
   }
   return s;
 }
@@ -160,6 +160,10 @@ namespace flopoco
         LogLevel::MESSAGE, "The requested method is not very compatible with the function selected, the computation might take a long time or fail.")
     }
 
+    // Tackle symmetry, the symmetry is considered after reducing the function all the way, i.e. after delta and offset manipulations
+    const bool cond = fd.offset != 0.0 || fd.deltaFunction == Delta::None;
+    const bool enableSymmetry = fd.parity != Parity::None && (!cond || adhocCompression == Compression::Enabled);
+
     // Process the function definition based on what we know
     const string scaleString = "(" + to_string(inputScale) + "*@)";
 
@@ -176,6 +180,12 @@ namespace flopoco
       break;
     case Delta::None:
       break;
+    }
+
+    // Disable the threshold part when we exploit symmetry
+    if(enableSymmetry) {
+      base = _replace(base, "exp(-1b256*X)", "0", 13);
+      deltaTo = _replace(deltaTo, "exp(-1b256*X)", "0", 13);
     }
 
     // Scale the input accordingly
@@ -277,10 +287,6 @@ namespace flopoco
       // FIXME: It is sure to not work when inputScale is not a power of two
       vhdl << tab << declare("ReLU", wOut) << " <= " << relu_fd(wIn, wOut, fd);
     }
-
-    // Tackle symmetry, the symmetry is considered after reducing the function all the way, i.e. after delta and offset manipulations
-    const bool cond = fd.offset != 0.0 || fd.deltaFunction == Delta::None;
-    const bool enableSymmetry = fd.parity != Parity::None && (!cond || adhocCompression == Compression::Enabled);
 
     if(enableSymmetry) {
       REPORT(LogLevel::MESSAGE, "Symmetry enabled.")
