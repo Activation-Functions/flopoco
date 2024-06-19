@@ -6,10 +6,7 @@
 	<meta charset="utf-8">
 	<title>FloPoCo installation manual</title>
 </head>
-
 <body>
-<script type="text/javascript" src="prism.js"></script>
-
 <h1>FloPoCo installation  manual</h1>
 
 <p style="text-align: center"> <img src="FloPoCoSmall.png"/>	</p>
@@ -25,27 +22,32 @@
 
 <h3>Versions (most recent on top)</h3>
 
-<h4>Versions 5.0.0 and higher (june 2024)</h4>
-<p>
-	You can now just hit <em>make</em> in order to build flopoco and its dependencies. A few options are also available in order to configure the build:<br>
-<!-- <div class="box"><pre><code class="language-bash">-->
-<kbd>
-# Install 'package dependencies' (e.g. from apt on debian):<br>
-make sysdeps<br>
-# Build flopoco<br>
-make<br>
-# Install a symlink of flopoco in /usr/local/bin:<br>
-sudo make install<br>
-# Build without SCIP (ON by default):<br>
-make WITH_SCIP=OFF<br>
-# Build with 'nvc' (OFF by default):<br>
-make WITH_NVC=ON<br>
-# Add a custom path for your Gurobi installation (default is $GUROBI_HOME)<br>
-make GUROBI_HOME=/opt/gurobi1102/linux64<br>
-# Build flopoco in a docker image (available are: debian:latest (default) and ubuntu:latest)<br>
-# default branch is 'master'<br>
-make docker DOCKER_IMAGE=debian DOCKER_BRANCH=master<br>
-<!--</code></pre></div>-->
+<h4> Bleeding edge git master version</h4>
+<p>You can now just use <em>GNU make</em> in order to build <b>flopoco</b> and its <b>dependencies</b>:<br><br>
+
+&bull; Auto-install '<em>package dependencies</em>' (e.g. from <em>apt</em> on debian) (<em>optional</em>):<br>
+<dl><kbd>$ make sysdeps</kbd><br></dl>
+
+&bull; Build <b>flopoco:</b><br>
+<dl><kbd>$ make<br></kbd></dl>
+
+&bull; Install a <em>symlink</em> of flopoco in <em>/usr/local/bin</em>:<br>
+<dl><kbd>$ sudo make install</kbd></dl>
+
+A few <b>options</b> are also available in order to <u>configure the build</u>:<br><br>
+
+&bull; Build <b>without SCIP</b> (<b><span style="color:green">ON</span></b> by default):<br>
+<dl><kbd>$ make WITH_SCIP=OFF</dl></kbd>
+
+&bull; Build with <b>nvc</b> (<b><span style="color:red">OFF</span></b> by default):<br>
+<dl><kbd>$ make WITH_NVC=ON</dl></kbd>
+
+&bull; Add a custom path for your <b>Gurobi installation</b> (default is <em>$GUROBI_HOME</em>):<br>
+<dl><kbd>$ make GUROBI_HOME=/opt/gurobi1102/linux64</dl></kbd>
+
+&bull; Build flopoco in a <b>docker image</b> (available are: <em>debian</em> (default) and <em>ubuntu</em>, default branch is '<em>master</em>'):
+<dl><kbd>$ make docker DOCKER_IMAGE=debian DOCKER_BRANCH=master</dl></kbd>
+
 </p>
 
 <h4>Versions > 4.1.2 to 5.0.0</h4>
