@@ -90,9 +90,13 @@ autotests_debian:
     tags:
       - debian
     only:
-      - dev/autotests
-    needs: 
-      - autotests_debian_build
+      refs:
+        - dev/autotests
+      changes:
+        - code/**/*
+        - cmake/*
+        - Makefile
+        - CMakeLists.txt
     before_script:
       - apt update
       - apt install -y git make sudo
@@ -109,9 +113,13 @@ autotests_debian_deploy:
     tags:
       - debian
     only:
-      - dev/autotests
-    needs:
-      - autotests_debian
+      refs:
+        - dev/autotests
+      changes:
+        - code/**/*
+        - cmake/*
+        - Makefile
+        - CMakeLists.txt
     before_script:
       - apt update
       - apt install -y git make sudo cargo
