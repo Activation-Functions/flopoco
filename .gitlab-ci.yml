@@ -36,6 +36,7 @@ build_squid_debian:
   only:    
     refs:
       - dev/master
+    changes:
       - code/**/*
       - cmake/*
       - Makefile
@@ -63,7 +64,8 @@ autotests_debian_build:
     tags:
       - debian
     only:
-      - dev/autotests
+      refs:
+        - dev/autotests
       changes:
         - code/**/*
         - cmake/*
