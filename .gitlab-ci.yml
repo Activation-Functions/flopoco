@@ -38,6 +38,11 @@ build_squid_debian:
       - merge_requests
     variables:
       - $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "dev/master"
+    changes:
+      - code/**/*
+      - cmake/*
+      - Makefile
+      - CMakeLists.txt
 
 build_squid_macos:
   stage: build
@@ -52,6 +57,11 @@ build_squid_macos:
     - merge_requests
     variables:
     - $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "dev/master"
+    changes:
+      - code/**/*
+      - cmake/*
+      - Makefile
+      - CMakeLists.txt
 
 autotests_debian_build:
     stage: build
@@ -59,6 +69,11 @@ autotests_debian_build:
       - debian
     only:
       - dev/autotests
+      changes:
+        - code/**/*
+        - cmake/*
+        - Makefile
+        - CMakeLists.txt
     before_script:
       - apt update
       - apt install -y git make sudo
@@ -84,9 +99,7 @@ autotests_debian:
       - apt install -y git make sudo
     script:
       - make sysdeps nvc
-      - ./flopoco autotest operator=all testlevel=0
-      # Find 'summary.csv' file in /tmp and copy to repository's root
-      - find /tmp -name "summary.csv" -exec cp {} . \;
+      - ./flopoco autotest operator=all testlevel=0 output=.
     artifacts:
       paths:
         - summary.csv
