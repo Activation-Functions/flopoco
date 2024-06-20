@@ -91,7 +91,8 @@ autotests_debian:
       - debian
     only:
       - dev/autotests
-    needs: ["autotests_debian_build"]
+    needs: 
+      - autotests_debian_build
     before_script:
       - apt update
       - apt install -y git make sudo
@@ -109,7 +110,8 @@ autotests_debian_deploy:
       - debian
     only:
       - dev/autotests
-    needs: ["autotests_debian"]
+    needs:
+      - autotests_debian
     before_script:
       - apt update
       - apt install -y git make sudo cargo
