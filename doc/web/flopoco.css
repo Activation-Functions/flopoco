@@ -46,3 +46,11 @@ span.optionalparam               {color: #555555;}
   display: table;
   clear: both;
 }
+
+div.inbox
+{
+  background: rgb(240,255,255);
+  border: thin solid black;
+  padding: 0em 0.5em 0.2em 0.5em; /*top right bottom left*/
+  margin: 1em 0 0 0;
+}
