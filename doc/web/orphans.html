@@ -32,7 +32,7 @@
 		<div class="inbox">
  			<h2>Uniform random number generators</h2>
 
-			<p> Random bits on FPGAs are cheaps as chips if done properly. The relevant techniques are described in  <a href="bib/flopoco.html#ThomasLuk2013-TVLSI-LUT-SR">David B. Thomas and Wayne Luk. <em>The LUT-SR family of uniform random number generators for FPGA architectures. IEEE Transactions on VLSI Systems</em></a> </p>
+			<p> Random bits on FPGAs are cheaps as chips if done properly. The relevant techniques are described in  <a href="bib/flopoco.html#ThomasLuk2013-TVLSI-LUT-SR">David B. Thomas and Wayne Luk. <em>The LUT-SR family of uniform random number generators for FPGA architectures.</em></a> </p>
 
 			<p>There is an operator called <code>src/random/urng/LutSrRng.cpp</code> in the Obscure Branch <code>origin/statistical_ops</code>.
 				Don't believe the git blame, it was written by David Barrie Thomas.</p>		
@@ -55,7 +55,9 @@
 			</p>
 
 		<p>In the Obscure Branch <code>origin/statistical_ops</code>, there are all sorts of interesting things, for instance an operator called <code>src/FPNormalCDF.cpp</code> (very probably a floating-point Cumulative Distribution Function for a normal distribution) and a directory called <code>distributions</code>.
-			 Most of this was probably written by David Barrie Thomas. </p>		
+			Most of this was probably written by David Barrie Thomas. </p>
+
+		<p>Some of it is replicated in another Obscure Branch called <code>origin/random</code>. It seems to contain random bits by David, not only random number generators. </p>
 		</div>
 
 
@@ -78,7 +80,7 @@
 				A general-purpose method for faithfully rounded floating-point function approximation in FPGAs. </em></a>
 		</p>
 		
-		<p> I don't know where to find the source code.</p>
+		<p>This code was so well hidden that it alone justifies this whole page. It lives in an Obscure Branch called <code>origin/random</code>, in a directory called <code>src/float_approx</code>.</p>
 
 			
 		</div>
@@ -102,7 +104,7 @@
 		<div class="inbox">
  		<h2>A polynomial-based floating-point square root</h2>
 
-		<p> It was called <code>FPSqrtPoly</code> in versions of FloPoCo up to 4.2.</p>
+		<p> It was called <code>FPSqrtPoly</code> in versions of FloPoCo up to 4.2 and was written by Mioara Joldes and Bogdan Pasca.</p>
 
 		</div>
 
@@ -110,7 +112,11 @@
 
 		<div class="inbox">
  			<h2>General-purpose LNS arithmetic</h2>
-			It was developed by Jérémie Detrey then Sylvain Collange, and worked in versions up to 2.5.
+
+
+		<p>It was developed by Jérémie Detrey then Sylvain Collange, and worked in versions up to 2.5.			</p>
+		<p>The code is  unplugged but still distributed with FloPoCo: at time of writing this, this ghost lives in the <code>code/src/VHDLOperators/LNS</code> directory.</p>
+
 		</div>
 
 
