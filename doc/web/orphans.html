@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<link rel="stylesheet" href="flopoco.css">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<meta charset="utf-8"> 
+		<title>Please Adopt Me! Orphaned Operators in the FloPoCo project</title>
+	</head>
+	
+	<body>
+		<h1>Please adopt me! FloPoCo orphaned code</h1>
+
+		<p style="text-align: center"> <img src="FloPoCoSmall.png"/></p>
+
+
+		
+		<p>FloPoCo is an academic project. We academics write code in FloPoCo to <a href="bib/flopoco.html"> write papers</a>. After publication, maintaining FloPoCo is time consuming, and if there is no prospect of future paper, we tend not to do it.</p>
+
+		<p> This page lists FloPoCo's orphans: operators or techniques that worked at some point in FloPoCo, then didn't work any longer for some reason (evolving dependencies, framework changes, ...) and were not maintained because the original developer moved on.
+		</p>
+
+		<p> We believe that most operators listed here do not deserve oblivion. All of them were the state of the art at their time. Some still are.</p>
+
+		<p> If you just want to generate VHDL for any of these operators, it is very probably possible and even easy: first set up a docker containing a version of Ubuntu as old as the code itself. Then follow the compilation instruction in the corresponding snapshot of FloPoCo source code.</p>
+
+		<p> We also believe that the operators listed here even deserve to be revived in the main FloPoCo branch. Each of them could be the subject of a nice internship or GSoC for somebody interested in building up expertise in hardware arithmetic.</p>
+
+
+		<p>This list is maintained by Florent de Dinechin and is ordered (highly subjectively) by relevance or interest... If I forgot something, please drop me a mail.</p>
+
+		
+		<div class="inbox">
+ 			<h2>Uniform random number generators</h2>
+
+			<p> Random bits on FPGAs are cheaps as chips if done properly. The relevant techniques are described in  <a href="bib/flopoco.html#ThomasLuk2013-TVLSI-LUT-SR">David B. Thomas and Wayne Luk. <em>The LUT-SR family of uniform random number generators for FPGA architectures. IEEE Transactions on VLSI Systems</em></a> </p>
+
+			<p>There is an operator called <code>src/random/urng/LutSrRng.cpp</code> in the Obscure Branch <code>origin/statistical_ops</code>.
+				Don't believe the git blame, it was written by David Barrie Thomas.</p>		
+		</div>
+
+		
+		<div class="inbox">
+ 		<h2>Non-uniform random number generators</h2>
+
+		<p>To generate Gaussian or other distributions out of uniform random bits, several methods are available (non exhaustive list):
+
+			<ul>
+				<li>Dong-U Lee et al. <em>A Hardware Gaussian Noise Generator Using the Box-Muller Method and Its Error Analysis</em>, 2006 </li>
+				<li>Ray C. C. Cheung et al. <em>Hardware Generation of Arbitrary Random Number Distributions From Uniform Distributions Via the Inversion Method</em>, 2007.</li>
+				<li><a href="bib/flopoco.html#thomas-13-table-hadamard-grng">David B. Thomas. <em>Parallel generation of Gaussian random numbers using the Table-Hadamard transform</em></a>, 2013 </li>
+				<li>... (see references therein and who cites these works) </li>
+			</ul>
+
+			Most of these methods rely on the approximation of some functions, so FloPoCo can help. Some non-uniform segmentation techniques were developed for this context, and they would be welcome in FloPoCo, too.
+			</p>
+
+		<p>In the Obscure Branch <code>origin/statistical_ops</code>, there are all sorts of interesting things, for instance an operator called <code>src/FPNormalCDF.cpp</code> (very probably a floating-point Cumulative Distribution Function for a normal distribution) and a directory called <code>distributions</code>.
+			 Most of this was probably written by David Barrie Thomas. </p>		
+		</div>
+
+
+
+		<div class="inbox">
+ 			<h2>The HOTBM method for fixed-point function approximation</h2>
+			<p>This operator is described in <a href="bib/flopoco.html#DetDin2005:asap">J&eacute;r&eacute;mie Detrey and Florent de&nbsp;Dinechin.<em> Table-based polynomials for fast hardware function evaluation</em></a>, and a more detailed study can be found in J&eacute;r&eacute;mie's PhD thesis (in French).
+		</p>
+		
+		<p>It was ported to FloPoCo by Cristian Klein and lived happily there until version 2.5.</p>
+
+		</div>
+
+
+
+		<div class="inbox">
+ 		<h2>A universal floating-point function approximator</h2>
+
+		<p>This operator is described in <a href="bib/flopoco.html#thomas-15-general-purpose-function-approximation">David&nbsp;B. Thomas.<em>
+				A general-purpose method for faithfully rounded floating-point function approximation in FPGAs. </em></a>
+		</p>
+		
+		<p> I don't know where to find the source code.</p>
+
+			
+		</div>
+
+
+
+		<div class="inbox">
+ 		<h2>An implementation of Milo&scaron; Ercegovac's E-Method</h2>
+		<p>		This operator is described in <a href="bib/flopoco.html#BrisebarreEtAl2018-EMethod">Nicolas Brisebarre, George Constantinides, Milo&scaron; Ercezovac, Silviu-Ioan Filip, Matei I&#x015F;toan, and Jean-Michel Muller.<em>
+					A high throughput polynomial and rational function approximations evaluator.
+		</em></a></p>
+
+		<p>This operator is available in the Obscure Branch <code>e-method</code>.
+			The person to contact for questions is probably Matei I&#x015F;toan.</p>
+
+		
+		</div>
+
+
+
+		<div class="inbox">
+ 		<h2>A polynomial-based floating-point square root</h2>
+
+		<p> It was called <code>FPSqrtPoly</code> in versions of FloPoCo up to 4.2.</p>
+
+		</div>
+
+
+
+		<div class="inbox">
+ 			<h2>General-purpose LNS arithmetic</h2>
+			It was developed by Jérémie Detrey then Sylvain Collange, and worked in versions up to 2.5.
+		</div>
+
+
+
+
+		
+ 	</body>
+</html>
+
