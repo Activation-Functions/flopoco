@@ -103,7 +103,6 @@ impl OperatorResults {
             self.passed_last = String::from_utf8(out)
                 .expect("Could not parse git output");
             self.passed_last.pop();
-            println!("{}", self.passed_last);
         }
     }
 }
@@ -127,7 +126,6 @@ fn deserialize_trim<'de, D, T>(deserializer: D) -> Result<T, D::Error>
         .unwrap()
     )
 }
-
 
 macro_rules! cell {
     ($contents:expr) => {
@@ -160,8 +158,8 @@ fn add_html_row(op: &OperatorResults, table: &mut build_html::Table) {
     if op.passed_last != "n/a" {
         c6.add_link(
             format!("{gitlab}/-/commit/{}", &op.passed_last),
-            &op.passed_last
-        )
+            "#commit"
+        );
     } else {
         c6.add_paragraph(&op.passed_last);
     }
