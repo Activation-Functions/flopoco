@@ -144,6 +144,18 @@ fn add_color(cell: &mut TableCell, txt: impl ToString, color: &str) {
 
 const gitlab: &str = "https://gitlab.com/flopoco/flopoco";
 
+fn get_commit_date(commit: &String) -> String {
+    let out = Command::new("git")
+        .arg("show")
+        .arg("-s")
+        .arg("--format=%ci")
+        .arg(&commit)
+        .output()
+        .expect("Could not get commit date")
+        .stdout;
+    return String::from_utf8(out).expect("Could not parse commit date");
+}
+
 fn add_html_row(op: &OperatorResults, table: &mut build_html::Table) {
     // For each row:
     // Note: TableCell doesn't implement copy/clone
@@ -156,9 +168,10 @@ fn add_html_row(op: &OperatorResults, table: &mut build_html::Table) {
     let mut c5 = cell!(op.status);
     let mut c6 = TableCell::default();
     if op.passed_last != "n/a" {
+        let date = get_commit_date(&op.passed_last);
         c6.add_link(
             format!("{gitlab}/-/commit/{}", &op.passed_last),
-            "#commit"
+            format!("#commit ({date})")
         );
     } else {
         c6.add_paragraph(&op.passed_last);
