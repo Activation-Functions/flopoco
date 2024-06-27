@@ -205,7 +205,7 @@ public:
      * @brief nbGenerationOK
      * @return
      */
-    size_t nbGenerationOK () const {
+    size_t nbGenerationOk () const {
     	assert(hasRun);
     	size_t res{0};
     	for (auto const & testCase : tests) {
@@ -356,7 +356,7 @@ public:
                 << endl;
         } else {
             out  << "Results for " << opFact->name() << endl;
-            size_t nbGenOk {nbGenerationOK()}, nbSimOk {nbSimulationOk()};
+            size_t nbGenOk {nbGenerationOk()}, nbSimOk {nbSimulationOk()};
             auto plural = [](int val) {
                 if (val > 1)  {
                     return std::string_view("tests");
@@ -503,19 +503,42 @@ AutoTest::AutoTest(string opName, const int testLevel, string output) : testLeve
     	tester.printStats(cout);
     }
     // Build summary.csv and a few global stats
-    auto summaryFilePath= path / "summary.csv";
-    ofstream outputSummary{summaryFilePath};
+    fs::path summaryFilePath = path / "summary.csv";
+    ofstream outputSummary(summaryFilePath);
     size_t totalTests = 0, genOK = 0, simOK = 0;
-    outputSummary << "Operator Name, Total Tests, Generation OK, Simulation Ok\n";
+    outputSummary << "Operator, "
+                  << "Tests, "
+                  << "Generation, "
+                  << "Simulation, "
+                  << "%, "
+                  << "Status, "       // These two columns are just placeholders
+                  << "Passed Last\n"  // and are post-processed during 'deploy' stage on Gitlab.
+    ;
     for (auto& [opName, tester] : testerMap) {
     	totalTests += tester.getNbTests();
-    	genOK += tester.nbGenerationOK();
+    	genOK += tester.nbGenerationOk();
     	simOK += tester.nbSimulationOk();
+        float percentage = 0;
+        if (tester.getNbTests() > 0) {
+            percentage= (float) tester.nbSimulationOk()
+                      / (float) tester.getNbTests()
+                      * 100.f;
+        }
     	outputSummary << opName << ", "
                       << tester.getNbTests() << ", "
-                      << tester.nbGenerationOK() << ", "
-                      << tester.nbSimulationOk() << "\n";
+                      << tester.nbGenerationOk() << ", "
+                      << tester.nbSimulationOk() << ", "
+                      << percentage << ", "
+                      << "Undefined, "     // 'status'
+                      << 0 << std::endl;  // commit hash
     }
+    outputSummary << "Total, "
+                  << totalTests << ", "
+                  << genOK << ", "
+                  << simOK << ", "
+                  << (float) totalTests / (float) (simOK) * 100.f << ", "
+                  << "Undefined, "
+                  << 0 << std::endl;
     cout << "Tests are finished, see summary in " << summaryFilePath.string() << endl;
     cout << "Total number of tests  " << totalTests << endl;
     cout << "Code generation OK     " << genOK << endl;
