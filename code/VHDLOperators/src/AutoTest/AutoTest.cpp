@@ -529,16 +529,16 @@ AutoTest::AutoTest(string opName, const int testLevel, string output) : testLeve
                       << tester.nbGenerationOk() << ", "
                       << tester.nbSimulationOk() << ", "
                       << percentage << ", "
-                      << "Undefined, "     // 'status'
-                      << 0 << std::endl;  // commit hash
+                      << "Undefined, "        // 'status'
+                      << "n/a" << std::endl;  // commit hash
     }
     outputSummary << "Total, "
                   << totalTests << ", "
                   << genOK << ", "
                   << simOK << ", "
-                  << (float) totalTests / (float) (simOK) * 100.f << ", "
+                  << (float) (simOK) / (float) totalTests * 100.f << ", "
                   << "Undefined, "
-                  << 0 << std::endl;
+                  << "n/a" << std::endl;
     cout << "Tests are finished, see summary in " << summaryFilePath.string() << endl;
     cout << "Total number of tests  " << totalTests << endl;
     cout << "Code generation OK     " << genOK << endl;

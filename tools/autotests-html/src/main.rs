@@ -50,8 +50,6 @@ struct OperatorResults {
     #[serde(deserialize_with = "deserialize_trim")]
     generation: usize,
     // ---------------------------------------------------
-    // Also Note: it's OK for 'Generation OK'
-    // but 'Ok' for 'Simulation OK'... (TODO)
     #[serde(rename = " Simulation")]
     #[serde(deserialize_with = "deserialize_trim")]
     simulation: usize,
@@ -66,8 +64,10 @@ struct OperatorResults {
     // ---------------------------------------------------
     #[serde(rename = " Passed Last")]
     #[serde(deserialize_with = "deserialize_trim")]
-    passed_last: isize, // commit hash
+    passed_last: String, // commit hash
 }
+
+use std::process::Command;
 
 impl OperatorResults {
     /// Update the Operator's status, in comparison
@@ -93,6 +93,18 @@ impl OperatorResults {
         println!("Updating Operator {}, status: {:?}",
             self.id, self.status
         );
+        // If pass: save the commit hash
+        if self.percentage == 100f32 {
+            let out = Command::new("git")
+                .arg("rev-parse").arg("HEAD")
+                .output()
+                .expect("Failed to get current git commit")
+                .stdout;
+            self.passed_last = String::from_utf8(out)
+                .expect("Could not parse git output");
+            self.passed_last.pop();
+            println!("{}", self.passed_last);
+        }
     }
 }
 
@@ -116,14 +128,6 @@ fn deserialize_trim<'de, D, T>(deserializer: D) -> Result<T, D::Error>
     )
 }
 
-fn create_cell(txt: impl ToString, color: &str) -> TableCell {
-    TableCell::new(TableCellType::Data)
-        .with_paragraph_attr(
-            txt.to_string().trim(), [(
-                "style", format!("color:{color}").as_str()
-            )]
-        )
-}
 
 macro_rules! cell {
     ($contents:expr) => {
@@ -132,48 +136,68 @@ macro_rules! cell {
     };
 }
 
+fn add_color(cell: &mut TableCell, txt: impl ToString, color: &str) {
+    cell.add_paragraph_attr(
+        txt.to_string().trim(), [(
+            "style", format!("color:{color}").as_str()
+        )]
+    );
+}
+
+const gitlab: &str = "https://gitlab.com/flopoco/flopoco";
+
 fn add_html_row(op: &OperatorResults, table: &mut build_html::Table) {
     // For each row:
     // Note: TableCell doesn't implement copy/clone
     // so we have to instantiate each cell individually...
-    let mut c0 = cell!(&op.id);
+    let mut c0 = TableCell::default();
     let mut c1 = cell!(op.ntests);
-    let mut c2 = cell!(op.generation);
-    let mut c3 = cell!(op.simulation);
-    let mut c4 = cell!(op.percentage);
+    let mut c2 = TableCell::default();
+    let mut c3 = TableCell::default();
+    let mut c4 = TableCell::default();
     let mut c5 = cell!(op.status);
-    let mut c6 = cell!(op.passed_last);
-
+    let mut c6 = TableCell::default();
+    if op.passed_last != "n/a" {
+        c6.add_link(
+            format!("{gitlab}/-/commit/{}", &op.passed_last),
+            &op.passed_last
+        )
+    } else {
+        c6.add_paragraph(&op.passed_last);
+    }
     if op.ntests > 0 {
         // If autotests are available
         let mut gen_ok = false;
         let mut sim_ok = false;
         if op.generation == op.ntests {
             // If all generation tests succeed:
-            c2 = create_cell(op.generation, "green");
+            add_color(&mut c2, op.generation, "green");
             gen_ok = true;
         } else {
-            c2 = create_cell(op.generation, "red");
+            add_color(&mut c2, op.generation, "red");
         }
         if op.simulation == op.ntests {
             // If all simulation tests succeed:
-            c3 = create_cell(op.simulation, "green");
-            c4 = create_cell(format!("{:.0}%", op.percentage), "green");
+            add_color(&mut c3, op.simulation, "green");
+            add_color(&mut c4, format!("{:.0}%", op.percentage), "green");
             sim_ok = true;
         } else {
-            c3 = create_cell(op.simulation, "red");
-            c4 = create_cell(format!("{:.0}%", op.percentage), "red");
+            add_color(&mut c3, op.simulation, "red");
+            add_color(&mut c4, format!("{:.0}%", op.percentage), "red");
         }
         if gen_ok && sim_ok {
             // If both Generation and Simulation are OK,
             // Highlight very cell in green
-            c0 = create_cell(&op.id, "green");
+            add_color(&mut c0, &op.id, "green");
         } else {
             // Otherwise, set to red
-            c0 = create_cell(&op.id, "red");
+            add_color(&mut c0, &op.id, "red");
         }
     } else {
-        c4 = create_cell(format!("{:.0}%", op.percentage), "black");
+        c0.add_paragraph(&op.id);
+        c2.add_paragraph(op.generation);
+        c3.add_paragraph(op.simulation);
+        c4.add_paragraph(format!("{:.0}%", op.percentage));
     }
     table.add_custom_body_row(
         TableRow::new()
@@ -224,7 +248,9 @@ fn write_csv_file<P: AsRef<Path>>(path: P, csv: &Vec<OperatorResults>) {
 }
 
 fn write_html<P: AsRef<Path>>(path: P, csv: &Vec<OperatorResults>) {
-    let mut table = build_html::Table::new();
+    let mut table = build_html::Table::new()
+        .with_attributes([("th style","text-align:center")]) // doesn't work
+    ;
     // Add headers first (TODO: get them from serde instead):
     let headers = vec![
         "Operator", "Tests", "Generation",
@@ -263,12 +289,4 @@ fn main() {
     // Convert and write to 'doc/web/autotests.html'
     println!("Converting to HTML: 'doc/web/autotests.html'");
     write_html("doc/web/autotests.html", &summary);
-    // match csv_summary.headers() {
-    // // Parse and add headers:
-    //     Ok(record) => {
-    //         let mut headers: Vec<&str> = record.iter().collect();
-    //         html_table.add_header_row(headers);
-    //     }
-    //     Err(..) => ()
-    // }
 }
