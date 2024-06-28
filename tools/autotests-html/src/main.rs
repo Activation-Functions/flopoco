@@ -32,6 +32,19 @@ impl ToString for OperatorStatus {
     }
 }
 
+impl OperatorStatus {
+    fn color(&self) -> String {
+        match self {
+               Self::Up => String::from("green"),
+             Self::Down => String::from("red"),
+             Self::Pass => String::from("green"),
+            Self::Break => String::from("red"),
+           Self::Stable => String::from("blue"),
+        Self::Undefined => String::from("black")
+        }
+    }
+}
+
 #[derive(Default, Debug)]
 #[derive(Serialize, Deserialize)]
 struct OperatorResults {
@@ -165,25 +178,15 @@ fn add_html_row(op: &OperatorResults, table: &mut build_html::Table) {
     let mut c2 = TableCell::default();
     let mut c3 = TableCell::default();
     let mut c4 = TableCell::default();
-    let mut c5 = cell!(op.status);
+    let mut c5 = TableCell::default();
     let mut c6 = TableCell::default();
-    if op.passed_last != "n/a" {
-        let date = get_commit_date(&op.passed_last);
-        c6.add_link(
-            format!("{gitlab}/-/commit/{}", &op.passed_last),
-            format!("#commit ({date})")
-        );
-    } else {
-        c6.add_paragraph(&op.passed_last);
-    }
+
     if op.ntests > 0 {
         // If autotests are available
-        let mut gen_ok = false;
-        let mut sim_ok = false;
+        let mut pass = false;
         if op.generation == op.ntests {
             // If all generation tests succeed:
             add_color(&mut c2, op.generation, "green");
-            gen_ok = true;
         } else {
             add_color(&mut c2, op.generation, "red");
         }
@@ -191,12 +194,12 @@ fn add_html_row(op: &OperatorResults, table: &mut build_html::Table) {
             // If all simulation tests succeed:
             add_color(&mut c3, op.simulation, "green");
             add_color(&mut c4, format!("{:.0}%", op.percentage), "green");
-            sim_ok = true;
+            pass = true;
         } else {
             add_color(&mut c3, op.simulation, "red");
             add_color(&mut c4, format!("{:.0}%", op.percentage), "red");
         }
-        if gen_ok && sim_ok {
+        if pass {
             // If both Generation and Simulation are OK,
             // Highlight very cell in green
             add_color(&mut c0, &op.id, "green");
@@ -209,6 +212,19 @@ fn add_html_row(op: &OperatorResults, table: &mut build_html::Table) {
         c2.add_paragraph(op.generation);
         c3.add_paragraph(op.simulation);
         c4.add_paragraph(format!("{:.0}%", op.percentage));
+    }
+    // Colorize 'Status' symbols:
+    add_color(&mut c5, op.status, &op.status.color());
+
+    // Compute 'Passed Last' column:
+    if op.passed_last != "n/a" {
+        let date = get_commit_date(&op.passed_last);
+        c6.add_link(
+            format!("{gitlab}/-/commit/{}", &op.passed_last),
+            format!("#commit ({date})")
+        );
+    } else {
+        c6.add_paragraph(&op.passed_last);
     }
     table.add_custom_body_row(
         TableRow::new()
@@ -281,11 +297,11 @@ fn write_html<P: AsRef<Path>>(path: P, csv: &Vec<OperatorResults>) {
 }
 
 fn main() {
-    // Read new .csv 'summary' file, add total row:
+    // Read new .csv 'summary' file
     let mut summary = read_parse_csv_file("autotests/summary.csv");
-    let compare = read_parse_csv_file("doc/web/autotests.csv");
     // Compare with previous results,
     // + update the 'status' and 'passed_last' members:
+    let compare = read_parse_csv_file("doc/web/autotests.csv");
     for op in &mut summary {
         for cmp in &compare {
             if op.id == cmp.id {
