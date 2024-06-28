@@ -34,9 +34,12 @@ build_squid_debian:
     - flopoco
   only:    
     refs:
-      - merge_requests
-    variables:
-      - $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "dev/master"
+      - dev/master
+    changes:
+      - code/**/*
+      - cmake/*
+      - Makefile
+      - CMakeLists.txt
 
 build_squid_macos:
   stage: build
@@ -48,6 +51,9 @@ build_squid_macos:
     # but on our current runner, it would require having sudo...
   only:
     refs:
-    - merge_requests
-    variables:
-    - $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "dev/master"
+    - dev/master 
+    changes:
+      - code/**/*
+      - cmake/*
+      - Makefile
+      - CMakeLists.txt
