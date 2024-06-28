@@ -102,11 +102,10 @@ autotests_debian:
       - apt install -y git make sudo
     script:
       - make sysdeps nvc
-      - ./flopoco autotest operator=all testlevel=0 output=.
+      - ./flopoco autotest operator=all testlevel=0 output=autotests
     artifacts:
       paths:
         - summary.csv
-  # allow_failure: true
 
 autotests_debian_deploy:
     stage: deploy
@@ -124,7 +123,7 @@ autotests_debian_deploy:
       - apt update
       - apt install -y git make sudo cargo openssh-client
       - eval `ssh-agent -s`
-      - echo "${SSH_PRIVATE_KEY}" | tr -d '\r' | ssh-add - > /dev/null
+      - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add - > /dev/null
       - mkdir -p ~/.ssh
       - chmod 700 ~/.ssh
       - echo "$SSH_PUBLIC_KEY" >> ~/.ssh/id_rsa.pub
@@ -136,9 +135,11 @@ autotests_debian_deploy:
       - git config --global user.email "${CI_EMAIL}"
       - git config --global user.name "${CI_USERNAME}"
       - git add -f doc/web/autotests.html
+      - git add -f doc/web/autotests.csv
       - git commit -m "[autotests] updated 'doc/web/autotests.html' [skip ci]"
       - git remote rm origin && git remote add origin git@gitlab.com:$CI_PROJECT_PATH.git
       - git push origin HEAD:$CI_COMMIT_REF_NAME
     artifacts:
       paths:
+        - doc/web/autotests.csv
         - doc/web/autotests.html

@@ -201,7 +201,7 @@ fn add_html_row(op: &OperatorResults, table: &mut build_html::Table) {
         }
         if pass {
             // If both Generation and Simulation are OK,
-            // Highlight very cell in green
+            // Highlight every cell in green
             add_color(&mut c0, &op.id, "green");
         } else {
             // Otherwise, set to red
@@ -215,7 +215,6 @@ fn add_html_row(op: &OperatorResults, table: &mut build_html::Table) {
     }
     // Colorize 'Status' symbols:
     add_color(&mut c5, op.status, &op.status.color());
-
     // Compute 'Passed Last' column:
     if op.passed_last != "n/a" {
         let date = get_commit_date(&op.passed_last);
@@ -276,7 +275,7 @@ fn write_csv_file<P: AsRef<Path>>(path: P, csv: &Vec<OperatorResults>) {
 
 fn write_html<P: AsRef<Path>>(path: P, csv: &Vec<OperatorResults>) {
     let mut table = build_html::Table::new()
-        .with_attributes([("th style","text-align:center")]) // doesn't work
+        .with_attributes([("th style","text-align:center")])
     ;
     // Add headers first (TODO: get them from serde instead):
     let headers = vec![
