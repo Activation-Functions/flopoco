@@ -512,7 +512,8 @@ AutoTest::AutoTest(string opName, const int testLevel, string output) : testLeve
                   << "Simulation,"
                   << "%,"
                   << "Status,"         // These two columns are just placeholders
-                  << "Changed Last\n"   // and are post-processed during 'deploy' stage on Gitlab.
+                  << "Changed Last,"   // and are post-processed during 'deploy' stage on Gitlab.
+                  << "Status Last" << std::endl;
     ;
     for (auto& [opName, tester] : testerMap) {
     	totalTests += tester.getNbTests();
@@ -530,7 +531,8 @@ AutoTest::AutoTest(string opName, const int testLevel, string output) : testLeve
                       << tester.nbSimulationOk() << ","
                       << percentage << ","
                       << "Undefined,"        // 'status'
-                      << "n/a" << std::endl;  // commit hash
+                      << "n/a," // commit hash
+                      << "Undefined" << std::endl; // status last
     }
     outputSummary << "Total,"
                   << totalTests << ","
@@ -538,7 +540,8 @@ AutoTest::AutoTest(string opName, const int testLevel, string output) : testLeve
                   << simOK << ","
                   << (float) (simOK) / (float) totalTests * 100.f << ","
                   << "Undefined,"
-                  << "n/a" << std::endl;
+                  << "n/a,"
+                  << "Undefined" << std::endl;
     cout << "Tests are finished, see summary in " << summaryFilePath.string() << endl;
     cout << "Total number of tests  " << totalTests << endl;
     cout << "Code generation OK     " << genOK << endl;
