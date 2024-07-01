@@ -506,13 +506,13 @@ AutoTest::AutoTest(string opName, const int testLevel, string output) : testLeve
     fs::path summaryFilePath = path / "summary.csv";
     ofstream outputSummary(summaryFilePath);
     size_t totalTests = 0, genOK = 0, simOK = 0;
-    outputSummary << "Operator, "
-                  << "Tests, "
-                  << "Generation, "
-                  << "Simulation, "
-                  << "%, "
-                  << "Status, "       // These two columns are just placeholders
-                  << "Passed Last\n"  // and are post-processed during 'deploy' stage on Gitlab.
+    outputSummary << "Operator,"
+                  << "Tests,"
+                  << "Generation,"
+                  << "Simulation,"
+                  << "%,"
+                  << "Status,"         // These two columns are just placeholders
+                  << "Changed Last\n"   // and are post-processed during 'deploy' stage on Gitlab.
     ;
     for (auto& [opName, tester] : testerMap) {
     	totalTests += tester.getNbTests();
@@ -524,20 +524,20 @@ AutoTest::AutoTest(string opName, const int testLevel, string output) : testLeve
                       / (float) tester.getNbTests()
                       * 100.f;
         }
-    	outputSummary << opName << ", "
-                      << tester.getNbTests() << ", "
-                      << tester.nbGenerationOk() << ", "
-                      << tester.nbSimulationOk() << ", "
-                      << percentage << ", "
-                      << "Undefined, "        // 'status'
+    	outputSummary << opName << ","
+                      << tester.getNbTests() << ","
+                      << tester.nbGenerationOk() << ","
+                      << tester.nbSimulationOk() << ","
+                      << percentage << ","
+                      << "Undefined,"        // 'status'
                       << "n/a" << std::endl;  // commit hash
     }
-    outputSummary << "Total, "
-                  << totalTests << ", "
-                  << genOK << ", "
-                  << simOK << ", "
-                  << (float) (simOK) / (float) totalTests * 100.f << ", "
-                  << "Undefined, "
+    outputSummary << "Total,"
+                  << totalTests << ","
+                  << genOK << ","
+                  << simOK << ","
+                  << (float) (simOK) / (float) totalTests * 100.f << ","
+                  << "Undefined,"
                   << "n/a" << std::endl;
     cout << "Tests are finished, see summary in " << summaryFilePath.string() << endl;
     cout << "Total number of tests  " << totalTests << endl;

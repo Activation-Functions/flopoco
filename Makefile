@@ -623,7 +623,7 @@ endif
 
 # -----------------------------------------------------------------------------
 .ONESHELL:
-.PHONY: test
+.PHONY: autotests
 # -----------------------------------------------------------------------------
-test: $(FLOPOCO)
-	@$(FLOPOCO) autotest operator=all testlevel=0
+autotests: $(FLOPOCO)
+	@$(FLOPOCO) autotest operator=all testlevel=0 output=autotests

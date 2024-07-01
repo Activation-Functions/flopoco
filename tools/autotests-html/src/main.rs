@@ -1,9 +1,9 @@
 use std::fs;
 use std::path::Path;
-use std::str::FromStr;
 use std::fmt::Debug;
 use build_html::{Html, HtmlContainer, TableCell, TableCellType, TableRow};
-use serde::{Serialize, Deserialize, Deserializer};
+use serde::{Serialize, Deserialize};
+use std::process::Command;
 use strum::{EnumString};
 
 #[derive(Default, Debug, Copy, Clone)]
@@ -18,12 +18,15 @@ enum OperatorStatus {
    #[default] Undefined, // Could not resolve operator's status
 }
 
+const STATUS_UP_OPCODE: &str = "&#8593";
+const STATUS_DN_OPCODE: &str = "&#8595";
+
 /// This would be the HTML representation of the Operator Status:
 impl ToString for OperatorStatus {
     fn to_string(&self) -> String {
         match self {
-               Self::Up => String::from("&#8593"),
-             Self::Down => String::from("&#8595"),
+               Self::Up => String::from(STATUS_UP_OPCODE),
+             Self::Down => String::from(STATUS_DN_OPCODE),
              Self::Pass => String::from("PASS!"),
             Self::Break => String::from("BREAK!"),
            Self::Stable => String::from("="),
@@ -32,6 +35,7 @@ impl ToString for OperatorStatus {
     }
 }
 
+/// HTML status color.
 impl OperatorStatus {
     fn color(&self) -> String {
         match self {
@@ -55,38 +59,74 @@ struct OperatorResults {
     // Note: the generated .csv file has ', ' as delimiter
     // which is impossible to set in the reader's options,
     // so it doesn't take the whitespace into account:
-    #[serde(rename = " Tests")]
-    #[serde(deserialize_with = "deserialize_trim")]
+    // Update: According to RFC 4180, spaces outside quotes
+    // in a field are not allowed.
+    // See also: https://github.com/BurntSushi/rust-csv/issues/210
+    // multi-character delimiters are now removed.
+    #[serde(rename = "Tests")]
     ntests: usize,
     // ---------------------------------------------------
-    #[serde(rename = " Generation")]
-    #[serde(deserialize_with = "deserialize_trim")]
+    #[serde(rename = "Generation")]
     generation: usize,
     // ---------------------------------------------------
-    #[serde(rename = " Simulation")]
-    #[serde(deserialize_with = "deserialize_trim")]
+    #[serde(rename = "Simulation")]
     simulation: usize,
     // ---------------------------------------------------
-    #[serde(rename = " %")]
-    #[serde(deserialize_with = "deserialize_trim")]
+    #[serde(rename = "%")]
     percentage: f32,
     //----------------------------------------------------
-    #[serde(rename = " Status")]
-    #[serde(deserialize_with = "deserialize_trim")]
+    #[serde(rename = "Status")]
     status: OperatorStatus,
     // ---------------------------------------------------
-    #[serde(rename = " Passed Last")]
-    #[serde(deserialize_with = "deserialize_trim")]
-    passed_last: String, // commit hash
+    #[serde(rename = "Changed Last")]
+    changed_last: String, // commit hash
 }
 
-use std::process::Command;
+const GITLAB: &str = "https://gitlab.com/flopoco/flopoco";
+
+fn get_commit_date(commit: &String) -> String {
+    let out = Command::new("git")
+        .arg("show").arg("-s")
+        .arg("--format=%ci")
+        .arg(&commit)
+        .output()
+        .expect("Could not get commit date")
+        .stdout;
+    return String::from_utf8(out)
+        .expect("Could not parse commit date");
+}
+
+fn get_current_branch() -> String {
+    let out = Command::new("git")
+        .arg("symbolic-ref")
+        .arg("--short").arg("HEAD")
+        .output()
+        .expect("Could not get current git branch")
+        .stdout;
+    return String::from_utf8(out)
+        .expect("Could not parse current git branch");
+}
+
+fn get_commit_hash() -> String {
+    let out = Command::new("git")
+        .arg("rev-parse").arg("HEAD")
+        .output()
+        .expect("Failed to get current git commit")
+        .stdout;
+    let mut s = String::from_utf8(out)
+        .expect("Could not parse git output");
+    s.pop();
+    return s;
+}
 
 impl OperatorResults {
     /// Update the Operator's status, in comparison
     /// with `cmp`: a previous internal representation
     /// of the autotest results for the same operator.
     fn update(&mut self, cmp: &OperatorResults) {
+        if self != &cmp {
+            self.changed_last = get_commit_hash();
+        }
         if cmp.percentage == 100f32
         && self.percentage < 100f32 {
         // If Operator was previously at 100%
@@ -106,17 +146,6 @@ impl OperatorResults {
         println!("Updating Operator {}, status: {:?}",
             self.id, self.status
         );
-        // If pass: save the commit hash
-        if self.percentage == 100f32 {
-            let out = Command::new("git")
-                .arg("rev-parse").arg("HEAD")
-                .output()
-                .expect("Failed to get current git commit")
-                .stdout;
-            self.passed_last = String::from_utf8(out)
-                .expect("Could not parse git output");
-            self.passed_last.pop();
-        }
     }
 }
 
@@ -128,16 +157,20 @@ impl std::ops::AddAssign<&OperatorResults> for OperatorResults {
     }
 }
 
-fn deserialize_trim<'de, D, T>(deserializer: D) -> Result<T, D::Error>
-    where D: Deserializer<'de>,
-          T: FromStr, <T as FromStr>::Err: Debug
-{
-    Ok(String::deserialize(deserializer)
-        .unwrap()
-        .trim()
-        .parse::<T>()
-        .unwrap()
-    )
+impl PartialEq<&OperatorResults> for OperatorResults {
+    fn eq(&self, other: &&OperatorResults) -> bool {
+        return self.ntests == other.ntests
+            && self.generation == other.generation
+            && self.simulation == other.simulation;
+    }
+}
+
+fn add_color(cell: &mut TableCell, txt: impl ToString, color: &str) {
+    cell.add_paragraph_attr(
+        txt.to_string().trim(), [
+            ("style", format!("color:{color}").as_str())
+        ]
+    );
 }
 
 macro_rules! cell {
@@ -147,28 +180,7 @@ macro_rules! cell {
     };
 }
 
-fn add_color(cell: &mut TableCell, txt: impl ToString, color: &str) {
-    cell.add_paragraph_attr(
-        txt.to_string().trim(), [(
-            "style", format!("color:{color}").as_str()
-        )]
-    );
-}
-
-const gitlab: &str = "https://gitlab.com/flopoco/flopoco";
-
-fn get_commit_date(commit: &String) -> String {
-    let out = Command::new("git")
-        .arg("show")
-        .arg("-s")
-        .arg("--format=%ci")
-        .arg(&commit)
-        .output()
-        .expect("Could not get commit date")
-        .stdout;
-    return String::from_utf8(out).expect("Could not parse commit date");
-}
-
+#[allow(unused_mut)]
 fn add_html_row(op: &OperatorResults, table: &mut build_html::Table) {
     // For each row:
     // Note: TableCell doesn't implement copy/clone
@@ -181,8 +193,8 @@ fn add_html_row(op: &OperatorResults, table: &mut build_html::Table) {
     let mut c5 = TableCell::default();
     let mut c6 = TableCell::default();
 
-    if op.ntests > 0 {
-        // If autotests are available
+    // If autotests are available for operator
+    if op.ntests > 0 {        
         let mut pass = false;
         if op.generation == op.ntests {
             // If all generation tests succeed:
@@ -216,14 +228,14 @@ fn add_html_row(op: &OperatorResults, table: &mut build_html::Table) {
     // Colorize 'Status' symbols:
     add_color(&mut c5, op.status, &op.status.color());
     // Compute 'Passed Last' column:
-    if op.passed_last != "n/a" {
-        let date = get_commit_date(&op.passed_last);
+    if op.changed_last != "n/a" {
+        let date = get_commit_date(&op.changed_last);
         c6.add_link(
-            format!("{gitlab}/-/commit/{}", &op.passed_last),
+            format!("{GITLAB}/-/commit/{}", &op.changed_last),
             format!("#commit ({date})")
         );
     } else {
-        c6.add_paragraph(&op.passed_last);
+        c6.add_paragraph(&op.changed_last);
     }
     table.add_custom_body_row(
         TableRow::new()
@@ -238,29 +250,36 @@ fn add_html_row(op: &OperatorResults, table: &mut build_html::Table) {
 }
 
 fn read_parse_csv_file<P>(path: P) -> Vec<OperatorResults>
-    where P: AsRef<Path> {
-    // Read .csv file as String, from path:
+    where P: AsRef<Path>
+{
     let mut vec = vec![];
-    let csv = fs::read_to_string(path)
-        .expect("Could not open/read summary.csv file");
+    // Read .csv file as String, from path:
+    let csv = fs::read_to_string(path.as_ref())
+        .expect(&format!(
+            "Could not open/read {:?}",
+            path.as_ref().display()
+        ).to_string()
+    );
     // Parse .csv file:
     let mut reader = csv::ReaderBuilder::new()
         .delimiter(b',')
         .from_reader(csv.as_bytes());
-
+    // Deserialize in new Vec
     for record in reader.deserialize() {
         vec.push(record.unwrap());
     }
     return vec;
 }
 
-fn write_csv_file<P: AsRef<Path>>(path: P, csv: &Vec<OperatorResults>) {
+fn write_csv_file<P>(path: P, csv: &Vec<OperatorResults>)
+    where P: AsRef<Path>
+{
     let file = std::fs::OpenOptions::new()
         .create(true)
         .truncate(true)
         .read(true)
         .write(true)
-        .open(path)
+        .open(path.as_ref())
         .unwrap();
     let mut writer = csv::WriterBuilder::new()
         .has_headers(true)
@@ -269,19 +288,27 @@ fn write_csv_file<P: AsRef<Path>>(path: P, csv: &Vec<OperatorResults>) {
         writer.serialize(&op).expect(
             "Could not write operator results entry to file, aborting"
         );
-        writer.flush();
+        let _ = writer.flush();
     }
 }
 
-fn write_html<P: AsRef<Path>>(path: P, csv: &Vec<OperatorResults>) {
-    let mut table = build_html::Table::new()
-        .with_attributes([("th style","text-align:center")])
+fn write_html<P>(path: P, csv: &Vec<OperatorResults>)
+    where P: AsRef<Path>
+{
+    let date = chrono::offset::Local::now();
+    let branch = get_current_branch();
+    let mut page = build_html::HtmlPage::new()
+        .with_title("FloPoCo autotest results")
+        .with_header(3, format!("generated: {date}"))
+        .with_header(3, format!("branch: <em>{branch}</em>"))
     ;
+    let mut table = build_html::Table::new()
+        .with_attributes([("th style","text-align:center")]);
     // Add headers first (TODO: get them from serde instead):
     let headers = vec![
         "Operator", "Tests", "Generation",
         "Simulation", "%", "Status",
-        "Passed Last"
+        "Changed Last"
     ];
     table.add_header_row(headers);
     // Add row for each operator:
@@ -289,17 +316,19 @@ fn write_html<P: AsRef<Path>>(path: P, csv: &Vec<OperatorResults>) {
         add_html_row(&op, &mut table);
     }
     // Get the code, and write to file:
-    let html = table.to_html_string();
-    fs::write("doc/web/autotests.html", &html)
+    page.add_table(table);
+    let html = page.to_html_string();
+    fs::write(path.as_ref(), &html)
         .expect("Could not write HTML output");
-    println!("'doc/web/autotests.html' successfully generated!");
+    println!("'{:?}' successfully generated!",
+            path.as_ref().display());
 }
 
 fn main() {
     // Read new .csv 'summary' file
     let mut summary = read_parse_csv_file("autotests/summary.csv");
     // Compare with previous results,
-    // + update the 'status' and 'passed_last' members:
+    // + update the 'status' and 'changed_last' members:
     let compare = read_parse_csv_file("doc/web/autotests.csv");
     for op in &mut summary {
         for cmp in &compare {
