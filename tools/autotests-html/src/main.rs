@@ -151,9 +151,6 @@ impl OperatorResults {
             self.changed_last = cmp.changed_last.clone();
             self.status_last = cmp.status_last;
         }
-        // println!("Updating Operator {}, status: {:?}",
-        //     self.id, self.status
-        // );
     }
 }
 
@@ -186,6 +183,20 @@ macro_rules! cell {
         TableCell::new(TableCellType::Data)
             .with_paragraph($contents)
     };
+}
+
+macro_rules! row {
+    () => (
+        TableRow::new()
+    );
+    ($cell:expr) => (
+        TableRow::new().with_cell($cell)
+    );
+    ($($c:expr),+$(,)?) => {{
+        TableRow::new() $(
+            .with_cell($c)
+        )+
+    }};
 }
 
 #[allow(unused_mut)]
@@ -248,15 +259,7 @@ fn add_html_row(op: &OperatorResults, table: &mut build_html::Table) {
         c6.add_paragraph(&op.changed_last);
     }
     table.add_custom_body_row(
-        TableRow::new()
-            .with_cell(c0)
-            .with_cell(c1)
-            .with_cell(c2)
-            .with_cell(c3)
-            .with_cell(c4)
-            .with_cell(c5)
-            .with_cell(c6)
-            .with_cell(c7)
+        row![c0, c1, c2, c3, c4, c5, c6, c7]
     );
 }
 
