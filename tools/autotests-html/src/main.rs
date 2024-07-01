@@ -126,6 +126,8 @@ impl OperatorResults {
     fn update(&mut self, cmp: &OperatorResults) {
         if self != &cmp {
             self.changed_last = get_commit_hash();
+        } else {
+            self.changed_last = cmp.changed_last.clone();
         }
         if cmp.percentage == 100f32
         && self.percentage < 100f32 {
@@ -194,7 +196,7 @@ fn add_html_row(op: &OperatorResults, table: &mut build_html::Table) {
     let mut c6 = TableCell::default();
 
     // If autotests are available for operator
-    if op.ntests > 0 {        
+    if op.ntests > 0 {
         let mut pass = false;
         if op.generation == op.ntests {
             // If all generation tests succeed:
