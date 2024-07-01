@@ -14,7 +14,7 @@ FPDiv,3,3,3,100.0,Stable,n/a
 FPExp,3,3,3,100.0,Stable,n/a
 FPLog,3,3,3,100.0,Stable,n/a
 FPMult,3,3,3,100.0,Stable,n/a
-FPPow,6,6,6,100.0,Pass,30c8f8c619cb7b0e6754b24de081b72e9671e430
+FPPow,6,6,6,100.0,Stable,30c8f8c619cb7b0e6754b24de081b72e9671e430
 FPSqrt,3,3,3,100.0,Stable,n/a
 Fix2DNorm,0,0,0,0.0,Stable,n/a
 Fix2FP,0,0,0,0.0,Stable,n/a
@@ -47,7 +47,7 @@ IEEEFPAdd,0,0,0,0.0,Stable,n/a
 IEEEFPExp,3,3,3,100.0,Stable,n/a
 IEEEFPFMA,0,0,0,0.0,Stable,n/a
 InputIEEE,0,0,0,0.0,Stable,n/a
-IntAddSub,4,4,1,25.0,Break,30c8f8c619cb7b0e6754b24de081b72e9671e430
+IntAddSub,4,4,1,25.0,Stable,30c8f8c619cb7b0e6754b24de081b72e9671e430
 IntAdder,0,0,0,0.0,Stable,n/a
 IntComparator,0,0,0,0.0,Stable,n/a
 IntConstDiv,5,5,5,100.0,Stable,n/a
