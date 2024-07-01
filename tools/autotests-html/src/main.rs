@@ -80,6 +80,9 @@ struct OperatorResults {
     // ---------------------------------------------------
     #[serde(rename = "Changed Last")]
     changed_last: String, // commit hash
+    // ---------------------------------------------------
+    #[serde(rename = "Status Last")]
+    status_last: OperatorStatus, // commit hash
 }
 
 const GITLAB: &str = "https://gitlab.com/flopoco/flopoco";
@@ -124,11 +127,6 @@ impl OperatorResults {
     /// with `cmp`: a previous internal representation
     /// of the autotest results for the same operator.
     fn update(&mut self, cmp: &OperatorResults) {
-        if self != &cmp {
-            self.changed_last = get_commit_hash();
-        } else {
-            self.changed_last = cmp.changed_last.clone();
-        }
         if cmp.percentage == 100f32
         && self.percentage < 100f32 {
         // If Operator was previously at 100%
@@ -138,16 +136,24 @@ impl OperatorResults {
             // If operator now reaches 100%: pass!
              && self.percentage == 100f32 {
             self.status = OperatorStatus::Pass;
-        } else if self.simulation > cmp.simulation {
+        } else if self.percentage > cmp.percentage {
             self.status = OperatorStatus::Up;
-        } else if self.simulation < cmp.simulation {
+        } else if self.percentage < cmp.percentage {
             self.status = OperatorStatus::Down;
         } else {
             self.status = OperatorStatus::Stable;
         }
-        println!("Updating Operator {}, status: {:?}",
-            self.id, self.status
-        );
+        if self != &cmp {
+            println!("Change for Operator: {:?}", cmp.status);
+            self.changed_last = get_commit_hash();
+            self.status_last = cmp.status;
+        } else {
+            self.changed_last = cmp.changed_last.clone();
+            self.status_last = cmp.status_last;
+        }
+        // println!("Updating Operator {}, status: {:?}",
+        //     self.id, self.status
+        // );
     }
 }
 
@@ -167,7 +173,7 @@ impl PartialEq<&OperatorResults> for OperatorResults {
     }
 }
 
-fn add_color(cell: &mut TableCell, txt: impl ToString, color: &str) {
+fn cell_color(cell: &mut TableCell, txt: impl ToString, color: &str) {
     cell.add_paragraph_attr(
         txt.to_string().trim(), [
             ("style", format!("color:{color}").as_str())
@@ -194,32 +200,33 @@ fn add_html_row(op: &OperatorResults, table: &mut build_html::Table) {
     let mut c4 = TableCell::default();
     let mut c5 = TableCell::default();
     let mut c6 = TableCell::default();
+    let mut c7 = TableCell::default();
 
     // If autotests are available for operator
     if op.ntests > 0 {
         let mut pass = false;
         if op.generation == op.ntests {
             // If all generation tests succeed:
-            add_color(&mut c2, op.generation, "green");
+            cell_color(&mut c2, op.generation, "green");
         } else {
-            add_color(&mut c2, op.generation, "red");
+            cell_color(&mut c2, op.generation, "red");
         }
         if op.simulation == op.ntests {
             // If all simulation tests succeed:
-            add_color(&mut c3, op.simulation, "green");
-            add_color(&mut c4, format!("{:.0}%", op.percentage), "green");
+            cell_color(&mut c3, op.simulation, "green");
+            cell_color(&mut c4, format!("{:.0}%", op.percentage), "green");
             pass = true;
         } else {
-            add_color(&mut c3, op.simulation, "red");
-            add_color(&mut c4, format!("{:.0}%", op.percentage), "red");
+            cell_color(&mut c3, op.simulation, "red");
+            cell_color(&mut c4, format!("{:.0}%", op.percentage), "red");
         }
         if pass {
             // If both Generation and Simulation are OK,
             // Highlight every cell in green
-            add_color(&mut c0, &op.id, "green");
+            cell_color(&mut c0, &op.id, "green");
         } else {
             // Otherwise, set to red
-            add_color(&mut c0, &op.id, "red");
+            cell_color(&mut c0, &op.id, "red");
         }
     } else {
         c0.add_paragraph(&op.id);
@@ -228,7 +235,8 @@ fn add_html_row(op: &OperatorResults, table: &mut build_html::Table) {
         c4.add_paragraph(format!("{:.0}%", op.percentage));
     }
     // Colorize 'Status' symbols:
-    add_color(&mut c5, op.status, &op.status.color());
+    cell_color(&mut c5, op.status, &op.status.color());
+    cell_color(&mut c7, op.status_last, &op.status_last.color());
     // Compute 'Passed Last' column:
     if op.changed_last != "n/a" {
         let date = get_commit_date(&op.changed_last);
@@ -248,6 +256,7 @@ fn add_html_row(op: &OperatorResults, table: &mut build_html::Table) {
             .with_cell(c4)
             .with_cell(c5)
             .with_cell(c6)
+            .with_cell(c7)
     );
 }
 
@@ -310,7 +319,7 @@ fn write_html<P>(path: P, csv: &Vec<OperatorResults>)
     let headers = vec![
         "Operator", "Tests", "Generation",
         "Simulation", "%", "Status",
-        "Changed Last"
+        "Changed Last", "Status Last"
     ];
     table.add_header_row(headers);
     // Add row for each operator:
