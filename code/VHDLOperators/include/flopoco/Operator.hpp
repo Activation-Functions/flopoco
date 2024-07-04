@@ -170,6 +170,16 @@ namespace flopoco {
 		 * @param name  the name of the signal
 		 * @param width the number of bits of the signal.
 		 * @param isBus describes if this signal is a bus, that is, an instance of std_logic_vector
+		 * @param inputDelay is of how much the input (as top operator) is delayed (in seconds)
+		 */
+		void addInput  (const std::string name, const int width, const bool isBus, double inputDelay);
+
+		/**
+		 * Adds an input signal to the operator.
+		 * 	Adds a signal of type Signal::in to the the I/O signal list.
+		 * @param name  the name of the signal
+		 * @param width the number of bits of the signal.
+		 * @param isBus describes if this signal is a bus, that is, an instance of std_logic_vector
 		 */
 		void addInput  (const std::string name, const int width, const bool isBus=true);
 

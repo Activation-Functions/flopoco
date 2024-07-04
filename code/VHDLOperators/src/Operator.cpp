@@ -141,7 +141,7 @@ namespace flopoco{
 		isTopLevelDotDrawn_ = true;
 	}
 
-	void Operator::addInput(const std::string name, const int width, const bool isBus) {
+	void Operator::addInput(const std::string name, const int width, const bool isBus, double inputDelay) {
 		//search if the signal has already been declared
 		if (isSignalDeclared(name)) {
 			//if yes, signal the error
@@ -151,6 +151,16 @@ namespace flopoco{
 		//create a new signal for the input
 		// initialize its members
 		Signal *s = new Signal(this, name, Signal::in, width, isBus) ; // default TTL and cycle OK
+
+		// Make some inputs of global signal be able to start later
+		// Only when pipelined and on root operator
+		if (!(parentOp_ != nullptr && !isShared()) && target_->frequency() != 0.0) {
+			int cycle = floor(inputDelay * target_->frequency());
+			double criticalPathWithinCycle = inputDelay - cycle/target_->frequency();
+			s->setCycle(cycle);
+			s->setCriticalPath(criticalPathWithinCycle);
+			REPORT(LogLevel::DEBUG, "Adding the input " << name << " with input delay " << inputDelay << " on cycle " << cycle << " with criticalPathWithinCycle "<< criticalPathWithinCycle);
+		}
 
 		//add the signal to the input signal list and increase the number of inputs
 		ioList_.push_back(s);
@@ -163,6 +173,10 @@ namespace flopoco{
 		// add its lowercase version to the global list for sanity check
 		allSignalsLowercased.insert(name);
 }
+
+	void Operator::addInput(const std::string name, const int width, const bool isBus) {
+		addInput(name, width, isBus, 0.0);
+	}
 
 	void Operator::addInput(const std::string name) {
 		addInput(name, 1, false);
