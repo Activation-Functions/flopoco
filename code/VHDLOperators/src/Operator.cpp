@@ -154,7 +154,7 @@ namespace flopoco{
 
 		// Make some inputs of global signal be able to start later
 		// Only when pipelined and on root operator
-		if (!(parentOp_ != nullptr && !isShared()) && target_->frequency() != 0.0) {
+		if (target_->frequency() != 0.0 && !(parentOp_ != nullptr && !isShared())) {
 			int cycle = floor(inputDelay * target_->frequency());
 			double criticalPathWithinCycle = inputDelay - cycle/target_->frequency();
 			s->setCycle(cycle);
