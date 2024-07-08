@@ -26,13 +26,13 @@ build_squid_debian:
   tags:
     - debian
   rules:  
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "dev/master"
-    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == "dev/master" 
-    - changes:
-      - code/**/*
-      - cmake/*
-      - Makefile
-      - CMakeLists.txt
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == "dev/master"' 
+      changes:
+        - code/**/*
+        - cmake/*
+        - Makefile
+        - CMakeLists.txt
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
   before_script:
     - apt update
     - apt install -y git make sudo
@@ -46,13 +46,13 @@ build_squid_macos:
   tags:
     - macos
   rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "dev/master"
-    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == "dev/master" 
-    - changes:
-      - code/**/*
-      - cmake/*
-      - Makefile
-      - CMakeLists.txt
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == "dev/master"'
+      changes:
+        - code/**/*
+        - cmake/*
+        - Makefile
+        - CMakeLists.txt
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"' 
   script:
     - gmake sysdeps flopoco
     # Ideally, we would need to test the install step
