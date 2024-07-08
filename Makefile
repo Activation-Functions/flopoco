@@ -1,6 +1,8 @@
 
-ifeq ($(shell expr $(MAKE_VERSION) \< 3.82), 1)
-    $(error MAKE_VERSION should be at least >= 3.82 ($(MAKE_VERSION)))
+GNU_MAKE_VERSION_MINIMUM := 4.3
+
+ifeq ($(shell expr $(MAKE_VERSION) \< $(GNU_MAKE_VERSION_MINIMUM)), 1)
+    $(error MAKE_VERSION should be at least >= $(GNU_MAKE_VERSION_MINIMUM) ($(MAKE_VERSION)))
 endif
 
 # -----------------------------------------------------------------------
@@ -451,7 +453,7 @@ ifeq (SCIP, $(filter SCIP, $(SCALP_BACKEND)))
 endif
 
 .ONESHELL:
-$(SCALP_LIBRARIES): $(SCALP_DEPENDENCIES)
+$(SCALP_LIBRARIES) &: $(SCALP_DEPENDENCIES)
 	$(call shell_info, Fetching and building $(B)ScaLP$(N) library)
 	@mkdir -p $(SCALP_BINARY_DIR)
 	@git clone $(SCALP_GIT) $(SCALP_SOURCE_DIR)
@@ -494,7 +496,7 @@ endif # -----------------------------------------------------
 wcpg: $(WCPG_LIBRARIES)
 
 .ONESHELL:
-$(WCPG_LIBRARIES):
+$(WCPG_LIBRARIES) &:
 	$(call shell_info, Fetching and building $(B)WCPG$(N) library)
 	@mkdir -p $(WCPG_BINARY_DIR)
 	@git clone $(WCPG_GIT) $(WCPG_SOURCE_DIR)
@@ -526,7 +528,7 @@ PAGSUITE_LIBRARIES += $(PAGSUITE_BINARY_DIR)/lib/liboscm.$(dylib)
 pagsuite: $(PAGSUITE_LIBRARIES)
 
 .ONESHELL:
-$(PAGSUITE_LIBRARIES): scalp
+$(PAGSUITE_LIBRARIES) &: scalp
 	$(call shell_info, Fetching and building $(B)PAGSuite$(N) library)
 	@mkdir -p $(PAGSUITE_BINARY_DIR)
 	@git clone $(PAGSUITE_GIT) $(PAGSUITE_SOURCE_DIR)
