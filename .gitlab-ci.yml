@@ -32,7 +32,12 @@ build_squid_debian:
         - cmake/*
         - Makefile
         - CMakeLists.txt
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+      changes:
+        - code/**/*
+        - cmake/*
+        - Makefile
+        - CMakeLists.txt
   before_script:
     - apt update
     - apt install -y git make sudo
@@ -52,7 +57,12 @@ build_squid_macos:
         - cmake/*
         - Makefile
         - CMakeLists.txt
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"' 
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+      changes:
+        - code/**/*
+        - cmake/*
+        - Makefile
+        - CMakeLists.txt
   script:
     - gmake sysdeps flopoco
     # Ideally, we would need to test the install step
