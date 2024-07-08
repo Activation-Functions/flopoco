@@ -25,11 +25,10 @@ build_squid_debian:
   stage: build
   tags:
     - debian
-  only:  
-    variables:
-      - $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "dev/master"
-      - $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == "dev/master" 
-    changes:
+  rules:  
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "dev/master"
+    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == "dev/master" 
+    - changes:
       - code/**/*
       - cmake/*
       - Makefile
@@ -46,11 +45,10 @@ build_squid_macos:
   stage: build
   tags:
     - macos
-  only:  
-    variables:
-      - $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "dev/master"
-      - $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == "dev/master" 
-    changes:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "dev/master"
+    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == "dev/master" 
+    - changes:
       - code/**/*
       - cmake/*
       - Makefile
