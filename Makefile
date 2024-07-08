@@ -384,6 +384,7 @@ sysdeps:
 # nonlinear programming (MINLP)
 # -----------------------------------------------------------------------------
 SCIP_GIT := https://github.com/scipopt/scip.git
+SCIP_COMMIT := 81df6e5a4ff190e8412356856247aeb527b5ca4f
 SCIP_SOURCE_DIR := $(BUILD_DEPENDENCIES_SOURCE_DIR)/scip
 SCIP_BINARY_DIR := $(BUILD_DEPENDENCIES_BINARY_DIR)/scip
 SCIP_LIBRARIES := $(SCIP_BINARY_DIR)/lib/libscip.$(dylib)
@@ -395,6 +396,7 @@ $(SCIP_LIBRARIES):
 	$(call shell_info, Fetching and building $(B)SCIP$(N) library)
 	@mkdir -p $(SCIP_BINARY_DIR)
 	@git clone $(SCIP_GIT) $(SCIP_SOURCE_DIR)
+	@git checkout 81df6e5a4ff190e8412356856247aeb527b5ca4f
 	@cd $(SCIP_SOURCE_DIR)
 	@cmake -B build -G$(CMAKE_GENERATOR)		    \
 	       -DAUTOBUILD=ON				    \
