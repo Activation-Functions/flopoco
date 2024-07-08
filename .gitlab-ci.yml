@@ -32,9 +32,12 @@ build_squid_debian:
     - make sysdeps flopoco
     - make install
     - flopoco
-  only:    
+  only:  
     refs:
+      - merge_requests
       - dev/master
+    variables:
+      - $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "dev/master"
     changes:
       - code/**/*
       - cmake/*
@@ -51,7 +54,10 @@ build_squid_macos:
     # but on our current runner, it would require having sudo...
   only:
     refs:
+    - merge_requests
     - dev/master 
+    variables:
+      - $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "dev/master"
     changes:
       - code/**/*
       - cmake/*
