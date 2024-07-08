@@ -32,7 +32,7 @@ FixFunctionByTable,0,0,0,0.0,Stable,n/a,Undefined
 FixHalfSine,0,0,0,0.0,Stable,n/a,Undefined
 FixIIR,1,1,1,100.0,Stable,n/a,Undefined
 FixIIRShiftAdd,0,0,0,0.0,Stable,n/a,Undefined
-FixMultAdd,36,36,34,94.4444,Stable,n/a,Undefined
+FixMultAdd,32,32,32,100.0,Pass,cdb07234e698562a3d0f46670a9b407352fbb30d,Stable
 FixRealConstMult,0,0,0,0.0,Stable,n/a,Undefined
 FixRealKCM,0,0,0,0.0,Stable,n/a,Undefined
 FixRealShiftAdd,0,0,0,0.0,Stable,n/a,Undefined
@@ -56,7 +56,7 @@ IntConstMultShiftAdd,38,38,38,100.0,Stable,n/a,Undefined
 IntConstMultShiftAddOpt,11,11,11,100.0,Stable,n/a,Undefined
 IntConstMultShiftAddOptTernary,11,11,11,100.0,Stable,n/a,Undefined
 IntConstMultShiftAddPlain,0,0,0,0.0,Stable,n/a,Undefined
-IntConstMultShiftAddRPAG,10,0,0,0.0,Stable,n/a,Undefined
+IntConstMultShiftAddRPAG,10,10,10,100.0,Pass,cdb07234e698562a3d0f46670a9b407352fbb30d,Stable
 IntConstantComparator,0,0,0,0.0,Stable,n/a,Undefined
 IntDualAddSub,0,0,0,0.0,Stable,n/a,Undefined
 IntFIRTransposed,7,7,7,100.0,Stable,n/a,Undefined
@@ -91,4 +91,4 @@ TestBench,0,0,0,0.0,Stable,n/a,Undefined
 TutorialOperator,0,0,0,0.0,Stable,n/a,Undefined
 UniformPiecewisePolyApprox,0,0,0,0.0,Stable,n/a,Undefined
 VaryingPiecewisePolyApprox,0,0,0,0.0,Stable,n/a,Undefined
-Total,244,231,229,93.8525,Stable,d54240b2b7115396e53e01f3c8a9b193c9b53ba3,Stable
+Total,240,237,237,98.75,Up,cdb07234e698562a3d0f46670a9b407352fbb30d,Stable
