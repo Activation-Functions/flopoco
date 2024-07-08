@@ -100,8 +100,10 @@ autotests_debian:
     before_script:
       - apt update
       - apt install -y git make sudo
+      - git clone git@gitlab.inria.fr:pcochard/nvc-vivado
     script:
       - make sysdeps nvc
+      - export XILINX_VIVADO=./nvc-vivado && nvc --install vivado
       - ./flopoco autotest operator=all testlevel=0 output=autotests
     artifacts:
       paths:
