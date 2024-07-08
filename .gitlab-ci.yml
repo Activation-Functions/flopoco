@@ -101,6 +101,12 @@ autotests_debian:
       - apt update
       - apt install -y git make sudo
       - git clone git@gitlab.inria.fr:pcochard/nvc-vivado
+      - eval `ssh-agent -s`
+      - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add - > /dev/null
+      - mkdir -p ~/.ssh
+      - chmod 700 ~/.ssh
+      - echo "$SSH_PUBLIC_KEY" >> ~/.ssh/id_rsa.pub
+      - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
     script:
       - make sysdeps nvc
       - export XILINX_VIVADO=./nvc-vivado && nvc --install vivado
