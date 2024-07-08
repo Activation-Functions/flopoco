@@ -100,6 +100,12 @@ autotests_debian:
     before_script:
       - apt update
       - apt install -y git make sudo
+      - eval `ssh-agent -s`
+      - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add - > /dev/null
+      - mkdir -p ~/.ssh
+      - chmod 700 ~/.ssh
+      - echo "$SSH_PUBLIC_KEY" >> ~/.ssh/id_rsa.pub
+      - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
       - git clone git@gitlab.inria.fr:pcochard/nvc-vivado
     script:
       - make sysdeps nvc
