@@ -50,13 +50,13 @@ namespace flopoco {
 	    int wIn_,
 	    string graphStr,
       bool isSigned,
-	    int epsilon_,
+	    int errorBudget_,
 	    string truncations
 	)
 	    : Operator(parentOp, target),
-	      wIn(wIn_),
+        wIn(wIn_),
         isSigned(isSigned),
-	      epsilon(epsilon_)
+        errorBudget(errorBudget_)
 	{
 
 		ostringstream name;
@@ -81,10 +81,10 @@ namespace flopoco {
       }
     }
 
-    ProcessIntConstMultShiftAdd(target, graphStr, truncations, epsilon_);
+    ProcessIntConstMultShiftAdd(target, graphStr, truncations, errorBudget_);
   };
 
-  void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(Target* target, string graphStr, string truncations, int epsilon)
+  void IntConstMultShiftAdd::ProcessIntConstMultShiftAdd(Target* target, string graphStr, string truncations, int errorBudget)
   {
     if(graphStr.empty()) return; //in case the realization string is not defined, don't further process it.
 
@@ -128,7 +128,7 @@ namespace flopoco {
         adder_graph.print_graph();
 
       isTruncated=false;
-      if(!truncations.empty() || (epsilon > 0))
+      if(!truncations.empty() || (errorBudget > 0))
       {
         isTruncated=true;
         if(!truncations.empty())
@@ -137,12 +137,12 @@ namespace flopoco {
 
           parseTruncation(truncations);
         }
-        if(epsilon > 0)
+        if(errorBudget > 0)
         {
-          REPORT(LogLevel::DETAIL,  "Found non-zero epsilon=" << epsilon << ", computing word sizes of truncated MCM");
+          REPORT(LogLevel::DETAIL,  "Found non-zero errorBudget=" << errorBudget << ", computing word sizes of truncated MCM");
 
 #if defined(HAVE_PAGLIB) && defined(HAVE_SCALP)
-          WordLengthCalculator wlc = WordLengthCalculator(adder_graph, wIn, epsilon, target);
+          WordLengthCalculator wlc = WordLengthCalculator(adder_graph, wIn, errorBudget, target);
           wordSizeMap = wlc.optimizeTruncation();
 
           REPORT(LogLevel::DETAIL, "Finished computing word sizes of truncated MCM");
@@ -949,10 +949,10 @@ namespace flopoco {
         string outputName = "R_" + factorToString(node->output_factor);
         mpz_class outputValue_mpz = outputValue;
         tc->addExpectedOutput(outputName, outputValue_mpz, isSigned);
-        if(epsilon > 0)
+        if(errorBudget > 0)
         {
-          //Probably not the most efficient way for large epsilons...
-          for(int e=1; e <= epsilon; e++)
+          //Probably not the most efficient way for a large error budget...
+          for(int e=1; e <= errorBudget; e++)
           {
             tc->addExpectedOutput(outputName, outputValue+e);
             tc->addExpectedOutput(outputName, outputValue-e);
@@ -1355,19 +1355,19 @@ namespace flopoco {
 		int wIn, sync_every = 0;
 		std::string adder_graph, truncations;
     bool isSigned;
-		int epsilon;
+		int errorBudget;
 
 		ui.parseInt(args, "wIn", &wIn);
 		ui.parseString(args, "graph", &adder_graph);
     ui.parseBoolean(args, "signed", &isSigned);
 		ui.parseString( args, "truncations", &truncations);
-		ui.parseInt(args, "epsilon", &epsilon);
+		ui.parseInt(args, "errorBudget", &errorBudget);
 
 		if (truncations == "\"\"") {
 			truncations = "";
 		}
 
-		return new IntConstMultShiftAdd(parentOp, target, wIn, adder_graph, isSigned, epsilon, truncations);
+		return new IntConstMultShiftAdd(parentOp, target, wIn, adder_graph, isSigned, errorBudget, truncations);
 	}
 
 
@@ -1385,7 +1385,7 @@ namespace flopoco {
 	    "wIn(int): Wordsize of pag inputs; \
        graph(string): Adder graph description (see PAGSuite project) as string or as text file with file extension \".ag\"; \
        signed(bool)=true: signedness of input and output; \
-       epsilon(int)=0: Allowable error for truncated constant multipliers; \
+       errorBudget(int)=0: Allowable error for truncated constant multipliers; \
        truncations(string)=\"\": provides the truncations for intermediate values (format: const1,stage:trunc_input_0,trunc_input_1,...|const2,stage:trunc_input_0,trunc_input_1,...)",""};
        // (format const1,stage:trunc_input_0,trunc_input_1,...;const2,stage:trunc_input_0,trunc_input_1,...;...)
 }//namespace

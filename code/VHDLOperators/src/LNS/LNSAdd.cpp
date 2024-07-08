@@ -38,7 +38,7 @@ namespace flopoco{
 		setCombinatorial(); // TODO this should no longer be useful in the new framework
 
 		addInput ("x", wE + wF);
-		addOutput("r", wF, 2); // Faithful rounding;
+		addOutput("r", wF); // Faithful rounding;
 	
 		if(wF > 7) {
 			// Who is going to free this memory??

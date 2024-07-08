@@ -91,7 +91,7 @@ rattrapper les erreurs sur guess degree des fonctions très méchantes
  		int wX=-lsbIn;
 		addInput("X", wX);
 		int outputSize = msbOut-lsbOut+1;
-		addOutput("Y" ,outputSize , 2);
+		addOutput("Y" ,outputSize);
 		useNumericStd();
 
 

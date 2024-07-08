@@ -33,7 +33,7 @@ using namespace PAGSuite;
 
 namespace flopoco{
 
-    IntConstMultShiftAddRPAG::IntConstMultShiftAddRPAG(Operator* parentOp, Target* target, int wIn, list<mpz_class> &coeffList, bool isSigned, int epsilon)  : IntConstMultShiftAdd(parentOp, target, wIn, "", isSigned, epsilon)
+    IntConstMultShiftAddRPAG::IntConstMultShiftAddRPAG(Operator* parentOp, Target* target, int wIn, list<mpz_class> &coeffList, bool isSigned, int errorBudget)  : IntConstMultShiftAdd(parentOp, target, wIn, "", isSigned, errorBudget)
     {
 		srcFileName="IntConstMultShiftAddRPAG";
 
@@ -80,7 +80,7 @@ namespace flopoco{
 
 		REPORT(LogLevel::DETAIL, "adderGraph=" << adderGraph);
 
-		ProcessIntConstMultShiftAdd(target,adderGraph,"",epsilon);
+		ProcessIntConstMultShiftAdd(target, adderGraph, "", errorBudget);
 
     ostringstream name;
     name << "IntConstMultRPAG_";
@@ -117,7 +117,7 @@ namespace flopoco{
       for(auto c:constantList) // test various constants
       {
         paramList.push_back(make_pair("wIn",  to_string(wIn)));
-        paramList.push_back(make_pair("constant", c));
+        paramList.push_back(make_pair("constants", c));
         testStateList.push_back(paramList);
         paramList.clear();
       }
@@ -130,7 +130,7 @@ namespace flopoco{
 				for(auto c:constantList) // test various constants
 				{
 					paramList.push_back(make_pair("wIn",  to_string(wIn)));
-					paramList.push_back(make_pair("constant", c));
+					paramList.push_back(make_pair("constants", c));
 					testStateList.push_back(paramList);
 					paramList.clear();
 				}
@@ -146,10 +146,10 @@ namespace flopoco{
 
     OperatorPtr flopoco::IntConstMultShiftAddRPAG::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui)
     {
-      int wIn, epsilon;
+      int wIn, errorBudget;
 
       ui.parseStrictlyPositiveInt( args, "wIn", &wIn );
-      ui.parsePositiveInt( args, "epsilon", &epsilon );
+      ui.parsePositiveInt( args, "errorBudget", &errorBudget );
 
       string constListStr;
       ui.parseString(args, "constants", &constListStr);
@@ -177,7 +177,7 @@ namespace flopoco{
 
         if(constList.size() > 0)
         {
-          return new IntConstMultShiftAddRPAG(parentOp, target, wIn, constList, isSigned, epsilon);
+          return new IntConstMultShiftAddRPAG(parentOp, target, wIn, constList, isSigned, errorBudget);
         }
         else
         {
@@ -200,7 +200,7 @@ namespace flopoco{
                             "wIn(int): Input word size; \
                             constants(string): list of constants; \
                             signed(bool)=true: signedness of input and output; \
-                            epsilon(int)=0: Allowable error for truncated constant multipliers;",
+                            errorBudget(int)=0: Allowable error for truncated constant multipliers;",
 	"Nope."};
 }
 #endif //defined(HAVE_PAGLIB) && defined(HAVE_RPAGLIB)

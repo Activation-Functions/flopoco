@@ -35,8 +35,8 @@ namespace flopoco
 							 int msbX, int lsbX,
 							 int msbY, int lsbY,
 							 int msbA, int lsbA,
-							 int msbOut, int lsbOut);
-
+							 int msbOut, int lsbOut,
+							 bool correctlyRounded);
 
 		
 		/**
@@ -58,7 +58,8 @@ namespace flopoco
 		static OperatorPtr parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui);
 
 		
-
+		// Do not hesitate to add getters for these methods, especially is correctlyRounded etc.
+		// (to implement error analysis of larger operators)
 
 	private:
 		bool signedIO; /**<  signedness of the multiplicands */
@@ -70,6 +71,7 @@ namespace flopoco
 		int lsbA;     /**<	LSB position of the addend A*/ 
 		int msbOut;   /**<  MSB position of the output signal */
 		int lsbOut;   /**<  LSB position of the output signal */
+		bool correctlyRounded; /**< should the result be correctly rounded. This attribute defines what we want, not what we get: even when false, an exact, e.g. integer fixmultadd will be correctly rounded. In such a case, isCorrectyRounded below will be true. See the case analysis in the cpp. */
 		int wX;       /**< X input width */
 		int wY;				/**< Y input width */
 		int wA;				/**< A input width */
@@ -80,23 +82,8 @@ namespace flopoco
 		double maxAbsError;   /**< the max absolute value error of this multiplier, in ulps of the result. Should be 0 for untruncated, 1 or a bit less for truncated.*/
 		bool isExact; /**< true if the operator involves no rounding */
 		bool isCorrectlyRounded; /**< true if the operator involves rounding and rounding is to nearest (ties to up) */
-		bool isFaithfullyRounded; /**< true if the operator involves rounding and rounding is faithful */
-		
 
-		// int g ;                    	/**< the number of guard bits if the product is truncated */
-		// int maxWeight;             	/**< The max weight for the bit heap of this multiplier, wOut + g*/
-		// int possibleOutputs;  		/**< 1 if the operator is exact, 2 if it is faithfully rounded */
-
-	private:
 		BitHeap* bitHeap;    		/**< The heap of weighted bits that will be used to do the additions */
-		IntMultiplier* mult; 		/**< the virtual multiplier */
-		Plotter* plotter;
-
-		int workPMSB;				/**< MSB of the product, aligned with the output precision */
-		int workPLSB;				/**< LSB of the product, aligned with the output precision */
-		int workAMSB;				/**< MSB of the addend, aligned with the output precision */
-		int workALSB;				/**< LSB of the addend, aligned with the output precision */
-
 	};
 
 } // namespace flopoco
