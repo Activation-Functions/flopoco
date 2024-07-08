@@ -303,6 +303,7 @@ namespace flopoco
       break;
     }
     case Method::MultiPartite: {
+      params["d"] = "1";
       break;
     }
     case Method::Horner: {

@@ -102,10 +102,10 @@ static inline const string methodOperator(Method m)
   switch(m) {
   case Method::PlainTable:
     return "FixFunctionByTable";
-  case Method::MultiPartite:
-    return "FixFunctionByMultipartiteTable";
   case Method::Horner:
     return "FixFunctionBySimplePoly";
+  case Method::MultiPartite:
+    // return "FixFunctionByMultipartiteTable";
   case Method::PiecewiseHorner2:
   case Method::PiecewiseHorner3:
     return "FixFunctionByPiecewisePoly";
