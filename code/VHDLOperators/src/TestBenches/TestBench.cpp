@@ -373,6 +373,8 @@ namespace flopoco{
 		vhdl << tab << tab << tab << "readline(inputsFile, expectedOutput);" << endl; // read the outputs line
 		vhdl << tab << tab << tab << "expectedOutputString := expectedOutput.all & (expectedOutput'Length+1 to 10000 => ' ');" << endl;
 		vhdl << tab << tab << tab << "testSuccess := testLine(testCounter, expectedOutputString, expectedOutput'Length";
+		// Using for testLine the delayed signals so it resyncronises the outputs before testing the result
+		// But adding the normal name to outputSignalNames for testbench construction
 		for(Signal* s: outputSignalVector){
 			if (s->getCycle() != maxOutputCycle)
 				vhdl << ", " << s->getName() << "_d" << maxOutputCycle - s->getCycle();
