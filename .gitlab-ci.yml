@@ -5,47 +5,51 @@ stages:
   - deploy
 
 squid_debian_build:
-    stage: build
-    tags:
-      - debian
-    only:
-      refs:
-        - dev/autotests
+  stage: build
+  tags:
+    - debian
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == "dev/master"'
       changes:
         - code/**/*
         - cmake/*
         - Makefile
         - CMakeLists.txt
-    before_script:
-      - apt update
-      - apt install -y git make sudo
-    script:
-      - make sysdeps flopoco
-      - make install
-      - flopoco
-    artifacts:
-      paths:
-        - flopoco
-        - build/bin
-        - build/lib
-        - build/dependencies/bin
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+      changes:
+        - code/**/*
+        - cmake/*
+        - Makefile
+        - CMakeLists.txt
+  before_script:
+    - apt update
+    - apt install -y git make sudo
+  script:
+    - make sysdeps flopoco
+    - make install
+    - flopoco
 
 squid_macos_build:
   stage: build
   tags:
     - macos
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == "dev/master"'
+      changes:
+        - code/**/*
+        - cmake/*
+        - Makefile
+        - CMakeLists.txt
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+      changes:
+        - code/**/*
+        - cmake/*
+        - Makefile
+        - CMakeLists.txt
   script:
     - gmake sysdeps flopoco
     # Ideally, we would need to test the install step
     # but on our current runner, it would require having sudo...
-  only:
-    refs:
-    - dev/master
-    changes:
-      - code/**/*
-      - cmake/*
-      - Makefile
-      - CMakeLists.txt
 
 squid_debian_autotests:
     stage: test
