@@ -61,14 +61,19 @@ squid_debian_autotests:
     stage: test
     tags:
       - debian
-    only:
-      refs:
-        - dev/master
-      changes:
-        - code/**/*
-        - cmake/*
-        - Makefile
-        - CMakeLists.txt
+    rules:
+      - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == "dev/master"'
+        changes:
+          - code/**/*
+          - cmake/*
+          - Makefile
+          - CMakeLists.txt
+      - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+        changes:
+          - code/**/*
+          - cmake/*
+          - Makefile
+          - CMakeLists.txt
     before_script:
       - apt update
       - apt install -y git make sudo
@@ -91,14 +96,19 @@ squid_debian_deploy:
     stage: deploy
     tags:
       - debian
-    only:
-      refs:
-        - dev/master
-      changes:
-        - code/**/*
-        - cmake/*
-        - Makefile
-        - CMakeLists.txt
+    rules:
+      - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == "dev/master"'
+        changes:
+          - code/**/*
+          - cmake/*
+          - Makefile
+          - CMakeLists.txt
+      - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+        changes:
+          - code/**/*
+          - cmake/*
+          - Makefile
+          - CMakeLists.txt
     before_script:
       - apt update
       - apt install -y git make sudo cargo openssh-client
