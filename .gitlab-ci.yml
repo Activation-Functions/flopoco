@@ -28,6 +28,12 @@ squid_debian_build:
     - make sysdeps flopoco
     - make install
     - flopoco
+  artifacts:
+      paths:
+        - flopoco
+        - build/bin
+        - build/lib
+        - build/dependencies/bin
 
 squid_macos_build:
   stage: build
