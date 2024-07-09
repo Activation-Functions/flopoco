@@ -57,7 +57,7 @@ squid_debian_autotests:
       - debian
     only:
       refs:
-        - dev/autotests
+        - dev/master
       changes:
         - code/**/*
         - cmake/*
@@ -87,7 +87,7 @@ squid_debian_deploy:
       - debian
     only:
       refs:
-        - dev/autotests
+        - dev/master
       changes:
         - code/**/*
         - cmake/*
