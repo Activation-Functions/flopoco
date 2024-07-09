@@ -1,6 +1,8 @@
 
-ifeq ($(shell expr $(MAKE_VERSION) \< 3.82), 1)
-    $(error MAKE_VERSION should be at least >= 3.82 ($(MAKE_VERSION)))
+GNU_MAKE_VERSION_MINIMUM := 4.3
+
+ifeq ($(shell expr $(MAKE_VERSION) \< $(GNU_MAKE_VERSION_MINIMUM)), 1)
+    $(error MAKE_VERSION should be at least >= $(GNU_MAKE_VERSION_MINIMUM) ($(MAKE_VERSION)))
 endif
 
 # -----------------------------------------------------------------------
@@ -382,6 +384,7 @@ sysdeps:
 # nonlinear programming (MINLP)
 # -----------------------------------------------------------------------------
 SCIP_GIT := https://github.com/scipopt/scip.git
+#SCIP_COMMIT := 81df6e5a4ff190e8412356856247aeb527b5ca4f
 SCIP_SOURCE_DIR := $(BUILD_DEPENDENCIES_SOURCE_DIR)/scip
 SCIP_BINARY_DIR := $(BUILD_DEPENDENCIES_BINARY_DIR)/scip
 SCIP_LIBRARIES := $(SCIP_BINARY_DIR)/lib/libscip.$(dylib)
@@ -393,6 +396,7 @@ $(SCIP_LIBRARIES):
 	$(call shell_info, Fetching and building $(B)SCIP$(N) library)
 	@mkdir -p $(SCIP_BINARY_DIR)
 	@git clone $(SCIP_GIT) $(SCIP_SOURCE_DIR)
+#	@git checkout 81df6e5a4ff190e8412356856247aeb527b5ca4f
 	@cd $(SCIP_SOURCE_DIR)
 	@cmake -B build -G$(CMAKE_GENERATOR)		    \
 	       -DAUTOBUILD=ON				    \
@@ -422,13 +426,10 @@ install-scip: $(SCIP_LIBRARIES)
 SCALP_GIT := https://digidev.digi.e-technik.uni-kassel.de/git/scalp.git
 SCALP_SOURCE_DIR := $(BUILD_DEPENDENCIES_SOURCE_DIR)/scalp
 SCALP_BINARY_DIR := $(BUILD_DEPENDENCIES_BINARY_DIR)/scalp
+SCALP_PATCH := $(MKROOT)/tools/scalp.patch
 
 SCALP_LIBRARIES += $(SCALP_BINARY_DIR)/lib/libScaLP.$(dylib)
 scalp: $(SCALP_LIBRARIES)
-
-SCALP_DEPENDENCIES += $(SCALP_FIND_GUROBI_PATCH)
-SCALP_DEPENDENCIES += $(SCALP_FIND_CPLEX_PATCH)
-SCALP_DEPENDENCIES += $(SCALP_FIND_SCIP_PATCH)
 
 SCALP_CMAKE_OPTIONS += -DUSE_LPSOLVE=OFF
 SCALP_CMAKE_OPTIONS += $(CMAKE_BUILD_TYPE)
@@ -449,11 +450,14 @@ ifeq (SCIP, $(filter SCIP, $(SCALP_BACKEND)))
 endif
 
 .ONESHELL:
-$(SCALP_LIBRARIES): $(SCALP_DEPENDENCIES)
+$(SCALP_LIBRARIES) &: $(SCALP_DEPENDENCIES)
 	$(call shell_info, Fetching and building $(B)ScaLP$(N) library)
 	@mkdir -p $(SCALP_BINARY_DIR)
 	@git clone $(SCALP_GIT) $(SCALP_SOURCE_DIR)
 	@cd $(SCALP_SOURCE_DIR)
+# FindSoplex.cmake patch ------------------------------------------
+	@git apply $(SCALP_PATCH)
+# -----------------------------------------------------------------
 	@cmake -B build -G$(CMAKE_GENERATOR)		    \
 	       -DCMAKE_INSTALL_PREFIX=$(SCALP_BINARY_DIR)   \
 	       $(SCALP_CMAKE_OPTIONS)
@@ -489,7 +493,7 @@ endif # -----------------------------------------------------
 wcpg: $(WCPG_LIBRARIES)
 
 .ONESHELL:
-$(WCPG_LIBRARIES):
+$(WCPG_LIBRARIES) &:
 	$(call shell_info, Fetching and building $(B)WCPG$(N) library)
 	@mkdir -p $(WCPG_BINARY_DIR)
 	@git clone $(WCPG_GIT) $(WCPG_SOURCE_DIR)
@@ -521,7 +525,7 @@ PAGSUITE_LIBRARIES += $(PAGSUITE_BINARY_DIR)/lib/liboscm.$(dylib)
 pagsuite: $(PAGSUITE_LIBRARIES)
 
 .ONESHELL:
-$(PAGSUITE_LIBRARIES): scalp
+$(PAGSUITE_LIBRARIES) &: scalp
 	$(call shell_info, Fetching and building $(B)PAGSuite$(N) library)
 	@mkdir -p $(PAGSUITE_BINARY_DIR)
 	@git clone $(PAGSUITE_GIT) $(PAGSUITE_SOURCE_DIR)
@@ -618,7 +622,7 @@ endif
 
 # -----------------------------------------------------------------------------
 .ONESHELL:
-.PHONY: test
+.PHONY: autotests
 # -----------------------------------------------------------------------------
-test: $(FLOPOCO)
-	@$(FLOPOCO) autotest operator=all testlevel=0
+autotests: $(FLOPOCO)
+	@$(FLOPOCO) autotest operator=all testlevel=0 output=autotests
