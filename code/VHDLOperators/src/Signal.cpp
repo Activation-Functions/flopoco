@@ -511,7 +511,6 @@ namespace flopoco{
 
 	string Signal::toVHDLDeclaration() {
 		ostringstream o;
-		cout << "signal " << getName() << " with lifespan " << lifeSpan_ << endl;
 		o << "signal ";
 		if (type_!=Signal::in)
 			o << getName() << (lifeSpan_ > 0 ? ", ": "");
