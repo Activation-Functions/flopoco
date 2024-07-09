@@ -38,6 +38,8 @@ namespace flopoco{
 	{
 		//We do not set the parent operator to this operator
 		setNoParseNoSchedule();
+		// Use delay notation instead of cycle notation for the testbench
+		setNameSignalByCycle(false);
 
 		useNumericStd();
 		// This allows the op under test to know how long it is being tested.
@@ -155,14 +157,18 @@ namespace flopoco{
 				for (int stage = op->getMinInputCycle(); stage < op->getMaxOutputCycle(); stage++ ) {
 					vhdl << "," << endl << tab << tab << "           ce_" << stage+1 << " => ce_" << stage+1;
 				}
-			}				
+			}
 		}
 		// code for inputs and outputs
 		for(int i=0; i < op->getIOList().size(); i++){
 			Signal* s = op->getIOListSignal(i);
 			if (i != 0 || op->isSequential())
 				vhdl << "," << endl <<  tab << tab << "           ";
-			vhdl << s->getName() << " => " << s->getName();
+			// Adding the delay in case it is needed
+			if (s->type() == Signal::in && s->getCycle() != 0)
+				vhdl << s->getName() << " => " << s->getName() << "_d" << s->getCycle();
+			else
+				vhdl << s->getName() << " => " << s->getName();
 		}
 		vhdl << ");" << endl;
 
@@ -272,6 +278,19 @@ namespace flopoco{
 		void TestBench::generateTestFromFile() {
 		vector<Signal*> inputSignalVector = op->getInputList();
 		vector<Signal*> outputSignalVector = op->getOutputList();
+
+		// If the IOs of the tested operator are not synchronized
+		// then registering them is necessary
+		int maxOutputCycle = -1;
+		for(unsigned i=0; i<op->ioList_.size(); i++)
+		{
+			Signal *s = op->getIOListSignal(i);
+			if(s->type() == Signal::out) {
+				if (s->getCycle() > maxOutputCycle) {
+					maxOutputCycle = s->getCycle();
+				}
+			}
+		}
 			
 		// In order to generate the file containing inputs and expected output in a correct order
 		// we will store the use order for file decompression
@@ -356,10 +375,14 @@ namespace flopoco{
 		vhdl << tab << tab << tab << "readline(inputsFile, expectedOutput);" << endl; // read the outputs line
 		vhdl << tab << tab << tab << "expectedOutputString := expectedOutput.all & (expectedOutput'Length+1 to 10000 => ' ');" << endl;
 		vhdl << tab << tab << tab << "testSuccess := testLine(testCounter, expectedOutputString, expectedOutput'Length";
+		// Using for testLine the delayed signals so it resyncronises the outputs before testing the result
+		// But adding the normal name to outputSignalNames for testbench construction
 		for(Signal* s: outputSignalVector){
-			vhdl << ", " << s->getName();
+			if (s->getCycle() != maxOutputCycle)
+				vhdl << ", " << s->getName() << "_d" << maxOutputCycle - s->getCycle();
+			else
+				vhdl << ", " << s->getName();
 			outputSignalNames.push_back(s->getName());
-
 		}
 		vhdl << 	");" << endl;
 		vhdl << tab << tab << tab << "if not testSuccess" << " then " << endl;
@@ -433,6 +456,19 @@ vhdl << tab << tab << tab << "if possibilityNumber = -1 then -- this means an in
 
 
 	void TestBench::outputVHDL(ostream& o, string name) {
+		// If the IOs of the tested operator are not synchronized
+		// then registering them is necessary
+		int maxOutputCycle = -1;
+		for(unsigned i=0; i<op->ioList_.size(); i++)
+		{
+			Signal *s = op->getIOListSignal(i);
+			if(s->type() == Signal::out) {
+				if (s->getCycle() > maxOutputCycle) {
+					maxOutputCycle = s->getCycle();
+				}
+			}
+		}
+
 		licence(o,"Florent de Dinechin, Cristian Klein, Nicolas Brunie (2007-2010)");
 
 		Operator::stdLibs(o);
@@ -442,6 +478,20 @@ vhdl << tab << tab << tab << "if possibilityNumber = -1 then -- this means an in
 
 		// the operator to wrap
 		op->outputVHDLComponent(o);
+
+		// Add signals in case they are delayed
+		// Give current signals the delay of the subcomponent's signals
+		for(unsigned i=0; i<op->ioList_.size(); i++) {
+			Signal *t = op->getIOListSignal(i);
+			Signal *s = getSignalByName(t->getName());			
+			s->setCycle(t->getCycle());
+			if(t->type() == Signal::in) {
+				s->updateLifeSpan(t->getCycle());
+			} else if (t->type() == Signal::out) {
+				s->updateLifeSpan(maxOutputCycle - t->getCycle());
+			}
+		}
+
 		// The local signals
 		o << buildVHDLSignalDeclarations();
 
@@ -606,38 +656,38 @@ vhdl << tab << tab << tab << "if possibilityNumber = -1 then -- this means an in
 		o	 << endl;
 		// reset is managed when 
 
-		//if the outputs of the tested operator are not synchronized
-		//	then registering and delaying the outputs might be necessary
+		// If the IOs of the tested operator are not synchronized
+		// then registering and delaying the IOs is necessary
 		bool opHasOutputsDesync = false;
 
-		for(unsigned i=0; i<op->ioList_.size(); i++)
-		{
+		for(unsigned i=0; i<op->ioList_.size(); i++) {
 			Signal *s = op->getIOListSignal(i);
 
-			if(s->type() != Signal::out)
-				continue;
-
-			for(unsigned j=0; j<op->ioList_.size(); j++)
-			{
-				Signal *t = op->getIOListSignal(j);
-
-				if((t->type() == Signal::out) && (s->getName() != t->getName()) && (s->getCycle() != t->getCycle())){
-					opHasOutputsDesync = true;
-					break;
-				}
-			}
-
-			if(opHasOutputsDesync)
+			if(s->type() == Signal::out && s->getCycle() != maxOutputCycle) {
+				opHasOutputsDesync = true;
 				break;
+			}
 		}
-		if(opHasOutputsDesync == true)
+
+		bool opHasInputsDesync = false;
+
+		for(unsigned i=0; i<op->ioList_.size(); i++) {
+			Signal *s = op->getIOListSignal(i);
+
+			if(s->type() == Signal::in && s->getCycle() != 0) {
+				opHasInputsDesync = true;
+				break;
+			}
+		}
+
+		if((opHasOutputsDesync | opHasInputsDesync) == true) {
 			o << buildVHDLRegisters() << endl;
+		}
 
 		//output the actual code of the testbench
 		o << vhdl.str() << endl;
 
 		o << "end architecture;" << endl << endl;
-
 
 	}
 
