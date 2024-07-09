@@ -38,6 +38,8 @@ namespace flopoco{
 	{
 		//We do not set the parent operator to this operator
 		setNoParseNoSchedule();
+		// Use delay notation instead of cycle notation for the testbench
+		setNameSignalByCycle(false);
 
 		useNumericStd();
 		// This allows the op under test to know how long it is being tested.
