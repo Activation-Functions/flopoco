@@ -448,6 +448,10 @@ ifeq (SCIP, $(filter SCIP, $(SCALP_BACKEND)))
     SCALP_LIBRARIES += $(SCALP_BINARY_DIR)/lib/libScaLP-SCIP.$(dylib)
 endif
 
+ifeq ($(OS_ID), alpine)
+		SCALP_CMAKE_OPTIONS += -DCMAKE_CXX_FLAGS=-U_FORTIFY_SOURCE
+endif
+
 .ONESHELL:
 $(SCALP_LIBRARIES): $(SCALP_DEPENDENCIES)
 	$(call shell_info, Fetching and building $(B)ScaLP$(N) library)
