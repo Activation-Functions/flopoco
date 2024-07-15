@@ -16,6 +16,8 @@
 #include "flopoco/utils.hpp"
 //#include "PrimitiveComponents/Altera/Altera_TernaryAdd.hpp"
 
+#include <sys/types.h>
+
 using namespace PAGSuite;
 
 namespace IntConstMultShiftAdd_TYPES {

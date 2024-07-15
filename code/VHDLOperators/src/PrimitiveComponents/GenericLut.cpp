@@ -1,6 +1,7 @@
 // general c++ library for manipulating streams
 #include <iostream>
 #include <sstream>
+#include <sys/types.h>
 
 // include the header of the Operator
 #include "flopoco/PrimitiveComponents/GenericLut.hpp"
