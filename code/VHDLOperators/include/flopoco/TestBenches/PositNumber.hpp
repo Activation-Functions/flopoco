@@ -3,6 +3,7 @@
 
 #include <gmpxx.h>
 #include <mpfr.h>
+#include <cstdint>
 
 namespace flopoco{
 	/**
