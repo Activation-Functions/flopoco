@@ -73,11 +73,22 @@ index 6b8b5fc..dd116aa 100644
  ENDIF (SCIP_FOUND)
  
 -mark_as_advanced(SCIP_INCLUDE_DIR SCIP_LIBRARY SOPLEX_LIBRARY Z_LIBRARY)
-+mark_as_advanced(${FIND_PACKAGE_HANDLES})
++mark_as_advanced(SCIP_INCLUDE_DIR SCIP_LIBRARY Z_LIBRARY)
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 1311d42..471d75c 100644
+index 1311d42..8df7666 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
+@@ -4,6 +4,10 @@ project (ScaLP)
+ 
+ set(CMAKE_MACOSX_RPATH 1)
+ 
++if (LINUX)
++    set(CMAKE_INSTALL_RPATH_USE_LINK_PATH ON)
++endif()
++
+ # Syntax errors are fatal
+ cmake_policy(SET CMP0010 NEW)
+ 
 @@ -34,6 +34,7 @@ option(BUILD_TESTS "Build tests" OFF)
  option(BUILD_SCALP_EXECUTABLE "Build the scalp executable (no functionality yet)" ON)
  option(OLD_CXX_ABI "Build with an old C++-abi (activate if you get undefined references with '__cxx11')" OFF)
@@ -86,12 +97,14 @@ index 1311d42..471d75c 100644
  
  #set(CPLEX_LIBRARIES "" CACHE STRING "the paths to the cplex libraries")
  #set(CPLEX_INCLUDE_DIRS "" CACHE STRING "the paths to the cplex headers")
-@@ -68,7 +69,7 @@ include_directories ("${PROJECT_SOURCE_DIR}/src")
- # Execute Options #
- ###################
- # Deactivate C++11-abi?
--if(OLD_CXX_ABI) 
-+if(OLD_CXX_ABI)
-   add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
- endif()
+@@ -119,6 +123,10 @@ add_library(ScaLP ${LIBRARY_TYPE}
+   ${PARSER_SOURCES}
+ )
  
++if (LINUX)
++    set_target_properties(ScaLP PROPERTIES INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/lib)
++endif()
++
+ #####################
+ # Backend-Libraries #
+ #####################
