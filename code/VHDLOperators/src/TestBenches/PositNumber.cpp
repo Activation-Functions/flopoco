@@ -13,6 +13,7 @@ All rights reserved.
 */
 #include <cassert>
 #include "flopoco/TestBenches/PositNumber.hpp"
+#include <sys/types.h>
 
 #ifndef DEBUGPOSIT
 #define DEBUG_OUT(status) {}
