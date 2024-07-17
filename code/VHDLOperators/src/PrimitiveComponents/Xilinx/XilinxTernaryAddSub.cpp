@@ -1,5 +1,6 @@
 // general c++ library for manipulating streams
 #include <iostream>
+#include <sys/types.h>
 
 /* header of libraries to manipulate multiprecision numbers
    There will be used in the emulate function to manipulate arbitraly large
