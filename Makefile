@@ -433,6 +433,7 @@ scalp: $(SCALP_LIBRARIES)
 
 SCALP_CMAKE_OPTIONS += -DUSE_LPSOLVE=OFF
 SCALP_CMAKE_OPTIONS += $(CMAKE_BUILD_TYPE)
+SCALP_CMAKE_OPTIONS += -DSOPLEX_DYN_LINK=OFF
 
 # -----------------------------------------------
 ifeq (GUROBI, $(filter GUROBI, $(SCALP_BACKEND)))
