@@ -1,5 +1,6 @@
 #include <iostream>
 #include <sstream>
+#include <sys/types.h>
 
 #include "gmp.h"
 #include "mpfr.h"
