@@ -478,7 +478,7 @@ namespace flopoco {
 			THROWERROR("addConstant doesn't manage negative constants yet but should: FIXME");
 		}
 
-		if( (shift < lsb) || (shift+intlog2(constant) > msb) ) {
+		if( (shift < lsb) || (shift+sizeInBits(constant) > msb) ) {
 			THROWERROR("addConstant: Constant " << constant << " shifted by " << shift << " has bits out of the bitheap range ("<< this->msb << ", " << this->lsb << ")");
 		}
 
@@ -491,7 +491,7 @@ namespace flopoco {
 
 	void BitHeap::subtractConstant(mpz_class constant, int shift)
 	{
-		if( (shift < lsb) || (shift+intlog2(constant) > msb) )
+		if( (shift < lsb) || (shift+sizeInBits(constant) > msb) )
 			THROWERROR("subtractConstant: Constant " << constant << " shifted by " << shift << " has bits out of the bitheap range ("<< this->msb << ", " << this->lsb << ")");
 
 		constantBits -= (constant << (shift-lsb));

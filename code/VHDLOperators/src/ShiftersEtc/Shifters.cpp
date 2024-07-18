@@ -71,7 +71,7 @@ namespace flopoco{
 		REPORT(LogLevel::VERBOSE, " wX="<<wX<<" maxShift="<<maxShift<<" direction="<< (direction == Right?  "RightShifter": "LeftShifter") );
 
 
-		wShiftIn     = intlog2(maxShift);
+		wShiftIn     = sizeInBits(maxShift);
 
 		addInput ("X", wX);
 		addInput ("S", wShiftIn);

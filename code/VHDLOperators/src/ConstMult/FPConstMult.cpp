@@ -77,7 +77,7 @@ namespace flopoco{
 				mantissa_is_one = true;
 			}
 
-			cstWidth = intlog2(cstIntSig);
+			cstWidth = sizeInBits(cstIntSig);
 			cst_exp_when_mantissa_1_2 = cst_exp_when_mantissa_int + cstWidth - 1;
 
 			// initialize mpfr constant
@@ -208,7 +208,7 @@ namespace flopoco{
 
 			// First euclidean division of a by b
 			header = aa/bb;
-			headerSize=intlog2(header);
+			headerSize=sizeInBits(header);
 
 			cc = aa - header*bb; // remainder
 			REPORT(LogLevel::DEBUG, "fraction " << a << "/" << b << " rewritten as " << header << "+" << cc << "/" << bb );
@@ -236,7 +236,7 @@ namespace flopoco{
 
 			if(wF_out >= wF_in) {
 				correctRounding=true;
-				wC = wF_out + 1  +1 + intlog2(b);
+				wC = wF_out + 1  +1 + sizeInBits(b);
 				REPORT(LogLevel::DETAIL, "Building a correctly rounded multiplier");
 			}
 			else {
@@ -247,13 +247,13 @@ namespace flopoco{
 
 			int r = ceil(   ((double)(wC-headerSize)) / ((double)periodSize)   ); // Needed repetitions
 			REPORT(LogLevel::VERBOSE, "target wC=" << wC << ", need to repeat the period " << r << " times");
-			int i = intlog2(r) -1; // 2^i < r < 2^{i+1}
+			int i = sizeInBits(r) -1; // 2^i < r < 2^{i+1}
 			int rr = r - (1<<i);
 			int j;
 			if (rr==0)
 				j=-1;
 			else
-				j= intlog2(rr-1);
+				j= sizeInBits(rr-1);
 
 			// now round up the number of needed repetitions
 			if(j==-1) {
@@ -280,7 +280,7 @@ namespace flopoco{
 			int patternLeadingZeroes, patternLSBZeroes;
 			if(header==0) {
 			 	// Do we have leading zeroes in the pattern?
-			 	patternLeadingZeroes = periodSize - intlog2(periodicPattern);
+			 	patternLeadingZeroes = periodSize - sizeInBits(periodicPattern);
 				REPORT(LogLevel::VERBOSE, "Null header, and period starting with  " << patternLeadingZeroes << " zero(s)...");
 				cstWidth -= patternLeadingZeroes;
 				REPORT(LogLevel::VERBOSE, "   ... so the practical size of the constant is " << cstWidth
@@ -523,7 +523,7 @@ namespace flopoco{
 		}
 
 		// bit width of constant exponent
-		int wE_cst=intlog2(abs(cst_exp_when_mantissa_1_2));
+		int wE_cst=sizeInBits(abs(cst_exp_when_mantissa_1_2));
 		REPORT(LogLevel::DEBUG, "wE_cst = " << wE_cst);
 
 		// We have to compute Er = E_X - bias(wE_in) + E_C + bias(wE_R)
@@ -535,7 +535,7 @@ namespace flopoco{
 			expAddendSign=1;
 		}
 		int wE_sum; // will be the max size of all the considered  exponents
-		wE_sum = intlog2(expAddend);
+		wE_sum = sizeInBits(expAddend);
 		if(wE_in > wE_sum)
 			wE_sum = wE_in;
 		if(wE_out > wE_sum)

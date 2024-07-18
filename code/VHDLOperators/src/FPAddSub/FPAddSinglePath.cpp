@@ -59,7 +59,7 @@ namespace flopoco{
 
 		setCopyrightString("Florent de Dinechin, Bogdan Pasca (2010-2017)");
 
-		sizeRightShift = intlog2(wF+3 );
+		sizeRightShift = sizeInBits(wF+3 );
 		REPORT(LogLevel::DEBUG, "sizeRightShift = " <<  sizeRightShift);
 		/* Set up the IO signals */
 		/* Inputs: 2b(Exception) + 1b(Sign) + wE bits (Exponent) + wF bits(Fraction) */

@@ -52,7 +52,7 @@ namespace flopoco{
 		 Final rounding may entail up to exp2(lsbOut-1).
 		 So approximation+rounding error budget is  exp2(lsbOut-1).
 		 We call PiecewisePolyApprox with approximation target error bound exp2(lsbOut-2).
-		 It reports pwp->LSB: may be lsbOut-2, may be up to lsbOut-2- intlog2(degree)
+		 It reports pwp->LSB: may be lsbOut-2, may be up to lsbOut-2- sizeInBits(degree)
 		 It also reports pwp->approxErrorBound
 		 so rounding error budget is  exp2(lsbOut-1) - pwp->approxErrorBound
 		 Staying within this budget is delegated to FixHornerEvaluator: see there for the details

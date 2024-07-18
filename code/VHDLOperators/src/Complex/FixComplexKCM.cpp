@@ -171,8 +171,8 @@ namespace flopoco {
 			
 			double errorInUlpsRe = kcmInReConstRe->getErrorInUlps() + kcmInImConstIm->getErrorInUlps();
 			double errorInUlpsIm = kcmInReConstIm->getErrorInUlps() + kcmInImConstRe->getErrorInUlps();
-			int guardBits_re = intlog2(errorInUlpsRe)+1;
-			int guardBits_im = intlog2(errorInUlpsIm)+1;
+			int guardBits_re = sizeInBits(errorInUlpsRe)+1;
+			int guardBits_im = sizeInBits(errorInUlpsIm)+1;
 //			int guardBits_re = ceil(log2(errorInUlpsRe))+1;
 //			int guardBits_im = ceil(log2(errorInUlpsIm))+1;
 

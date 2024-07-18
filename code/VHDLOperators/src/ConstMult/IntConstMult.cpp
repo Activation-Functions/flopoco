@@ -101,13 +101,13 @@ void IntConstMult::implementSCM()
   {
     if(const_mpz > 0)
     {
-      wOut = intlog2(const_mpz * ((mpz_class(1)<<wIn)-1));
-//      wCoeff = intlog2(const_mpz-1);
+      wOut = sizeInBits(const_mpz * ((mpz_class(1)<<wIn)-1));
+//      wCoeff = sizeInBits(const_mpz-1);
     }
     else
     {
-//      wCoeff = intlog2(const_mpz);
-      wOut = intlog2(abs(const_mpz) * ((mpz_class(1)<<wIn)));
+//      wCoeff = sizeInBits(const_mpz);
+      wOut = sizeInBits(abs(const_mpz) * ((mpz_class(1)<<wIn)));
     }
     REPORT(LogLevel::DETAIL, "No output word size wOut was given, determining word size to be " << wOut << " bits");
   }

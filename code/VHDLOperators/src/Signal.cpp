@@ -70,7 +70,7 @@ namespace flopoco{
 		wE_(0), wF_(0), MSB_(0), LSB_(0),
 		isBus_(true), isCustom_(false), customType_("")
 	{
-		width_ = intlog2(fabs(constValue_));
+		width_ = sizeInBits(fabs(constValue_));
 		MSB_=width_-1;
 		isSigned_ = constValue_ < 0;
 		predecessors_.clear();

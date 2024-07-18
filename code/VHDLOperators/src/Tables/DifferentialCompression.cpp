@@ -164,7 +164,7 @@ namespace flopoco {
 
 		for (int s = 1 ; s < wIn ; s++) {
 			std::tie(min_max, max_dist) = groupSlices(min_max);
-			auto minWL = intlog2(max_dist);
+			auto minWL = sizeInBits(max_dist);
 			for (auto wL = minWL ; wL < wOut - 1 ; ++wL) {
 				auto [interestingSol, overlapped, costBestSol, bestLocalWH] = find_best_subconfig(
 						min_max,

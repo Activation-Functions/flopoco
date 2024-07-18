@@ -72,7 +72,7 @@ namespace flopoco {
 		param << "N=" << N;
 		param << " wKey=" << wKey;
 
-		int wIndex = intlog2(N);
+		int wIndex = sizeInBits(N);
 
 		if (method==0) { // Sorting network
 			if (indexPayload && wPayload != 0) { // Using indices as payload and multiplexing afterwards. This is not needed if there is no payload	

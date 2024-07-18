@@ -111,7 +111,7 @@ namespace flopoco{
 		srcFileName="ConstDiv3ForSinPoly";
 
 		//set gamma to the size of the remainder
-		gamma = intlog2(d-1);
+		gamma = sizeInBits(d-1);
 
 		//check alpha, and set it properly if necessary
 		if(alpha == -1)

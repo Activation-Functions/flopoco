@@ -158,12 +158,12 @@ namespace flopoco{
 				p[i+1] = p[i] + a[i] - 1; // and we zero out a[i]-1 bits
 			}
 			i++;
-			gLog=max(4, intlog2(3+0.5+0.5+3*i-1));
+			gLog=max(4, sizeInBits(3+0.5+0.5+3*i-1));
 		}
 
 		// The number of stages, not counting stage 0
 		stages = i-1;
-		gLog=max(4, intlog2(3+0.5+0.5+3*stages));
+		gLog=max(4, sizeInBits(3+0.5+0.5+3*stages));
 
 		if(is_log_lvl_enabled(LogLevel::VERBOSE)) {
 			cerr << "> FPLogIterative\t Initial parameters:" << endl;
@@ -290,7 +290,7 @@ namespace flopoco{
 		addConstant("g",  "positive",          gLog);
 		addConstant("wE", "positive",          wE);
 		addConstant("wF", "positive",          wF);
-		addConstant("log2wF", "positive",     intlog2(wF));
+		addConstant("log2wF", "positive",     sizeInBits(wF));
 		addConstant("targetprec", "positive", target_prec);
 		addConstant("sfinal", "positive",     s[stages+1]);
 		addConstant("pfinal", "positive",     p[stages+1]);
@@ -322,11 +322,11 @@ namespace flopoco{
 								"I=>Y0h, OZB=>FirstBit",
 								"O=>lzo");
 
-		vhdl << tab << declare("pfinal_s", intlog2(wF)) << " <= \"" << unsignedBinary(mpz_class(pfinal), intlog2(wF)) << "\";"<<endl;
-		vhdl << tab << declare(getTarget()->adderDelay(intlog2(wF)+1),
-													 "shiftval", intlog2(wF)+1) << " <= ('0' & lzo) - ('0' & pfinal_s); " << endl;
-		vhdl << tab << declare("shiftvalinL", intlog2(wF-pfinal+2))     << " <= shiftval(" << intlog2(wF-pfinal+2)-1 << " downto 0);" << endl;
-		vhdl << tab << declare("shiftvalinR", intlog2(sfinal-pfinal+1)) << " <= shiftval(" << intlog2(sfinal-pfinal+1)-1 << " downto 0);" << endl;
+		vhdl << tab << declare("pfinal_s", sizeInBits(wF)) << " <= \"" << unsignedBinary(mpz_class(pfinal), sizeInBits(wF)) << "\";"<<endl;
+		vhdl << tab << declare(getTarget()->adderDelay(sizeInBits(wF)+1),
+													 "shiftval", sizeInBits(wF)+1) << " <= ('0' & lzo) - ('0' & pfinal_s); " << endl;
+		vhdl << tab << declare("shiftvalinL", sizeInBits(wF-pfinal+2))     << " <= shiftval(" << sizeInBits(wF-pfinal+2)-1 << " downto 0);" << endl;
+		vhdl << tab << declare("shiftvalinR", sizeInBits(sfinal-pfinal+1)) << " <= shiftval(" << sizeInBits(sfinal-pfinal+1)-1 << " downto 0);" << endl;
 		vhdl << tab << declare("doRR") << " <= shiftval(log2wF); -- sign of the result" << endl;
 
 		//done in parallel with the shifter

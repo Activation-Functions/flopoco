@@ -101,7 +101,7 @@ namespace flopoco{
 
 		setCopyrightString("Florent de Dinechin (2007-2017)");
 
-		int gamma = intlog2(d);
+		int gamma = sizeInBits(d);
 		int s = gamma-1;
 		int h = d>>1; 
 		int intDivSize = wFIn+1 + s+1;
