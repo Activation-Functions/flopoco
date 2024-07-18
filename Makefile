@@ -433,7 +433,6 @@ scalp: $(SCALP_LIBRARIES)
 
 SCALP_CMAKE_OPTIONS += -DUSE_LPSOLVE=OFF
 SCALP_CMAKE_OPTIONS += $(CMAKE_BUILD_TYPE)
-SCALP_CMAKE_OPTIONS += -DSOPLEX_DYN_LINK=OFF
 
 # -----------------------------------------------
 ifeq (GUROBI, $(filter GUROBI, $(SCALP_BACKEND)))
@@ -445,13 +444,9 @@ endif
 # -------------------------------------------
 ifeq (SCIP, $(filter SCIP, $(SCALP_BACKEND)))
 # -------------------------------------------
-    SCALP_DEPENDENCIES += scip
+    SCALP_DEPENDENCIES += $(SCIP_LIBRARIES)
     SCALP_CMAKE_OPTIONS += -DSCIP_ROOT_DIR=$(SCIP_BINARY_DIR)
     SCALP_LIBRARIES += $(SCALP_BINARY_DIR)/lib/libScaLP-SCIP.$(dylib)
-endif
-
-ifeq ($(OS_ID), alpine)
-    SCALP_CMAKE_OPTIONS += -DCMAKE_CXX_FLAGS=-U_FORTIFY_SOURCE
 endif
 
 .ONESHELL:
@@ -530,7 +525,7 @@ PAGSUITE_LIBRARIES += $(PAGSUITE_BINARY_DIR)/lib/liboscm.$(dylib)
 pagsuite: $(PAGSUITE_LIBRARIES)
 
 .ONESHELL:
-$(PAGSUITE_LIBRARIES) &: scalp
+$(PAGSUITE_LIBRARIES) &: $(SCALP_LIBRARIES)	
 	$(call shell_info, Fetching and building $(B)PAGSuite$(N) library)
 	@mkdir -p $(PAGSUITE_BINARY_DIR)
 	@git clone $(PAGSUITE_GIT) $(PAGSUITE_SOURCE_DIR)
@@ -573,8 +568,9 @@ $(NVC):
 
 # PAGSuite needs scalp anyway.
 #FLOPOCO_DEPENDENCIES += scalp
-FLOPOCO_DEPENDENCIES += wcpg
-FLOPOCO_DEPENDENCIES += pagsuite
+FLOPOCO_DEPENDENCIES += $(WCPG_LIBRARIES)
+FLOPOCO_DEPENDENCIES += $(PAGSUITE_LIBRARIES)
+FLOPOCO_DEPENDENCIES += $(shell find code/ -type f -name '*')
 
 ifeq ($(WITH_NVC), ON)
     FLOPOCO_DEPENDENCIES += $(NVC)
@@ -603,7 +599,7 @@ $(FLOPOCO): $(FLOPOCO_DEPENDENCIES)
 	$(call shell_info, Building the $(B)HTML documentation$(N) in doc/web)
 	$(MKROOT)/flopoco BuildHTMLDoc
 	$(call shell_info, Now running $(B)FloPoCo$(N))
-	$(MKROOT)/flopoco
+#$(MKROOT)/flopoco
 	$(call shell_info, Generating and installing $(B)bash autocompletion$(N) file)
 	$(MKROOT)/flopoco BuildAutocomplete
 	$(call shell_ok, If you saw the command-line help of FloPoCo - Welcome!)
