@@ -554,7 +554,7 @@ namespace flopoco
 #if 0 //REMOVE ME
 
 	void	 FixFunctionByMultipartiteTable::buildDiffTIVCache(){
-		for (auto g=0; g<2+intlog2(f->wIn); g++) {
+		for (auto g=0; g<2+sizeInBits(f->wIn); g++) {
 			vector<DifferentialCompression*> v;
 			for (auto alpha=0; alpha<f->wIn; alpha++) {
 				// build the TIV

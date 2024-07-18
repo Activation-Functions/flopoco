@@ -161,7 +161,7 @@ namespace flopoco{
 		setNameWithFreqAndUID(name.str());
 
 		// -------- Parameter set up -----------------
-		wOut_ = intlog2(wIn);
+		wOut_ = sizeInBits(wIn);
 
 		addInput("I", wIn_);
 		addInput("countOnes", 1, false);
@@ -179,10 +179,10 @@ namespace flopoco{
 		}
 		
 		// Find the highest power of two we can fit on a non routed LUT
-		blockSize_ = 1 << (intlog2(lutWidth));
+		blockSize_ = 1 << (sizeInBits(lutWidth));
 		if (blockSize_ > lutWidth)
 			blockSize_ >>= 1;
-		lowBitCodeSize_ = intlog2(blockSize_ - 1);
+		lowBitCodeSize_ = sizeInBits(blockSize_ - 1);
 
 		auto remainder = wIn_ % blockSize_;
 

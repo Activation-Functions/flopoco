@@ -61,7 +61,7 @@ namespace flopoco{
 	// BEWARE, only works for dMax<1
 	vector<mpz_class> FPDiv::selFunctionTable(double dMin, double dMax, int nbBitD, int nbBitW, int alpha, int radix) {
 		int wIn = nbBitD+nbBitW;
-		int wOut = 1+intlog2(alpha); //Nb of bit for the integer part of w
+		int wOut = 1+sizeInBits(alpha); //Nb of bit for the integer part of w
 		double rho = ((double)alpha)/(radix-1);
 
 		if (dMax>1) {

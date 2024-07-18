@@ -142,7 +142,7 @@ namespace flopoco
         REPORT(LogLevel::MESSAGE, "H=" << H);
       }
 
-      wcpgBitGain = intlog2(H);
+      wcpgBitGain = sizeInBits(H);
       REPORT(LogLevel::DETAIL, "wcpg bit gain: " << wcpgBitGain);
 
       // ################# COMPUTE GUARD BITS AND HEPS #########################################
@@ -161,7 +161,7 @@ namespace flopoco
         {
           REPORT(LogLevel::MESSAGE, "Heps=" << Heps);
         }
-        guardBits = intlog2(Heps) + 1; // +1 for last bit accuracy
+        guardBits = sizeInBits(Heps) + 1; // +1 for last bit accuracy
       }
 
 #else

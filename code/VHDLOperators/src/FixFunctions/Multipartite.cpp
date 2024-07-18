@@ -141,11 +141,11 @@ namespace flopoco
 
 			deltaRight = abs(yRL-yRR);
 			deltaMax = max(deltaLeft,deltaRight);   // for instance s=1 and we find deltaMax=21
-			deltaBits = intlog2(deltaMax);          // 21 fits on 5 bits. The deltaTIV will have 5 output bits.
+			deltaBits = sizeInBits(deltaMax);          // 21 fits on 5 bits. The deltaTIV will have 5 output bits.
 			REPORT(LogLevel::FULL, "trying s=" << s << " deltaleft deltaright = "<< deltaLeft << " " << deltaRight << "  \tdeltaBits="<<deltaBits);
 			// Now how many bits can we shave from the SSTIV?
 			slack = (1<<deltaBits)-1 - deltaMax; // so the deltaTIV may represent values between 0 and 31, therefore we have a slack of 31-21=10
-			saved_LSBs_in_SSTIV = intlog2(slack)-1; // for instance if slack=10 we may save 3 bits, because it will offset the TIV at most by 7 which is smaller than 10
+			saved_LSBs_in_SSTIV = sizeInBits(slack)-1; // for instance if slack=10 we may save 3 bits, because it will offset the TIV at most by 7 which is smaller than 10
 			// This is the number of bits we are sure we can shave, but this is only a worst-case analysis:  we could be more lucky
 			// However it will save very little: TODO if somebody wants to try
 

@@ -352,7 +352,7 @@ namespace flopoco{
 // #endif
 
 	// How many bits does it take to write number ?
-	int intlog2(double number)
+	int sizeInBits(double number)
 	{
 		double po2 = 1.0; int result = 0;
 		while (po2 <= number) {
@@ -373,7 +373,7 @@ namespace flopoco{
 		return result;
 	}
 
-	int intlog2(mpz_class number)
+	int sizeInBits(mpz_class number)
 	{
 	  if(number == 1) return 0;
 		mpz_class po2 = 1;

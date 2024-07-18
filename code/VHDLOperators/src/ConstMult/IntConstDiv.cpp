@@ -85,7 +85,7 @@ namespace flopoco{
 	// This method mostly replicates the computations done in the constructor
 	// l is the number of inputs to the LUT of the target FPGA
 	int evaluateLUTCostOfLinearArch(int wIn, int d, int l) {
-		int rSize = intlog2(d-1);
+		int rSize = sizeInBits(d-1);
 		int alpha = l-rSize;
 		if (alpha<1)	alpha=1;
 		int xDigits = wIn/alpha;
@@ -129,7 +129,7 @@ namespace flopoco{
 		
 		REPORT(LogLevel::DETAIL, "Composite division, d=" << d);
 
-		rSize = intlog2(d-1);
+		rSize = sizeInBits(d-1);
 
 		if(alpha==-1){
 			if(architecture==0) {
@@ -143,7 +143,7 @@ namespace flopoco{
 			}
 		}
 
-		qSize = intlog2(  ((mpz_class(1)<<wIn)-1)/d  );
+		qSize = sizeInBits(  ((mpz_class(1)<<wIn)-1)/d  );
 		if(!computeQuotient && !computeRemainder) {
 			THROWERROR("Neither quotient, neither remainder to compute: better die just now")
 		}
@@ -165,7 +165,7 @@ namespace flopoco{
 			cost=evaluateLUTCostOfLinearArch(wInCurrent, divisors[i], getTarget()->lutInputs());
 			REPORT(LogLevel::DETAIL, "Dividing by " << divisors[i] << " for wIn=" << wInCurrent << " should cost about " << cost << " LUTs");
 			currentDivProd *= divisors[i];
-			wInCurrent = intlog2( ((mpz_class(1)<<wIn)-1) / currentDivProd );
+			wInCurrent = sizeInBits( ((mpz_class(1)<<wIn)-1) / currentDivProd );
 			overallCostUp+=cost;
 		}
 		REPORT(LogLevel::DETAIL, "  Overall cost of composite division: " << overallCostUp << " LUTs");
@@ -177,7 +177,7 @@ namespace flopoco{
 				cost=evaluateLUTCostOfLinearArch(wInCurrent, divisors[i], getTarget()->lutInputs());
 				REPORT(LogLevel::DETAIL, "Dividing by " << divisors[i] << " for wIn=" << wInCurrent << " costs " << cost);
 				currentDivProd *= divisors[i];
-				wInCurrent = intlog2( ((mpz_class(1)<<wIn)-1) / currentDivProd );
+				wInCurrent = sizeInBits( ((mpz_class(1)<<wIn)-1) / currentDivProd );
 				overallCostDown+=cost;
 			}
 			REPORT(LogLevel::DETAIL, "  Overall cost of composite division, counting down: " << overallCostDown );
@@ -203,7 +203,7 @@ namespace flopoco{
 
 				// REPORT(LogLevel::DETAIL, join("subDiv",i) << " " <<  params.str() << "  " << inportmap.str() << "   " << outportmap.str());
 				// Slight sub-optimality here, TODO: we can win one bit from time to time
-				// wInCurrent = intlog2( ((mpz_class(1)<<wIn)-1) /divisors[i]);
+				// wInCurrent = sizeInBits( ((mpz_class(1)<<wIn)-1) /divisors[i]);
 				wInCurrent = getSignalByName(join("Q",i+1))->width();
 			}
 			// Now rebuild the remainder
@@ -217,17 +217,17 @@ namespace flopoco{
 				//				currentDivProd *= divisors[i];
 				// wInCurrent = getSignalByName(join("Q",i+1))->width();
 				ostringstream multParams;
-				multParams << "wIn=" << intlog2(currentDivProd) << " constant=" << divisors[i-1];
+				multParams << "wIn=" << sizeInBits(currentDivProd) << " constant=" << divisors[i-1];
 				newInstance("IntConstMultShiftAddPlain", join("rMult",i), multParams.str(), "X=>"+join("RR",i+1), "R=>"+join("M",i));
 				currentDivProd *= divisors[i-1];
-				int sizeRR = intlog2(currentDivProd);
+				int sizeRR = sizeInBits(currentDivProd);
 				int sizeM  = getSignalByName(join("M",i))->width();
 				// int sizePreviousRR =  getSignalByName(join("RR",i+1))->width();
 				vhdl << tab << declare(join("RR",i), sizeRR) << " <= ";
 				//				if (sizePreviousRR<sizeRR)
 				//	vhdl << zg(sizeRR-sizePreviousRR) << "&";
 				vhdl << "R" << i << + " + M" << i
-						 << (sizeRR<sizeM? range(intlog2(currentDivProd)-1,0)  : "")
+						 << (sizeRR<sizeM? range(sizeInBits(currentDivProd)-1,0)  : "")
 						 <<  ";" << endl;
 			}
 			vhdl << tab << "Q <= Q" << divisors.size()<<range(qSize-1,0) << ";" << endl;
@@ -251,7 +251,7 @@ namespace flopoco{
 		}
 
 		//		if((architecture==INTCONSTDIV_LINEAR_ARCHITECTURE) || (architecture==INTCONSTDIV_LOGARITHMIC_ARCHITECTURE)) {
-		rSize = intlog2(d-1);
+		rSize = sizeInBits(d-1);
 		
 			
 		if(alpha==-1){
@@ -272,7 +272,7 @@ namespace flopoco{
 			}
 		}
 			
-		qSize = intlog2(  ((mpz_class(1)<<wIn)-1)/d  );
+		qSize = sizeInBits(  ((mpz_class(1)<<wIn)-1)/d  );
  
 		
 		std::ostringstream o;
@@ -317,7 +317,7 @@ namespace flopoco{
 
 
 
-		rho = intlog2(  ((mpz_class(1)<<alpha)-1)/d  );
+		rho = sizeInBits(  ((mpz_class(1)<<alpha)-1)/d  );
 
 		REPORT(LogLevel::DETAIL, "alpha="<<alpha);
 		REPORT(LogLevel::DEBUG, "rSize=" << rSize << " qSize=" << qSize << " rho=" << rho);
@@ -396,7 +396,7 @@ namespace flopoco{
 			//////////////////////////////////////// Logarithmic architecture //////////////////////////////////:
 			
 			// The number of levels is computed out of the number of digits of the _input_
-			int levels = intlog2(2*xDigits-1); 
+			int levels = sizeInBits(2*xDigits-1); 
 			REPORT(LogLevel::DETAIL, "levels=" << levels);
 			string ri, xi, ini, outi, qi, qs, r;
 
@@ -623,14 +623,14 @@ namespace flopoco{
 			so we still have to divide by d the smaller value \sum R_i:
 			\sum R_i = d.Q'_i + R : this Euclidean division can be tabulated, too
 			and finally X = dQ+R  with  Q = (\sum Q_i) + Q'_i 
-			The radix-2^k decomposition starts at bit intlog2(d): 
-			for the lower chunk of intlog2(d)-1 bits, the quotient is zero and the remainder is Xi
+			The radix-2^k decomposition starts at bit sizeInBits(d): 
+			for the lower chunk of sizeInBits(d)-1 bits, the quotient is zero and the remainder is Xi
 			*/
 			
 			string ri, xi, ini, outi, qi;
       vector<int> QiSize;
 			int i=0;
-			int x0Size=intlog2(d)-1;
+			int x0Size=sizeInBits(d)-1;
 			REPORT(LogLevel::DETAIL, "chunk " <<0 << " of size " << x0Size);
 			xi = join("x", i);
 			vhdl << tab << declare(xi, x0Size, true) << " <= " <<  "X" << range(x0Size-1, 0) << ";" << endl;
@@ -659,7 +659,7 @@ namespace flopoco{
 					// cerr << "(" << q << "," << r << ")="  << mpz_class( (q<<rSize) + r) << ", " ;
 					result.push_back((q<<rSize) + r );
 				}
-				int tableOutSize=intlog2(result[(1<<chunkSize)-1]);
+				int tableOutSize=sizeInBits(result[(1<<chunkSize)-1]);
 				TableOperator::newUniqueInstance(this, xi, outi, result, join("DivTable",i), chunkSize, tableOutSize);
 				vhdl << tab << declare(qi, tableOutSize-rSize, true) << " <= " <<  outi << range(tableOutSize-1, rSize) << ";" << endl;
 				vhdl << tab << declare(ri, rSize, true) << " <= " <<  outi << range(rSize-1, 0) << ";" << endl;
@@ -674,7 +674,7 @@ namespace flopoco{
 			// then divide the first sum by D and update the second sum 
 
 			//REPORT(LogLevel::MESSAGE, "numberOfChunks=" << numberOfChunks);
-			int rTildeSize = intlog2(numberOfChunks*(d-1));
+			int rTildeSize = sizeInBits(numberOfChunks*(d-1));
 			BitHeap *rBH = new BitHeap(this, rTildeSize);
 			rBH->addSignal("x0"); // x0 is the remainder of the leading bits
 			for(i=1; i<numberOfChunks; i++) {
@@ -708,7 +708,7 @@ namespace flopoco{
 				// cerr << "d=" << d << "  x=" << x << "  xsi= " << xsi << "  (q,r) = (" << q << "," << r << ")="  << mpz_class( (q<<rSize) + r) << ", " ;
 				result.push_back((q<<rSize) + r );
 			}
-			int tableOutSize=max(rSize,intlog2(result[(1<<tableInSize)-1]));
+			int tableOutSize=max(rSize,sizeInBits(result[(1<<tableInSize)-1]));
 			TableOperator::newUniqueInstance(this, "RtildeH", "LastQR", result, "LastDivTable", tableInSize, tableOutSize);
 			vhdl << tab << declare("LastQ", tableOutSize-rSize, true) << " <= " <<  "LastQR" << range(tableOutSize-1, rSize) << ";" << endl;
 			vhdl << tab << declare("LastR", rSize, true) << " <= " <<  "LastQR" << range(rSize-1, 0) << ";" << endl;

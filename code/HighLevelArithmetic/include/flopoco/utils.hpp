@@ -29,7 +29,7 @@ namespace flopoco{
       _type1& first(){return std::get<0>(*this);}
 	  _type2& second(){return std::get<1>(*this);}
 	  _type3& third(){return std::get<2>(*this);}
-	  
+
 	  triplet() = default;
 
 	  template<typename... ArgsType>
@@ -42,7 +42,7 @@ namespace flopoco{
 	{
 		return {tmp1, tmp2, tmp3};
 	}
-	
+
 	/** This class contains all information about a random state
 	 * it has to be used has a singleton to initialize and share a random state
 	 * between calls to getLargeRandom function
@@ -200,7 +200,7 @@ namespace flopoco{
 	 * @param number the number to be represented (floating point)
 	 * @return the number of bits
 	 */
-	int intlog2(double number);
+	int sizeInBits(double number);
 
 	/** computes a logarithm in a given base
 	 * @param base base of the logarithm
@@ -214,7 +214,7 @@ namespace flopoco{
 	 * @param number the number to be represented (mpz_class)
 	 * @return the number of bits
 	 */
-	int intlog2(mpz_class number);
+	int sizeInBits(mpz_class number);
 
 	/** How many bits are set at 1 in the mnumber.
 	 * @param number the number of which we count the bits at 1

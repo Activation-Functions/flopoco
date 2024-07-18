@@ -41,7 +41,7 @@ namespace flopoco {
 		setName(name.str()); // See also setNameWithFrequencyAndUID()
 		// Copyright 
 		setCopyrightString("Oregane Desrentes 2023");
-		int wIndex = intlog2(N);
+		int wIndex = sizeInBits(N);
 
 		// declaring inputs and outputs
 		for (int i =0; i < N; i++) {

@@ -38,9 +38,9 @@ namespace flopoco{
 		n=impl->computeConstant(op, i, s, j);
 		// now compute the size according to this constant, as the log2 of the max value the result can take
 		if (n >= 0)
-			size = intlog2(n * ((mpz_class(1)<<impl->icm->xsize)-1));
+			size = sizeInBits(n * ((mpz_class(1)<<impl->icm->xsize)-1));
 		else
-			size = 1 + intlog2(-n* ((mpz_class(1)<<impl->icm->xsize)-1));  // we need a sign bit
+			size = 1 + sizeInBits(-n* ((mpz_class(1)<<impl->icm->xsize)-1));  // we need a sign bit
 		if(n==1)
 			size=impl->icm->xsize;
 

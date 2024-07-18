@@ -36,7 +36,7 @@ namespace flopoco{
 	Normalizer::Normalizer(OperatorPtr parentOp_, Target* target_, int wX_, int wR_, int maxShift_, bool computeSticky_, const int countType_) :
 		Operator(parentOp_, target_), wX(wX_), wR(wR_), maxShift(maxShift_),  computeSticky(computeSticky_), countType(countType_) {
 
-		wCount = intlog2(maxShift);  
+		wCount = sizeInBits(maxShift);  
 		// -------- Parameter set up -----------------
 		srcFileName = "Normalizer";
 		setCopyrightString("Florent de Dinechin, (2007-2020)");

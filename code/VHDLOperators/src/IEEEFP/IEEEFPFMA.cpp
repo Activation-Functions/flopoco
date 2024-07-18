@@ -221,7 +221,7 @@ namespace flopoco{
 
 
 
-		int shiftValWidth = intlog2(3*p+4);
+		int shiftValWidth = sizeInBits(3*p+4);
 		vhdl << tab << declare("ShiftValue", shiftValWidth) << " <= " << endl 
 				 << tab << tab << "     \"" << unsignedBinary(mpz_class(3*p+4), shiftValWidth)  << "\" when expDiffVerySmall='1'" << endl 
 				 << tab << tab << "else \""<< unsignedBinary(mpz_class(p+3), shiftValWidth) << "\" - (expDiff " << range(shiftValWidth-1, 0) << ") when expDiffNotLarge='1'" << endl 
@@ -296,7 +296,7 @@ namespace flopoco{
 
 		// A partir de là il n'est pas clair que un seul LZOCShifter ne serait pas plus efficace.
 
-		int LSize=intlog2(2*p+4);
+		int LSize=sizeInBits(2*p+4);
 		vhdl << tab << declare("BigSumAbsLowerBits", 2*p+4) << " <= BigSumAbs" << range(2*p+3, 0) << ";" << endl;
 #if 1
 		newInstance(
@@ -344,7 +344,7 @@ namespace flopoco{
 
 
 
-		int normShiftValWidth = intlog2(3*p+3);
+		int normShiftValWidth = sizeInBits(3*p+3);
 		vhdl << tab << declare("normShiftValue", normShiftValWidth) << " <= " << endl 
 				 << tab << tab << "     L + \"" << unsignedBinary(mpz_class(p+1), normShiftValWidth)  << "\" when (expDiffSmall and not RisSubNormal)='1'" << endl 
 				 << tab << tab << "else shiftValueCaseSubnormal" << range(normShiftValWidth -1, 0) << " when (expDiffSmall and RisSubNormal)='1'"  << endl 

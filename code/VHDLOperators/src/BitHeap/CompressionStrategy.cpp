@@ -1162,7 +1162,7 @@ namespace flopoco{
 		//Generate all "workable" compressors for 2 columns
 		for(col0=maxCompressibleBits; col0>=3; col0--)
 			for(col1=col0; col1>=0; col1--)
-				if((col0 + col1<=maxCompressibleBits) && (intlog2(col0 + 2*col1)<=3))
+				if((col0 + col1<=maxCompressibleBits) && (sizeInBits(col0 + 2*col1)<=3))
 					{
 						vector<int> newVect;
 

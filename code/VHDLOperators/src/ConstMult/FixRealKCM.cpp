@@ -33,7 +33,7 @@ Instead of resurrecting IntIntKCM, let's do the following
 - compute lsbC such that C=I*2^lsbC and I is an integer
 (this lsbC doesn't always exist, e.g. if we input 1/3, so we must place a reasonable limit)
 For an odd integer we will get lsbC=0.
-- compute m_c = intlog2(I)
+- compute m_c = sizeInBits(I)
 - If lsbOut <= lsbC + lsbIn then we have an exact operation.
  We can actually directly output zeroes for the (lsbC+lsbIn) - lsbOut bits.
 - For each table, check if it is exact (it will be in the case of an exact operation)

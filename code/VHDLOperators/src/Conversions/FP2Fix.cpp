@@ -128,7 +128,7 @@ namespace flopoco{
 										"X=>xoredMantissa,Y=>bigZero,Cin=>sign", "R=>signedMantissa"
 										);
 				int maxShift = w-1; // see drawing above
-				int shiftSize = intlog2(maxShift);
+				int shiftSize = sizeInBits(maxShift);
 				// when shift=0 we have E-bias = MSB-1,  hence shift = MSB-1-E+bias = (MSB+bias-1) - E
 				// In this case we also know that shiftSize <=wE, so let's perform the subtraction on this size, plus 1 bit to detect if < 0
 				vhdl << tab << declare(getTarget()->adderDelay(wE+1), "shiftVal", wE+1)
@@ -206,7 +206,7 @@ namespace flopoco{
 			Altogether the first option seems more desirable.
 		*/
 				int maxShift = w-1; // see drawing above
-				int shiftSize = intlog2(maxShift);
+				int shiftSize = sizeInBits(maxShift);
 				// when shift=0 we have E-bias = MSB-1,  hence shift = MSB-1-E+bias = (MSB+bias-1) - E
 				// In this case we also know that shiftSize <=wE, so let's perform the subtraction on this size, plus 1 bit to detect if < 0
 				vhdl << tab << declare(getTarget()->adderDelay(wE+1), "shiftVal", wE+1)

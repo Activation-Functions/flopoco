@@ -19,7 +19,7 @@ using namespace std;
 namespace flopoco {
 
   void PIF2Posit::computePIFWidths(int const widthO, int const wES, int* wE, int* wF) {
-		*wE = intlog2(widthO) + 1 + wES;
+		*wE = sizeInBits(widthO) + 1 + wES;
 		*wF = widthO - (wES + 3);
 	}
 
@@ -99,7 +99,7 @@ namespace flopoco {
 		
 		// on s'occupe de la partie regime
 		//de combien il faut décaler
-		int wCount = intlog2(widthO);
+		int wCount = sizeInBits(widthO);
 		vhdl << declare(0., "bin_regime", wCount) << "<= exponent" << range(wE_ -2, wES) << ";" << endl;
 		vhdl << declare(.0, "first_regime", 1, false) << "<= exponent" << of(wE_-1) << ";" << endl;
 

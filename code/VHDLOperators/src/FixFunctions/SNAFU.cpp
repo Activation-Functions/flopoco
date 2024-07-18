@@ -180,7 +180,7 @@ namespace flopoco{
 			sollyaReLU = "(1-1b"+to_string(lsbOut)+")*("+sollyaReLU+")";
 		}
 		else if (reluVariant) {
-			lsbOut = -wOut + intlog2(inputScale);
+			lsbOut = -wOut + sizeInBits(inputScale);
 		}
 		else {
 			throw(string("unable to set lsbOut"));

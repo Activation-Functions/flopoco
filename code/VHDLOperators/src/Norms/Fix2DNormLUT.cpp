@@ -49,7 +49,7 @@ namespace flopoco {
 				    "I=>S",
 				    "O=>C");
 
-		int wCount = intlog2(wInAdder);
+		int wCount = sizeInBits(wInAdder);
 		vhdl << tab << declare("C_even", wCount) << " <= C" << range(wCount - 1, 1) << " & '0';" << endl;
 		
 		newInstance("Shifter", "SShifter", 

@@ -149,7 +149,7 @@ namespace flopoco{
 		vhdl << tab  << declare("maxShift", wE+1) << " <= conv_std_logic_vector(" << maxshift << ", wE+1);  -- wE-2 + wF+g" << endl;
 		vhdl << tab  << declare(getTarget()->adderDelay(wE+1),"overflow0") << " <= not shiftVal(wE+1) when shiftVal(wE downto 0) > maxShift else '0';" << endl;
 
-		int shiftInSize = intlog2(maxshift);
+		int shiftInSize = sizeInBits(maxshift);
 		vhdl << tab  << declare("shiftValIn", shiftInSize) << " <= shiftVal" << range(shiftInSize-1, 0) << ";" << endl;
 		newInstance("Shifter",
 								"mantissa_shift",
@@ -213,7 +213,7 @@ namespace flopoco{
 		// isn't a subnormal if we don't have to shift
 		vhdl << tab << declare("notSubnormal") << " <= '1' when preshiftSubnormalAmount" << of(wE+1) << "='1' or preshiftSubnormalAmount=\"" << string(wE+2, '0') << "\"  else '0';" << endl;
 		
-		int shiftsize = intlog2(sizeExpY);
+		int shiftsize = sizeInBits(sizeExpY);
 	
 		addComment("Flush to zero command only works when detected as subnormal (underflow) ");
 		vhdl << tab << declare("flushed_to_zero") << " <= \'0\' when preshiftSubnormalAmount" << range(wE+1, shiftsize) << " = \"" << string(wE+1-shiftsize+1, '0') << "\" else \'1\';" << endl; 

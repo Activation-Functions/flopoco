@@ -21,7 +21,7 @@ namespace flopoco {
         for( uint i=0;i<inputCount;++i )
             addInput(getInputName(i),wIn);
 
-        addInput(getSelectName(), intlog2( inputCount-1 ) );
+        addInput(getSelectName(), sizeInBits( inputCount-1 ) );
         addOutput(getOutputName(),wIn);
 
         if(target->useTargetOpt() && target->getVendor() == "Xilinx" )
@@ -48,7 +48,7 @@ namespace flopoco {
     }
 
     void GenericMux::buildCommon(Target* target, const uint32_t &wIn, const uint32_t &inputCount){
-        const uint16_t select_ws = intlog2( inputCount-1 );
+        const uint16_t select_ws = sizeInBits( inputCount-1 );
 
         vhdl << tab << "with " << getSelectName() << " select" << endl
              << tab << tab << getOutputName() << " <= " << endl;

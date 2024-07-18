@@ -19,7 +19,7 @@ using namespace std;
 namespace flopoco {
 
   void Posit2PIF::computePIFWidths(int const widthI, int const wES, int* wE, int* wF) {
-		*wE = intlog2(widthI) + 1 + wES;
+		*wE = sizeInBits(widthI) + 1 + wES;
 		*wF = widthI - (wES + 3);
 	}
 
@@ -103,7 +103,7 @@ namespace flopoco {
 		vhdl << declare(target->logicDelay(2), "neg_count", 1, false) << "<= not (s xor count_type);" << endl;
 
 		ostringstream param, inmap, outmap;
-		int wCount = intlog2(widthI) - 1; //comme ça le shifter ne pense pas qu'il peut shifter un nombre absurde de bits
+		int wCount = sizeInBits(widthI) - 1; //comme ça le shifter ne pense pas qu'il peut shifter un nombre absurde de bits
 
 		param << "wX=" << widthI - 2;
 		param << " wR=" << widthI - 2;

@@ -22,7 +22,7 @@ namespace flopoco{
     setNameWithFreqAndUID(name.str());
     setCopyrightString("Oregane Desrentes 2019");
     
-    int wE = intlog2(width_) + 1 + wES_;
+    int wE = sizeInBits(width_) + 1 + wES_;
     int wF = width_ - (wES_ + 3);
     addInput ("X" , width_);
     addInput ("Y" , width_);

@@ -50,7 +50,7 @@ namespace flopoco
 		// set wIn
 		if (wIn < 0) {
 			// set the value of wIn
-			wIn = intlog2(values.size());
+			wIn = sizeInBits(values.size());
 		}
 
 		assert(((unsigned)1 << wIn) >= values.size() &&
@@ -72,7 +72,7 @@ namespace flopoco
 		}
 
 		// set wOut
-		wOut = intlog2(maxValue);
+		wOut = sizeInBits(maxValue);
 
 		if (minIn < 0) {
 			minIn = 0;

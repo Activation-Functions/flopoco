@@ -179,7 +179,7 @@ namespace flopoco{
 						 << " <= " << "X" << of(i) << " & "  <<  "C" << of(i) <<  ";"<<endl;
 			}
 			REPORT(LogLevel::VERBOSE, "padding to the next power of two");
-			int j=1 << intlog2(w); // next power of two
+			int j=1 << sizeInBits(w); // next power of two
 			for(int i=w; i<j; i++) {
 				vhdl << tab << declare("C_" + to_string(i) + "_" + to_string(i), 2)
 						 << " <= \"00\" ;"<<endl;
