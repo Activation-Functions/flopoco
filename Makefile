@@ -445,7 +445,7 @@ endif
 # -------------------------------------------
 ifeq (SCIP, $(filter SCIP, $(SCALP_BACKEND)))
 # -------------------------------------------
-    SCALP_DEPENDENCIES += scip
+    SCALP_DEPENDENCIES += $(SCIP_LIBRARIES)
     SCALP_CMAKE_OPTIONS += -DSCIP_ROOT_DIR=$(SCIP_BINARY_DIR)
     SCALP_LIBRARIES += $(SCALP_BINARY_DIR)/lib/libScaLP-SCIP.$(dylib)
 endif
@@ -530,7 +530,7 @@ PAGSUITE_LIBRARIES += $(PAGSUITE_BINARY_DIR)/lib/liboscm.$(dylib)
 pagsuite: $(PAGSUITE_LIBRARIES)
 
 .ONESHELL:
-$(PAGSUITE_LIBRARIES) &: scalp
+$(PAGSUITE_LIBRARIES) &: $(SCALP_LIBRARIES)
 	$(call shell_info, Fetching and building $(B)PAGSuite$(N) library)
 	@mkdir -p $(PAGSUITE_BINARY_DIR)
 	@git clone $(PAGSUITE_GIT) $(PAGSUITE_SOURCE_DIR)
@@ -573,8 +573,9 @@ $(NVC):
 
 # PAGSuite needs scalp anyway.
 #FLOPOCO_DEPENDENCIES += scalp
-FLOPOCO_DEPENDENCIES += wcpg
-FLOPOCO_DEPENDENCIES += pagsuite
+FLOPOCO_DEPENDENCIES += $(WCPG_LIBRARIES)
+FLOPOCO_DEPENDENCIES += $(PAGSUITE_LIBRARIES)
+FLOPOCO_DEPENDENCIES += $(shell find code/ -type f -name '*')
 
 ifeq ($(WITH_NVC), ON)
     FLOPOCO_DEPENDENCIES += $(NVC)
