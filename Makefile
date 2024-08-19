@@ -384,7 +384,7 @@ sysdeps:
 # nonlinear programming (MINLP)
 # -----------------------------------------------------------------------------
 SCIP_GIT := https://github.com/scipopt/scip.git
-#SCIP_COMMIT := 81df6e5a4ff190e8412356856247aeb527b5ca4f
+SCIP_VERSION := v910
 SCIP_SOURCE_DIR := $(BUILD_DEPENDENCIES_SOURCE_DIR)/scip
 SCIP_BINARY_DIR := $(BUILD_DEPENDENCIES_BINARY_DIR)/scip
 SCIP_LIBRARIES := $(SCIP_BINARY_DIR)/lib/libscip.$(dylib)
@@ -395,9 +395,9 @@ scip: $(SCIP_LIBRARIES)
 $(SCIP_LIBRARIES):
 	$(call shell_info, Fetching and building $(B)SCIP$(N) library)
 	@mkdir -p $(SCIP_BINARY_DIR)
-	@git clone $(SCIP_GIT) $(SCIP_SOURCE_DIR)
-#	@git checkout 81df6e5a4ff190e8412356856247aeb527b5ca4f
+	@git clone $(SCIP_GIT) $(SCIP_SOURCE_DIR)	
 	@cd $(SCIP_SOURCE_DIR)
+	@git checkout $(SCIP_VERSION)
 	@cmake -B build -G$(CMAKE_GENERATOR)		    \
 	       -DAUTOBUILD=ON				    \
 	       -DCMAKE_INSTALL_PREFIX=$(SCIP_BINARY_DIR)    \
@@ -565,7 +565,7 @@ $(NVC):
 	@mkdir build && cd build
 	@../configure
 	@make
-	@make install
+	@sudo make install
 
 # -----------------------------------------------------------------------------
 .PHONY: dependencies
