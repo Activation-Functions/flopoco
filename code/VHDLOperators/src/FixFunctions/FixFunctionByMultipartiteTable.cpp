@@ -834,10 +834,9 @@ namespace flopoco
 					paramList.clear();
 					string f = function[i];
 					int lsbOut = lsbIn + msbOut[i]; // to have inputSize=outputSize
-					if(scaleOutput[i]) {
+					if (scaleOutput[i]) {
 						f = "(1-1b"+to_string(lsbOut) + ")*(" + f + ")";
 					}
-					f="\"" + f + "\"";
 					paramList.push_back(make_pair("f", f));
 					paramList.push_back(make_pair("signedIn", to_string(signedIn[i]) ) );
 					paramList.push_back(make_pair("lsbIn", to_string(lsbIn)));
