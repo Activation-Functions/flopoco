@@ -15,7 +15,7 @@ git clone https://gitlab.com/flopoco/flopoco
 cd flopoco
 
 # this should not be necessary!
-git branch dev/master
+git checkout dev/master
 
 mkdir build
 cd build
