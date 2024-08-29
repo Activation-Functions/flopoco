@@ -13,6 +13,10 @@ yes | sudo apt update && \
 git clone https://gitlab.com/flopoco/flopoco
 
 cd flopoco
+
+# this should not be necessary!
+git checkout dev/master
+
 mkdir build
 cd build
 
