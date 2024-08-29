@@ -30,9 +30,6 @@ ninja
 # executables are in bin/flopoco
 ln -s ./bin/flopoco
 
-pwd
-ls -l
-
 # build the html documentation in doc/web. 
 ./flopoco BuildHTMLDoc
 
