@@ -14,7 +14,7 @@ git clone https://gitlab.com/flopoco/flopoco
 
 cd flopoco
 
-# this should not be necessary, change this once master is working again!
+# this should not be necessary!
 git checkout dev/master
 
 mkdir build
@@ -27,8 +27,8 @@ ninja
 #  cmake ..
 #  make
 
-# executables are in bin/flopoco
-ln -s ./bin/flopoco
+# executables are in build/code/FloPoCoBin/
+ln -s ./code/FloPoCoBin/flopoco .
 
 # build the html documentation in doc/web. 
 ./flopoco BuildHTMLDoc
