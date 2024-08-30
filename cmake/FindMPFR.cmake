@@ -44,44 +44,44 @@ find_package(PkgConfig)
 pkg_check_modules(PC_MPFR QUIET mpfr)
 
 find_path(MPFR_INCLUDE_DIR
-  NAMES mpfr.h
-  PATHS ${PC_MPFR_INCLUDE_DIRS}
-  DOC "Path of mpfr.h, the include file for GNU MPFR library"
+    NAMES mpfr.h
+    PATHS ${PC_MPFR_INCLUDE_DIRS}
+    DOC "Path of mpfr.h, the include file for GNU MPFR library"
 )
 
-FIND_LIBRARY(MPFR_LIBRARY
-  NAMES mpfr mpfr.lib
-  PATHS ${PC_MPFR_LIBRARY_DIRS}
-  DOC "Directory of the MPFR library"
+find_library(MPFR_LIBRARY
+    NAMES mpfr mpfr.lib
+    PATHS ${PC_MPFR_LIBRARY_DIRS}
+    DOC "Directory of the MPFR library"
 )
 
 set(MPFR_VERSION ${PC_MPFR_VERSION})
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(
-  MPFR
-  FOUND_VAR MPFR_FOUND 
-  REQUIRED_VARS
-    MPFR_LIBRARY
-    MPFR_INCLUDE_DIR
-  VERSION_VAR MPFR_VERSION
+    MPFR
+    FOUND_VAR MPFR_FOUND
+    REQUIRED_VARS
+        MPFR_LIBRARY
+        MPFR_INCLUDE_DIR
+    VERSION_VAR MPFR_VERSION
 )
 
-if(MPFR_FOUND)
-  set(MPFR_LIBRARIES ${MPFR_LIBRARY})
-  set(MPFR_INCLUDE_DIRS ${MPFR_INCLUDE_DIR})
-  set(MPFR_DEFINITIONS ${PC_MPFR_FLAGS_OTHER})
+if (MPFR_FOUND)
+    set(MPFR_LIBRARIES ${MPFR_LIBRARY})
+    set(MPFR_INCLUDE_DIRS ${MPFR_INCLUDE_DIR})
+    set(MPFR_DEFINITIONS ${PC_MPFR_FLAGS_OTHER})
 endif()
 
 if (MPFR_FOUND AND NOT TARGET MPFR::MPFR)
-  find_package(GMP REQUIRED)
-  add_library(MPFR::MPFR UNKNOWN IMPORTED)
-  set_target_properties(MPFR::MPFR PROPERTIES 
-    IMPORTED_LOCATION "${MPFR_LIBRARY}"
-    INTERFACE_COMPILE_OPTIONS "${PC_MPFR_FLAGS_OTHER}"
-    INTERFACE_INCLUDE_DIRECTORIES "${MPFR_INCLUDE_DIR}"
-  )
-  target_link_libraries(MPFR::MPFR INTERFACE GMP::GMP)
+    find_package(GMP REQUIRED)
+    add_library(MPFR::MPFR UNKNOWN IMPORTED)
+    set_target_properties(MPFR::MPFR PROPERTIES
+        IMPORTED_LOCATION "${MPFR_LIBRARY}"
+        INTERFACE_COMPILE_OPTIONS "${PC_MPFR_FLAGS_OTHER}"
+        INTERFACE_INCLUDE_DIRECTORIES "${MPFR_INCLUDE_DIR}"
+    )
+    target_link_libraries(MPFR::MPFR INTERFACE GMP::GMP)
 endif()
 
 mark_as_advanced(MPFR_INCLUDE_DIR MPFR_LIBRARY)
