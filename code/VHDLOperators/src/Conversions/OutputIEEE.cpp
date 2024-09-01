@@ -67,6 +67,8 @@ namespace flopoco{
 				vhdl << " & not X" << of(wEI+wFI-1);
 			}
 			vhdl << " & X" << range(wEI+wFI-2, wFI) << ";" << endl;
+		} else { /* wEI > wEO */
+			vhdl << tab << declare("expX", wEI) << "  <= X" << range(wEI+wFI-1, wFI) << ";" << endl;
 		}
 
 		if(onlyPositiveZeroes)
@@ -83,7 +85,7 @@ namespace flopoco{
 				vhdl << tab << declare(getTarget()->lutDelay(), "fracR",wFO) << " <= " << endl
 					 << tab << tab << zg(wFO) << " when (exnX = \"00\") else" << endl //zero
 					 << tab << tab << "'1' & fracX" << range(wFI-1, wFO>wFI?0:1) << " & " << zg(wFO-wFI-(wFO>wFI?1:0)) << " when (expZero = '1' and exnX = \"01\") else" << endl  //subnormal, no rounding is performed here when wFO==wFI
-					 << tab << tab << "fracX " << " & " << zg(wFO-wFI) << " when (exnX = \"01\") else " << endl //normal number
+					 << tab << tab << "fracX " << " & " << zg(wFO-wFI) << " when (exnX = \"01\") else" << endl //normal number
 					 << tab << tab << zg(wFO-1) << " & exnX(0);" << endl; //+/- infty or NaN
 				vhdl << tab << declare(getTarget()->lutDelay(), "expR",wEO) << " <=  " << endl
 					 << tab << tab << rangeAssign(wEO-1,0, "'0'") << " when (exnX = \"00\") else" << endl
@@ -121,8 +123,79 @@ namespace flopoco{
 			}
 
 		}
-		else {
-			throw  string("OutputIEEE not yet implemented for wEI>wEO, send us a mail if you need it");
+		else { // wEI > wEO
+			//throw  string("OutputIEEE not yet implemented for wEI>wEO, send us a mail if you need it");
+			int32_t eMinO = -((1<<(wEO-1)) -2); // that's our minimal ouput exponent (IEEE)
+			int32_t eMaxO = (1<<(wEO-1)) -1; // that's our maximal ouput exponent (IEEE)
+			int32_t biasI = (1<<(wEI-1)) -1; // Input Bias
+			int32_t biasO = (1<<(wEO-1)) -1; // Output Bias
+			underflowThreshold = eMinO+biasI; // positive since wEI>wEO.
+			overflowThreshold = eMaxO+biasI;
+
+			std::cerr << "@@@@ values: eMinO = " << eMinO << ", biasI = " << biasI << ", eMaxO = " << eMaxO << std::endl;
+			std::cerr << "@@@@ values: underflowThreshold = " << underflowThreshold << ", overflowThreshold = " << overflowThreshold << std::endl;
+
+			vhdl << tab << "-- min exponent value without underflow, biased with input bias: " << underflowThreshold << endl;
+			vhdl << tab << declare("unSub",wEI+1) << " <= ('0' & expX) - CONV_STD_LOGIC_VECTOR(" << underflowThreshold << "," << wEI+1 <<");" << endl;
+			vhdl << tab << declare("underflow") << " <= unSub(" << wEI << ");" << endl;
+
+			vhdl << tab << "-- max exponent value without overflow, biased with input bias: " << overflowThreshold << endl ;
+			vhdl << tab << declare("ovSub",wEI+1) << " <= CONV_STD_LOGIC_VECTOR(" << overflowThreshold << "," << wEI+1 <<")  -  ('0' & expX);" << endl;
+			vhdl << tab << declare("overflow") << " <= ovSub(" << wEI << ");" << endl;
+
+			vhdl << tab << declare("in_is_zero") << " <= '1' when (exnX=\"00\") else '0';" << endl;
+			vhdl << tab << declare("in_is_normal") << " <= '1' when (exnX=\"01\") else '0';" << endl;
+			vhdl << tab << declare("in_is_inf") << " <= '1' when (exnX=\"10\") else '0';" << endl;
+			vhdl << tab << declare("in_is_nan") << " <= '1' when (exnX=\"11\") else '0';" << endl;
+
+			// wEI>wEO therefore biasI>biasO
+			// have to compute expR = ((expX-biasI) + biasO) (wEO-1 downto 0)
+			// but the wEO-1 LSB bits of both biases are identical, therefore simply copy 
+			// and the remaining MSB are 1 for input and 0 for output, therefore subtract the leading 1 by inverting it
+			vhdl << tab << declare("expXO", wEO) << " <= (not expX(" << wEO-1 << ")) & expX" << range(wEO-2, 0) << ";" << endl;
+
+			if(wFO>=wFI){ // no rounding needed
+				vhdl << tab << declare("fracR",wFO) << " <= " << "fracX";
+
+				vhdl << tab << declare("fracR",wFO) << " <= "  << endl;
+				vhdl << tab << tab << "fracX";
+				if(wFO>wFI) // need to pad with 0s
+					vhdl << " & CONV_STD_LOGIC_VECTOR(0," << wFO-wFI <<")";
+				vhdl << " when ((in_is_nan = '1') or ((in_is_normal = '1') and not ((underflow = '1') or (overflow = '1')))) else " << endl;
+				vhdl << tab << tab << rangeAssign(wFO-1,0, "'0'") << ";" << endl;
+			}
+			else { // wFI>wFO, wEI>wEO
+				vhdl << tab << "-- wFO < wFI, need to round fraction" << endl;
+				vhdl << tab << declare("resultLSB") << " <= fracX("<< wFI-wFO <<");" << endl;
+				vhdl << tab << declare("roundBit") << " <= fracX("<< wFI-wFO-1 <<");" << endl;
+				// need to define a sticky bit
+				vhdl << tab << declare("sticky") << " <= ";
+				if(wFI-wFO>1) {
+					vhdl<< " '0' when fracX" << range(wFI-wFO-2, 0) <<" = CONV_STD_LOGIC_VECTOR(0," << wFI-wFO-2 <<")   else '1';"<<endl;
+				}
+				else {
+					vhdl << "'0';" << endl;
+				}
+				vhdl << tab << declare("round") << " <= roundBit and (sticky or resultLSB);"<<endl;
+
+				vhdl << tab << "-- The following addition may overflow" <<endl;
+				vhdl << tab << declare("expfracR0", wEO+wFO+1) << " <= ('0' & expXO & fracX" << range(wFI-1, wFI-wFO) << ")  +  (CONV_STD_LOGIC_VECTOR(0," << wEO+wFO <<") & round);"<<endl;
+				vhdl << tab << declare("roundOverflow") << " <= '1' when (expXO=(" << rangeAssign(wEO-1,0, "'1'") << ")) else expfracR0(" << wEO+wFO << ");" << endl;
+
+				// vhdl << tab << declare("fracR",wFO) << " <= expfracR0" << range(wFO-1, 0) << ";" << endl;
+				// vhdl << tab << declare("expR",wEO) << " <= expfracR0" << range(wFO+wEO-1, wFO) << ";" << endl;
+
+				vhdl << tab << declare("fracR",wFO) << " <= "  << endl;
+				vhdl << tab << tab << "expfracR0" << range(wFO-1, 0) << " when ((in_is_nan = '1') or ((in_is_normal = '1') and not ((underflow = '1') or (overflow = '1') or (roundOverflow = '1')))) else " << endl;
+				vhdl << tab << tab << rangeAssign(wFO-1,0, "'0'") << ";" << endl;
+			}
+			// Also:
+			// underflow are flushed to zero (no denormals generated) IMPROVEME
+			// overflow are flushed to infinity
+			vhdl << tab << declare("expR",wEO) << " <=  " << endl;
+			vhdl << tab << tab << rangeAssign(wEO-1,0, "'0'") << " when ((in_is_zero = '1') or (underflow = '1')) else" << endl; /* zeroes, underflow flushed to zeroes */
+			vhdl << tab << tab << rangeAssign(wEO-1,0, "'1'") << " when ((in_is_inf = '1') or (in_is_nan = '1') or (overflow = '1') or (roundOverflow = '1')) else" << endl; /* infinity, NaN, overflow flushed to infinity */
+			vhdl << tab << tab << "expfracR0" << range(wFO+wEO-1, wFO) << ";" << endl; /* normal numbers */
 		}
 
 		vhdl << tab << "R <= sX & expR & fracR; " << endl;
