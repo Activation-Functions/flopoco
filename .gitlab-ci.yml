@@ -93,7 +93,7 @@ squid_debian_autotests:
     script:
       - make sysdeps nvc
       - export XILINX_VIVADO=./nvc-vivado && nvc --install vivado
-      - ./flopoco autotest operator=all testlevel=0 output=autotests
+      - make autotests
     artifacts:
       paths:
         - autotests/summary.csv
