@@ -596,7 +596,7 @@ $(FLOPOCO): $(FLOPOCO_DEPENDENCIES)
 	       $(CMAKE_BUILD_TYPE)
 	@cmake --build build -j 8
 	$(call shell_info, Adding 'flopoco' $(B)symlink$(N)' in repository's root directory)
-	@ln -fs $(FLOPOCO) $(MKROOT)
+	@ln -fs $(FLOPOCO) $(MKROOT)/build
 	$(call shell_info, Building the $(B)HTML documentation$(N) in doc/web)
 	$(MKROOT)/flopoco BuildHTMLDoc
 	$(call shell_info, Now running $(B)FloPoCo$(N))
