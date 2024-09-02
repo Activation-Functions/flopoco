@@ -813,18 +813,19 @@ Now run in a terminal\\
 and you should obtain  some VHDL in \texttt{flopoco.vhdl}
 
 \subsection{Contributing to the FloPoCo gitlab}
-Every new feature or operator should be developed in a branch derived from dev/master. 
-Once the developer feels like the work is done, a merge-request to \texttt{dev/master} should be opened, which will trigger the \textit{CI} and check that everything builds correctly. 
+The FloPoCo gitlab \texttt{master} branch should be viewed as the \textit{stable} or \textit{release} branch of FloPoCo, that users should use in priority, unless they are in need of some of the newer features. It is guaranteed to be stable, documented and have a coherent set of features.
 
-The CI has 3 sequential steps: 
+The \texttt{dev/master} branch of the git should be considered as the \textit{bleeding edge} version of FloPoCo: it is considered 'ok' if it breaks from time to time, even though everyone tries to maintain its stability as much as he can on the parts he's responsible for.
+
+As a result, every new feature or operator should be developed in a branch derived from \texttt{dev/master}. 
+Once the developer feels like the work is done, a merge-request to \texttt{dev/master} should be opened, which will trigger the \textit{CI} and check that everything builds correctly. The CI has 3 sequential steps: 
 \begin{itemize}
   \item the \textit{build} stage, which builds flopoco and its dependencies (WCPG, SCIP, ScaLP, PAGSuite) on both Linux (latest debian) and macOS (currently running on a Sonoma VM)
   \item the \textit{autotest} stage, which runs all operator autotests with \texttt{testLevel = 0}
   \item the \textit{deploy} stage, which collects all of the autotest results, and publish it in \texttt{doc/web/autotests.html} as a HTML table.
 \end{itemize}
 
-The \texttt{dev/master} branch should be considered as the \textit{bleeding edge} version of FloPoCo, it is considered 'ok' if it breaks from time to time, even though everyone tries to maintain its stability as much as he can on the parts he's responsible for.
-Consequently, the \texttt{master} branch should be really viewed as the \textit{stable} or \textit{release} branch of FloPoCo, that users should use in priority, unless they are in need of some of the newer features. It is guaranteed to be stable, documented and have a coherent set of features.
+
 
 \subsection{Overview of FloPoCo code organization}
 
