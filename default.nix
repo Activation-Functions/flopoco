@@ -26,6 +26,9 @@
       # Dev utilities
       pre-commit
       clang-tools
+      rlwrap
+      gnuplot
+      nvc
     ];
 
     shellHook = ''
