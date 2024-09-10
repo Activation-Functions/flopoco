@@ -1143,9 +1143,9 @@ namespace flopoco {
 
 		bool hasReset();
 
-		bool hasClockEnable();
+		bool hasWriteEnable();
 
-		void setClockEnable(bool val);
+		void setWriteEnable(bool val);
 
 		bool nameSignalByCycle();
 
@@ -1384,7 +1384,7 @@ private:
 	string                 headerComment_;                  /**< Optional comment that gets added to the header. Possibly multiline.  */
 	string                 copyrightString_;                /**< Authors and years.  */
 	string                 additionalHeaderString_;         /**< User-defined header information (used, e.g., for primitives that require extra libraries).  */
-	bool                   hasClockEnable_;    	            /**< True if the operator has a clock enable signal  */
+	bool                   hasWriteEnable_;    	            /**< True if the operator has a write enable signal  */
 	bool                   nameSignalByCycle_;    	        /**< True if the operator uses signal name by cycle instead of delay */
 	int		                 hasDelay1Feedbacks_;             /**< True if this operator has feedbacks of one cycle, and no more than one cycle (i.e. an error if the distance is more). False gives warnings */
 	Operator*              indirectOperator_;               /**< NULL if this operator is just an interface operator to several possible implementations, otherwise points to the instance*/

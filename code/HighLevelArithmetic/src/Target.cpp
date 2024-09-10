@@ -32,7 +32,7 @@ namespace flopoco{
 			id_                = "generic";
 
 			pipeline_          = true;
-			useClockEnable_       = false;
+			useWriteEnable_       = false;
 			nameSignalByCycle_       = false;
 			frequency_         = 400000000.;
 			useHardMultipliers_= true;
@@ -65,16 +65,16 @@ namespace flopoco{
 		return (frequency_!=0);
 	}
 
-	void Target::setClockEnable(bool val) {
-		useClockEnable_=val;
+	void Target::setWriteEnable(bool val) {
+		useWriteEnable_=val;
 	}
 
 	void Target::setNameSignalByCycle(bool val) {
 		nameSignalByCycle_=val;
 	}
 
-	bool Target::useClockEnable(){
-		return useClockEnable_;
+	bool Target::useWriteEnable(){
+		return useWriteEnable_;
 	}
 
 	bool Target::useNameSignalByCycle(){

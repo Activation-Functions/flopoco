@@ -116,10 +116,10 @@ namespace flopoco{
 		// add clk and rst
 		declare("clk");
 		declare("rst");
-		// declaration and assignation of the clock enable signal
-		if (op_->hasClockEnable()) {
+		// declaration and assignation of the write enable signal
+		if (op_->hasWriteEnable()) {
 			for (int stage = op->getMinInputCycle(); stage < op->getMaxOutputCycle(); stage++ ) {
-				vhdl << tab << declare("ce_" + to_string(stage+1)) << " <= '1';" << endl;
+				vhdl << tab << declare("write_enable_" + to_string(stage+1)) << " <= '1';" << endl;
 			}
 		}
 
@@ -153,9 +153,9 @@ namespace flopoco{
 			vhdl << "clk  => clk";
 			if (op->hasReset())
 			  vhdl << "," << endl << tab << tab << "           rst  => rst";
-			if(op->hasClockEnable()) {
+			if(op->hasWriteEnable()) {
 				for (int stage = op->getMinInputCycle(); stage < op->getMaxOutputCycle(); stage++ ) {
-					vhdl << "," << endl << tab << tab << "           ce_" << stage+1 << " => ce_" << stage+1;
+					vhdl << "," << endl << tab << tab << "           write_enable_" << stage+1 << " => write_enable_" << stage+1;
 				}
 			}
 		}
