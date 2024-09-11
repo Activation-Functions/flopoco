@@ -588,7 +588,18 @@ dependencies: $(FLOPOCO_DEPENDENCIES)
 FLOPOCO := $(MKROOT)/build/bin/flopoco
 flopoco: $(FLOPOCO)
 
-$(FLOPOCO): $(FLOPOCO_DEPENDENCIES)
+ifeq ($(call file_exists, $(FLOPOCO)), 0) # -----------------------------
+# The following commands are only executed in the case of a fresh
+# flopoco installation. This prevents displaying the looong FloPoCo 
+# list of operators every time a re-make is done.
+define epilogue # ------------------------------------------------------
+	$(call shell_info, Now running $(B)FloPoCo$(N))
+	$(FLOPOCO) 
+	$(call shell_ok, If you saw the command-line help of FloPoCo - Welcome!)
+endef # ----------------------------------------------------------------
+endif
+
+$(FLOPOCO) &: $(FLOPOCO_DEPENDENCIES)
 	$(call shell_info, Now building $(B)FloPoCo$(N))
 	@cmake -B build -G$(CMAKE_GENERATOR)	    \
 	       -DWCPG_LOCAL=$(WCPG_BINARY_DIR)	    \
@@ -596,16 +607,14 @@ $(FLOPOCO): $(FLOPOCO_DEPENDENCIES)
 	       -DPAG_LOCAL=$(PAGSUITE_BINARY_DIR)   \
 	       -DCMAKE_INSTALL_PREFIX=$(PREFIX)	    \
 	       $(CMAKE_BUILD_TYPE)
-	@cmake --build build -j 8
-	$(call shell_info, Adding 'flopoco' $(B)symlink$(N)' in repository's root directory)
+	@cmake --build build || exit;
+	$(call shell_info, Adding 'flopoco' $(B)symlink$(N) in build directory)
 	@ln -fs $(FLOPOCO) $(MKROOT)/build
 	$(call shell_info, Building the $(B)HTML documentation$(N) in doc/web)
 	$(FLOPOCO) BuildHTMLDoc
-	$(call shell_info, Now running $(B)FloPoCo$(N))
-	$(FLOPOCO)
 	$(call shell_info, Generating and installing $(B)bash autocompletion$(N) file)
 	$(FLOPOCO) BuildAutocomplete
-	$(call shell_ok, If you saw the command-line help of FloPoCo - Welcome!)
+	$(call epilogue)
 
 # -----------------------------------------------------------------------------
 .ONESHELL:
