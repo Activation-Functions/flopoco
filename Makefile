@@ -26,15 +26,23 @@ FLOPOCO_COMMIT_HASH     := $(shell git rev-parse HEAD)
 MKROOT := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
 # Local dependencies build directories:
-
 BUILD_DIR := $(MKROOT)/build
 BUILD_DEPENDENCIES_DIR := $(BUILD_DIR)/dependencies
 BUILD_DEPENDENCIES_SOURCE_DIR := $(BUILD_DEPENDENCIES_DIR)/src
 BUILD_DEPENDENCIES_BINARY_DIR := $(BUILD_DEPENDENCIES_DIR)/bin
+FLOPOCO := $(MKROOT)/build/bin/flopoco
+
 
 # Utilities for parsing OS and distribution version
 # as well as pretty-printing stuff.
 include $(MKROOT)/tools/utilities.mk
+
+ifeq ($(call file_exists, $(FLOPOCO)), 0)
+    FRESH_INSTALL := TRUE
+    $(call static_info, Clean installation of FloPoCo)
+else
+    FRESH_INSTALL := FALSE
+endif
 
 # Print FloPoCo version, branch and commit hash:
 $(call static_info, Running $(B)FloPoCo$(N) build script\
@@ -118,9 +126,13 @@ endif
 
 $(call static_info, $(B)ScaLP backend(s)$(N): $(SCALP_BACKEND))
 
-# -----------------------------------------------------------------------------xxxxxx
-
-all: flopoco
+# Add 'sysdeps' target if flopoco target has not been built yet.
+# Otherwise, just re-build flopoco.
+ifeq ($(FRESH_INSTALL), TRUE)
+    all: sysdeps flopoco 
+else
+    all: flopoco
+endif
 
 # -----------------------------------------------------------------------------
 .PHONY: help
@@ -584,11 +596,9 @@ dependencies: $(FLOPOCO_DEPENDENCIES)
 # -----------------------------------------------------------------------------
 .PHONY: flopoco
 # -----------------------------------------------------------------------------
-
-FLOPOCO := $(MKROOT)/build/bin/flopoco
 flopoco: $(FLOPOCO)
 
-ifeq ($(call file_exists, $(FLOPOCO)), 0) # -----------------------------
+ifeq ($(FRESH_INSTALL), TRUE) # ----------------------------------------
 # The following commands are only executed in the case of a fresh
 # flopoco installation. This prevents displaying the looong FloPoCo 
 # list of operators every time a re-make is done.
