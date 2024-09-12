@@ -15,17 +15,15 @@ squid_debian_build:
         - cmake/*
         - Makefile
         - CMakeLists.txt
-        - tools/scalp.patch
     - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
       changes:
         - code/**/*
         - cmake/*
         - Makefile
         - CMakeLists.txt
-        - tools/scalp.patch
   before_script:
     - apt update
-    - apt install -y git make sudo
+    - apt install -y git make sudo ninja-build
   script:
     - make sysdeps flopoco
     - make install
@@ -48,14 +46,12 @@ squid_macos_build:
         - cmake/*
         - Makefile
         - CMakeLists.txt
-        - tools/scalp.patch
     - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
       changes:
         - code/**/*
         - cmake/*
         - Makefile
         - CMakeLists.txt
-        - tools/scalp.patch
   script:
     - gmake sysdeps flopoco
     # Ideally, we would need to test the install step
@@ -72,14 +68,12 @@ squid_debian_autotests:
           - cmake/*
           - Makefile
           - CMakeLists.txt
-          - tools/scalp.patch
       - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
         changes:
           - code/**/*
           - cmake/*
           - Makefile
           - CMakeLists.txt
-          - tools/scalp.patch
     before_script:
       - apt update
       - apt install -y git make sudo
@@ -109,14 +103,12 @@ squid_debian_deploy:
           - cmake/*
           - Makefile
           - CMakeLists.txt
-          - tools/scalp.patch
       - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
         changes:
           - code/**/*
           - cmake/*
           - Makefile
           - CMakeLists.txt
-          - tools/scalp.patch
     before_script:
       - apt update
       - apt install -y git make sudo cargo openssh-client
