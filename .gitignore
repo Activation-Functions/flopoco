@@ -36,8 +36,18 @@ doc/flopoco_developer_manual/flopoco_developer_manual.toc
 doc/flopoco_developer_manual/flopoco_developer_manual.bbl
 doc/flopoco_developer_manual/flopoco_developer_manual.blg
 
+# Doxygen doc
+doc/doxygen/latex/
+doc/doxygen/*.bak
+
 #tata
 fftest
 .cache/clangd/index
 .direnv
 build
+
+# Tools
+tools/autotests-html/target/
+
+# IDE related
+.vscode/
