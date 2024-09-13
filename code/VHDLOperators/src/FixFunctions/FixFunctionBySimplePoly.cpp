@@ -210,29 +210,29 @@ namespace flopoco{
 			for (size_t i=0; i<functionList.size(); i++) {
 					// first deg 2 and 3, 15 bits, exhaustive test, then deg 5 for 25 bits 
 					string f = functionList[i];
-					paramList.push_back(make_pair("f","\"" + f + "\""));
+					paramList.push_back(make_pair("f",f));
 					paramList.push_back(make_pair("plainVHDL","true"));
 					paramList.push_back(make_pair("lsbOut","-15"));
 					paramList.push_back(make_pair("lsbIn","-15"));
 					paramList.push_back(make_pair("TestBench n=","-2"));
 					testStateList.push_back(paramList);
 					paramList.clear();
-
-					paramList.push_back(make_pair("f","\"" + f + "\""));
+					
+					paramList.push_back(make_pair("f",f));
 					paramList.push_back(make_pair("plainVHDL","true"));
 					paramList.push_back(make_pair("lsbOut","-24"));
 					paramList.push_back(make_pair("lsbIn","-24"));
 					testStateList.push_back(paramList);
 					paramList.clear();
 
-					paramList.push_back(make_pair("f","\"" + f + "\""));
+					paramList.push_back(make_pair("f",f));
 					paramList.push_back(make_pair("plainVHDL","true"));
 					paramList.push_back(make_pair("lsbOut","-30"));
 					paramList.push_back(make_pair("lsbIn","-30"));
 					testStateList.push_back(paramList);
 					paramList.clear();
 
-					paramList.push_back(make_pair("f","\"" + f + "\""));
+					paramList.push_back(make_pair("f",f));
 					paramList.push_back(make_pair("plainVHDL","true"));
 					paramList.push_back(make_pair("lsbOut","-32"));
 					paramList.push_back(make_pair("lsbIn","-32"));

@@ -36,7 +36,7 @@ namespace flopoco{
 
 		//this operator is a sequential one	even if Target is unpipelined
 		setSequential();
-		if (op->hasClockEnable()) {
+		if (op->hasWriteEnable()) {
 			THROWERROR("Operator RegisterSandwich cannot have clock enable activated.")
 		}
 		if (op->nameSignalByCycle()) {

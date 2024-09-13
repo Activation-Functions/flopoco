@@ -77,11 +77,11 @@ namespace flopoco{
 		 */
 		bool isPipelined();
 
-		/** Returns true if the target is to have clock enable signals
+		/** Returns true if the target is to have write enable signals
 		 */
-		bool useClockEnable();
+		bool useWriteEnable();
 
-		void setClockEnable(bool val);
+		void setWriteEnable(bool val);
 
 		/** Returns true if the target names signals delays with the cycle number
 		 */
@@ -452,7 +452,7 @@ namespace flopoco{
 		 */
 		bool   pipeline_;           /**< True if the target is pipelined/ false otherwise */
 		double frequency_;          /**< The desired frequency for the operator in Hz */
-		bool   useClockEnable_;     /**< True if we want a clock enable signal */
+		bool   useWriteEnable_;     /**< True if we want a write enable signal */
 		bool   nameSignalByCycle_;     /**< True if we want to rename signals by cycle number instead of delay */
 		bool   useHardMultipliers_;        /**< True if we want to use DSPs, False if we want to generate logic-only architectures */
 		float  unusedHardMultThreshold_;/**< Between 0 and 1. When we have a multiplier smaller than (or equal to) a DSP in both dimensions,

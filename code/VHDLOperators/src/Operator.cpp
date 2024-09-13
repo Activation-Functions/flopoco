@@ -79,7 +79,7 @@ namespace flopoco{
 		parentOp_                   = parentOp;
 		isOperatorApplyScheduleDone_= false;
 
-		// Currently we set the pipeline and clock enable from the global target.
+		// Currently we set the pipeline and write enable from the global target.
 		// This is relatively safe from command line, in the sense that they can only be changed by the command-line,
 		// so each sub-component of an operator will share the same target.
 		// It also makes the subcomponent calls easier: pass clock and ce without thinking about it.
@@ -89,7 +89,7 @@ namespace flopoco{
 		else
 			setCombinatorial();
 
-		setClockEnable(target_->useClockEnable());
+		setWriteEnable(target_->useWriteEnable());
 		setNameSignalByCycle(target_->useNameSignalByCycle());
 
 	}
@@ -592,10 +592,10 @@ namespace flopoco{
 							o << "clk";
 							if(hasReset())
 								o << ", rst";
-							if(hasClockEnable()) {
+							if(hasWriteEnable()) {
 								//o << ", ce";
 								for (int stage = getMinInputCycle(); stage < getMaxOutputCycle(); stage++ ) {
-									o << ", ce_" << stage+1;
+									o << ", write_enable_" << stage+1;
 								}
 							}
 							o << " : in std_logic;" <<endl;
@@ -635,10 +635,10 @@ namespace flopoco{
 					o << "clk";
 					if(hasReset())
 						o << ", rst";
-					if(hasClockEnable()) {
+					if(hasWriteEnable()) {
 						//o << ", ce";
 						for (int stage = getMinInputCycle(); stage < getMaxOutputCycle(); stage++ ) {
-							o << ", ce_" << stage+1;
+							o << ", write_enable_" << stage+1;
 						}
 					}
 					o << " : in std_logic;" <<endl;
@@ -1373,8 +1373,8 @@ namespace flopoco{
 			o << "clk  => clk";
 			if (op->hasReset())
 			  o << "," << endl << tab << tab << "           rst  => rst";
-			if(op->hasClockEnable()) {
-				o << "," << endl << tab << tab << "           ce_fixme => ce_fixme"; //Will be replaced in doApplySchedule
+			if(op->hasWriteEnable()) {
+				o << "," << endl << tab << tab << "           write_enable_fixme => write_enable_fixme"; //Will be replaced in doApplySchedule
 			}				
 		}
 		//build the code for the inputs
@@ -1812,7 +1812,7 @@ namespace flopoco{
 
 		// execute only if the operator is sequential, otherwise output nothing
 		string recTab = "";
-		if (hasClockEnable())
+		if (hasWriteEnable())
 			recTab = tab;
 		if (isSequential()){
 			// first concatenate SignalList and ioList
@@ -1824,11 +1824,11 @@ namespace flopoco{
 			if (nameSignalByCycle()) {
 				ostringstream regs, aregs, aregsinit, sregs, sregsinit;
 				
-				for (int stage=getMinInputCycle(); stage < getMaxOutputCycle(); stage++) { // Add clock enable signals in the regs stream
-					if (hasClockEnable()) {
-						regs << tab << tab << tab << tab << "if ce_" << stage+1 << " = '1' then" << endl;
-						aregs << tab << tab << tab << tab << "if ce_" << stage+1 << " = '1' then" << endl;
-						sregs << tab << tab << tab << tab << "if ce_" << stage+1 << " = '1' then" << endl;
+				for (int stage=getMinInputCycle(); stage < getMaxOutputCycle(); stage++) { // Add write enable signals in the regs stream
+					if (hasWriteEnable()) {
+						regs << tab << tab << tab << tab << "if write_enable_" << stage+1 << " = '1' then" << endl;
+						aregs << tab << tab << tab << tab << "if write_enable_" << stage+1 << " = '1' then" << endl;
+						sregs << tab << tab << tab << tab << "if write_enable_" << stage+1 << " = '1' then" << endl;
 					}
 
 					for(auto s: siglist) {
@@ -1865,8 +1865,8 @@ namespace flopoco{
 							
 						}
 					}
-					// End of clock enable
-					if (hasClockEnable()) {
+					// End of write enable
+					if (hasWriteEnable()) {
 						regs << tab << tab << tab << tab << "end if;" << endl;
 						aregs << tab << tab << tab << tab << "end if;" << endl;
 						sregs << tab << tab << tab << tab << "end if;" << endl;
@@ -1944,10 +1944,10 @@ namespace flopoco{
 					o << tab << "process(clk)" << endl;
 					o << tab << tab << "begin" << endl;
 					o << tab << tab << tab << "if clk'event and clk = '1' then" << endl;
-					if (hasClockEnable())
+					if (hasWriteEnable()) // TODO this shouldn't be used as write enable will use cycle name automatically
 						o << tab << tab << tab << tab << "if ce = '1' then" << endl;
 					o << regs.str();
-					if (hasClockEnable())
+					if (hasWriteEnable())
 						o << tab << tab << tab << tab << "end if;" << endl;
 					o << tab << tab << tab << "end if;\n";
 					o << tab << tab << "end process;\n";
@@ -1960,9 +1960,9 @@ namespace flopoco{
 					o << tab << tab << tab << "if rst = '1' then" << endl;
 					o << aregsinit.str();
 					o << tab << tab << tab << "elsif clk'event and clk = '1' then" << endl;
-					if (hasClockEnable()) o << tab << tab << tab << tab << "if ce = '1' then" << endl;
+					if (hasWriteEnable()) o << tab << tab << tab << tab << "if ce = '1' then" << endl;
 					o << aregs.str();
-					if (hasClockEnable())	o << tab << tab << tab << tab << "end if;" << endl;
+					if (hasWriteEnable())	o << tab << tab << tab << tab << "end if;" << endl;
 					o << tab << tab << tab << "end if;" << endl;
 					o << tab << tab <<"end process;" << endl;
 				}
@@ -1975,9 +1975,9 @@ namespace flopoco{
 					o << tab << tab << tab << tab << "if rst = '1' then" << endl;
 					o << sregsinit.str();
 					o << tab << tab << tab << tab << "else" << endl;
-					if (hasClockEnable()) o << tab << tab << tab << tab << "if ce = '1' then" << endl;
+					if (hasWriteEnable()) o << tab << tab << tab << tab << "if ce = '1' then" << endl;
 					o << sregs.str();
-					if (hasClockEnable())	o << tab << tab << tab << tab << "end if;" << endl;
+					if (hasWriteEnable())	o << tab << tab << tab << tab << "end if;" << endl;
 					o << tab << tab << tab << tab << "end if;" << endl;
 					o << tab << tab << tab << "end if;" << endl;
 					o << tab << tab << "end process;" << endl;
@@ -2145,12 +2145,12 @@ namespace flopoco{
 		return false;
 	}
 
-	bool Operator::hasClockEnable(){
-		return hasClockEnable_;
+	bool Operator::hasWriteEnable(){
+		return hasWriteEnable_;
 	}
 
-	void Operator::setClockEnable(bool val){
-		hasClockEnable_=val;
+	void Operator::setWriteEnable(bool val){
+		hasWriteEnable_=val;
 	}
 
 	bool Operator::nameSignalByCycle(){
@@ -2329,12 +2329,12 @@ namespace flopoco{
 
 							
 
-							// Deal with clock enable
-							if (isSequential() && hasClockEnable() && lhsName == "ce_fixme") {
+							// Deal with write enable
+							if (isSequential() && hasWriteEnable() && lhsName == "write_enable_fixme") {
 								if (subop->getMinInputCycle() != subop->getMaxOutputCycle() ) {
-									newStr << "ce_" << subop->getMinInputCycle() +1 << " => ce_" << subop->getMinInputCycle() +1 << "," << endl;
+									newStr << "write_enable_" << subop->getMinInputCycle() +1 << " => write_enable_" << subop->getMinInputCycle() +1 << "," << endl;
 									for (int stage = subop->getMinInputCycle() +1; stage < subop->getMaxOutputCycle(); stage++ ) {
-										newStr << tab << tab << "           ce_" << stage+1 << "=> ce_" << stage+1 << "," << endl;
+										newStr << tab << tab << "           write_enable_" << stage+1 << "=> write_enable_" << stage+1 << "," << endl;
 									}
 									newStr << tab << tab << "           ";
 								}
@@ -3641,7 +3641,7 @@ namespace flopoco{
 		commentedName_              = op->commentedName_;
 		headerComment_              = op->headerComment_;
 		copyrightString_            = op->getCopyrightString();
-		hasClockEnable_             = op->hasClockEnable();
+		hasWriteEnable_             = op->hasWriteEnable();
 		nameSignalByCycle_          = op->nameSignalByCycle();
 		indirectOperator_           = op->getIndirectOperator();
 		hasDelay1Feedbacks_         = op->hasDelay1Feedbacks();

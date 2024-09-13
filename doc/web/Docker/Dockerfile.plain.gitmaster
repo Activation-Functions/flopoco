@@ -1,4 +1,4 @@
-FROM ubuntu:focal
+FROM ubuntu:latest
 RUN apt update
 RUN yes | apt install wget sudo
 RUN wget http://www.flopoco.org/install_scripts/install-plain-gitmaster-on-focal64.sh

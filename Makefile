@@ -26,13 +26,23 @@ FLOPOCO_COMMIT_HASH     := $(shell git rev-parse HEAD)
 MKROOT := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
 # Local dependencies build directories:
-BUILD_DEPENDENCIES_DIR := $(MKROOT)/build/dependencies
+BUILD_DIR := $(MKROOT)/build
+BUILD_DEPENDENCIES_DIR := $(BUILD_DIR)/dependencies
 BUILD_DEPENDENCIES_SOURCE_DIR := $(BUILD_DEPENDENCIES_DIR)/src
 BUILD_DEPENDENCIES_BINARY_DIR := $(BUILD_DEPENDENCIES_DIR)/bin
+FLOPOCO := $(MKROOT)/build/bin/flopoco
+
 
 # Utilities for parsing OS and distribution version
 # as well as pretty-printing stuff.
 include $(MKROOT)/tools/utilities.mk
+
+ifeq ($(call file_exists, $(FLOPOCO)), 0)
+    FRESH_INSTALL := TRUE
+    $(call static_info, Clean installation of FloPoCo)
+else
+    FRESH_INSTALL := FALSE
+endif
 
 # Print FloPoCo version, branch and commit hash:
 $(call static_info, Running $(B)FloPoCo$(N) build script\
@@ -116,9 +126,13 @@ endif
 
 $(call static_info, $(B)ScaLP backend(s)$(N): $(SCALP_BACKEND))
 
-# -----------------------------------------------------------------------------xxxxxx
-
-all: flopoco
+# Add 'sysdeps' target if flopoco target has not been built yet.
+# Otherwise, just re-build flopoco.
+ifeq ($(FRESH_INSTALL), TRUE)
+    all: sysdeps flopoco 
+else
+    all: flopoco
+endif
 
 # -----------------------------------------------------------------------------
 .PHONY: help
@@ -384,7 +398,7 @@ sysdeps:
 # nonlinear programming (MINLP)
 # -----------------------------------------------------------------------------
 SCIP_GIT := https://github.com/scipopt/scip.git
-#SCIP_COMMIT := 81df6e5a4ff190e8412356856247aeb527b5ca4f
+SCIP_VERSION := v910
 SCIP_SOURCE_DIR := $(BUILD_DEPENDENCIES_SOURCE_DIR)/scip
 SCIP_BINARY_DIR := $(BUILD_DEPENDENCIES_BINARY_DIR)/scip
 SCIP_LIBRARIES := $(SCIP_BINARY_DIR)/lib/libscip.$(dylib)
@@ -395,9 +409,9 @@ scip: $(SCIP_LIBRARIES)
 $(SCIP_LIBRARIES):
 	$(call shell_info, Fetching and building $(B)SCIP$(N) library)
 	@mkdir -p $(SCIP_BINARY_DIR)
-	@git clone $(SCIP_GIT) $(SCIP_SOURCE_DIR)
-#	@git checkout 81df6e5a4ff190e8412356856247aeb527b5ca4f
+	@git clone $(SCIP_GIT) $(SCIP_SOURCE_DIR)	
 	@cd $(SCIP_SOURCE_DIR)
+	@git checkout $(SCIP_VERSION)
 	@cmake -B build -G$(CMAKE_GENERATOR)		    \
 	       -DAUTOBUILD=ON				    \
 	       -DCMAKE_INSTALL_PREFIX=$(SCIP_BINARY_DIR)    \
@@ -426,7 +440,6 @@ install-scip: $(SCIP_LIBRARIES)
 SCALP_GIT := https://digidev.digi.e-technik.uni-kassel.de/git/scalp.git
 SCALP_SOURCE_DIR := $(BUILD_DEPENDENCIES_SOURCE_DIR)/scalp
 SCALP_BINARY_DIR := $(BUILD_DEPENDENCIES_BINARY_DIR)/scalp
-SCALP_PATCH := $(MKROOT)/tools/scalp.patch
 
 SCALP_LIBRARIES += $(SCALP_BINARY_DIR)/lib/libScaLP.$(dylib)
 scalp: $(SCALP_LIBRARIES)
@@ -460,9 +473,6 @@ $(SCALP_LIBRARIES) &: $(SCALP_DEPENDENCIES)
 	@mkdir -p $(SCALP_BINARY_DIR)
 	@git clone $(SCALP_GIT) $(SCALP_SOURCE_DIR)
 	@cd $(SCALP_SOURCE_DIR)
-# FindSoplex.cmake patch ------------------------------------------
-	@git apply $(SCALP_PATCH)
-# -----------------------------------------------------------------
 	@cmake -B build -G$(CMAKE_GENERATOR)		    \
 	       -DCMAKE_INSTALL_PREFIX=$(SCALP_BINARY_DIR)   \
 	       $(SCALP_CMAKE_OPTIONS)
@@ -565,7 +575,7 @@ $(NVC):
 	@mkdir build && cd build
 	@../configure
 	@make
-	@make install
+	@sudo make install
 
 # -----------------------------------------------------------------------------
 .PHONY: dependencies
@@ -586,11 +596,20 @@ dependencies: $(FLOPOCO_DEPENDENCIES)
 # -----------------------------------------------------------------------------
 .PHONY: flopoco
 # -----------------------------------------------------------------------------
-
-FLOPOCO := $(MKROOT)/build/bin/flopoco
 flopoco: $(FLOPOCO)
 
-$(FLOPOCO): $(FLOPOCO_DEPENDENCIES)
+ifeq ($(FRESH_INSTALL), TRUE) # ----------------------------------------
+# The following commands are only executed in the case of a fresh
+# flopoco installation. This prevents displaying the looong FloPoCo 
+# list of operators every time a re-make is done.
+define epilogue # ------------------------------------------------------
+	$(call shell_info, Now running $(B)FloPoCo$(N))
+	$(FLOPOCO) 
+	$(call shell_ok, If you saw the command-line help of FloPoCo - Welcome!)
+endef # ----------------------------------------------------------------
+endif
+
+$(FLOPOCO) &: $(FLOPOCO_DEPENDENCIES)
 	$(call shell_info, Now building $(B)FloPoCo$(N))
 	@cmake -B build -G$(CMAKE_GENERATOR)	    \
 	       -DWCPG_LOCAL=$(WCPG_BINARY_DIR)	    \
@@ -598,16 +617,14 @@ $(FLOPOCO): $(FLOPOCO_DEPENDENCIES)
 	       -DPAG_LOCAL=$(PAGSUITE_BINARY_DIR)   \
 	       -DCMAKE_INSTALL_PREFIX=$(PREFIX)	    \
 	       $(CMAKE_BUILD_TYPE)
-	@cmake --build build -j 8
-	$(call shell_info, Adding 'flopoco' $(B)symlink$(N)' in repository's root directory)
-	@ln -fs $(FLOPOCO) $(MKROOT)
+	@cmake --build build || exit;
+	$(call shell_info, Adding 'flopoco' $(B)symlink$(N) in build directory)
+	@ln -fs $(FLOPOCO) $(MKROOT)/build
 	$(call shell_info, Building the $(B)HTML documentation$(N) in doc/web)
-	$(MKROOT)/flopoco BuildHTMLDoc
-	$(call shell_info, Now running $(B)FloPoCo$(N))
-	$(MKROOT)/flopoco
+	$(FLOPOCO) BuildHTMLDoc
 	$(call shell_info, Generating and installing $(B)bash autocompletion$(N) file)
-	$(MKROOT)/flopoco BuildAutocomplete
-	$(call shell_ok, If you saw the command-line help of FloPoCo - Welcome!)
+	$(FLOPOCO) BuildAutocomplete
+	$(call epilogue)
 
 # -----------------------------------------------------------------------------
 .ONESHELL:

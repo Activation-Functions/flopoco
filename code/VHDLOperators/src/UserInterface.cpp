@@ -132,7 +132,7 @@ namespace flopoco
 				values.clear();
 				values.push_back(std::to_string(0));
 				values.push_back(std::to_string(1));
-				v.push_back(option_t("clockEnable", values));
+				v.push_back(option_t("writeEnable", values));
 				v.push_back(option_t("nameSignalByCycle", values));
 				v.push_back(option_t("plainVHDL", values));
 				v.push_back(option_t("generateFigures", values));
@@ -220,7 +220,7 @@ namespace flopoco
 		parseString(args, "target", &targetFPGA, true); // not sticky: will be used, and reset, after the operator parser
 		parseFloat(args, "frequency", &targetFrequencyMHz, true); // sticky option
 		parseBoolean(args, "plainVHDL", &plainVHDL, true);
-		parseBoolean(args, "clockEnable", &clockEnable, true);
+		parseBoolean(args, "writeEnable", &writeEnable, true);
 		parseBoolean(args, "nameSignalByCycle", &nameSignalByCycle, true);
 		parseFloat(args, "hardMultThreshold", &unusedHardMultThreshold, true); // sticky option
 		parseBoolean(args, "useHardMult", &useHardMult, true);
@@ -452,10 +452,10 @@ namespace flopoco
 				else {
 					throw("ERROR: unknown target: " + targetFPGA);
 				}
-				target->setClockEnable(clockEnable);
-				if (clockEnable) {
+				target->setWriteEnable(writeEnable);
+				if (writeEnable) {
 					target->setNameSignalByCycle(true);
-					REPORT(LogLevel::MESSAGE,"If clock enable is active, name signals by their cycle number instead of the delay.");
+					REPORT(LogLevel::MESSAGE,"If write enable is active, name signals by their cycle number instead of the delay.");
 				} else {
 					target->setNameSignalByCycle(nameSignalByCycle);
 				}				
@@ -822,8 +822,8 @@ namespace flopoco
 		s << "  " << COLOR_BOLD << "verbose" << COLOR_NORMAL << "=<int>:        verbosity level (0-4, default=1)" << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL<<endl;
 		s << "  " << COLOR_BOLD << "generateFigures" << COLOR_NORMAL << "=<0|1>:generate graphics in SVG or LaTeX for some operators (default off) " << COLOR_RED_NORMAL << "(sticky option)" << COLOR_NORMAL << endl;
 		s << "  " << COLOR_BOLD << "dependencyGraph" << COLOR_NORMAL << "=<no|compact|full>: generate data dependence drawing of the Operator (default no) " << COLOR_RED_NORMAL << COLOR_NORMAL<<endl;
-		s << "  " << COLOR_BOLD << "nameSignalByCycle" << COLOR_NORMAL << "=<0|1>:when pipelining, names the delayed signals by their cycle name instead of their delay. This helps with clock enable and declaring group path for synthesis (default off) " << endl;
-		s << "  " << COLOR_BOLD << "clockEnable" << COLOR_NORMAL << "=<0|1>:when pipelining, adds clock enable signals that enables the different pipeline stages to progress. In testbenches, these pipelining operations are not tested (default off) " << endl;
+		s << "  " << COLOR_BOLD << "nameSignalByCycle" << COLOR_NORMAL << "=<0|1>:when pipelining, postfix signal names by their cycle (default off)" << endl;
+		s << "  " << COLOR_BOLD << "writeEnable" << COLOR_NORMAL << "=<0|1>:when pipelining, adds write enable signals that enables the different pipeline stages to progress (default off)" << endl;
 		s << "  " << COLOR_BOLD << "showHidden" << COLOR_NORMAL << "=<0|1>: show operators and operator arguments that are for internal use and normally hidden from the command line (default=0)" <<endl;
 		
 		return s.str();

@@ -29,7 +29,7 @@
 
 using namespace std;
 
-#if defined(HAVE_PAGLIB) && defined(HAVE_OSCM)
+#if defined(HAVE_PAGLIB) && defined(HAVE_OSCM) && defined(HAVE_SCALP)
 #include "pagsuite/pagexponents.hpp"
 
 #include "pagsuite/compute_successor_set.h"

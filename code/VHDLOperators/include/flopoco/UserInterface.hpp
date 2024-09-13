@@ -142,7 +142,7 @@ namespace flopoco
 		FactoryRegistry const & factRegistry;
 		double targetFrequencyMHz;
 //		bool   pipeline; //not used at all, uncomment for now, remove this later!
-		bool   clockEnable;
+		bool   writeEnable;
 		bool   nameSignalByCycle;
 		bool   useHardMult;
 		bool   plainVHDL;
