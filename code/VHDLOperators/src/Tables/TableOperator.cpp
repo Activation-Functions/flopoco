@@ -161,18 +161,16 @@ namespace flopoco
 			tableAttributes += "\"block\";";
 		}
 		getSignalByName("Y0")->setTableAttributes(tableAttributes);
-		schedule();
-		vhdl << tab << declare("Y1", wOut)
-		     << " <= Y0; -- for the possible blockram register" << endl;
+		vhdl << tab << declare("Y1", wOut) << " <= Y0; -- for the possible blockram register" << endl;
 
-		if (!logicTable &&
-		    getTarget()->registerLargeTables()) { // force a register so that a
-						   // blockRAM can be infered
-			setSequential();
-			int cycleY0 = getCycleFromSignal("Y0");
-			getSignalByName("Y1")->setSchedule(cycleY0 + 1, 0);
-			getSignalByName("Y0")->updateLifeSpan(1);
-		}
+		if (!logicTable)//  && getTarget()->registerLargeTables())
+			{ // force a register so that a blockRAM can be infered
+				setSequential();
+				schedule();
+				int cycleY0 = getCycleFromSignal("Y0");
+				getSignalByName("Y1")->setSchedule(cycleY0 + 1, 0);
+				getSignalByName("Y0")->updateLifeSpan(1);
+			}
 
 		vhdl << tab << "Y <= Y1;" << endl;
 	}

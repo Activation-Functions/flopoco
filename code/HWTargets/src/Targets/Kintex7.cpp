@@ -11,11 +11,8 @@
   All rights reserved.
 */
 
-#include <iostream>
-#include <sstream>
 
 #include "flopoco/Targets/Kintex7.hpp"
-#include "flopoco/utils.hpp"
 
 using namespace std;
 
