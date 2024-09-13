@@ -50,6 +50,7 @@ endif()
 
 include(GNUInstallDirs)
 
+add_subdirectory(code/HWTargets)
 add_subdirectory(code/HighLevelArithmetic)
 add_subdirectory(code/VHDLOperators)
 add_subdirectory(code/FloPoCoBin)

@@ -449,7 +449,7 @@
 <dt> <code class="parametername">wIn</code>  (<code class="parametertype">int</code>) </dt><dd>Input word size</dd>
 <dt> <code class="parametername">constant</code>  (<code class="parametertype">int</code>) </dt><dd>constant</dd>
 <span class="optionalparam"> <dt> <code class="parametername">signed</code>  (<code class="parametertype">bool</code>)   (optional, default value is true)</dt><dd>signedness of input and output</dd> </span>
-<span class="optionalparam"> <dt> <code class="parametername">epsilon</code>  (<code class="parametertype">int</code>)   (optional, default value is 0)</dt><dd>Allowable error for truncated constant multipliers</dd> </span>
+<span class="optionalparam"> <dt> <code class="parametername">errorBudget</code>  (<code class="parametertype">int</code>)   (optional, default value is 0)</dt><dd>Allowable error for truncated constant multipliers</dd> </span>
 </dl></dd>
 <dd>Nope.</dd>
 </dl>
@@ -498,7 +498,7 @@
 <dt> <code class="parametername">wIn</code>  (<code class="parametertype">int</code>) </dt><dd>Input word size</dd>
 <dt> <code class="parametername">constant</code>  (<code class="parametertype">int</code>) </dt><dd>constant</dd>
 <span class="optionalparam"> <dt> <code class="parametername">signed</code>  (<code class="parametertype">bool</code>)   (optional, default value is true)</dt><dd>signedness of input and output</dd> </span>
-<span class="optionalparam"> <dt> <code class="parametername">epsilon</code>  (<code class="parametertype">int</code>)   (optional, default value is 0)</dt><dd>Allowable error for truncated constant multipliers</dd> </span>
+<span class="optionalparam"> <dt> <code class="parametername">errorBudget</code>  (<code class="parametertype">int</code>)   (optional, default value is 0)</dt><dd>Allowable error for truncated constant multipliers</dd> </span>
 </dl></dd>
 <dd>Nope.</dd>
 </dl>
@@ -509,7 +509,7 @@
 <dt> <code class="parametername">wIn</code>  (<code class="parametertype">int</code>) </dt><dd>Input word size</dd>
 <dt> <code class="parametername">constants</code>  (<code class="parametertype">string</code>) </dt><dd>list of constants</dd>
 <span class="optionalparam"> <dt> <code class="parametername">signed</code>  (<code class="parametertype">bool</code>)   (optional, default value is true)</dt><dd>signedness of input and output</dd> </span>
-<span class="optionalparam"> <dt> <code class="parametername">epsilon</code>  (<code class="parametertype">int</code>)   (optional, default value is 0)</dt><dd>Allowable error for truncated constant multipliers</dd> </span>
+<span class="optionalparam"> <dt> <code class="parametername">errorBudget</code>  (<code class="parametertype">int</code>)   (optional, default value is 0)</dt><dd>Allowable error for truncated constant multipliers</dd> </span>
 </dl></dd>
 <dd>Nope.</dd>
 </dl>
@@ -529,7 +529,7 @@
 <dt> <code class="parametername">wIn</code>  (<code class="parametertype">int</code>) </dt><dd>Wordsize of pag inputs</dd>
 <dt> <code class="parametername">graph</code>  (<code class="parametertype">string</code>) </dt><dd>Adder graph description (see PAGSuite project) as string or as text file with file extension ".ag"</dd>
 <span class="optionalparam"> <dt> <code class="parametername">signed</code>  (<code class="parametertype">bool</code>)   (optional, default value is true)</dt><dd>signedness of input and output</dd> </span>
-<span class="optionalparam"> <dt> <code class="parametername">epsilon</code>  (<code class="parametertype">int</code>)   (optional, default value is 0)</dt><dd>Allowable error for truncated constant multipliers</dd> </span>
+<span class="optionalparam"> <dt> <code class="parametername">errorBudget</code>  (<code class="parametertype">int</code>)   (optional, default value is 0)</dt><dd>Allowable error for truncated constant multipliers</dd> </span>
 <span class="optionalparam"> <dt> <code class="parametername">truncations</code>  (<code class="parametertype">string</code>)   (optional, default value is "")</dt><dd>provides the truncations for intermediate values (format: const1,stage:trunc_input_0,trunc_input_1,...|const2,stage:trunc_input_0,trunc_input_1,...)</dd> </span>
 </dl></dd>
 </dl>
@@ -823,7 +823,7 @@
 <span class="optionalparam"> <dt> <code class="parametername">wOut</code>  (<code class="parametertype">int</code>)   (optional, default value is -1)</dt><dd>output word size in bits, -1 means automatic determination without truncation, if wOut is less then necessary it will be rounded</dd> </span>
 <dt> <code class="parametername">coeff</code>  (<code class="parametertype">string</code>) </dt><dd>colon-separated list of integer coefficients. Example: coeff="123:321:123"</dd>
 <span class="optionalparam"> <dt> <code class="parametername">graph</code>  (<code class="parametertype">string</code>)   (optional, default value is "")</dt><dd>Realization string of the adder graph</dd> </span>
-<span class="optionalparam"> <dt> <code class="parametername">epsilon</code>  (<code class="parametertype">int</code>)   (optional, default value is 0)</dt><dd>Allowable error for truncated constant multipliers (currently only used to check error for given truncations in testbench)</dd> </span>
+<span class="optionalparam"> <dt> <code class="parametername">errorBudget</code>  (<code class="parametertype">int</code>)   (optional, default value is 0)</dt><dd>Allowable error for truncated constant multipliers (currently only used to check error for given truncations in testbench)</dd> </span>
 <span class="optionalparam"> <dt> <code class="parametername">graph_truncations</code>  (<code class="parametertype">string</code>)   (optional, default value is "")</dt><dd>provides the truncations for intermediate values of the adder graph (format: const1,stage:trunc_input_0,trunc_input_1,...|const2,stage:trunc_input_0,trunc_input_1,...)"</dd> </span>
 <span class="optionalparam"> <dt> <code class="parametername">sa_truncations</code>  (<code class="parametertype">string</code>)   (optional, default value is "")</dt><dd>provides the truncations for the strucutal adder (format: sa_1_trunc_input_0,sa_1_trunc_input_1|...|sa_2_trunc_input_0,sa_2_trunc_input_1,...|...)</dd> </span>
 </dl></dd>
@@ -968,7 +968,8 @@
 <dd class="operatordescription">A tester for operators.</dd>
 <dd><em>Parameters:</em> <dl>
 <dt> <code class="parametername">Operator</code>  (<code class="parametertype">string</code>) </dt><dd>name of the operator to test, All if we need to test all the operators</dd>
-<span class="optionalparam"> <dt> <code class="parametername">testLevel</code>  (<code class="parametertype">int</code>)   (optional, default value is 0)</dt><dd>test level (0-3), 0=only quick tests (< 1 second per operator), 1=substantial tests, 2=exhaustive tests, 3=infinite tests (which produce random parameter combinations which may take forever) </dd> </span>
+<span class="optionalparam"> <dt> <code class="parametername">testLevel</code>  (<code class="parametertype">int</code>)   (optional, default value is 0)</dt><dd>test level (0-3), 0=only quick tests (< 1 second per operator), 1=substantial tests, 2=exhaustive tests, 3=infinite tests (which produce random parameter combinations which may take forever)</dd> </span>
+<span class="optionalparam"> <dt> <code class="parametername">output</code>  (<code class="parametertype">string</code>)   (optional, default value is random)</dt><dd>explicit path for .csv generation output (otherwise random)</dd> </span>
 </dl></dd>
 </dl>
 </body>
