@@ -76,13 +76,14 @@ endif # -------------------------------
 # $ make GUROBI_HOME=/opt/gurobi1102/linux64
 GUROBI_ROOT_DIR := $(GUROBI_HOME)
 
-# By default, install a symlink of 'flopoco' binary in $(PREFIX)
-# when '$ make install' is used.
-# Otherwise, install all libraries and binaries in $(PREFIX)
-INSTALL_TYPE ?= local
+# DESTDIR used for system installation of the FloPoCo binaries/symlink:
+DESTDIR ?= /usr/local
 
-# PREFIX used for system installation of the FloPoCo binaries/symlink:
-PREFIX ?= /usr/local
+# By default, install all libraries and binaries in $(DESTDIR)
+# when '$ make install' is used.
+# Otherwise, if set to 'symlink', it will only 
+# install a symlink to the 'flopoco' binary in $(DESTDIR)
+INSTALL_TYPE ?= system
 
 # If ON (default), the script will take care of fetching and building SCIP
 # locally, and integrate it with ScaLP.
@@ -103,7 +104,7 @@ endif # -------------------------------------------
 $(call static_info, $(B)CONFIG$(N): $(CONFIG))
 $(call static_info, $(B)CMAKE_GENERATOR$(N): $(CMAKE_GENERATOR))
 $(call static_info, $(B)INSTALL_TYPE$(N): $(INSTALL_TYPE))
-$(call static_info, $(B)PREFIX$(N): $(PREFIX))
+$(call static_info, $(B)DESTDIR$(N): $(DESTDIR))
 $(call static_info, $(B)NVC building$(N): $(WITH_NVC))
 
 # -----------------------------------------------------------------------------
@@ -611,8 +612,8 @@ $(FLOPOCO) &: $(FLOPOCO_DEPENDENCIES)
 .PHONY: install-dependencies
 # -----------------------------------------------------------------------------
 install-dependencies: 
-	$(call shell_info, Now installing $(B)flopoco dependencies$(N) in $(PREFIX))
-	$(call prompt, cp -r $(BUILD_DEPENDENCIES_BINARY_DIR)/* $(PREFIX))
+	$(call shell_info, Now installing $(B)flopoco dependencies$(N) in $(DESTDIR))
+	cp -r $(BUILD_DEPENDENCIES_BINARY_DIR)/* $(DESTDIR)
 
 # -----------------------------------------------------------------------------
 .ONESHELL:
@@ -650,23 +651,23 @@ INSTALLED_FILES += $(call find_file_with_suffix,tinycthread)
 INSTALLED_FILES += $(call find_file_with_suffix,tpi)
 
 INSTALLED_FILES_PREFIX = $(foreach file,$(INSTALLED_FILES),     \
-    $(subst $(BUILD_DEPENDENCIES_BINARY_DIR),$(realpath $(PREFIX)),$(file)) \
+    $(subst $(BUILD_DEPENDENCIES_BINARY_DIR),$(realpath $(DESTDIR)),$(file)) \
 )
 
 # $(call static_info, installed: $(INSTALLED_FILES_PREFIX))
 
 uninstall-dependencies: 
-	$(call shell_info, Now uninstalling $(B)flopoco dependencies$(N) in $(PREFIX))
-	$(call prompt, rm -rf $(INSTALLED_FILES_PREFIX))
+	$(call shell_info, Now uninstalling $(B)flopoco dependencies$(N) in $(DESTDIR))
+	@rm -rf $(INSTALLED_FILES_PREFIX)
 
 # -----------------------------------------------------------------------------
 .ONESHELL:
 .PHONY: install
 # -----------------------------------------------------------------------------
-ifeq ($(INSTALL_TYPE), local) # ---------------------------------------------
+ifeq ($(INSTALL_TYPE), symlink) # -----------------------------------------------
 install: $(FLOPOCO)
-	$(call shell_info, Installing $(B)flopoco symlink$(N) in $(PREFIX)/bin)
-	@ln -fs $(FLOPOCO) $(PREFIX)/bin
+	$(call shell_info, Installing $(B)flopoco symlink$(N) in $(DESTDIR)/bin)
+	@ln -fs $(FLOPOCO) $(DESTDIR)/bin
 else # ------------------------------------------------------------------------
 install: $(FLOPOCO) install-dependencies
 	@cd $(MKROOT)
