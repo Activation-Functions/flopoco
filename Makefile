@@ -29,7 +29,7 @@ MKROOT := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 BUILD_DIR := $(MKROOT)/build
 BUILD_DEPENDENCIES_DIR := $(BUILD_DIR)/dependencies
 BUILD_DEPENDENCIES_SOURCE_DIR := $(BUILD_DEPENDENCIES_DIR)/src
-BUILD_DEPENDENCIES_BINARY_DIR := $(BUILD_DEPENDENCIES_DIR)/bin
+BUILD_DEPENDENCIES_BINARY_DIR := $(BUILD_DEPENDENCIES_DIR)/prefix
 FLOPOCO := $(MKROOT)/build/bin/flopoco
 
 # Utilities for parsing OS and distribution version
@@ -416,7 +416,7 @@ $(SCIP_LIBRARIES):
 	       -DCMAKE_INSTALL_PREFIX=$(SCIP_BINARY_DIR)    \
 	       -DCMAKE_BUILD_WITH_INSTALL_RPATH=TRUE	    \
 	       $(CMAKE_BUILD_TYPE)
-	@$(INSTALL) cmake --build build --target install -j 8
+	@cmake --build build --target install -j 8
 
 # -----------------------------------------------------------------------------
 .PHONY: gurobi
@@ -616,11 +616,56 @@ install-dependencies:
 
 # -----------------------------------------------------------------------------
 .ONESHELL:
+.PHONY: uninstall-dependencies
+# -----------------------------------------------------------------------------
+
+define find_file_with_suffix
+    $(shell find $(BUILD_DEPENDENCIES_BINARY_DIR) -type f,l,d -name '$(1)')
+endef
+
+INSTALLED_FILES += $(call find_file_with_suffix,*.a)
+INSTALLED_FILES += $(call find_file_with_suffix,*.la)
+INSTALLED_FILES += $(call find_file_with_suffix,*.so)
+INSTALLED_FILES += $(call find_file_with_suffix,*.so.*)
+INSTALLED_FILES += $(call find_file_with_suffix,*.h)
+INSTALLED_FILES += $(call find_file_with_suffix,*.hpp)
+INSTALLED_FILES += $(call find_file_with_suffix,*.cmake)
+
+INSTALLED_FILES += $(call find_file_with_suffix,omcm)
+INSTALLED_FILES += $(call find_file_with_suffix,oscm)
+INSTALLED_FILES += $(call find_file_with_suffix,osr)
+INSTALLED_FILES += $(call find_file_with_suffix,pag_fusion)
+INSTALLED_FILES += $(call find_file_with_suffix,rpag)
+INSTALLED_FILES += $(call find_file_with_suffix,scalp)
+INSTALLED_FILES += $(call find_file_with_suffix,scip)
+INSTALLED_FILES += $(call find_file_with_suffix,blockmemshell)
+INSTALLED_FILES += $(call find_file_with_suffix,dijkstra)
+INSTALLED_FILES += $(call find_file_with_suffix,lpi)
+INSTALLED_FILES += $(call find_file_with_suffix,objscip)
+INSTALLED_FILES += $(call find_file_with_suffix,pagsuite)
+INSTALLED_FILES += $(call find_file_with_suffix,ScaLP)
+INSTALLED_FILES += $(call find_file_with_suffix,symmetry)
+INSTALLED_FILES += $(call find_file_with_suffix,tclique)
+INSTALLED_FILES += $(call find_file_with_suffix,tinycthread)
+INSTALLED_FILES += $(call find_file_with_suffix,tpi)
+
+INSTALLED_FILES_PREFIX = $(foreach file,$(INSTALLED_FILES),     \
+    $(subst $(BUILD_DEPENDENCIES_BINARY_DIR),$(realpath $(PREFIX)),$(file)) \
+)
+
+# $(call static_info, installed: $(INSTALLED_FILES_PREFIX))
+
+uninstall-dependencies: 
+	$(call shell_info, Now uninstalling $(B)flopoco dependencies$(N) in $(PREFIX))
+	$(call prompt, rm -rf $(INSTALLED_FILES_PREFIX))
+
+# -----------------------------------------------------------------------------
+.ONESHELL:
 .PHONY: install
 # -----------------------------------------------------------------------------
 ifeq ($(INSTALL_TYPE), local) # ---------------------------------------------
 install: $(FLOPOCO)
-	$(call shell_info, Installing $(B)flopoco symlink$(N) in $(PREFIX))
+	$(call shell_info, Installing $(B)flopoco symlink$(N) in $(PREFIX)/bin)
 	@ln -fs $(FLOPOCO) $(PREFIX)/bin
 else # ------------------------------------------------------------------------
 install: $(FLOPOCO) install-dependencies
