@@ -1,8 +1,5 @@
 #ifndef Zynq7000_HPP
 #define Zynq7000_HPP
-#include <iostream>
-#include <sstream>
-#include <vector>
 
 #include "flopoco/Target.hpp"
 

@@ -3,8 +3,10 @@ find_package(GMPXX REQUIRED)
 
 add_library(hwtargets SHARED)
 
-target_include_directories(hwtargets PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> 
-   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+target_include_directories(hwtargets PUBLIC 
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> 
+  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
 
 function(add_hwtargets_src)
   target_sources(hwtargets PRIVATE ${ARGN} )

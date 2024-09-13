@@ -1,10 +1,7 @@
 #ifndef VERSAL_HPP
 #define VERSAL_HPP
-#include "flopoco/Target.hpp"
-#include <iostream>
-#include <sstream>
-#include <vector>
 
+#include "flopoco/Target.hpp"
 
 namespace flopoco{
 

@@ -18,13 +18,8 @@
   All rights reserved.
 */
 
-
-
 #ifndef VirtexUltrascalePlus_HPP
 #define VirtexUltrascalePlus_HPP
-#include <iostream>
-#include <sstream>
-#include <vector>
 
 #include "flopoco/Target.hpp"
 

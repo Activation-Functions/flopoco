@@ -1,14 +1,8 @@
 #ifndef StratixV_HPP
 #define  StratixV_HPP
-#include <iostream>
-#include <sstream>
-#include <vector>
-#include <math.h>
-#include <gmp.h>
-#include <mpfr.h>
-#include <gmpxx.h>
-#include "flopoco/Target.hpp"
 
+#include <math.h>
+#include "flopoco/Target.hpp"
 
 namespace flopoco{
 
