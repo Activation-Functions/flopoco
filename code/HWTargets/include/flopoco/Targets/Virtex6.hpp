@@ -1,12 +1,7 @@
 #ifndef Virtex6_HPP
 #define Virtex6_HPP
-#include <iostream>
-#include <sstream>
-#include <vector>
+
 #include <math.h>
-#include <gmp.h>
-#include <mpfr.h>
-#include <gmpxx.h>
 
 #include "flopoco/Target.hpp"
 
