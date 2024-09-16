@@ -596,7 +596,7 @@ $(FLOPOCO) &: $(FLOPOCO_DEPENDENCIES)
 	$(call shell_info, Now building $(B)FloPoCo$(N))
 	@cmake -B build -G$(CMAKE_GENERATOR) \
            -DCMAKE_PREFIX_PATH=$(BUILD_DEPENDENCIES_BINARY_DIR) \
-	       -DCMAKE_INSTALL_PREFIX=$(PREFIX) \
+	       -DCMAKE_INSTALL_PREFIX=$(DESTDIR) \
 	       $(CMAKE_BUILD_TYPE)
 	@cmake --build build || exit;
 	$(call shell_info, Adding 'flopoco' $(B)symlink$(N) in build directory)
