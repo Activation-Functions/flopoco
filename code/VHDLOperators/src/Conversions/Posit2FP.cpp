@@ -11,7 +11,7 @@ using namespace std;
 namespace flopoco{
 	void Posit2FP::computeFloatWidths(int const widthI, int const eS, int* wE, int* wF)
 	{
-		*wE = intlog2(widthI - 1) + 1 + eS;
+		*wE = sizeInBits(widthI - 1) + 1 + eS;
 		*wF = widthI - (eS + 3);
 	}
 
@@ -57,7 +57,7 @@ namespace flopoco{
 		vhdl << declare(0., "encodingTail", widthI - 2, true) << " <= absoluteEncoding" <<
 		   range(widthI - 3, 0) << ";" << endl;	
 		ostringstream param, inmap, outmap;
-		int wCount = intlog2(widthI - 1); 
+		int wCount = sizeInBits(widthI - 1); 
 		param << "wX=" << widthI - 2;
 		param << " wR=" << widthI - 2;
 		param << " maxShift=" << widthI - 1; 

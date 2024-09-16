@@ -60,7 +60,7 @@ namespace flopoco{
 
 		setCopyrightString("Jérémie Detrey, Bogdan Pasca, Florent de Dinechin (2008-2017)");
 
-		sizeRightShift = intlog2(wF+3);
+		sizeRightShift = sizeInBits(wF+3);
 
 		/* Set up the IO signals */
 		/* Inputs: 2b(Exception) + 1b(Sign) + wE bits (Exponent) + wF bits(Fraction) */
@@ -209,7 +209,7 @@ namespace flopoco{
 
 			// LZC + Shifting. The number of leading zeros are returned together with the shifted input
 			REPORT(LogLevel::DEBUG, "Building close path LZC + shifter");
-			int countWidth = intlog2(wF + 2);
+			int countWidth = sizeInBits(wF + 2);
 			newInstance("Normalizer",
 									"norm",
 									"countType=0" + join(" wX=", wF+2) + join(" wR=", wF+2) +

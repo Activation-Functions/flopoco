@@ -157,13 +157,13 @@ namespace flopoco{
 			LSB = floor(log2(targetAccuracy*degree));
 			REPORT(LogLevel::DEBUG, "To obtain target accuracy " << targetAccuracy << " with a degree-"<<degree
 					<<" polynomial, we compute coefficients accurate to LSB="<<LSB);
-			// It is pretty sure that adding intlog2(degree) bits is enough for FPMinimax.
+			// It is pretty sure that adding sizeInBits(degree) bits is enough for FPMinimax.
 
 			// The main loop starts with the almost hopeless LSB defined above, then tries to push it down, a0 first, then all the others.
 			// If guessdegree returned an interval, it tries lsbAttemptsMax times, then gives up and tries to increase the degree.
 			// Otherwise lsbAttemptsMax is ignored, but in practice success happens earlier anyway
 
-			int lsbAttemptsMax = intlog2(degree)+1;
+			int lsbAttemptsMax = sizeInBits(degree)+1;
 			int lsbAttempts=0; // a counter of attempts to move the LSB down, caped by lsbAttemptsMax
 			// bool a0Increased=false; // before adding LSB bits to everybody we try to add them to a0 only.
 

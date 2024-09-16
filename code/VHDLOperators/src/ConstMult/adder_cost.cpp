@@ -165,7 +165,7 @@ vector<vector<size_t>> splitNonOverlap(
 		size_t cur_idx = order[i];			
 		int group_left_bound = leftbound;
 		if (curSet.size() > 0) {
-			group_left_bound += intlog2(curSet.size());
+			group_left_bound += sizeInBits(curSet.size());
 		}
 		if (kz[cur_idx] < group_left_bound) {
 			leftbound = max(leftbound, left_border[cur_idx]);

@@ -447,7 +447,7 @@ namespace flopoco{
 			}
 
 			else{
-				rsize = intlog2(n * ((mpz_class(1)<<xsize)-1));
+				rsize = sizeInBits(n * ((mpz_class(1)<<xsize)-1));
 
 				addInput("X", xsize);
 				addOutput("R", rsize);
@@ -617,7 +617,7 @@ namespace flopoco{
 
 			//implementation = new ShiftAddDag(this);
 
-			rsize = intlog2(n * ((mpz_class(1)<<xsize)-1));
+			rsize = sizeInBits(n * ((mpz_class(1)<<xsize)-1));
 			REPORT(LogLevel::DETAIL, "Building a periodic DAG for  " << n );
 
 			addInput("X", xsize);
@@ -842,7 +842,7 @@ namespace flopoco{
 		}
 
 #if defined USE_EXPERIMENTAL_HEURISTIC_1
-			int *fBC= new int [intlog2(n)+1];
+			int *fBC= new int [sizeInBits(n)+1];
 			int sizeOfCurrentOperands, sizeOfNewOperands;
 #endif
 
@@ -913,7 +913,7 @@ namespace flopoco{
 		int i;
 		int *b, *c;
 		int nonZeroInBoothCode = 0;
-		int nsize = intlog2(n);
+		int nsize = sizeInBits(n);
 
 		// Build the binary representation -- I'm sure there is a mpz method for it.
 		//		Search around mpz_array_init(), mpz_export(), or mpz_get_ui()
@@ -1126,11 +1126,11 @@ namespace flopoco{
                                                    ShiftAddOp* &MX, unsigned int* &shifts, int &nonZeroInBoothCode, int &globalshift){
 		int i,j;
 
-		int nsize = intlog2(n);
+		int nsize = sizeInBits(n);
 
 		if((mpz_class(1) << (nsize-1)) == n) { // n is a power of two
 			REPORT(LogLevel::DEBUG, "Power of two");
-			result= tree_try->provideShiftAddOp(Shift, tree_try->PX, intlog2(n)-1);
+			result= tree_try->provideShiftAddOp(Shift, tree_try->PX, sizeInBits(n)-1);
 			globalshift = nsize-1;
 			return 1;
 		}

@@ -60,7 +60,7 @@ namespace flopoco{
 
 		setCopyrightString("Florent de Dinechin, Valentin Huguet (2016)");
 
-		sizeRightShift = intlog2(wF+3);
+		sizeRightShift = sizeInBits(wF+3);
 
 	/* Set up the IO signals */
 	/* Inputs: 2b(Exception) + 1b(Sign) + wE bits (Exponent) + wF bits(Fraction) */
@@ -487,13 +487,13 @@ namespace flopoco{
 		else if ((i & 7) == 3) {// alignment within the mantissa sizes
 			mpz_class e = getLargeRandom(wE);
 			x  = getLargeRandom(wF) + (e << wF) + negative;
-			e +=	getLargeRandom(intlog2(wF)); // may lead to an overflow, who cares
+			e +=	getLargeRandom(sizeInBits(wF)); // may lead to an overflow, who cares
 			y  = getLargeRandom(wF) + (e << wF);
 		}
 		else if ((i & 7) == 4) {// subtraction, alignment within the mantissa sizes
 			mpz_class e = getLargeRandom(wE);
 			x  = getLargeRandom(wF) + (e << wF);
-			e +=	getLargeRandom(intlog2(wF)); // may lead to an overflow
+			e +=	getLargeRandom(sizeInBits(wF)); // may lead to an overflow
 			if(e > (mpz_class(1)<<(wE)-1))
 				e = (mpz_class(1)<<(wE)-1);
 			y  = getLargeRandom(wF) + (e << wF) + negative;
@@ -501,7 +501,7 @@ namespace flopoco{
 		else if ((i & 7) == 5 || (i & 7) == 6) {// addition, alignment within the mantissa sizes
 			mpz_class e = getLargeRandom(wE);
 			x  = getLargeRandom(wF) + (e << wF);
-			e +=	getLargeRandom(intlog2(wF)); // may lead to an overflow
+			e +=	getLargeRandom(sizeInBits(wF)); // may lead to an overflow
 			y  = getLargeRandom(wF) + (e << wF);
 		}
 		else{ //fully random

@@ -148,9 +148,9 @@ namespace flopoco{
 				vhdl << tab << declare("MSB2Signal",wE)<<"<=CONV_STD_LOGIC_VECTOR("<<MSB-1<<","<<wE<<");"<<endl;
 	
 			if(Signed)
-				vhdl << tab << declare("zeroPadding4Exponent",wE- intlog2(inputWidth-1),true)<<"<=CONV_STD_LOGIC_VECTOR(0,"<<wE- intlog2(inputWidth-1)<<");"<<endl;
+				vhdl << tab << declare("zeroPadding4Exponent",wE- sizeInBits(inputWidth-1),true)<<"<=CONV_STD_LOGIC_VECTOR(0,"<<wE- sizeInBits(inputWidth-1)<<");"<<endl;
 			else
-				vhdl << tab << declare("zeroPadding4Exponent",wE- intlog2(inputWidth),true)<<"<=CONV_STD_LOGIC_VECTOR(0,"<<wE- intlog2(inputWidth)<<");"<<endl;
+				vhdl << tab << declare("zeroPadding4Exponent",wE- sizeInBits(inputWidth),true)<<"<=CONV_STD_LOGIC_VECTOR(0,"<<wE- sizeInBits(inputWidth)<<");"<<endl;
 	
 			vhdl << tab << declare("valueExponent",wE)<<"<= not (zeroPadding4Exponent & temporalExponent );"<<endl;
 	
@@ -430,9 +430,9 @@ namespace flopoco{
 					vhdl << tab << declare("MSB2Signal",wE,true)<<"<= CONV_STD_LOGIC_VECTOR("<<MSB-1<<","<<wE<<");"<<endl;
 	
 				if(Signed)
-					vhdl << tab << declare("zeroPadding4Exponent",wE- intlog2(inputWidth-1),true)<<"<= CONV_STD_LOGIC_VECTOR(0,"<<wE- intlog2(inputWidth-1)<<");"<<endl;
+					vhdl << tab << declare("zeroPadding4Exponent",wE- sizeInBits(inputWidth-1),true)<<"<= CONV_STD_LOGIC_VECTOR(0,"<<wE- sizeInBits(inputWidth-1)<<");"<<endl;
 				else
-					vhdl << tab << declare("zeroPadding4Exponent",wE- intlog2(inputWidth),true)<<"<= CONV_STD_LOGIC_VECTOR(0,"<<wE- intlog2(inputWidth)<<");"<<endl;
+					vhdl << tab << declare("zeroPadding4Exponent",wE- sizeInBits(inputWidth),true)<<"<= CONV_STD_LOGIC_VECTOR(0,"<<wE- sizeInBits(inputWidth)<<");"<<endl;
 	
 				vhdl << tab << declare("valueExponent",wE,true)<<"<= not(zeroPadding4Exponent & temporalExponent);"<<endl;
 	

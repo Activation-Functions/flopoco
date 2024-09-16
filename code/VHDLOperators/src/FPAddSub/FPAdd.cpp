@@ -137,19 +137,19 @@ namespace flopoco{
 		else if ((i & 7) == 3) {// alignment within the mantissa sizes
 			mpz_class e = getLargeRandom(wE);
 			x  = getLargeRandom(wF) + (e << wF) + normalExn + negative;
-			e +=	getLargeRandom(intlog2(wF)); // may lead to an overflow, who cares
+			e +=	getLargeRandom(sizeInBits(wF)); // may lead to an overflow, who cares
 			y  = getLargeRandom(wF) + (e << wF) + normalExn;
 		}
 		else if ((i & 7) == 4) {// subtraction, alignment within the mantissa sizes
 			mpz_class e = getLargeRandom(wE);
 			x  = getLargeRandom(wF) + (e << wF) + normalExn;
-			e +=	getLargeRandom(intlog2(wF)); // may lead to an overflow
+			e +=	getLargeRandom(sizeInBits(wF)); // may lead to an overflow
 			y  = getLargeRandom(wF) + (e << wF) + normalExn + negative;
 		}
 		else if ((i & 7) == 5 || (i & 7) == 6) {// addition, alignment within the mantissa sizes
 			mpz_class e = getLargeRandom(wE);
 			x  = getLargeRandom(wF) + (e << wF) + normalExn;
-			e +=	getLargeRandom(intlog2(wF)); // may lead to an overflow
+			e +=	getLargeRandom(sizeInBits(wF)); // may lead to an overflow
 			y  = getLargeRandom(wF) + (e << wF) + normalExn;
 		}
 		else{ //fully random

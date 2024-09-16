@@ -20,7 +20,7 @@ namespace flopoco{
     setNameWithFreqAndUID(name.str());
     setCopyrightString("Oregane Desrentes 2019");
     
-    int maxshiftsize = intlog2(wF+4);
+    int maxshiftsize = sizeInBits(wF+4);
     int width = wE + wF + 5;
     addInput ("X" , width);
     addInput ("Y" , width);
@@ -113,7 +113,7 @@ namespace flopoco{
     vhdl << declare(.0, "count_type", 1, false) << "<= add_mantissa" << of(wF+5) << ";" << endl;
     
     ostringstream param2, inmap2, outmap2;
-    int wCount = intlog2(wF+6); 
+    int wCount = sizeInBits(wF+6); 
     param2 << "wX=" << wF + 6;
     param2 << " wR=" << wF + 6;
     param2 << " maxShift=" << ((1<<wCount)-1) ; 

@@ -48,7 +48,7 @@ namespace flopoco{
 
 		BitHeap* bh;
 		if(wOut_==0){ //compute it
-			wOut = wIn+intlog2(n);
+			wOut = wIn+sizeInBits(n);
 		}
 		else{
 			wOut=wOut_;

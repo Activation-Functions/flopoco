@@ -145,7 +145,7 @@ namespace flopoco{
 		vhdl << tab  << declare("maxShift", wE+1) << " <= conv_std_logic_vector(" << maxshift << ", wE+1);  -- wE-2 + wF+g" << endl;
 		vhdl << tab  << declare(getTarget()->adderDelay(wE+1),"overflow0") << " <= not shiftVal(wE+1) when shiftVal(wE downto 0) > maxShift else '0';" << endl;
 
-		int shiftInSize = intlog2(maxshift);
+		int shiftInSize = sizeInBits(maxshift);
 		vhdl << tab  << declare("shiftValIn", shiftInSize) << " <= shiftVal" << range(shiftInSize-1, 0) << ";" << endl;
 		newInstance("Shifter",
 								"mantissa_shift",

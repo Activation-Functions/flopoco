@@ -50,7 +50,7 @@ namespace flopoco{
 		setNameWithFreqAndUID(name.str());
 
 		// -------- Parameter set up -----------------
-		wOut = intlog2(wIn);
+		wOut = sizeInBits(wIn);
 		p2wOut = 1<<wOut; // no need for GMP here
 
 		
@@ -133,7 +133,7 @@ namespace flopoco{
 
 		vhdl << tab << "with " << nextLevelName << " select " << declare(finalDelay, "lowBits", i) << " <= " << endl;
 		for (int j=0; j<intpow2(i); j++) {
-			vhdl << tab << tab << "\"" << unsignedBinary(intpow2(i)-1-intlog2(j), i) <<"\" when \"" << unsignedBinary(j, intpow2(i)-1) << "\"," << endl;
+			vhdl << tab << tab << "\"" << unsignedBinary(intpow2(i)-1-sizeInBits(j), i) <<"\" when \"" << unsignedBinary(j, intpow2(i)-1) << "\"," << endl;
 		}
 		vhdl << tab << tab << zg(i) << " when others;" << endl;
 		//		vhdl << tab << tab << rangeAssign(i,0,"'-'") << " when others;" << endl; // seems to slow everything down and consume space 

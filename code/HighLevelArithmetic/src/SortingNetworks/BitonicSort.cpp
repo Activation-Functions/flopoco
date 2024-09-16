@@ -117,7 +117,7 @@ namespace flopoco{
 		
 		top_half = N/2;
 		bottom_half = N - top_half;
-		power_of_2 = intlog2(N-1);
+		power_of_2 = sizeInBits(N-1);
 		power_of_2_N_div_2 = 1 << (power_of_2-1);
 
 		BitonicSort::sortStage returnVector;

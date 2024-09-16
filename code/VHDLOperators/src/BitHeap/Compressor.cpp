@@ -18,7 +18,7 @@ namespace flopoco{
 			maxVal += intpow2(i) * heights[i];
 		}
 
-		wOut = intlog2(maxVal);
+		wOut = sizeInBits(maxVal);
 
 		//setting up outHeights
 		outHeights.resize(wOut, 1);
@@ -328,7 +328,7 @@ namespace flopoco{
 			maxVal += intpow2(i) * heights[i];
 		}
 
-		wOut = intlog2(maxVal);
+		wOut = sizeInBits(maxVal);
 
 		//setting up outHeights
 		outHeights.resize(wOut, 1);

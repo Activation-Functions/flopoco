@@ -129,7 +129,7 @@ namespace flopoco {
 		}
 
 		// guard bits for a faithful result
-		int lsbExt = lsbOut-1-intlog2(Heps);
+		int lsbExt = lsbOut-1-sizeInBits(Heps);
 
 
 #if 0 // sabotaging, to test if we overestimate

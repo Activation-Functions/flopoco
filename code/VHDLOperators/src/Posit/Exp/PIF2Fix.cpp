@@ -19,7 +19,7 @@ using namespace std;
 namespace flopoco {
 
   void PIF2Fix::computePIFWidths(int const widthP, int const wES, int* wE, int* wF) {
-		*wE = intlog2(widthP) + 1 + wES;
+		*wE = sizeInBits(widthP) + 1 + wES;
 		*wF = widthP - (wES + 3);
 	}
 
@@ -86,7 +86,7 @@ namespace flopoco {
 		//donc en gros on shift à gauche, en extension de signe, et voilà on est content
 
 		int maxshift= wE_ + g - 1;
-		int maxshiftsize = intlog2(maxshift);
+		int maxshiftsize = sizeInBits(maxshift);
 		
 		vhdl << declare(0., "oufl", 1, false) << " <= not resultWillBeOne when shiftVal" << range(wE_, 0) << " >= " << maxshift << " else '0';" << endl; //là on vérifie so exposant trop grand
 
