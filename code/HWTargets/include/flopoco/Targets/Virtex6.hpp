@@ -1,34 +1,32 @@
-#ifndef VERSAL_HPP
-#define VERSAL_HPP
-#include "flopoco/Target.hpp"
-#include <iostream>
-#include <sstream>
-#include <vector>
+#ifndef Virtex6_HPP
+#define Virtex6_HPP
 
+#include <math.h>
+
+#include "flopoco/Target.hpp"
 
 namespace flopoco{
-
-	/** Class for representing an Versal target */
-	/** note: copied from Zynq7000 **/
-	/** TODO: do we need different versal subtypes??? **/
-	class Versal : public Target {
+	
+	/** Class for representing an Virtex6 target */
+	class Virtex6 : public Target
+	{
 	public:
-		/** The default constructor. */
-		Versal();
+		
+	/** The default constructor. */
+		Virtex6();
 		/** The destructor */
-		~Versal();
+		virtual ~Virtex6() {};
+		
 		/** overloading the virtual functions of Target
 		 * @see the target class for more details
 		 */
-
-		double logicDelay(int inputs);
-
+		double logicDelay(int inputs=0);
 		double adderDelay(int size, bool addRoutingDelay=true);
-
 		double adder3Delay(int size){return 0;}; // currently irrelevant for Xilinx
 		double eqComparatorDelay(int size);
 		double ltComparatorDelay(int size);
 		double eqConstComparatorDelay(int size);
+		double lutDelay();
 
 		double DSPMultiplierDelay(){ return DSPMultiplierDelay_;}
 		double DSPAdderDelay(){ return DSPAdderDelay_;}
@@ -37,50 +35,55 @@ namespace flopoco{
 		double LogicToDSPWireDelay(){ return DSPToLogicWireDelay_;}
 
 		double RAMDelay() { return RAMDelay_; }
+		double tableDelay(int wIn_, int wOut_, bool logicTable_);
 		double RAMToLogicWireDelay() { return RAMToLogicWireDelay_; }
 		double LogicToRAMWireDelay() { return RAMToLogicWireDelay_; }
 
 		double carryPropagateDelay();
-		double addRoutingDelay(double d);
 		double fanoutDelay(int fanout = 1);
-		double lutDelay();
 		double ffDelay();
-
-		long   sizeOfMemoryBlock();
-		double tableDelay(int wIn, int wOut, bool logicTable);
-		int maxLutInputs() {return 8;}
+		int maxLutInputs();
 		double lutConsumption(int lutInputSize);
+		long sizeOfMemoryBlock();
 
 	private:
+		double fastcarryDelay_; /**< The delay of the fast carry chain */
+		double lutDelay_;       /**< The delay between two LUTs */
+		double elemWireDelay_;  /**< The elementary wire dealy (for computing the distant wire delay) */
 
-		// TODO: timings???
-		const double lutDelay_ = 0.124e-9;       /**< The delay of a LUT, without any routing (cut from vivado timing report)*/
-		const double carry4Delay_ = 0.114e-9;    /**< The delay of the fast carry chain */
-		const double ffDelay_ = 0.518e-9;       /**< The delay of a flip-flop, without any routing  (cut from vivado timing report)*/
-		const double adderConstantDelay_  = 0.532e-9 + 0.222e-9; /**< includes a LUT delay and the initial and final carry4delays*/
-		const double fanoutConstant_ = 2e-9/200 ; /**< Somewhere in Vivado report, someday, there has appeared a delay of 2e-9 for fo=200 */
-		const double typicalLocalRoutingDelay_ = 0.5e-9;
-		const double DSPMultiplierDelay_ = 0; // TODO
-		const double RAMDelay_ = 0; // TODO
-		const double RAMToLogicWireDelay_= 0; // TODO
-
-		// From there on, obsolete stuff
+		double fdCtoQ_;         /**< The delay of the FlipFlop. Also contains an approximate Net Delay experimentally determined */
 		double lut2_;           /**< The LUT delay for 2 inputs */
 		double lut3_;           /**< The LUT delay for 3 inputs */
 		double lut4_;           /**< The LUT delay for 4 inputs */
-		double fdCtoQ_;         /**< The delay of the FlipFlop. Also contains an approximate Net Delay experimentally determined */
+		double lut5_;           /**< The LUT delay for 5 inputs */
+		double lut6_;           /**< The LUT delay for 6 inputs */
+		double lut_net_;        /**< The LUT NET delay */
 		double muxcyStoO_;      /**< The delay of the carry propagation MUX, from Source to Out*/
 		double muxcyCINtoO_;    /**< The delay of the carry propagation MUX, from CarryIn to Out*/
 		double ffd_;            /**< The Flip-Flop D delay*/
+		double ff_net_;            /**< The Flip-Flop D net delay*/
 		double muxf5_;          /**< The delay of the almighty mux F5*/
+		double muxf7_;          /**< The delay of the even mightier mux F7*/
+		double muxf7_net_;      /**< The NET delay of the even mightier mux F7*/
+		double muxf8_;          /**< The delay of the mightiest mux F8*/
+		double muxf8_net_;      /**< The NET delay of the mightiest mux F8*/
+		double muxf_net_;       /**< The NET delay while inside the slice */
 		double slice2sliceDelay_;       /**< This is approximate. It approximates the wire delays between Slices */
 		double xorcyCintoO_;    /**< the S to O delay of the xor gate */
+		double xorcyCintoO_net_;
 		int nrDSPs_;			/**< Number of available DSPs on this target */
 		int dspFixedShift_;		/**< The amount by which the DSP block can shift an input to the ALU */
 
+		double DSPMultiplierDelay_;
 		double DSPAdderDelay_;
 		double DSPCascadingWireDelay_;
 		double DSPToLogicWireDelay_;
+
+		double RAMDelay_;
+		double RAMToLogicWireDelay_;
+		double logicWireToRAMDelay_;
+
 	};
+
 }
 #endif

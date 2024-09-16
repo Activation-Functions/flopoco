@@ -43,6 +43,8 @@ set_target_properties(FloPoCoLib PROPERTIES OUTPUT_NAME "FloPoCo")
 
 target_link_libraries(FloPoCoLib PUBLIC hileco)
 
+target_link_libraries(FloPoCoLib PUBLIC hwtargets)
+
 target_link_libraries(
     FloPoCoLib PRIVATE
     GMPXX::GMPXX MPFR::MPFR MPFI::MPFI LAPACK::LAPACK ${Boost_LIBRARIES}

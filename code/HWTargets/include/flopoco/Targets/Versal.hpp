@@ -1,23 +1,21 @@
-#ifndef Zynq7000_HPP
-#define Zynq7000_HPP
-#include <iostream>
-#include <sstream>
-#include <vector>
+#ifndef VERSAL_HPP
+#define VERSAL_HPP
 
 #include "flopoco/Target.hpp"
 
 namespace flopoco{
 
-	/** Class for representing an Zynq7000 target */
-	class Zynq7000 : public Target
-	{
+	/** Class for representing an Versal target */
+	/** note: copied from Zynq7000 **/
+	/** TODO: do we need different versal subtypes??? **/
+	class Versal : public Target {
 	public:
-		/** The default constructor. */  
-		Zynq7000();
+		/** The default constructor. */
+		Versal();
 		/** The destructor */
-		~Zynq7000();
+		~Versal();
 		/** overloading the virtual functions of Target
-		 * @see the target class for more details 
+		 * @see the target class for more details
 		 */
 
 		double logicDelay(int inputs);
@@ -29,32 +27,30 @@ namespace flopoco{
 		double ltComparatorDelay(int size);
 		double eqConstComparatorDelay(int size);
 
-		
 		double DSPMultiplierDelay(){ return DSPMultiplierDelay_;}
 		double DSPAdderDelay(){ return DSPAdderDelay_;}
 		double DSPCascadingWireDelay(){ return DSPCascadingWireDelay_;}
 		double DSPToLogicWireDelay(){ return DSPToLogicWireDelay_;}
 		double LogicToDSPWireDelay(){ return DSPToLogicWireDelay_;}
 
-		// TODO some cleanup to do below
-		long   sizeOfMemoryBlock();
 		double RAMDelay() { return RAMDelay_; }
 		double RAMToLogicWireDelay() { return RAMToLogicWireDelay_; }
 		double LogicToRAMWireDelay() { return RAMToLogicWireDelay_; }
-		double tableDelay(int wIn, int wOut, bool logicTable); 
 
 		double carryPropagateDelay();
 		double addRoutingDelay(double d);
 		double fanoutDelay(int fanout = 1);
 		double lutDelay();
 		double ffDelay();
+
+		long   sizeOfMemoryBlock();
+		double tableDelay(int wIn, int wOut, bool logicTable);
 		int maxLutInputs() {return 8;}
 		double lutConsumption(int lutInputSize);
 
-		
 	private:
 
-
+		// TODO: timings???
 		const double lutDelay_ = 0.124e-9;       /**< The delay of a LUT, without any routing (cut from vivado timing report)*/
 		const double carry4Delay_ = 0.114e-9;    /**< The delay of the fast carry chain */
 		const double ffDelay_ = 0.518e-9;       /**< The delay of a flip-flop, without any routing  (cut from vivado timing report)*/
@@ -64,7 +60,6 @@ namespace flopoco{
 		const double DSPMultiplierDelay_ = 0; // TODO
 		const double RAMDelay_ = 0; // TODO
 		const double RAMToLogicWireDelay_= 0; // TODO
-
 
 		// From there on, obsolete stuff
 		double lut2_;           /**< The LUT delay for 2 inputs */
@@ -79,12 +74,10 @@ namespace flopoco{
 		double xorcyCintoO_;    /**< the S to O delay of the xor gate */
 		int nrDSPs_;			/**< Number of available DSPs on this target */
 		int dspFixedShift_;		/**< The amount by which the DSP block can shift an input to the ALU */
-		
+
 		double DSPAdderDelay_;
 		double DSPCascadingWireDelay_;
 		double DSPToLogicWireDelay_;
-
 	};
-
 }
 #endif

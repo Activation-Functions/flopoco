@@ -12,11 +12,8 @@
   All rights reserved.
 */
 
-#include <iostream>
-#include <sstream>
 
 #include "flopoco/Targets/Virtex6.hpp"
-#include "flopoco/utils.hpp"
 
 using namespace std;
 
@@ -171,7 +168,7 @@ namespace flopoco{
 				//table fits inside a slice
 				double delays[] = {lut6_, muxf7_, muxf8_};
 
-				totalDelay = fanoutDelay(wOut_*(int)intpow2(wIn_-lutInputs_));
+				totalDelay = fanoutDelay(wOut_);
 				for(i=lutInputs_; i<=wIn_; i++){
 					totalDelay += delays[i-lutInputs_];
 				}
@@ -181,7 +178,7 @@ namespace flopoco{
 				double delays[] = {lut6_, 0, muxf7_};
 				double delaysNet[] = {lut_net_, lut_net_, muxf7_net_};
 
-				totalDelay = fanoutDelay(wOut_*(int)intpow2(wIn_-lutInputs_)) + lut6_ + muxf7_ + muxf8_ + muxf8_net_;
+				totalDelay = fanoutDelay(wOut_*(1<<(wIn_-lutInputs_))) + lut6_ + muxf7_ + muxf8_ + muxf8_net_;
 				for(i=lutInputs_+3; i<=wIn_; i++){
 					totalDelay += delays[(i-lutInputs_)%(sizeof(delays)/sizeof(*delays))];
 				}

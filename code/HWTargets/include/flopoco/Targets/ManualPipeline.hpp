@@ -1,10 +1,7 @@
 #ifndef ManualPipeline_HPP
 #define ManualPipeline_HPP
-#include "flopoco/Target.hpp"
-#include <iostream>
-#include <sstream>
-#include <vector>
 
+#include "flopoco/Target.hpp"
 
 namespace flopoco{
 

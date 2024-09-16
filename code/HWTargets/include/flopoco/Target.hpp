@@ -40,7 +40,7 @@
 #include <sstream>
 #include <string>
 #include <math.h>
-#include "flopoco/IntMult/MultiplierBlock.hpp"
+// TODO ask Martin about it #include "flopoco/IntMult/MultiplierBlock.hpp
 
 #define REPORTDELAYS false
 

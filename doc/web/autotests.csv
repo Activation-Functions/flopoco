@@ -11,10 +11,10 @@ FPConstDiv,6,6,6,100.0,Stable,n/a,Undefined
 FPConstMult,9,9,9,100.0,Stable,n/a,Undefined
 FPConstMultRational,6,3,3,50.0,Stable,n/a,Undefined
 FPDiv,3,3,3,100.0,Stable,n/a,Undefined
-FPExp,3,3,3,100.0,Stable,n/a,Undefined
-FPLog,3,3,3,100.0,Stable,n/a,Undefined
+FPExp,3,3,3,100.0,Pass,eba5cc552795ea5319a924b6819d9d62417f8e6b,Break
+FPLog,3,3,3,100.0,Pass,eba5cc552795ea5319a924b6819d9d62417f8e6b,Break
 FPMult,3,3,3,100.0,Stable,n/a,Undefined
-FPPow,6,6,6,100.0,Stable,257755ef49679c2a251b2cb3632b52bd50a18e0c,Undefined
+FPPow,6,6,6,100.0,Pass,eba5cc552795ea5319a924b6819d9d62417f8e6b,Break
 FPSqrt,3,3,3,100.0,Stable,n/a,Undefined
 Fix2DNorm,0,0,0,0.0,Stable,n/a,Undefined
 Fix2FP,0,0,0,0.0,Stable,n/a,Undefined
@@ -44,7 +44,7 @@ FixSinOrCos,0,0,0,0.0,Stable,n/a,Undefined
 GenericLut,0,0,0,0.0,Stable,n/a,Undefined
 GenericMux,0,0,0,0.0,Stable,n/a,Undefined
 IEEEFPAdd,0,0,0,0.0,Stable,n/a,Undefined
-IEEEFPExp,3,3,3,100.0,Stable,n/a,Undefined
+IEEEFPExp,3,3,3,100.0,Pass,eba5cc552795ea5319a924b6819d9d62417f8e6b,Break
 IEEEFPFMA,0,0,0,0.0,Stable,n/a,Undefined
 InputIEEE,0,0,0,0.0,Stable,n/a,Undefined
 IntAddSub,4,4,4,100.0,Stable,d54240b2b7115396e53e01f3c8a9b193c9b53ba3,Break
@@ -91,4 +91,4 @@ TestBench,0,0,0,0.0,Stable,n/a,Undefined
 TutorialOperator,0,0,0,0.0,Stable,n/a,Undefined
 UniformPiecewisePolyApprox,0,0,0,0.0,Stable,n/a,Undefined
 VaryingPiecewisePolyApprox,0,0,0,0.0,Stable,n/a,Undefined
-Total,240,237,237,98.75,Stable,cdb07234e698562a3d0f46670a9b407352fbb30d,Stable
+Total,240,237,237,98.75,Up,eba5cc552795ea5319a924b6819d9d62417f8e6b,Down
