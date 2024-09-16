@@ -12,6 +12,4 @@ yes | sudo apt update && \
 
 git clone https://gitlab.com/flopoco/flopoco
 cd flopoco
-# Remove this before merge:
-git checkout merge/master-cmake
 make
