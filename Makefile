@@ -26,15 +26,22 @@ FLOPOCO_COMMIT_HASH     := $(shell git rev-parse HEAD)
 MKROOT := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
 # Local dependencies build directories:
-
 BUILD_DIR := $(MKROOT)/build
 BUILD_DEPENDENCIES_DIR := $(BUILD_DIR)/dependencies
 BUILD_DEPENDENCIES_SOURCE_DIR := $(BUILD_DEPENDENCIES_DIR)/src
-BUILD_DEPENDENCIES_BINARY_DIR := $(BUILD_DEPENDENCIES_DIR)/bin
+BUILD_DEPENDENCIES_BINARY_DIR := $(BUILD_DEPENDENCIES_DIR)/prefix
+FLOPOCO := $(MKROOT)/build/bin/flopoco
 
 # Utilities for parsing OS and distribution version
 # as well as pretty-printing stuff.
 include $(MKROOT)/tools/utilities.mk
+
+ifeq ($(call file_exists, $(FLOPOCO)), 0)
+    FRESH_INSTALL := TRUE
+    $(call static_info, Clean installation of FloPoCo)
+else
+    FRESH_INSTALL := FALSE
+endif
 
 # Print FloPoCo version, branch and commit hash:
 $(call static_info, Running $(B)FloPoCo$(N) build script\
@@ -69,13 +76,14 @@ endif # -------------------------------
 # $ make GUROBI_HOME=/opt/gurobi1102/linux64
 GUROBI_ROOT_DIR := $(GUROBI_HOME)
 
-# By default, install a symlink of 'flopoco' binary in $(PREFIX)
-# when '$ make install' is used.
-# Otherwise, install all libraries and binaries in $(PREFIX)
-INSTALL_TYPE ?= symlink
+# DESTDIR used for system installation of the FloPoCo binaries/symlink:
+DESTDIR ?= /usr/local
 
-# PREFIX used for system installation of the FloPoCo binaries/symlink:
-PREFIX ?= /usr/local
+# By default, install all libraries and binaries in $(DESTDIR)
+# when '$ make install' is used.
+# Otherwise, if set to 'symlink', it will only 
+# install a symlink to the 'flopoco' binary in $(DESTDIR)
+INSTALL_TYPE ?= system
 
 # If ON (default), the script will take care of fetching and building SCIP
 # locally, and integrate it with ScaLP.
@@ -96,7 +104,7 @@ endif # -------------------------------------------
 $(call static_info, $(B)CONFIG$(N): $(CONFIG))
 $(call static_info, $(B)CMAKE_GENERATOR$(N): $(CMAKE_GENERATOR))
 $(call static_info, $(B)INSTALL_TYPE$(N): $(INSTALL_TYPE))
-$(call static_info, $(B)PREFIX$(N): $(PREFIX))
+$(call static_info, $(B)DESTDIR$(N): $(DESTDIR))
 $(call static_info, $(B)NVC building$(N): $(WITH_NVC))
 
 # -----------------------------------------------------------------------------
@@ -118,9 +126,13 @@ endif
 
 $(call static_info, $(B)ScaLP backend(s)$(N): $(SCALP_BACKEND))
 
-# -----------------------------------------------------------------------------xxxxxx
-
-all: flopoco
+# Add 'sysdeps' target if flopoco target has not been built yet.
+# Otherwise, just re-build flopoco.
+ifeq ($(FRESH_INSTALL), TRUE)
+    all: sysdeps flopoco 
+else
+    all: flopoco
+endif
 
 # -----------------------------------------------------------------------------
 .PHONY: help
@@ -388,7 +400,7 @@ sysdeps:
 SCIP_GIT := https://github.com/scipopt/scip.git
 SCIP_VERSION := v910
 SCIP_SOURCE_DIR := $(BUILD_DEPENDENCIES_SOURCE_DIR)/scip
-SCIP_BINARY_DIR := $(BUILD_DEPENDENCIES_BINARY_DIR)/scip
+SCIP_BINARY_DIR := $(BUILD_DEPENDENCIES_BINARY_DIR)
 SCIP_LIBRARIES := $(SCIP_BINARY_DIR)/lib/libscip.$(dylib)
 
 scip: $(SCIP_LIBRARIES)
@@ -400,16 +412,12 @@ $(SCIP_LIBRARIES):
 	@git clone $(SCIP_GIT) $(SCIP_SOURCE_DIR)	
 	@cd $(SCIP_SOURCE_DIR)
 	@git checkout $(SCIP_VERSION)
-	@cmake -B build -G$(CMAKE_GENERATOR)		    \
-	       -DAUTOBUILD=ON				    \
+	@cmake -B build -G$(CMAKE_GENERATOR)        \
+	       -DAUTOBUILD=ON				        \
 	       -DCMAKE_INSTALL_PREFIX=$(SCIP_BINARY_DIR)    \
 	       -DCMAKE_BUILD_WITH_INSTALL_RPATH=TRUE	    \
 	       $(CMAKE_BUILD_TYPE)
 	@cmake --build build --target install -j 8
-
-install-scip: $(SCIP_LIBRARIES)
-	$(call shell_info, Installing $(B)SCIP$(N) libraries ($(SCIP_LIBRARIES)) in $(PREFIX))
-	@cp $(SCIP_LIBRARIES) $(PREFIX)/lib
 
 # -----------------------------------------------------------------------------
 .PHONY: gurobi
@@ -427,7 +435,7 @@ install-scip: $(SCIP_LIBRARIES)
 # -----------------------------------------------------------------------------
 SCALP_GIT := https://digidev.digi.e-technik.uni-kassel.de/git/scalp.git
 SCALP_SOURCE_DIR := $(BUILD_DEPENDENCIES_SOURCE_DIR)/scalp
-SCALP_BINARY_DIR := $(BUILD_DEPENDENCIES_BINARY_DIR)/scalp
+SCALP_BINARY_DIR := $(BUILD_DEPENDENCIES_BINARY_DIR)
 
 SCALP_LIBRARIES += $(SCALP_BINARY_DIR)/lib/libScaLP.$(dylib)
 scalp: $(SCALP_LIBRARIES)
@@ -466,10 +474,6 @@ $(SCALP_LIBRARIES) &: $(SCALP_DEPENDENCIES)
 	       $(SCALP_CMAKE_OPTIONS)
 	@cmake --build build --target install
 
-install-scalp: $(SCALP_LIBRARIES)
-	$(call shell_info, Installing $(B)SCALP$(N) libraries ($(SCALP_LIBRARIES)) in $(PREFIX))
-	@cp $(SCALP_LIBRARIES) $(PREFIX)/lib
-
 # -----------------------------------------------------------------------------
 .PHONY: wcpg
 # Functions for reliable evaluation of the Worst-Case Peak Gain matrix
@@ -477,7 +481,7 @@ install-scalp: $(SCALP_LIBRARIES)
 # -----------------------------------------------------------------------------
 WCPG_GIT := https://github.com/fixif/WCPG
 WCPG_SOURCE_DIR := $(BUILD_DEPENDENCIES_SOURCE_DIR)/wcpg
-WCPG_BINARY_DIR := $(BUILD_DEPENDENCIES_BINARY_DIR)/wcpg
+WCPG_BINARY_DIR := $(BUILD_DEPENDENCIES_BINARY_DIR)
 
 WCPG_LIBRARIES += $(WCPG_BINARY_DIR)/lib/libwcpg.$(dylib).0.0.9
 WCPG_LIBRARIES += $(WCPG_BINARY_DIR)/lib/libwcpg.$(dylib).0
@@ -505,10 +509,6 @@ $(WCPG_LIBRARIES) &:
 	@./configure --prefix=$(WCPG_BINARY_DIR) $(WCPG_CONFIGURE_FLAGS)
 	@make -j8 install
 
-install-wcpg: $(WCPG_LIBRARIES)
-	$(call shell_info, Installing $(B)WCPG$(N) libraries ($(WCPG_LIBRARIES)) in $(PREFIX)/lib)
-	@cp $(WCPG_LIBRARIES) $(PREFIX)/lib
-
 # -----------------------------------------------------------------------------
 .PHONY: pagsuite
 # Optimization tools for the (pipelined) multiple constant multiplication
@@ -518,7 +518,7 @@ install-wcpg: $(WCPG_LIBRARIES)
 # -----------------------------------------------------------------------------
 PAGSUITE_GIT := https://gitlab.com/kumm/pagsuite.git
 PAGSUITE_SOURCE_DIR := $(BUILD_DEPENDENCIES_SOURCE_DIR)/pagsuite
-PAGSUITE_BINARY_DIR := $(BUILD_DEPENDENCIES_BINARY_DIR)/pagsuite
+PAGSUITE_BINARY_DIR := $(BUILD_DEPENDENCIES_BINARY_DIR)
 PAGSUITE_LIBRARIES += $(PAGSUITE_BINARY_DIR)/lib/libpag.$(dylib)
 PAGSUITE_LIBRARIES += $(PAGSUITE_BINARY_DIR)/lib/libpag.$(dylib).0
 PAGSUITE_LIBRARIES += $(PAGSUITE_BINARY_DIR)/lib/libpag.$(dylib).2.1.0
@@ -538,10 +538,6 @@ $(PAGSUITE_LIBRARIES) &: $(SCALP_LIBRARIES)
 	       -DCMAKE_INSTALL_PREFIX=$(PAGSUITE_BINARY_DIR)	\
 	       $(CMAKE_BUILD_TYPE)
 	@cmake --build build --target install
-
-install-pagsuite: $(PAGSUITE_LIBRARIES)
-	$(call shell_info, Installing $(B)PAGSuite$(N) libraries ($(PAGSUITE_LIBRARIES)) in $(PREFIX))
-	@cp $(PAGSUITE_LIBRARIES) $(PREFIX)/lib
 
 # -----------------------------------------------------------------------------
 .PHONY: nvc
@@ -568,7 +564,6 @@ $(NVC):
 # -----------------------------------------------------------------------------
 .PHONY: dependencies
 # -----------------------------------------------------------------------------
-
 # PAGSuite needs scalp anyway.
 #FLOPOCO_DEPENDENCIES += scalp
 FLOPOCO_DEPENDENCIES += $(WCPG_LIBRARIES)
@@ -584,42 +579,97 @@ dependencies: $(FLOPOCO_DEPENDENCIES)
 # -----------------------------------------------------------------------------
 .PHONY: flopoco
 # -----------------------------------------------------------------------------
-
-FLOPOCO := $(MKROOT)/build/bin/flopoco
 flopoco: $(FLOPOCO)
 
-$(FLOPOCO): $(FLOPOCO_DEPENDENCIES)
+ifeq ($(FRESH_INSTALL), TRUE) # ----------------------------------------
+# The following commands are only executed in the case of a fresh
+# flopoco installation. This prevents displaying the looong FloPoCo 
+# list of operators every time a re-make is done.
+define epilogue # ------------------------------------------------------
+	$(call shell_info, Now running $(B)FloPoCo$(N))
+	$(FLOPOCO) 
+	$(call shell_ok, If you saw the command-line help of FloPoCo - Welcome!)
+endef # ----------------------------------------------------------------
+endif
+
+$(FLOPOCO) &: $(FLOPOCO_DEPENDENCIES)
 	$(call shell_info, Now building $(B)FloPoCo$(N))
-	@cmake -B build -G$(CMAKE_GENERATOR)	    \
-	       -DWCPG_LOCAL=$(WCPG_BINARY_DIR)	    \
-	       -DSCALP_LOCAL=$(SCALP_BINARY_DIR)    \
-	       -DPAG_LOCAL=$(PAGSUITE_BINARY_DIR)   \
-	       -DCMAKE_INSTALL_PREFIX=$(PREFIX)	    \
+	@cmake -B build -G$(CMAKE_GENERATOR) \
+           -DCMAKE_PREFIX_PATH=$(BUILD_DEPENDENCIES_BINARY_DIR) \
+	       -DCMAKE_INSTALL_PREFIX=$(DESTDIR) \
 	       $(CMAKE_BUILD_TYPE)
-	@cmake --build build -j 8
-	$(call shell_info, Adding 'flopoco' $(B)symlink$(N)' in repository's root directory)
+	@cmake --build build || exit;
+	$(call shell_info, Adding 'flopoco' $(B)symlink$(N) in build directory)
 	@ln -fs $(FLOPOCO) $(MKROOT)/build
 	$(call shell_info, Building the $(B)HTML documentation$(N) in doc/web)
 	$(FLOPOCO) BuildHTMLDoc
-	$(call shell_info, Now running $(B)FloPoCo$(N))
-	$(FLOPOCO)
 	$(call shell_info, Generating and installing $(B)bash autocompletion$(N) file)
 	$(FLOPOCO) BuildAutocomplete
-	$(call shell_ok, If you saw the command-line help of FloPoCo - Welcome!)
+	$(call epilogue)
+	
+# -----------------------------------------------------------------------------
+.ONESHELL:
+.PHONY: install-dependencies
+# -----------------------------------------------------------------------------
+install-dependencies: 
+	$(call shell_info, Now installing $(B)flopoco dependencies$(N) in $(DESTDIR))
+	cp -r $(BUILD_DEPENDENCIES_BINARY_DIR)/* $(DESTDIR)
+
+# -----------------------------------------------------------------------------
+.ONESHELL:
+.PHONY: uninstall-dependencies
+# -----------------------------------------------------------------------------
+
+define find_file_with_suffix
+    $(shell find $(BUILD_DEPENDENCIES_BINARY_DIR) -type f,l,d -name '$(1)')
+endef
+
+INSTALLED_FILES += $(call find_file_with_suffix,*.a)
+INSTALLED_FILES += $(call find_file_with_suffix,*.la)
+INSTALLED_FILES += $(call find_file_with_suffix,*.so)
+INSTALLED_FILES += $(call find_file_with_suffix,*.so.*)
+INSTALLED_FILES += $(call find_file_with_suffix,*.h)
+INSTALLED_FILES += $(call find_file_with_suffix,*.hpp)
+INSTALLED_FILES += $(call find_file_with_suffix,*.cmake)
+
+INSTALLED_FILES += $(call find_file_with_suffix,omcm)
+INSTALLED_FILES += $(call find_file_with_suffix,oscm)
+INSTALLED_FILES += $(call find_file_with_suffix,osr)
+INSTALLED_FILES += $(call find_file_with_suffix,pag_fusion)
+INSTALLED_FILES += $(call find_file_with_suffix,rpag)
+INSTALLED_FILES += $(call find_file_with_suffix,scalp)
+INSTALLED_FILES += $(call find_file_with_suffix,scip)
+INSTALLED_FILES += $(call find_file_with_suffix,blockmemshell)
+INSTALLED_FILES += $(call find_file_with_suffix,dijkstra)
+INSTALLED_FILES += $(call find_file_with_suffix,lpi)
+INSTALLED_FILES += $(call find_file_with_suffix,objscip)
+INSTALLED_FILES += $(call find_file_with_suffix,pagsuite)
+INSTALLED_FILES += $(call find_file_with_suffix,ScaLP)
+INSTALLED_FILES += $(call find_file_with_suffix,symmetry)
+INSTALLED_FILES += $(call find_file_with_suffix,tclique)
+INSTALLED_FILES += $(call find_file_with_suffix,tinycthread)
+INSTALLED_FILES += $(call find_file_with_suffix,tpi)
+
+INSTALLED_FILES_PREFIX = $(foreach file,$(INSTALLED_FILES),     \
+    $(subst $(BUILD_DEPENDENCIES_BINARY_DIR),$(realpath $(DESTDIR)),$(file)) \
+)
+
+# $(call static_info, installed: $(INSTALLED_FILES_PREFIX))
+
+uninstall-dependencies: 
+	$(call shell_info, Now uninstalling $(B)flopoco dependencies$(N) in $(DESTDIR))
+	@rm -rf $(INSTALLED_FILES_PREFIX)
 
 # -----------------------------------------------------------------------------
 .ONESHELL:
 .PHONY: install
 # -----------------------------------------------------------------------------
-ifeq ($(INSTALL_TYPE), symlink) # ---------------------------------------------
+ifeq ($(INSTALL_TYPE), symlink) # -----------------------------------------------
 install: $(FLOPOCO)
-	$(call shell_info, Installing $(B)flopoco symlink$(N) in $(PREFIX))
-	@ln -fs $(FLOPOCO) $(PREFIX)/bin
+	$(call shell_info, Installing $(B)flopoco symlink$(N) in $(DESTDIR)/bin)
+	@ln -fs $(FLOPOCO) $(DESTDIR)/bin
 else # ------------------------------------------------------------------------
-install: $(FLOPOCO) install-pagsuite	\
-		    install-wcpg	\
-		    install-scalp	\
-		    install-scip
+install: $(FLOPOCO) install-dependencies
 	@cd $(MKROOT)
 	@cmake --build build --target install
 endif
