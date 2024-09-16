@@ -44,42 +44,42 @@ find_package(PkgConfig)
 pkg_check_modules(PC_GMP QUIET gmp)
 
 find_path(GMP_INCLUDE_DIR
-  NAMES gmp.h
-  PATHS ${PC_GMP_INCLUDE_DIRS}
-  DOC "Path of gmp.h, the include file for GNU GMP library"
+    NAMES gmp.h
+    PATHS ${PC_GMP_INCLUDE_DIRS}
+    DOC "Path of gmp.h, the include file for GNU GMP library"
 )
 
-FIND_LIBRARY(GMP_LIBRARY
-  NAMES gmp gmp.lib
-  PATHS ${PC_GMP_LIBRARY_DIRS}
-  DOC "Directory of the GMP library"
+find_library(GMP_LIBRARY
+    NAMES gmp gmp.lib
+    PATHS ${PC_GMP_LIBRARY_DIRS}
+    DOC "Directory of the GMP library"
 )
 
 set(GMP_VERSION ${PC_GMP_VERSION})
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(
-  GMP
-  FOUND_VAR GMP_FOUND 
-  REQUIRED_VARS
-    GMP_LIBRARY
-    GMP_INCLUDE_DIR
-  VERSION_VAR GMP_VERSION
+    GMP
+    FOUND_VAR GMP_FOUND
+    REQUIRED_VARS
+        GMP_LIBRARY
+        GMP_INCLUDE_DIR
+    VERSION_VAR GMP_VERSION
 )
 
-if(GMP_FOUND)
-  set(GMP_LIBRARIES ${GMP_LIBRARY})
-  set(GMP_INCLUDE_DIRS ${GMP_INCLUDE_DIR})
-  set(GMP_DEFINITIONS ${PC_GMP_FLAGS_OTHER})
+if (GMP_FOUND)
+    set(GMP_LIBRARIES ${GMP_LIBRARY})
+    set(GMP_INCLUDE_DIRS ${GMP_INCLUDE_DIR})
+    set(GMP_DEFINITIONS ${PC_GMP_FLAGS_OTHER})
 endif()
 
 if (GMP_FOUND AND NOT TARGET GMP::GMP)
-  add_library(GMP::GMP UNKNOWN IMPORTED)
-  set_target_properties(GMP::GMP PROPERTIES 
-    IMPORTED_LOCATION "${GMP_LIBRARY}"
-    INTERFACE_COMPILE_OPTIONS "${PC_GMP_FLAGS_OTHER}"
-    INTERFACE_INCLUDE_DIRECTORIES "${GMP_INCLUDE_DIR}"
-  )
+    add_library(GMP::GMP UNKNOWN IMPORTED)
+    set_target_properties(GMP::GMP PROPERTIES
+        IMPORTED_LOCATION "${GMP_LIBRARY}"
+        INTERFACE_COMPILE_OPTIONS "${PC_GMP_FLAGS_OTHER}"
+        INTERFACE_INCLUDE_DIRECTORIES "${GMP_INCLUDE_DIR}"
+    )
 endif()
 
 mark_as_advanced(GMP_INCLUDE_DIR GMP_LIBRARY)

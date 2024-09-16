@@ -44,43 +44,43 @@ find_package(PkgConfig)
 pkg_check_modules(PC_Sollya QUIET sollya)
 
 find_path(Sollya_INCLUDE_DIR
-  NAMES sollya.h
-  PATHS ${PC_Sollya_INCLUDE_DIRS}
-  DOC "Path of sollya.h, the include file for GNU Sollya library"
+    NAMES sollya.h
+    PATHS ${PC_Sollya_INCLUDE_DIRS}
+    DOC "Path of sollya.h, the include file for GNU Sollya library"
 )
 
-FIND_LIBRARY(Sollya_LIBRARY
-  NAMES libsollya.so libsollya.dylib
-  PATHS ${PC_Sollya_LIBRARY_DIRS}
-  DOC "Directory of the Sollya library"
+find_library(Sollya_LIBRARY
+    NAMES libsollya.so libsollya.dylib
+    PATHS ${PC_Sollya_LIBRARY_DIRS}
+    DOC "Directory of the Sollya library"
 )
 
 set(Sollya_VERSION ${PC_Sollya_VERSION})
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(
-  Sollya
-  FOUND_VAR Sollya_FOUND 
-  REQUIRED_VARS
-    Sollya_LIBRARY
-    Sollya_INCLUDE_DIR
-  VERSION_VAR Sollya_VERSION
+    Sollya
+    FOUND_VAR Sollya_FOUND
+    REQUIRED_VARS
+        Sollya_LIBRARY
+        Sollya_INCLUDE_DIR
+    VERSION_VAR Sollya_VERSION
 )
 
-if(Sollya_FOUND)
-  set(Sollya_LIBRARIES ${Sollya_LIBRARY})
-  set(Sollya_INCLUDE_DIRS ${Sollya_INCLUDE_DIR})
-  set(Sollya_DEFINITIONS ${PC_Sollya_FLAGS_OTHER})
+if (Sollya_FOUND)
+    set(Sollya_LIBRARIES ${Sollya_LIBRARY})
+    set(Sollya_INCLUDE_DIRS ${Sollya_INCLUDE_DIR})
+    set(Sollya_DEFINITIONS ${PC_Sollya_FLAGS_OTHER})
 endif()
 
 if (Sollya_FOUND AND NOT TARGET Sollya::Sollya)
-  find_package(MPFI REQUIRED)
-  add_library(Sollya::Sollya UNKNOWN IMPORTED)
-  set_target_properties(Sollya::Sollya PROPERTIES 
-    IMPORTED_LOCATION "${Sollya_LIBRARY}"
-    INTERFACE_COMPILE_OPTIONS "${PC_Sollya_FLAGS_OTHER}"
-    INTERFACE_INCLUDE_DIRECTORIES "${Sollya_INCLUDE_DIR}"
-  )
+    find_package(MPFI REQUIRED)
+    add_library(Sollya::Sollya UNKNOWN IMPORTED)
+    set_target_properties(Sollya::Sollya PROPERTIES
+        IMPORTED_LOCATION "${Sollya_LIBRARY}"
+        INTERFACE_COMPILE_OPTIONS "${PC_Sollya_FLAGS_OTHER}"
+        INTERFACE_INCLUDE_DIRECTORIES "${Sollya_INCLUDE_DIR}"
+    )
   target_link_libraries(Sollya::Sollya INTERFACE MPFI::MPFI)
 endif()
 
