@@ -163,9 +163,8 @@ namespace flopoco
 		getSignalByName("Y0")->setTableAttributes(tableAttributes);
 		vhdl << tab << declare("Y1", wOut) << " <= Y0; -- for the possible blockram register" << endl;
 
-		if (!logicTable)//  && getTarget()->registerLargeTables())
+		if (!logicTable && isSequential())//  && getTarget()->registerLargeTables())
 			{ // force a register so that a blockRAM can be infered
-				setSequential();
 				schedule();
 				int cycleY0 = getCycleFromSignal("Y0");
 				getSignalByName("Y1")->setSchedule(cycleY0 + 1, 0);
