@@ -1,10 +1,7 @@
 #ifndef Kintex7_HPP
 #define Kintex7_HPP
-#include "flopoco/Target.hpp"
-#include <iostream>
-#include <sstream>
-#include <vector>
 
+#include "flopoco/Target.hpp"
 
 namespace flopoco{
 

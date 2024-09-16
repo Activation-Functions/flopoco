@@ -8,8 +8,10 @@ find_package(MPFR REQUIRED)
 find_package(Sollya)
 
 add_library(hileco SHARED)
-target_include_directories(hileco PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
-target_link_libraries(hileco PUBLIC GMPXX::GMPXX MPFR::MPFR)
+target_include_directories(hileco PUBLIC 
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> 
+  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+target_link_libraries(hileco PUBLIC GMPXX::GMPXX MPFR::MPFR hwtargets)
 
 if (${Sollya_FOUND})
   target_link_libraries(hileco PUBLIC Sollya::Sollya)

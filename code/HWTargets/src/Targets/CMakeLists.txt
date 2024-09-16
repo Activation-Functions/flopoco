@@ -1,4 +1,4 @@
-add_hileco_src(
+add_hwtargets_src(
 	Kintex7.cpp
 	ManualPipeline.cpp
 	StratixV.cpp

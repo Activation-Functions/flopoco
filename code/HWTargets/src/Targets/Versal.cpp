@@ -11,12 +11,8 @@
   All rights reserved.
 */
 
-#include <iostream>
-#include <sstream>
 
 #include "flopoco/Targets/Versal.hpp"
-#include "flopoco/utils.hpp"
-
 
 using namespace std;
 

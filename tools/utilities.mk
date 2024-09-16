@@ -85,3 +85,10 @@ endif
 #$(call static_info, OS_VERSION_ID = $(OS_VERSION_ID))
 #$(call static_info, OS_VERSION = $(OS_VERSION))
 #$(call static_info, OS_ID = $(OS_ID))
+
+define prompt
+@read -p "Please $(B)confirm$(N) [y/$(B)N$(N)]: " confirm;                  \
+if [ $$confirm = "y" ] || [ $$confirm = "Y" ]; then                         \
+     $(1)
+fi
+endef

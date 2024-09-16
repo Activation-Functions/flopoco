@@ -16,7 +16,6 @@
 #include <sstream>
 
 #include "flopoco/Targets/StratixV.hpp"
-#include "flopoco/utils.hpp"
 
 using namespace std;
 
