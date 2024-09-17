@@ -373,16 +373,17 @@ namespace flopoco{
 		return result;
 	}
 
-	int sizeInBits(mpz_class number)
+	int sizeInBits(mpz_class n)
 	{
-	  if(number == 1) return 0;
-		mpz_class po2 = 1;
-		int result = 0;
-		while (po2 <= number) {
-			po2 *= 2;
-			result++;
+		if(n<0) {
+		 throw "sizeInBits: positive argument required";
 		}
-		return result;
+		int size=0;
+		while(n>0) {
+			n=n>>1;
+			size++;
+		}
+		return size;
 	}
 
 	mpz_class popcnt(mpz_class number)
