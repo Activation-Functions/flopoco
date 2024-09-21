@@ -286,11 +286,6 @@ namespace flopoco{
     { // The substantial unit tests
 			for (auto formatIn : IEEEFloatFormat::getStandardFormats()) {
 				for (auto formatOut : IEEEFloatFormat::getStandardFormats()) {
-					if (formatIn.wE > formatOut.wE) {
-						// not implemented yet
-						continue;
-					}
-
 					paramList.clear();
 					paramList.push_back(make_pair("wEIn", to_string(formatIn.wE)));
 					paramList.push_back(make_pair("wFIn", to_string(formatIn.wF)));
