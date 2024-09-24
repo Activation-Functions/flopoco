@@ -9,7 +9,7 @@ FPAdd,9,9,9,100.0,Stable,n/a,Undefined
 FPComparator,3,3,3,100.0,Stable,n/a,Undefined
 FPConstDiv,6,6,6,100.0,Stable,n/a,Undefined
 FPConstMult,9,9,9,100.0,Stable,n/a,Undefined
-FPConstMultRational,6,6,6,100.0,Pass,933576e4697f37ae5be558d369e8f22f3c9897c4,Stable
+FPConstMultRational,6,6,6,100.0,Stable,933576e4697f37ae5be558d369e8f22f3c9897c4,Stable
 FPDiv,3,3,3,100.0,Stable,n/a,Undefined
 FPExp,3,3,3,100.0,Stable,eba5cc552795ea5319a924b6819d9d62417f8e6b,Break
 FPLog,3,3,3,100.0,Stable,eba5cc552795ea5319a924b6819d9d62417f8e6b,Break
@@ -91,4 +91,4 @@ TestBench,0,0,0,0.0,Stable,n/a,Undefined
 TutorialOperator,0,0,0,0.0,Stable,n/a,Undefined
 UniformPiecewisePolyApprox,0,0,0,0.0,Stable,n/a,Undefined
 VaryingPiecewisePolyApprox,0,0,0,0.0,Stable,n/a,Undefined
-Total,240,240,240,100.0,Pass,933576e4697f37ae5be558d369e8f22f3c9897c4,Stable
+Total,240,240,240,100.0,Stable,933576e4697f37ae5be558d369e8f22f3c9897c4,Stable
