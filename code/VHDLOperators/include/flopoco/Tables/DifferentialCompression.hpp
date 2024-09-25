@@ -1,8 +1,7 @@
-#ifndef DIFFERENTIAL_COMPRESSION_HPP
-#define DIFFERENTIAL_COMPRESSION_HPP
+#pragma once
 
 #include "flopoco/Operator.hpp"
-#include "TableCostModel.hpp"
+#include "flopoco/Tables/TableCostModel.hpp"
 
 namespace flopoco {
 	class DifferentialCompression {
@@ -84,4 +83,3 @@ namespace flopoco {
 																		int logicTable=0);
 	};
 }
-#endif
