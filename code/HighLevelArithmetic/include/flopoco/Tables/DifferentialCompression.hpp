@@ -1,6 +1,22 @@
 #pragma once
+#include <vector>
+//#include <set>
+//#include <map>
+//#include <memory>
+#include <iostream>
+//#include <fstream>
+#include <string>
+//#include <sstream>
+#include <gmpxx.h>
+//#include <float.h>
+//#include <utility>
 
-#include "flopoco/Operator.hpp"
+#include "flopoco/report.hpp"
+#include "flopoco/utils.hpp"
+
+using namespace std;
+
+#include "flopoco/Target.hpp"
 #include "flopoco/Tables/TableCostModel.hpp"
 
 namespace flopoco {
@@ -62,24 +78,8 @@ namespace flopoco {
 		 */
 		size_t subsamplingShift() const;
 
-		/**  Computes the parameters of the addition, then inserts the corresponding VHDL in Operator op. */
-		void insertAdditionVHDL(OperatorPtr op, string actualOutputName, string subsamplingOutName, string diffOutputName);
-
 
 		string report() const;
 
-		/** This is a drop-in  replacement for Table::newUniqueInstance.
-			It will instantiate two tables and an adder, therefore will be suboptimal if the table output goes to a bit heap
-		 * @param[in] op            The Operator that will be the parent of this Table (usually "this")
-		 * @param[in] actualInput   The actual input name
-		 * @param[in] actualOutput  The actual input name
-		 * @param[in] values        The vector of mpz_class values to be passed to the Table constructor
-		 returns the report
-		 */
-		static string newUniqueInstance(OperatorPtr op,
-																		string actualInput, string actualOutput,
-																		vector<mpz_class> values, string name,
-																		int wIn = -1, int wOut = -1,
-																		int logicTable=0);
 	};
 }

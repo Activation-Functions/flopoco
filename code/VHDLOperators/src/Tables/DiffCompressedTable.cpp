@@ -43,7 +43,9 @@ namespace flopoco
     // generate VHDL for diff table
     TableOperator::newUniqueInstance(this, "X", diffOut, diff_comp.diffs, getName() + "_diff", wIn, diff_comp.diffWordSize, _logicTable);
 
-    diff_comp.insertAdditionVHDL(this, "fullOut", subsamplingOut, diffOut);
+    DifferentialCompressionHelper diffCompObject;
+    diffCompObject.insertAdditionVHDL(this, diff_comp, "fullOut", subsamplingOut, diffOut); // Hopefully this does what I want ?
+
     vhdl << tab << "Y <= fullOut;" << endl;
   }
 

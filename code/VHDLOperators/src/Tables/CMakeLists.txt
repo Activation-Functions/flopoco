@@ -1,6 +1,6 @@
 add_flopocolib_src(
 	DiffCompressedTable.cpp
-	DifferentialCompression.cpp
+	DifferentialCompressionHelper.cpp
 	# DualTable.cpp
 	TableOperator.cpp
 )

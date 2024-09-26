@@ -2,6 +2,7 @@
 #define DIFF_COMPRESSED_TABLE_HPP
 
 #include "flopoco/Tables/DifferentialCompression.hpp"
+#include "flopoco/Tables/DifferentialCompressionHelper.hpp"
 #include "flopoco/Tables/Table.hpp"
 #include "flopoco/Tables/TableOperator.hpp"
 
