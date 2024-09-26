@@ -1,5 +1,4 @@
-#ifndef TABLECOSTMODEL_HPP
-#define TABLECOSTMODEL_HPP
+#pragma once
 
 #include <array>
 #include <functional>
@@ -32,5 +31,3 @@ namespace flopoco {
 
 	bool setGlobalCostModel(std::string const & key);
 }
-
-#endif // TABLECOSTMODEL_HPP
