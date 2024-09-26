@@ -17,7 +17,7 @@
 
 #include "flopoco/FixFunctions/FixFunctionByTable.hpp"
 #include "flopoco/FixFunctions/FixFunction.hpp"
-#include "flopoco/FixFunctions/FixFunctionEmulator.hpp"
+#include "flopoco/FixFunctions/FixFunctionHelper.hpp"
 #include "flopoco/FixFunctions/SNAFU.hpp"
 #include "flopoco/IntMult/FixMultAdd.hpp"
 

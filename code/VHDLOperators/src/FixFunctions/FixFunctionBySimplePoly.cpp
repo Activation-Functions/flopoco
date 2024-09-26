@@ -30,7 +30,7 @@ Error analysis: see FixFunctionByPiecewisePoly.cpp
 #include <mpfr.h>
 
 #include "flopoco/FixFunctions/FixFunctionBySimplePoly.hpp"
-#include "flopoco/FixFunctions/FixFunctionEmulator.hpp"
+#include "flopoco/FixFunctions/FixFunctionHelper.hpp"
 #include "flopoco/FixFunctions/FixHornerEvaluator.hpp"
 #include "flopoco/utils.hpp"
 
@@ -196,56 +196,8 @@ namespace flopoco{
 
 	TestList FixFunctionBySimplePoly::unitTest(int testLevel)
 	{
-		// the static list of mandatory tests
-		TestList testStateList;
-		vector<pair<string,string>> paramList;
-		vector<string> functionList;
-
-		functionList.push_back("sin(x)");
-		functionList.push_back("exp(x)");
-		functionList.push_back("log(x/2+1)");
-		
-    if(testLevel >= TestLevel::SUBSTANTIAL)
-    { // The substantial unit tests
-			for (size_t i=0; i<functionList.size(); i++) {
-					// first deg 2 and 3, 15 bits, exhaustive test, then deg 5 for 25 bits 
-					string f = functionList[i];
-					paramList.push_back(make_pair("f",f));
-					paramList.push_back(make_pair("plainVHDL","true"));
-					paramList.push_back(make_pair("lsbOut","-15"));
-					paramList.push_back(make_pair("lsbIn","-15"));
-					paramList.push_back(make_pair("TestBench n=","-2"));
-					testStateList.push_back(paramList);
-					paramList.clear();
-					
-					paramList.push_back(make_pair("f",f));
-					paramList.push_back(make_pair("plainVHDL","true"));
-					paramList.push_back(make_pair("lsbOut","-24"));
-					paramList.push_back(make_pair("lsbIn","-24"));
-					testStateList.push_back(paramList);
-					paramList.clear();
-
-					paramList.push_back(make_pair("f",f));
-					paramList.push_back(make_pair("plainVHDL","true"));
-					paramList.push_back(make_pair("lsbOut","-30"));
-					paramList.push_back(make_pair("lsbIn","-30"));
-					testStateList.push_back(paramList);
-					paramList.clear();
-
-					paramList.push_back(make_pair("f",f));
-					paramList.push_back(make_pair("plainVHDL","true"));
-					paramList.push_back(make_pair("lsbOut","-32"));
-					paramList.push_back(make_pair("lsbIn","-32"));
-					testStateList.push_back(paramList);
-					paramList.clear();
-				}
-	}
-		else     
-		{
-				// finite number of random test computed out of testLevel
-		}	
-
-		return testStateList;
+		REPORT(DETAIL, "Starting unit test generation");
+		return generateFixFunctionUnitTest(testLevel, 1);
 	}
 
 
