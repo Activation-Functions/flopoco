@@ -397,9 +397,9 @@ namespace flopoco{
 				else { // This error never appears during autotest, there is something surprising here
 					THROWERROR("Fixme! compressedCos.subsamplingIndexSize != compressedSin.subsamplingIndexSize");
 				}
-
-				compressedCos.insertAdditionVHDL(this, "CosPiA", "CosPiASubsampling", "CosPiADiff");
-				compressedSin.insertAdditionVHDL(this, "SinPiA", "SinPiASubsampling", "SinPiADiff");
+				DifferentialCompressionHelper diffCompObject;
+				diffCompObject.insertAdditionVHDL(this, compressedCos, "CosPiA", "CosPiASubsampling", "CosPiADiff"); // Hopefully this does what I want ?
+				diffCompObject.insertAdditionVHDL(this, compressedSin, "SinPiA", "SinPiASubsampling", "SinPiADiff");
 			}
 
 			else {			// if(target->tableCompression()
