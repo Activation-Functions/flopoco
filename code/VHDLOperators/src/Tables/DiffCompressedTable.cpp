@@ -1,8 +1,5 @@
 #include "flopoco/Tables/DiffCompressedTable.hpp"
 
-#include "flopoco/Tables/TableOperator.hpp"
-
-
 namespace flopoco
 {
 
@@ -43,7 +40,8 @@ namespace flopoco
     // generate VHDL for diff table
     TableOperator::newUniqueInstance(this, "X", diffOut, diff_comp.diffs, getName() + "_diff", wIn, diff_comp.diffWordSize, _logicTable);
 
-    diff_comp.insertAdditionVHDL(this, "fullOut", subsamplingOut, diffOut);
+    LDTCinsertAdditionVHDL(this, diff_comp, "fullOut", subsamplingOut, diffOut);
+
     vhdl << tab << "Y <= fullOut;" << endl;
   }
 
@@ -81,4 +79,24 @@ namespace flopoco
     auto diffLutCost = lutcost(diff_comp.diffIndexSize, diff_comp.diffWordSize);
     auto subsamplingLutCost = lutcost(diff_comp.subsamplingIndexSize, diff_comp.subsamplingWordSize);
   }
+
+  void LDTCinsertAdditionVHDL(OperatorPtr op, DifferentialCompression t,
+																									 string actualOutputName, string subsamplingOutName,string diffOutputName)
+	{
+		int wIn = t.diffIndexSize;
+		int wOut= t.originalWout;
+		int nonOverlapMSBBits = wOut- t.diffWordSize;
+		int overlapMiddleBits    = t.subsamplingWordSize - nonOverlapMSBBits;
+		REPORT(DETAIL, "*****************" << t.diffWordSize-overlapMiddleBits-1);
+		// TODO an intadder when needed, but this is proably never useful
+		op->vhdl << tab << op->declare(op->getTarget()->adderDelay(t.subsamplingWordSize),
+																	 actualOutputName+"_topbits", t.subsamplingWordSize) << " <= " << subsamplingOutName
+		<< " + (" << zg(nonOverlapMSBBits) << "& (" << diffOutputName << range(t.diffWordSize-1, t.diffWordSize-overlapMiddleBits) << "));" << endl;
+		op->vhdl << tab << op->declare(actualOutputName, wOut) << " <= " << actualOutputName+"_topbits";
+		if(t.diffWordSize-overlapMiddleBits-1 >=0 ) {
+			op->vhdl << " & (" <<diffOutputName << range(t.diffWordSize-overlapMiddleBits-1,0) << ")";
+		}
+		op->vhdl << ";" << endl;
+	}
+  
 }  // namespace flopoco

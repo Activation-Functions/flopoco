@@ -398,8 +398,8 @@ namespace flopoco{
 					THROWERROR("Fixme! compressedCos.subsamplingIndexSize != compressedSin.subsamplingIndexSize");
 				}
 
-				compressedCos.insertAdditionVHDL(this, "CosPiA", "CosPiASubsampling", "CosPiADiff");
-				compressedSin.insertAdditionVHDL(this, "SinPiA", "SinPiASubsampling", "SinPiADiff");
+				LDTCinsertAdditionVHDL(this, compressedCos, "CosPiA", "CosPiASubsampling", "CosPiADiff");
+				LDTCinsertAdditionVHDL(this, compressedSin, "SinPiA", "SinPiASubsampling", "SinPiADiff");
 			}
 
 			else {			// if(target->tableCompression()
