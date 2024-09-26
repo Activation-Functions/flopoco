@@ -2,7 +2,6 @@
 #define DIFF_COMPRESSED_TABLE_HPP
 
 #include "flopoco/Tables/DifferentialCompression.hpp"
-#include "flopoco/Tables/DifferentialCompressionHelper.hpp"
 #include "flopoco/Tables/Table.hpp"
 #include "flopoco/Tables/TableOperator.hpp"
 
@@ -32,8 +31,6 @@ namespace flopoco {
 		DiffCompressedTable(OperatorPtr parentOp, Target* target, vector<mpz_class> _values, string name="",
 					int _wIn = -1, int _wOut = -1, int _logicTable = 0, int _minIn = -1, int _maxIn = -1);
 
-
-
 		/** Drop-in replacement for Table::newUniqueInstance
 		 * @param[in] op            The Operator that will be the parent of this Table (usually "this")
 		 * @param[in] actualInput   The actual input name
@@ -51,5 +48,11 @@ namespace flopoco {
 
 		DifferentialCompression diff_comp;
 	};
+
+	/**  Computes the parameters of the addition, then inserts the corresponding VHDL in Operator op.
+	 * Is outside of class so it can be used in FixSinCosPoly
+	 */
+	void LDTCinsertAdditionVHDL(OperatorPtr op, DifferentialCompression t, string actualOutputName, string subsamplingOutName, string diffOutputName);
+
 }
 #endif
