@@ -73,6 +73,7 @@ enum class Method {
   PlainTable,
   MultiPartite,
   Horner,
+  PiecewiseHorner1,
   PiecewiseHorner2,
   PiecewiseHorner3,
 };
@@ -81,6 +82,7 @@ static const map<string, Method> methodMap = {
   {"plaintable", Method::PlainTable},
   {"multipartite", Method::MultiPartite},
   {"horner", Method::Horner},
+  {"piecewisehorner1", Method::PiecewiseHorner1},
   {"piecewisehorner2", Method::PiecewiseHorner2},
   {"piecewisehorner3", Method::PiecewiseHorner3},
   {"auto", Method::Auto},
@@ -109,7 +111,8 @@ static inline const string methodOperator(Method m)
   case Method::Horner:
     return "FixFunctionBySimplePoly";
   case Method::MultiPartite:
-    // return "FixFunctionByMultipartiteTable";
+    return "FixFunctionByMultipartiteTable";
+  case Method::PiecewiseHorner1:
   case Method::PiecewiseHorner2:
   case Method::PiecewiseHorner3:
     return "FixFunctionByPiecewisePoly";

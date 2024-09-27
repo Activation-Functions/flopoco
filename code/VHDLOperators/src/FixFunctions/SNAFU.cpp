@@ -303,11 +303,15 @@ namespace flopoco
       break;
     }
     case Method::MultiPartite: {
-      params["d"] = "1";
+      // params["d"] = "1";
       break;
     }
     case Method::Horner: {
       // FIXME: Make Horner work
+      break;
+    }
+    case Method::PiecewiseHorner1: {
+      params["d"] = "1";
       break;
     }
     case Method::PiecewiseHorner2: {
@@ -483,7 +487,7 @@ namespace flopoco
     "wOut(int): number of bits of the output; "
     "expensiveSymmetry(bool)=false: whether to add a special case for the input -1 when symmetry is used as 1 is not a representable fixed point;"
     "inputScale(real)=8.0: the input scaling factor: the 2^wIn input values are mapped on the interval[-inputScale, inputScale) ; "
-    "method(string)=auto: approximation method, among \"PlainTable\",\"MultiPartite\", \"Horner\", \"PiecewiseHorner2\", \"PiecewiseHorner3\", "
+    "method(string)=auto: approximation method, among \"PlainTable\",\"MultiPartite\", \"Horner\", \"PiecewiseHorner1\", \"PiecewiseHorner2\", \"PiecewiseHorner3\", "
     "\"auto\" ;"
     "adhocCompression(int)=-1: 1: subtract the base function ReLU to implement only the non-linear part. 0: do nothing. -1: automatic;",
     "",
