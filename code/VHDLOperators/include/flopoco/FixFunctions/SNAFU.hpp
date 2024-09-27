@@ -32,6 +32,8 @@ enum ActivationFunction {
   GeLU_P,
   ELU,
   ELU_P,
+  InvExp,
+  InvExp_P,  
 };
 
 static const map<string, ActivationFunction> functionMap = {
@@ -47,6 +49,8 @@ static const map<string, ActivationFunction> functionMap = {
   {"elu_p", ELU_P},
   {"silu", SiLU},
   {"silu_p", SiLU_P},
+  {"invexp", InvExp},
+  {"invexp_p", InvExp_P},
 };
 
 static inline const ActivationFunction functionFromString(const string s)
@@ -212,6 +216,15 @@ static const map<ActivationFunction, FunctionData> activationFunction = {
       .deltaFunction = Delta::ReLU,
       .scaleFactor = 1.0,                     //
     }},
+  {InvExp,
+    FunctionData{
+      .name = "InvExp",
+      .longName = "Inverse Exponential",
+      .formula = "exp(-X)",  // textbook
+      .signedOut = false,           // output unsigned
+      .parity = Parity::None,
+      .scaleFactor = 1.0,          //
+    }},
 
   // Derivatives
   {Sigmoid_P,
@@ -279,6 +292,15 @@ static const map<ActivationFunction, FunctionData> activationFunction = {
       .signedDelta = true,
       .scaleFactor = 0x1.20fffp0,  // Function is a derivative, so we need to take into account the inputScale
       .derivative = true,
+    }},
+  {InvExp_P, // This is probably stupid to have
+    FunctionData{
+      .name = "InvExp",
+      .longName = "Inverse Exponential",
+      .formula = "-exp(-X)",  // textbook
+      .signedOut = true,           // output signed (always negative)
+      .parity = Parity::None,
+      .scaleFactor = 1.0,          //
     }},
 };
 

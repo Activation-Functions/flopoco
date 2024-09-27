@@ -478,7 +478,7 @@ namespace flopoco
     "Simple Neural Activation Function Unit, without reinventing the wheel",
     "Hidden",  // some day: FunctionApproximation ?
     "Also see generic options",
-    "f(string): function of interest, among \"Tanh\", \"Sigmoid\", \"ReLU\", \"GELU\", \"ELU\", \"SiLU\" (case-insensitive);"
+    "f(string): function of interest, among \"Tanh\", \"Sigmoid\", \"ReLU\", \"GELU\", \"ELU\", \"SiLU\", \"InvExp\" (case-insensitive);"
     "wIn(int): number of bits of the input ;"
     "wOut(int): number of bits of the output; "
     "expensiveSymmetry(bool)=false: whether to add a special case for the input -1 when symmetry is used as 1 is not a representable fixed point;"
