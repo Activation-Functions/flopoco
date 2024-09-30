@@ -33,7 +33,7 @@ enum ActivationFunction {
   ELU,
   ELU_P,
   InvExp,
-  InvExp_P,  
+  InvExp_P,
 };
 
 static const map<string, ActivationFunction> functionMap = {
@@ -224,9 +224,9 @@ static const map<ActivationFunction, FunctionData> activationFunction = {
       .name = "InvExp",
       .longName = "Inverse Exponential",
       .formula = "exp(-X)",  // textbook
-      .signedOut = false,           // output unsigned
+      .signedOut = false,    // output unsigned
       .parity = Parity::None,
-      .scaleFactor = 1.0,          //
+      .scaleFactor = 1.0,    //
     }},
 
   // Derivatives
@@ -296,14 +296,14 @@ static const map<ActivationFunction, FunctionData> activationFunction = {
       .scaleFactor = 0x1.20fffp0,  // Function is a derivative, so we need to take into account the inputScale
       .derivative = true,
     }},
-  {InvExp_P, // This is probably stupid to have
+  {InvExp_P,                       // This is probably stupid to have
     FunctionData{
       .name = "InvExp",
       .longName = "Inverse Exponential",
       .formula = "-exp(-X)",  // textbook
-      .signedOut = true,           // output signed (always negative)
+      .signedOut = true,      // output signed (always negative)
       .parity = Parity::None,
-      .scaleFactor = 1.0,          //
+      .scaleFactor = 1.0,     //
     }},
 };
 
@@ -315,15 +315,7 @@ namespace flopoco
 
   class SNAFU : public Operator {
     public:
-    SNAFU(OperatorPtr parentOp,
-      Target* target,
-      string f,
-      int wIn,
-      int wOut,
-      string method,
-      double inputScale,
-      int adhocCompression,
-      bool expensiveSymmetry);
+    SNAFU(OperatorPtr parentOp, Target* target, string f, int wIn, int wOut, string method, double inputScale, int deltaRelu, bool expensiveSymmetry);
 
     void emulate(TestCase* tc);
 
@@ -332,7 +324,7 @@ namespace flopoco
     int wIn;
     int wOut;
     double inputScale;
-    Compression adhocCompression;
+    Compression deltaRelu;
     bool expensiveSymmetry;
     string sollyaDeltaFunction;  // when we use compression
     FixFunction* f;

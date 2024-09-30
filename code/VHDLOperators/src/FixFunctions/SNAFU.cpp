@@ -98,16 +98,9 @@ static inline string output(size_t n)
 
 namespace flopoco
 {
-  SNAFU::SNAFU(OperatorPtr parentOp_,
-    Target* target_,
-    string fIn,
-    int wIn,
-    int wOut,
-    string methodIn,
-    double inputScale,
-    int adhocCompression_,
-    bool expensiveSymmetry)
-      : Operator(parentOp_, target_), adhocCompression(static_cast<Compression>(adhocCompression_))
+  SNAFU::SNAFU(
+    OperatorPtr parentOp_, Target* target_, string fIn, int wIn, int wOut, string methodIn, double inputScale, int deltaRelu_, bool expensiveSymmetry)
+      : Operator(parentOp_, target_), deltaRelu(static_cast<Compression>(deltaRelu_))
   {
     // Check sanity of inputs
     if(inputScale <= 0) {
@@ -143,16 +136,16 @@ namespace flopoco
       if(e > 0) lsbOut += e;  // We only reduce precision when the output can get bigger than 1
     }
 
-    // adhocCompression is to use the difference to a known function to obtain smaller output values
-    if((adhocCompression == Compression::Enabled) && (fd.deltaFunction == Delta::None)) {
+    // deltaRelu is to use the difference to a known function to obtain smaller output values
+    if((deltaRelu == Compression::Enabled) && (fd.deltaFunction == Delta::None)) {
       // the user asked to compress a function that is not compressible
       REPORT(LogLevel::MESSAGE, fd.longName << " has no simple delta to a fast function (ReLU or ReLU'), attempting to compress anyway." << endl);
-      // adhocCompression = Compression::Disabled;
+      // deltaRelu = Compression::Disabled;
     }
 
-    if(adhocCompression == Compression::Auto) {
+    if(deltaRelu == Compression::Auto) {
       // The compression is only enabled for functions that have a delta
-      adhocCompression = static_cast<Compression>(fd.deltaFunction != Delta::None);
+      deltaRelu = static_cast<Compression>(fd.deltaFunction != Delta::None);
     }
 
     if(fd.incompatibleMethods.find(method) != fd.incompatibleMethods.end()) {
@@ -162,7 +155,7 @@ namespace flopoco
 
     // Tackle symmetry, the symmetry is considered after reducing the function all the way, i.e. after delta and offset manipulations
     const bool cond = fd.offset != 0.0 || fd.deltaFunction == Delta::None;
-    const bool enableSymmetry = fd.parity != Parity::None && (!cond || adhocCompression == Compression::Enabled);
+    const bool enableSymmetry = fd.parity != Parity::None && (!cond || deltaRelu == Compression::Enabled);
 
     // Process the function definition based on what we know
     const string scaleString = "(" + to_string(inputScale) + "*@)";
@@ -216,7 +209,7 @@ namespace flopoco
     correctlyRounded = false;  // default is faithful
 
     // Only compute the delta function if one is defined
-    if(adhocCompression == Compression::Enabled && fd.deltaFunction != Delta::None) {
+    if(deltaRelu == Compression::Enabled && fd.deltaFunction != Delta::None) {
       function = &delta;  // The function to really approximate is the delta one, the rest is only tricks
     } else {
       // Respect the whishes of the user
@@ -236,7 +229,7 @@ namespace flopoco
 
     REPORT(LogLevel::MESSAGE, "Method is " << methodIn);
 
-    if(adhocCompression == Compression::Enabled) {
+    if(deltaRelu == Compression::Enabled) {
       REPORT(LogLevel::MESSAGE,
         "To plot the function with its delta function,"
           << " copy-paste the following lines in Sollya:" << endl
@@ -278,7 +271,7 @@ namespace flopoco
       return;
     }
 
-    if(adhocCompression == Compression::Enabled && fd.deltaFunction != Delta::None) {
+    if(deltaRelu == Compression::Enabled && fd.deltaFunction != Delta::None) {
       if(wIn != wOut) {
         throw(string("Too lazy so far to support wIn<>wOut in case of ad-hoc compression "));
       };
@@ -299,7 +292,7 @@ namespace flopoco
     case Method::PlainTable: {
       // addComment("This function is correctly rounded");
       // When using compression, the best we can guarantee is faithful rounding
-      correctlyRounded = adhocCompression == Compression::Disabled;
+      correctlyRounded = deltaRelu == Compression::Disabled;
       break;
     }
     case Method::MultiPartite: {
@@ -379,7 +372,7 @@ namespace flopoco
     REPORT(LogLevel::MESSAGE, paramString);
 
     OperatorPtr op = newInstance(methodOperator(method),
-      fd.name + (adhocCompression == Compression::Enabled ? "_delta_SNAFU" : "_SNAFU"),
+      fd.name + (deltaRelu == Compression::Enabled ? "_delta_SNAFU" : "_SNAFU"),
       paramString,
       "X => " + input(in),
       "Y => " + output(out));
@@ -393,7 +386,7 @@ namespace flopoco
       vhdl << tab << declare("E", wOut - C->width());
       auto E = getSignalByName("E");
 
-      if((adhocCompression == Compression::Enabled && fd.signedDelta) || (adhocCompression == Compression::Disabled && fd.signedOut)) {
+      if((deltaRelu == Compression::Enabled && fd.signedDelta) || (deltaRelu == Compression::Disabled && fd.signedOut)) {
         vhdl << " <= " << E->valueToVHDL(0) << " when " << C->getName() << of(C->width() - 1) << " = '0' else " << E->valueToVHDL(-1) << ";" << endl;
       } else {
         vhdl << " <= " << E->valueToVHDL(0) << ";" << endl;
@@ -416,7 +409,7 @@ namespace flopoco
       // TODO: Take into account potential offsets
     }
 
-    if(adhocCompression == Compression::Enabled && fd.deltaFunction != Delta::None) {
+    if(deltaRelu == Compression::Enabled && fd.deltaFunction != Delta::None) {
       // Reconstruct the function
       size_t d = out;
       size_t f = ++out;
@@ -463,16 +456,16 @@ namespace flopoco
     int wIn, wOut;
     double inputScale;
     string fIn, methodIn;
-    int adhocCompression;
+    int deltaRelu;
     bool expensiveSymmetry;
     ui.parseString(args, "f", &fIn);
     ui.parseInt(args, "wIn", &wIn);
     ui.parseInt(args, "wOut", &wOut);
     ui.parseString(args, "method", &methodIn);
     ui.parseFloat(args, "inputScale", &inputScale);
-    ui.parseInt(args, "adhocCompression", &adhocCompression);
+    ui.parseInt(args, "deltaRelu", &deltaRelu);
     ui.parseBoolean(args, "expensiveSymmetry", &expensiveSymmetry);
-    return new SNAFU(parentOp, target, fIn, wIn, wOut, methodIn, inputScale, adhocCompression, expensiveSymmetry);
+    return new SNAFU(parentOp, target, fIn, wIn, wOut, methodIn, inputScale, deltaRelu, expensiveSymmetry);
   }
 
 
@@ -487,9 +480,10 @@ namespace flopoco
     "wOut(int): number of bits of the output; "
     "expensiveSymmetry(bool)=false: whether to add a special case for the input -1 when symmetry is used as 1 is not a representable fixed point;"
     "inputScale(real)=8.0: the input scaling factor: the 2^wIn input values are mapped on the interval[-inputScale, inputScale) ; "
-    "method(string)=auto: approximation method, among \"PlainTable\",\"MultiPartite\", \"Horner\", \"PiecewiseHorner1\", \"PiecewiseHorner2\", \"PiecewiseHorner3\", "
+    "method(string)=auto: approximation method, among \"PlainTable\",\"MultiPartite\", \"Horner\", \"PiecewiseHorner1\", \"PiecewiseHorner2\", "
+    "\"PiecewiseHorner3\", "
     "\"auto\" ;"
-    "adhocCompression(int)=-1: 1: subtract the base function ReLU to implement only the non-linear part. 0: do nothing. -1: automatic;",
+    "deltaRelu(int)=-1: 1: subtract the base function ReLU to implement only the non-linear part. 0: do nothing. -1: automatic;",
     "",
   };
 
