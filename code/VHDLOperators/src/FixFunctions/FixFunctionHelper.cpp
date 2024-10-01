@@ -242,7 +242,7 @@ TestList generateFixFunctionUnitTest(int testLevel, int methodSize) {
 			scaleOutput.push_back(false); // input in [0,1) output in [0.5,1] but we don't want scaleOutput
 			tableCompression.push_back(true);
 
-			function.push_back("acos(x*0.8) - pi/2"); // f negative, decreasing, concave
+			function.push_back("acos(x*0.8)-pi/2"); // f negative, decreasing, concave
 			signedIn.push_back(false);
 			msbOut.push_back(-1);
 			scaleOutput.push_back(false);
