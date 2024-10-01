@@ -132,6 +132,12 @@ TestList generateFixFunctionUnitTest(int testLevel, int methodSize) {
 
 		// Adding more functions
 
+		function.push_back("cosh(x-1.7)+1"); // f positive, decreasing, convex with output in (2;4)
+		signedIn.push_back(false);
+		msbOut.push_back(2);
+		scaleOutput.push_back(false);
+		tableCompression.push_back(true);
+
 		function.push_back("acos(x*0.8)-pi/2"); // f negative, decreasing, concave
 		signedIn.push_back(false);
 		msbOut.push_back(-1);
