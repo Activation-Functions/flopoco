@@ -25,10 +25,10 @@ FixComplexR2Butterfly,0,0,0,0.0,Stable,n/a,Undefined
 FixFFTFullyPA,0,0,0,0.0,Stable,n/a,Undefined
 FixFIR,0,0,0,0.0,Stable,n/a,Undefined
 FixFixConstMult,0,0,0,0.0,Stable,n/a,Undefined
-FixFunctionByMultipartiteTable,4,1,1,25.0,Stable,8d1e31905e761577d44212cb26db24f9879de726,Stable
-FixFunctionByPiecewisePoly,4,4,4,100.0,Pass,1ebd381c4f23e45e5ad6a8ec4ef3cf1e0d23d2d8,Break
-FixFunctionBySimplePoly,4,4,4,100.0,Pass,1ebd381c4f23e45e5ad6a8ec4ef3cf1e0d23d2d8,Up
-FixFunctionByTable,4,4,4,100.0,Pass,1ebd381c4f23e45e5ad6a8ec4ef3cf1e0d23d2d8,Break
+FixFunctionByMultipartiteTable,4,2,1,25.0,Stable,d802da13749fc8338a1e79c9d69e5302d3f3e361,Stable
+FixFunctionByPiecewisePoly,4,4,4,100.0,Stable,1ebd381c4f23e45e5ad6a8ec4ef3cf1e0d23d2d8,Break
+FixFunctionBySimplePoly,4,4,4,100.0,Stable,1ebd381c4f23e45e5ad6a8ec4ef3cf1e0d23d2d8,Up
+FixFunctionByTable,4,4,4,100.0,Stable,1ebd381c4f23e45e5ad6a8ec4ef3cf1e0d23d2d8,Break
 FixHalfSine,0,0,0,0.0,Stable,n/a,Undefined
 FixIIR,1,1,1,100.0,Stable,n/a,Undefined
 FixIIRShiftAdd,0,0,0,0.0,Stable,n/a,Undefined
@@ -91,4 +91,4 @@ TestBench,0,0,0,0.0,Stable,n/a,Undefined
 TutorialOperator,0,0,0,0.0,Stable,n/a,Undefined
 UniformPiecewisePolyApprox,0,0,0,0.0,Stable,n/a,Undefined
 VaryingPiecewisePolyApprox,0,0,0,0.0,Stable,n/a,Undefined
-Total,256,253,253,98.8281,Up,1ebd381c4f23e45e5ad6a8ec4ef3cf1e0d23d2d8,Stable
+Total,256,254,253,98.8281,Stable,d802da13749fc8338a1e79c9d69e5302d3f3e361,Up
