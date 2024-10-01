@@ -52,11 +52,6 @@ namespace flopoco{
 		if(finalRounding==false){
 			THROWERROR("FinalRounding=false not implemented yet" );
 		}
-
-		if(signedIn==false){
-			THROWERROR("signedIn=false not implemented yet" );
-		}
-
 		ostringstream name;
 		name<<"FixFunctionBySimplePoly";
 		setNameWithFreqAndUID(name.str());
