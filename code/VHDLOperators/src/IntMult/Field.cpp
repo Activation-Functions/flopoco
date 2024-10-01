@@ -205,7 +205,7 @@ namespace flopoco {
                 char b = '0' + c;
                 line =  string((const char*)&b, 1) + line;
             }
-            cout << line << endl;
+            cerr << line << endl;
         }
     }
 
@@ -236,12 +236,12 @@ namespace flopoco {
     }
 
     void Field::setTruncated(unsigned wOut, unsigned prodWidth, unsigned guardBits, unsigned keepBits,  FieldState& fieldState) {
-        cout << "keepBits " << keepBits << " guardBits " << guardBits << " prod " << prodWidth << " wOut " << wOut <<endl;
+        cerr << "keepBits " << keepBits << " guardBits " << guardBits << " prod " << prodWidth << " wOut " << wOut <<endl;
         ID fieldID = fieldState.getID();
         unsigned int updateMissing = 0;
 
         int t = IntMultiplier::widthOfDiagonalOfRect(wX_, wY_, (int)prodWidth-wOut-guardBits+1, prodWidth) - keepBits;
-        cout << "t=" << t << " diag=" << IntMultiplier::widthOfDiagonalOfRect(wX_, wY_, (int)prodWidth-wOut-guardBits+1, prodWidth) << endl;
+        cerr << "t=" << t << " diag=" << IntMultiplier::widthOfDiagonalOfRect(wX_, wY_, (int)prodWidth-wOut-guardBits+1, prodWidth) << endl;
         for(unsigned int y = 0; y < wY_; y++) {
             for(unsigned int x = 0; x < wX_; x++) {
                 if((x+y) < ((int)prodWidth-wOut-guardBits)){
@@ -249,11 +249,11 @@ namespace flopoco {
                     updateMissing++;
                 } else if((x+y) == ((int)prodWidth-wOut-guardBits)){
                     if((t)?t--:0){
-                        //cout << "NO keepBit at" << x << "," << y << endl;
+                        //cerr << "NO keepBit at" << x << "," << y << endl;
                         field_[y][x] = fieldID;
                         updateMissing++;
                     } else {
-                        //cout << "keepBit at" << x << "," << y << endl;
+                        //cerr << "keepBit at" << x << "," << y << endl;
                     }
                 }
             }
@@ -268,9 +268,9 @@ namespace flopoco {
 
         for(auto v: field_) {
             for(auto c: v) {
-                cout << (c == fieldID || c == baseID_);
+                cerr << (c == fieldID || c == baseID_);
             }
-            cout << endl;
+            cerr << endl;
         }
     }
 }

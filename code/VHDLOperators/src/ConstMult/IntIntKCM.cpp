@@ -399,13 +399,13 @@ namespace flopoco{
 	void IntIntKCM::emulate(TestCase* tc)
 	{
 		mpz_class svX =  tc->getInputValue("X");
-		// cout << "-------------------------"<<endl;
-		// cout << "X="<<unsignedBinary(svX, wIn_);
+		// cerr << "-------------------------"<<endl;
+		// cerr << "X="<<unsignedBinary(svX, wIn_);
 		// bool xneg = false;
 		//x is in 2's complement, so it's value is
 		if(signedIn_) {
 			if ( svX > ( (mpz_class(1)<<(wIn_-1))-1) ){
-				// cout << "X is negative" << endl;
+				// cerr << "X is negative" << endl;
 				// xneg = true;
 				svX = svX - (mpz_class(1)<<wIn_);
 			}
@@ -417,7 +417,7 @@ namespace flopoco{
 		if ( svR < 0)
 			svR = (mpz_class(1)<<wOut_) + svR;
 
-		// cout << "R="<<unsignedBinary(svR, wOut_);
+		// cerr << "R="<<unsignedBinary(svR, wOut_);
 
 		tc->addExpectedOutput("R", svR);
 	}

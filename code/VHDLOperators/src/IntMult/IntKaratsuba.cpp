@@ -407,7 +407,7 @@ namespace flopoco{
 				size++;
 			}
 			int startIndex = i-3;
-			cout << "Operand 0 startIndex="<<startIndex<<" and size is " << size<<endl;
+			cerr << "Operand 0 startIndex="<<startIndex<<" and size is " << size<<endl;
 			
 			vhdl << tab << declare( "top0",  size*(3*chunkSize_)+ (startIndex==2*(chunks-1)?-chunkSize_:0) ) << " <= ";
 			for (int i=startIndex; i>0; i=i-3){
@@ -426,7 +426,7 @@ namespace flopoco{
 				size++;
 			}
 			startIndex = i-3;
-			cout << "Operand 0 startIndex="<<startIndex<<" and size is " << size<<endl;
+			cerr << "Operand 0 startIndex="<<startIndex<<" and size is " << size<<endl;
 
 				
 			vhdl << tab << declare( "top1",  size*(3*chunkSize_) + chunkSize_ + (startIndex==2*(chunks-1)?-chunkSize_:0) ) << " <= ";
@@ -447,7 +447,7 @@ namespace flopoco{
 				size++;
 			}
 			startIndex = i-3;
-			cout << "Operand 0 startIndex="<<startIndex<<" and size is " << size<<endl;
+			cerr << "Operand 0 startIndex="<<startIndex<<" and size is " << size<<endl;
 
 				
 			vhdl << tab << declare( "top2",  size*(3*chunkSize_) + 2*chunkSize_ + (startIndex==2*(chunks-1)?-chunkSize_:0)) << " <= ";

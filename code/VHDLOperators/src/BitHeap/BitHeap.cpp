@@ -756,7 +756,7 @@ namespace flopoco {
 				c = c >> 1;
 				if (h > 0)
 					file << tab << tab << "\\drawdotcol{" << i << "}{" << h << "}" << endl;
-				//          cout << "i=" <<i  << "  "<<  h << endl;
+				//          cerr << "i=" <<i  << "  "<<  h << endl;
 			}
 			file << tab << tab << "\\end{scope}" << endl;
 			file << tab << "\\end{dotdiag}" << endl;

@@ -12,10 +12,10 @@ ostream& operator<<(ostream& flux, pair<int,int> p){
 }
 
 int main(int argc, char** argv){
-	cout << argc << endl;
+	cerr << argc << endl;
 	if(argc < 5){
 		for(int i=1; i<18; i++)
-			cout << uplog2(i) << " ";
+			cerr << uplog2(i) << " ";
 		return 1;
 	}
 	int msbIn = stoi(argv[1]);
@@ -26,14 +26,14 @@ int main(int argc, char** argv){
 	
 	
 	for(int lay=0; lay <= nbLay; lay++){
-		cout << FixFFT::sizeSignalAr(msbIn, lsbIn, lsbOut, nbLay, lay) << " ";
+		cerr << FixFFT::sizeSignalAr(msbIn, lsbIn, lsbOut, nbLay, lay) << " ";
 	}
-	cout << endl;
+	cerr << endl;
 	
 	for(int lay=0; lay <= nbLay; lay++){
-		cout << FixFFT::sizeSignalSfsg(msbIn, lsbIn, lsbOut, nbLay, lay) << " ";
+		cerr << FixFFT::sizeSignalSfsg(msbIn, lsbIn, lsbOut, nbLay, lay) << " ";
 	}
-	cout << endl;
+	cerr << endl;
 
 	return 0;
 }

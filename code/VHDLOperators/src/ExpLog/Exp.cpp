@@ -104,7 +104,7 @@ namespace flopoco{
 			if((h>=(1<<27)) || l>=512 || h<0 || l<0)
 				REPORT(LogLevel::MESSAGE, "Ouch!!!!!" <<"x=" << x << " " << xs << "    " << h << " " << l );
 
-			//cout << x << "\t" << h << "\t" << l <<endl;
+			//cerr << x << "\t" << h << "\t" << l <<endl;
 			mpfr_clears(yh, yl, a, one, NULL);
 
 			result.push_back(l + (h<<sizeExpZPart));
@@ -144,7 +144,7 @@ namespace flopoco{
 
 			// debug
 			//			if((h>=(1<<27)) || l>=512 || h<0 || l<0)
-			// cout  <<"z=" << z << " h=" << h <<endl;
+			// cerr  <<"z=" << z << " h=" << h <<endl;
 
 			mpfr_clears(mpz, mpy, one, NULL);
 
@@ -181,9 +181,9 @@ namespace flopoco{
 			mpfr_get_z(h.get_mpz_t(), mpy,  GMP_RNDN);
 
 			// debug
-			// cout  <<"x=" << x << " h=" << h <<endl;
+			// cerr  <<"x=" << x << " h=" << h <<endl;
 
-			//cout << x << "\t" << h << "\t" << l <<endl;
+			//cerr << x << "\t" << h << "\t" << l <<endl;
 			mpfr_clears(mpz, mpy, one, NULL);
 
 			result.push_back(h);
@@ -217,7 +217,7 @@ namespace flopoco{
 			if((h>=(mpz_class(1)<<wOut)) || h<0)
 				REPORT(LogLevel::MESSAGE, "Ouch!!!!!" << h);
 
-			//cout << x << "\t" << h << "\t" << l <<endl;
+			//cerr << x << "\t" << h << "\t" << l <<endl;
 			mpfr_clears(y, a, NULL);
 
 			result.push_back(h);

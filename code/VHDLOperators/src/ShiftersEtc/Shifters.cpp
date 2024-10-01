@@ -41,7 +41,7 @@ namespace flopoco{
 		setCopyrightString ( "Bogdan Pasca (2008-2011), Florent de Dinechin (2008-2019)" );
 		srcFileName = "Shifters";
 
-		//cout << endl << "! Shifter::Shifter, wout=" << wR << endl << endl;
+		//cerr << endl << "! Shifter::Shifter, wout=" << wR << endl << endl;
 
 		// -------- Parameter set up -----------------
 		if(wR==-1){ // The user asked a sensible default for wR, here it is
@@ -50,7 +50,7 @@ namespace flopoco{
 			else
 				wR = wX + maxShift;  // no information loss
 		}
-		//cout << endl << "!! Shifter::Shifter, wout=" << wR << endl << endl;
+		//cerr << endl << "!! Shifter::Shifter, wout=" << wR << endl << endl;
 
 		//Sanity check -- there should probably be more
 		if(wR>wX+maxShift)

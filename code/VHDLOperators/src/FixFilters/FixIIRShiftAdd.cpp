@@ -259,7 +259,7 @@ namespace flopoco
       wOut = msbOutIIR - lsbOut + 1;
     else
       wOut = msbOutFIR - lsbOut + 1;
-    cout << "isFir: " << isFIR << endl;
+    cerr << "isFir: " << isFIR << endl;
 
     // ################################### WORD SIZES BACKPATH ###############################################
     if (!isFIR)
@@ -533,7 +533,7 @@ namespace flopoco
       parameters << "wIn=" << wIn << " graph=" << graphb;
       string inPortMaps = "X0=>X";
       REPORT(LogLevel::MESSAGE, "outPortMaps (forward): " << outPortMaps.str())
-      cout << "parameters: " << parameters.str() << endl;
+      cerr << "parameters: " << parameters.str() << endl;
       newInstance("IntConstMultShiftAdd", "IntConstMultShiftAddComponentForward", parameters.str(), inPortMaps,
                   outPortMaps.str());
 
@@ -1015,18 +1015,18 @@ namespace flopoco
       }
 
 #if 0// debugging the emulate
-      cout << "x=" << 	mpfr_get_d(xHistory[currentIndex % n], GMP_RNDN);
-      cout << " //// y=" << 	mpfr_get_d(s,GMP_RNDN) << "  ////// ";
+      cerr << "x=" << 	mpfr_get_d(xHistory[currentIndex % n], GMP_RNDN);
+      cerr << " //// y=" << 	mpfr_get_d(s,GMP_RNDN) << "  ////// ";
       for (uint32_t i=0; i< n; i++)		{
-          cout << "  x" << i<< "c" << i<<  "=" <<
+          cerr << "  x" << i<< "c" << i<<  "=" <<
               mpfr_get_d(xHistory[(currentIndex+i)%n],GMP_RNDN) << "*" << mpfr_get_d(coeffb_mp_f[i],GMP_RNDN);
       }
-      cout << "  // ";
+      cerr << "  // ";
       for (uint32_t i=0; i<m; i++) {
-          cout <<"  ya" << i+1 << "=" <<
+          cerr <<"  ya" << i+1 << "=" <<
               mpfr_get_d(yHistory[(currentIndex +i+1)%(m+2)],GMP_RNDN) << "*" << mpfr_get_d(coeffa_mp_f[i],GMP_RNDN);
       }
-      cout << endl;
+      cerr << endl;
 
 #endif
 
@@ -1041,7 +1041,7 @@ namespace flopoco
       double d = mpfr_get_d(s, GMP_RNDD);
       miny = min(d, miny);
       maxy = max(d, maxy);
-      //		cout << "y=" << d <<  "\t  log2(|y|)=" << (ceil(log2(abs(d)))) << endl;
+      //		cerr << "y=" << d <<  "\t  log2(|y|)=" << (ceil(log2(abs(d)))) << endl;
 
       // make s an integer -- no rounding here
       mpfr_mul_2si(s, s, -lsbOut, GMP_RNDN);
@@ -1839,14 +1839,14 @@ namespace flopoco
       }
       for (uint32_t i = 0; i < m; i++)
       {
-        //		cout << "    k=" << k <<" i=" << i <<  "  yi[storageOffset+ k-i] =" << yi[storageOffset+ k-i] << endl;
+        //		cerr << "    k=" << k <<" i=" << i <<  "  yi[storageOffset+ k-i] =" << yi[storageOffset+ k-i] << endl;
         y -= yi[storageOffset + k - i] * coeffa_d[i];
       }
       k++;
       yi[storageOffset + k] = y;
 
       errorBudget = abs(y);
-      //cout << "k=" << k << " yi=" << y << endl;
+      //cerr << "k=" << k << " yi=" << y << endl;
       if (k >= 300000)
       {
         REPORT(LogLevel::MESSAGE, "computeImpulseResponse: giving up for k=" << k << " with errorBudget still at " << errorBudget << ", it seems hopeless");

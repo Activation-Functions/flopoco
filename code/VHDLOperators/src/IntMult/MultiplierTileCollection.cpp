@@ -13,7 +13,7 @@ using namespace std;
 namespace flopoco {
 
 	MultiplierTileCollection::MultiplierTileCollection(Target *target, BaseMultiplierCollection *bmc, int mult_wX, int mult_wY, bool superTile, bool use2xk, bool useirregular, bool useLUT, bool useDSP, bool useKaratsuba, bool useGenLUT, bool useBooth, bool squarer, bool varSizeDSP):squarer{squarer} {
-        //cout << bmc->size() << endl;
+        //cerr << bmc->size() << endl;
         int tilingWeights[4] = {1, -1, 2, -2};
         for(int w = 0; w < ((squarer)?4:1); w++){
 
@@ -126,7 +126,7 @@ namespace flopoco {
         }
 /*        for(int i = 0; i < (int)bmc->size(); i++)
         {
-            cout << bmc->getBaseMultiplier(i).getType() << endl;
+            cerr << bmc->getBaseMultiplier(i).getType() << endl;
 
             if( (bmc->getBaseMultiplier(i).getType().compare("BaseMultiplierDSPSuperTilesXilinx")) == 0){
                 for(int i = 1; i <= 12; i++) {
@@ -144,7 +144,7 @@ namespace flopoco {
 
         }
 */
-//        cout << MultTileCollection.size() << endl;
+//        cerr << MultTileCollection.size() << endl;
     }
 
     void  MultiplierTileCollection::addBaseTile(Target *target, BaseMultiplierCategory *mult, int tilingWeight) {

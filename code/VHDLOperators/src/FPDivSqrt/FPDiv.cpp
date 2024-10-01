@@ -606,7 +606,7 @@ rox P						or wi is 26 bits long
 	{
 
 		double ro = (double)digitSet/(radix-1);
-		cout<<"Rendundancy coefficiant is rho="<<ro<<endl<<endl;
+		cerr<<"Rendundancy coefficiant is rho="<<ro<<endl<<endl;
 
 		// eq. 5.82 p. 293 of Digital Arithmetic
 		double exactDeltaMin = 1-log2((2*ro - 1)/(2*(digitSet-1)));
@@ -620,20 +620,20 @@ rox P						or wi is 26 bits long
 		double nbBitPlus = -log2((2*ro-1)/2 - (digitSet-ro)*pow(2, 0-deltaMinPlus))+deltaMinPlus+log2(radix);
 		int nbBitP = ceil(nbBitPlus);
 
-		cout<<"There are 2 possibilities :"<<endl;
-		cout<<"-Delta = "<<deltaMinPlus<<", nbBits = "<<nbBitP<<endl;
-		cout<<"-Delta = "<<deltaMinMinus<<", nbBits = "<<nbBitM<<endl<<endl;
+		cerr<<"There are 2 possibilities :"<<endl;
+		cerr<<"-Delta = "<<deltaMinPlus<<", nbBits = "<<nbBitP<<endl;
+		cerr<<"-Delta = "<<deltaMinMinus<<", nbBits = "<<nbBitM<<endl<<endl;
 
 		int delta = (nbBitP-nbBitM < 0 ? deltaMinPlus : deltaMinMinus);
 		int nbBit = (nbBitP-nbBitM < 0 ? nbBitP : nbBitM);
 
-		cout<<"Therefore, the min is for Delta = "<<delta<<endl;
-		cout<<"You'll need "<<nbBit<<" bits : ";
-		cout<<delta-1<<" bits for D and ";
-		cout<<nbBit-delta+1;
-		cout<<" bits for the partial remainder"<<endl;
+		cerr<<"Therefore, the min is for Delta = "<<delta<<endl;
+		cerr<<"You'll need "<<nbBit<<" bits : ";
+		cerr<<delta-1<<" bits for D and ";
+		cerr<<nbBit-delta+1;
+		cerr<<" bits for the partial remainder"<<endl;
 
-		cout<<"Checking for better configurations..."<<endl<<endl;
+		cerr<<"Checking for better configurations..."<<endl<<endl;
 
 		//Optimized parameters for a digit set [-7,7] with a radix 8
 		//delta = 3;
@@ -644,7 +644,7 @@ rox P						or wi is 26 bits long
 		if(checkDistrib(delta, nbBit-delta+1, radix, digitSet))
 		{
 			int gain = 0;
-			cout<<"Optimization found!"<<endl;
+			cerr<<"Optimization found!"<<endl;
 			while(checkDistrib(delta, nbBit-delta, radix, digitSet))
 			{
 				nbBit--;
@@ -657,23 +657,23 @@ rox P						or wi is 26 bits long
 				gain++;
 			}
 
-			cout<<"You lost "<<gain<<" extra bits"<<endl;
+			cerr<<"You lost "<<gain<<" extra bits"<<endl;
 		}
 		else
 		{
-			cout<<"No better configuration found"<<endl;
+			cerr<<"No better configuration found"<<endl;
 		}
 
 
-		cout<<"Final values are : ";
-		cout<<delta-1<<" bits for D and ";
-		cout<<nbBit-delta+1;
-		cout<<" bits for the partial remainder"<<endl;
+		cerr<<"Final values are : ";
+		cerr<<delta-1<<" bits for D and ";
+		cerr<<nbBit-delta+1;
+		cerr<<" bits for the partial remainder"<<endl;
 
 		plotPDDiagram(delta-1, nbBit-delta+1, radix, digitSet);
 		//plotPDDiagram(3, 5, 8, 7);
 
-		cout<<"An implementation of this configuration is approximately "<<estimateCost(nbBit, radix, digitSet)<<" times larger than the actual implementation"<<endl;
+		cerr<<"An implementation of this configuration is approximately "<<estimateCost(nbBit, radix, digitSet)<<" times larger than the actual implementation"<<endl;
 
 	}
 
@@ -902,9 +902,9 @@ rox P						or wi is 26 bits long
 	{
 		int nbIter = (23+6)>>1;
 		double flopocoCost = nbIter*(2*27 + 3);
-		cout<<"FlopocoCost = "<<flopocoCost<<endl;
+		cerr<<"FlopocoCost = "<<flopocoCost<<endl;
 		double res = (nbIter*2/log2(radix))*((ceil(log2(digitSet))+1)*ceil(pow(2, nbBit-6))+27*(1+ceil(pow(2, log2(digitSet)-7))));
-		cout<<"Cost of this configuration = "<<res<<endl;
+		cerr<<"Cost of this configuration = "<<res<<endl;
 		return res/flopocoCost;
 	}
 

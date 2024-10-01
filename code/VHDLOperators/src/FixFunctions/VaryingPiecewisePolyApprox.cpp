@@ -438,7 +438,7 @@ namespace flopoco {
 		ui.parseInt(args, "lsbOut", &lsOut);
 
 		VaryingPiecewisePolyApprox *ppa = new VaryingPiecewisePolyApprox(f, ta, lsIn, lsOut);
-		cout << "Accuracy is " << ppa->approxErrorBound << " ("<< log2(ppa->approxErrorBound) << " bits)";
+		cerr << "Accuracy is " << ppa->approxErrorBound << " ("<< log2(ppa->approxErrorBound) << " bits)";
 
 		return NULL;
 	}

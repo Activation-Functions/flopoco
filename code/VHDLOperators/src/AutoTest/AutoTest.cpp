@@ -184,7 +184,7 @@ public:
             );
         }
         if (unitTestsList.empty())
-            std::cout << "No unitTest method defined" << std::endl;
+            std::cerr << "No unitTest method defined" << std::endl;
     }
 /*
     void registerUnitTests() {
@@ -231,7 +231,7 @@ public:
      * @brief runTests
      */
     void runTests() {
-        std::cout << endl << "Running tests for " << opFact->name() << ":\n";
+        std::cerr << endl << "Running tests for " << opFact->name() << ":\n";
         namespace bp = boost::process;
         if (!fs::create_directory(testRoot)) {
              fs::remove_all(testRoot);
@@ -259,11 +259,11 @@ public:
         for (auto & testCase : tests) {
              auto command = commandLineForTestCase(testCase);
         #if 0  // nice but I had rather see the command line
-             std::cout << "\33[2K\rRunning test " << (id + 1) << " / " << nbTests;
-             std::cout.flush();
+             std::cerr << "\33[2K\rRunning test " << (id + 1) << " / " << nbTests;
+             std::cerr.flush();
              fs::remove(bufferOut);
         #else
-            std::cout << "Running test " << (id + 1) << " / " << nbTests << "    "   << " " << command << endl;
+            std::cerr << "Running test " << (id + 1) << " / " << nbTests << "    "   << " " << command << endl;
         #endif
             detailedFile << id << ", " << name << " " << command << ", ";
             auto flopocoStatus = bp::system(
@@ -315,11 +315,11 @@ public:
                     errname << "nvc_err_" << id;
                     auto dest = testRoot / errname.str();
                     testCase.dumpnvcOut(dest.string());
-                    std::cout << endl << "Failed at simulation step. "
+                    std::cerr << endl << "Failed at simulation step. "
                               << endl << "Log can be found in "
                               << dest.string()
                               << endl;
-                    std::cout << "Command was:" << endl
+                    std::cerr << "Command was:" << endl
                               << name << " "
                               << commandLineForTestCase(testCase) /*nvcLine*/
                               << endl;
@@ -330,11 +330,11 @@ public:
                   errname << "flopoco_err_" << id;
                   auto dest = testRoot / errname.str();
                   testCase.dumpFlopocoOut(dest.string());
-                  std::cout << endl << "Failed at generation step. "
+                  std::cerr << endl << "Failed at generation step. "
                             << endl << "Log can be found in "
                             << dest.string()
                             << endl;
-                  std::cout << "Command was:" << endl
+                  std::cerr << "Command was:" << endl
                             << name << " "
                             << commandLineForTestCase(testCase)
                             << endl;
@@ -443,7 +443,7 @@ AutoTest::AutoTest(string opName, const int testLevel, string output) : testLeve
         path = tmpDirHolder.tmpPath->string();
     }
     fs::create_directories(path);
-    std:cout << "All reporting will be done in "
+    std:cerr << "All reporting will be done in "
              << path << std::endl
     ;
     FactoryRegistry& factRegistry = FactoryRegistry::getFactoryRegistry();
@@ -500,7 +500,7 @@ AutoTest::AutoTest(string opName, const int testLevel, string output) : testLeve
 */
     	// Real run of the tests
     	tester.runTests();
-    	tester.printStats(cout);
+    	tester.printStats(cerr);
     }
     // Build summary.csv and a few global stats
     fs::path summaryFilePath = path / "summary.csv";
@@ -542,10 +542,10 @@ AutoTest::AutoTest(string opName, const int testLevel, string output) : testLeve
                   << "Undefined,"
                   << "n/a,"
                   << "Undefined" << std::endl;
-    cout << "Tests are finished, see summary in " << summaryFilePath.string() << endl;
-    cout << "Total number of tests  " << totalTests << endl;
-    cout << "Code generation OK     " << genOK << endl;
-    cout << "Simulation OK          " << simOK << endl;
+    cerr << "Tests are finished, see summary in " << summaryFilePath.string() << endl;
+    cerr << "Total number of tests  " << totalTests << endl;
+    cerr << "Code generation OK     " << genOK << endl;
+    cerr << "Simulation OK          " << simOK << endl;
 }
 
 /**

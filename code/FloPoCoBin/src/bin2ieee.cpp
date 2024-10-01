@@ -92,6 +92,6 @@ int main(int argc, char* argv[] )
 								0, // enough digits so that number may be read back
 								mpfx, 
 								GMP_RNDN);
-  cout << endl;
+  cerr << endl;
 	
 }

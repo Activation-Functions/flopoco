@@ -161,7 +161,7 @@ namespace flopoco {
 		for (int i = 0; i < N-1; i++) {
 			if (list_to_sort[i].first > list_to_sort[i+1].first) {
 				for (int j = 0; j < N; j++) {
-					cout << j << ", " << (list_to_sort[j].first) << endl;
+					cerr << j << ", " << (list_to_sort[j].first) << endl;
 				}
 				THROWERROR("Sort does not work for those entries");
 				break;

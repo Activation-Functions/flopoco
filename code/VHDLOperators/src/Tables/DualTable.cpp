@@ -142,7 +142,7 @@ namespace flopoco{
 
 		int count=0;
 		for (x = minIn; x <= maxIn; x++) {
-			//cout << x << "  " << y << endl;
+			//cerr << x << "  " << y << endl;
 			y=function(x);
 			array 	<< tab<<tab << "\"" << unsignedBinary(y, wOut)  ;
 			if(x!=maxIn)

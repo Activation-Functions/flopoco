@@ -82,7 +82,7 @@ namespace flopoco
                     if(isSigned && 2*wIn-4 < o) break;
                     declare(target->logicDelay(6) + 9e-10, join("lut", lutnr, "_o"));
                     lut_init lutOp( lutMappings[o]);
-                    //cout << lutOp.get_hex() << endl;
+                    //cerr << lutOp.get_hex() << endl;
                     Xilinx_LUT6 *cur_lut = new Xilinx_LUT6(this,target);
                     cur_lut->setGeneric( "init", lutOp.get_hex() , 64 );
 
@@ -97,7 +97,7 @@ namespace flopoco
                         declare(target->logicDelay(6) + 9e-10, join("lut_n", lutnr, "_o6"));
                         declare(target->logicDelay(6) + 9e-10, join("lut_n", lutnr, "_o5"));
                         lut_init lutOp( lutMappings[o-1], lutMappings[o]);
-                        //cout << lutOp.get_hex() << endl;
+                        //cerr << lutOp.get_hex() << endl;
                         Xilinx_LUT6_2 *cur_lut = new Xilinx_LUT6_2(this,target);
                         cur_lut->setGeneric( "init", lutOp.get_hex() , 64 );
 
@@ -212,7 +212,7 @@ namespace flopoco
     double BaseSquarerLUT::getLUTCost(int x_anchor, int y_anchor, int wMultX, int wMultY, bool signedIO) {
         int wInMax = (signedIO)?(-1)*(1<<(wIn-1)):(1<<wIn)-1;
         int wR = ceil(log2(wInMax*wInMax+1));
-        cout << "wR=" << wR << endl;
+        cerr << "wR=" << wR << endl;
         if(wIn<7){
             return (double)((wIn==6)?7:wIn-1) + wR*getBitHeapCompressionCostperBit();
         } else {

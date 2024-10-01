@@ -446,6 +446,6 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 			}
 		}
 
-		cout << "Total cost: " << totalCost << endl;
+		cerr << "Total cost: " << totalCost << endl;
 	}
 };

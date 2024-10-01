@@ -261,12 +261,12 @@ void FixRealConstMult::emulate(TestCase* tc)
   mpfr_get_z(svRd.get_mpz_t(), mpR, GMP_RNDD);
 	mpfr_get_z(svRu.get_mpz_t(), mpR, GMP_RNDU);
 
-	//		cout << " emulate x="<< svX <<"  before=" << svRd;
+	//		cerr << " emulate x="<< svX <<"  before=" << svRd;
 	if(negativeInput != negativeConstant)		{
 		svRd += (mpz_class(1) << wOut);
 		svRu += (mpz_class(1) << wOut);
 	}
-	//		cout << " emulate after=" << svRd << endl;
+	//		cerr << " emulate after=" << svRd << endl;
 
 	//Border cases
 	if(svRd > (mpz_class(1) << wOut) - 1 )		{

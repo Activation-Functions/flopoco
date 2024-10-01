@@ -105,9 +105,9 @@ namespace flopoco{
 		mpfr_set_si(mpOp2, lsbOut - guardBits, GMP_RNDN);
 
 		mpfr_pow(mpEpsilonMax, mpOp1, mpOp2, GMP_RNDN); //2^(lsbOut-1)
-		ios::fmtflags old_settings = cout.flags();
+		ios::fmtflags old_settings = cerr.flags();
 		REPORT(LogLevel::DETAIL, "Epsilon max=" << std::scientific << mpfr_get_d(mpEpsilonMax, GMP_RNDN));
-		cout.flags(old_settings);
+		cerr.flags(old_settings);
 
     int q=4; // the search range for different integer representations
 
@@ -240,8 +240,8 @@ namespace flopoco{
 			int noOfFullAddersAfterTrunc = IntConstMultShiftAdd_TYPES::getGraphAdderCost(adderGraph, wIn, false, truncationReg);
 			REPORT(LogLevel::DETAIL, "  adder graph after truncation requires " << noOfFullAddersAfterTrunc << " full adders");
 
-//			IntConstMultShiftAdd_TYPES::print_aligned_word_graph(adderGraph, "", wIn, cout);
-//			IntConstMultShiftAdd_TYPES::print_aligned_word_graph(adderGraph, truncationReg, wIn, cout);
+//			IntConstMultShiftAdd_TYPES::print_aligned_word_graph(adderGraph, "", wIn, cerr);
+//			IntConstMultShiftAdd_TYPES::print_aligned_word_graph(adderGraph, truncationReg, wIn, cerr);
 
 			if(is_log_lvl_enabled(LogLevel::VERBOSE))
 			{

@@ -105,7 +105,7 @@ namespace flopoco{
 			fraction = (mpz_class(1) << wF) -1;
 			break;
 		}
-		//		cout << "exponent=" << exponent << " fraction=" << fraction << endl;
+		//		cerr << "exponent=" << exponent << " fraction=" << fraction << endl;
 	}
 
 
@@ -170,14 +170,14 @@ namespace flopoco{
 					 */
 					mp_exp_t exp = mpfr_get_exp(mp)-1;
 
-					//cout << "exp=" << exp <<endl;
+					//cerr << "exp=" << exp <<endl;
 					if(exp + ((1<<(wE-1))-1) <=0) {			// subnormal
 						// TODO manage double rounding to subnormals
 						exponent=0;
 						/* Extract fraction */
 						mpfr_mul_2si(mp, mp, wF-1+((1<<(wE-1))-1), MPFR_RNDN); // TODO exact ? check subnormalise
 						mpfr_get_z(fraction.get_mpz_t(), mp,  MPFR_RNDN);
-						//cout << "subnormal! " << wF + (exp + ((1<<(wE-1))-1)) << " fraction=" << fraction << endl;						
+						//cerr << "subnormal! " << wF + (exp + ((1<<(wE-1))-1)) << " fraction=" << fraction << endl;						
 					}
 					else { // Normal number
 						/* Extract fraction */

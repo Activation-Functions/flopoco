@@ -31,7 +31,7 @@ namespace flopoco {
                 output_weights.push_back(kxy*nr+kxy*xy);
             }
         }
-        //cout << "Karatsuba order " << n << " has " << output_weights.size() << " outputs." << endl;
+        //cerr << "Karatsuba order " << n << " has " << output_weights.size() << " outputs." << endl;
         return output_weights;
     }
 
@@ -45,7 +45,7 @@ namespace flopoco {
                 output_sizes.push_back(41);
             }
         }
-        //cout << "Karatsuba order " << n << " has " << output_weights.size() << " outputs." << endl;
+        //cerr << "Karatsuba order " << n << " has " << output_weights.size() << " outputs." << endl;
         return output_sizes;
     }
 
@@ -107,7 +107,7 @@ namespace flopoco {
         for(int j = 0; j <= n; j++){
             for(int i = 0; i <= j; i++){
                 //protruding_bits = x_anchor+y_anchor+2*kxy*j+wX+wY - wMultX+wMultY;
-                //cout << protruding_bits << endl;
+                //cerr << protruding_bits << endl;
                 //protruding_bits =((protruding_bits < 0)?0:protruding_bits);
                 bits += (wX + wY - protruding_bits);
                 if(i != j) {          //the DSPs that are replaced by Karatsuba contribute with 3 bits to bit heap
@@ -205,7 +205,7 @@ namespace flopoco {
             svR += (a[i]*b[i] << 2*i*kxy);
             for(int j = 0; j < i; j++) {     //karatsuba substitution
                 svR += (((a[j]-a[i])*(b[i]-b[j]) + a[j]*b[j] + a[i]*b[i]) << (j+i)*kxy);
-                //cout << i << " " << " " << j << " " << ((a[j]-a[i])*(b[i]-b[j]) + a[j]*b[j] + a[i]*b[i]) << endl;
+                //cerr << i << " " << " " << j << " " << ((a[j]-a[i])*(b[i]-b[j]) + a[j]*b[j] + a[i]*b[i]) << endl;
             }
         }
 
@@ -219,7 +219,7 @@ namespace flopoco {
 
         int kxy = gcd;
         for(; kxy % wX || kxy % wY; kxy += gcd);
-        cout << "first possible position " << kxy << endl;
+        cerr << "first possible position " << kxy << endl;
 
         srcFileName = "BaseMultiplierDSPKaratsuba";
         ostringstream name;
@@ -229,10 +229,10 @@ namespace flopoco {
 
         IntMultiplier* test = static_cast<IntMultiplier*>(parentOp);
         if(test != nullptr){
-            //cout << "this is a child operator" << endl;
+            //cerr << "this is a child operator" << endl;
             child_op = true;
         } else {
-            //cout << "this is a standalone operator" << endl;
+            //cerr << "this is a standalone operator" << endl;
             bitHeap = new BitHeap(this, 2*kxy*n+wX+wY+3);
             child_op = false;
         }

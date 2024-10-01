@@ -274,16 +274,16 @@ namespace flopoco{
 		// A bit of reporting
 		createPolynomialsReport();
 
-#if 0 // display the coefficients in pgfplot format			cout << "\addplot  coordinates { ";
-		cout << "xmax=" << nbIntervals-1 << endl;
+#if 0 // display the coefficients in pgfplot format			cerr << "\addplot  coordinates { ";
+		cerr << "xmax=" << nbIntervals-1 << endl;
 		for (int k=0; k<=degree; k++) {
-			cout << "\\addplot[only marks, mark=+]  coordinates { ";
+			cerr << "\\addplot[only marks, mark=+]  coordinates { ";
 			for(int i=0; i<nbIntervals; i++) {
-				cout << "(" << i << ", "
+				cerr << "(" << i << ", "
 						 << poly[i]->getCoeff(k)->getConstantAsMPZ()
 						 <<  ") ";
 			}
-			cout << "} ;" << endl
+			cerr << "} ;" << endl
 					 <<  "\\legend{$C_" << k << "$} ;" << endl;
 		}
 #endif
@@ -430,7 +430,7 @@ namespace flopoco{
 		ui.parseInt(args, "d", &d);
 
 		UniformPiecewisePolyApprox *ppa = new UniformPiecewisePolyApprox(f, ta, d);
-		cout << "Accuracy is " << ppa->approxErrorBound << " ("<< log2(ppa->approxErrorBound) << " bits)";
+		cerr << "Accuracy is " << ppa->approxErrorBound << " ("<< log2(ppa->approxErrorBound) << " bits)";
 
 		return NULL;
 	}

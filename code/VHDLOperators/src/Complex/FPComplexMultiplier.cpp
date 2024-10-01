@@ -130,7 +130,7 @@ namespace flopoco{
 			outPortMap(add, "R", "Zi", false);
 			vhdl << instance(add, "ADD_K1AddK2");
 			}catch(std::string str){
-				cout << "execution interrupted: " << str << endl;
+				cerr << "execution interrupted: " << str << endl;
 				exit(1);
 			}
 		}

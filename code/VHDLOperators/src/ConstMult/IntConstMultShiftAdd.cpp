@@ -102,10 +102,10 @@ namespace flopoco {
 
     if(is_log_lvl_enabled(LogLevel::DEBUG))
     {
-      cout  << endl << "-----------------------------------"  << endl;
-      cout  << endl << "Detailed adder graph:"  << endl;
+      cerr  << endl << "-----------------------------------"  << endl;
+      cerr  << endl << "Detailed adder graph:"  << endl;
       adder_graph.print_graph();
-      cout  << endl << "-----------------------------------"  << endl;
+      cerr  << endl << "-----------------------------------"  << endl;
     }
 
     adder_graph.check_and_correct();
@@ -156,10 +156,10 @@ namespace flopoco {
         if(is_log_lvl_enabled(LogLevel::DETAIL))
         {
           for(auto & it : wordSizeMap) {
-            std::cout << it.first.first << ", " << it.first.second << ": ";
+            std::cerr << it.first.first << ", " << it.first.second << ": ";
             for(auto & itV : it.second)
-              std::cout << itV << " ";
-            std::cout << std::endl;
+              std::cerr << itV << " ";
+            std::cerr << std::endl;
           }
         }
 

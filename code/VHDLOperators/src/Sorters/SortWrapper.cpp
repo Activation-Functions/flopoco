@@ -94,7 +94,7 @@ namespace flopoco {
 					outmap << ",sorted_key" << i << "=>" << "sorted_key" << i << "_o";
 					outmap << ",sorted_payload" << i << "=>" << "sorted_index" << i;
 				}
-				cout << param.str() <<endl;
+				cerr << param.str() <<endl;
 
 				OperatorPtr op = newInstance("SortingNetwork", "sort_network", param.str(), inmap.str(), outmap.str());
 				SortingNetwork* op_sort = dynamic_cast<SortingNetwork*>(op);
@@ -126,7 +126,7 @@ namespace flopoco {
 						outmap << ",sorted_payload" << i << "=>" << "sorted_payload" << i << "_o" ;
 					}
 				}
-				cout << param.str() <<endl;
+				cerr << param.str() <<endl;
 
 				OperatorPtr op = newInstance("SortingNetwork", "sort_network", param.str(), inmap.str(), outmap.str());
 				SortingNetwork* op_sort = dynamic_cast<SortingNetwork*>(op);
@@ -140,7 +140,7 @@ namespace flopoco {
 				inmap << ",key" << i << "=>" << "key" << i << "_i";
 				outmap << ",sorted_index" << i << "=>" << "sorted_index" << i;
 			}
-			cout << param.str() <<endl;
+			cerr << param.str() <<endl;
 
 			newInstance("TaoSort", "sort_tao", param.str(), inmap.str(), outmap.str());
 			
@@ -206,7 +206,7 @@ namespace flopoco {
 			for (int i = 0; i < N-1; i++) {
 				if (list_to_sort[i].first > list_to_sort[i+1].first) {
 					for (int j = 0; j < N; j++) {
-						cout << j << ", " << (list_to_sort[j].first) << endl;
+						cerr << j << ", " << (list_to_sort[j].first) << endl;
 					}
 					THROWERROR("Sort does not work for those entries");
 					break;
@@ -260,7 +260,7 @@ namespace flopoco {
 			}
 
 			for (int i = 0; i < N; i++) {
-				//cout << " Calcul pour i = " << i << " : ";
+				//cerr << " Calcul pour i = " << i << " : ";
 				int index = 0;
 				for (int j = 0; j < i; j++) {
 					index += (1 - c_matrix[j][i]);
@@ -278,7 +278,7 @@ namespace flopoco {
 			for (int i = 0; i < N-1; i++) {
 				if (sorted_list[i].first < sorted_list[i+1].first) {
 					for (int j = 0; j < N; j++) {
-						cout << j << ", " << sorted_list[j].first << endl;
+						cerr << j << ", " << sorted_list[j].first << endl;
 					}
 					THROWERROR("Sort does not work for those entries");
 					break;

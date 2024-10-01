@@ -56,7 +56,7 @@ namespace flopoco{
 			if (s >= j->size) // no overlap of bits of Vi<<s and Vj
 				cost_in_full_adders = 0;
 			else
-				cost_in_full_adders = size - s - 1; // -1 because the cout bit is for free    
+				cost_in_full_adders = size - s - 1; // -1 because the cerr bit is for free    
 			rpaglevel = 1+max(i->rpaglevel, j->rpaglevel);
 			rpag << "{'A',[" << n << "],"   << rpaglevel << ","
 				// left child
@@ -68,17 +68,17 @@ namespace flopoco{
 			
 			break;
 		case Sub:      
-			cost_in_full_adders = size - 1; // -1 because the cout bit is for free    
+			cost_in_full_adders = size - 1; // -1 because the cerr bit is for free    
 			break;
 		case RSub:      
 			if (s >= j->size) // no overlap of bits of Vi<<s and Vj
 				cost_in_full_adders = i->size - 1; // still need to negate i
 			else
-				cost_in_full_adders = size - s - 1; // -1 because the cout bit is for free    
+				cost_in_full_adders = size - s - 1; // -1 because the cerr bit is for free    
 			break;
 		case Shift:    cost_in_full_adders = 0; 
 			break;
-		case Neg:      cost_in_full_adders = size -1; // -1 because the cout bit is for free
+		case Neg:      cost_in_full_adders = size -1; // -1 because the cerr bit is for free
 			break;
 		}   
 	

@@ -131,6 +131,6 @@ int main(int argc, char* argv[] )
 								80, // used to be 0: enough digits so that number may be read back but it was a pain for small precisions
 								sig, 
 								MPFR_RNDN);
-  cout << endl;
+  cerr << endl;
   return 0;
 }

@@ -74,12 +74,12 @@ namespace flopoco {
 		}
 
 		else		{
-            //cout << "----------totalPeriod" << totalPeriod << " targetPeriod " << targetPeriod << endl;
+            //cerr << "----------totalPeriod" << totalPeriod << " targetPeriod " << targetPeriod << endl;
 			// Here we split into chunks.
 			double remainingSlack = targetPeriod-maxCP;                                                                 //remaining time to do addition in current period
 			int firstSubAdderSize = getMaxAdderSizeForPeriod(getTarget(), remainingSlack);                       //remaining additions that can be performed in current period
 			int maxSubAdderSize = getMaxAdderSizeForPeriod(getTarget(), targetPeriod);                           //total additions that can be performed in a period
-            //cout << "----------SubAdderSize" << firstSubAdderSize << " MaxSubAdderSize " << maxSubAdderSize << " Adder Delay n1 " << getTarget()->adderDelay(1) << " Adder Delay n2 " << getTarget()->adderDelay(2) << " remainingSlack " << remainingSlack << endl;
+            //cerr << "----------SubAdderSize" << firstSubAdderSize << " MaxSubAdderSize " << maxSubAdderSize << " Adder Delay n1 " << getTarget()->adderDelay(1) << " Adder Delay n2 " << getTarget()->adderDelay(2) << " remainingSlack " << remainingSlack << endl;
 			bool loop=true;
 			int subAdderSize=firstSubAdderSize;                                                                         //the size of the first sub-adder can be as large as there is time left to do the addition in the current period
 			int previousSubAdderSize=0;                                                                                 //keep record of the bits already added for the next iteration

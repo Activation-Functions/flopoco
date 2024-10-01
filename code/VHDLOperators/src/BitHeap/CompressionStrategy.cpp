@@ -951,7 +951,7 @@ namespace flopoco{
                 else
                     adderCin << "\'0\'";
             }
-            cout << "compressionDoneIndex " << compressionDoneIndex << " adderStartIndex " << adderStartIndex << " bh_widhth " << bitheap->width << " bh_msb " << bitheap->msb << endl;
+            cerr << "compressionDoneIndex " << compressionDoneIndex << " adderStartIndex " << adderStartIndex << " bh_widhth " << bitheap->width << " bh_msb " << bitheap->msb << endl;
             //create the signals for the inputs/output of the adder
             bitheap->getOp()->vhdl << endl;
             bitheap->getOp()->vhdl << tab << bitheap->getOp()->declare(adderIn0Name.str(), bitheap->msb-bitheap->lsb-adderStartIndex+1+1)
@@ -1378,7 +1378,7 @@ namespace flopoco{
 	    int max_reached = 0, check_height=adderHeight;
         for(int i=bitheap->width-1; i>=0; i--)
         {
-            //cout << "column=" << i << " height=" << bitheap->bits[i].size() << endl;
+            //cerr << "column=" << i << " height=" << bitheap->bits[i].size() << endl;
             if(bitheap->bits[i].size() > check_height)
             {
               if(!max_reached && bitheap->bits[i].size() <= adderHeight+1 ) //The adder LSB can process adderHeight+1 bits due to the Cin, but not more
@@ -1416,10 +1416,10 @@ namespace flopoco{
             for(unsigned c = 0; c < orderedBits[0].size(); c++) {
                 bh_bit[s][c] = orderedBits[s][c].size();
                 lastMaxHeight = (lastMaxHeight < orderedBits[s][c].size())?orderedBits[s][c].size():lastMaxHeight;
-                //cout << "col=" << c << " height=" << orderedBits[0][c].size() << endl;
+                //cerr << "col=" << c << " height=" << orderedBits[0][c].size() << endl;
                 for(unsigned b = 0; b < orderedBits[s][c].size(); b++) {
                     if(orderedBits[s][c][b]->signal->type() == Signal::SignalType::constantWithDeclaration || orderedBits[s][c][b]->signal->type() == Signal::SignalType::constant) bh_constants[c]++;
-                    //cout << (orderedBits[0][c][b]->signal->getName()) << " is constant " << (orderedBits[0][c][b]->signal->type() == Signal::SignalType::constantWithDeclaration) << endl;
+                    //cerr << (orderedBits[0][c][b]->signal->getName()) << " is constant " << (orderedBits[0][c][b]->signal->type() == Signal::SignalType::constantWithDeclaration) << endl;
                 }
             }
         }
@@ -1437,7 +1437,7 @@ namespace flopoco{
                     tempVector = solution.getCompressorsAtPosition(s, c);
                     for (unsigned j = 0; j < tempVector.size(); j++) {      //for every compressor in current column and stage
                         int cc;
-                        //cout << tempVector[j].first->heights.size() << " " << tempVector[j].first->heights[0] << " " << tempVector[j].first->getStringOfIO() << endl;
+                        //cerr << tempVector[j].first->heights.size() << " " << tempVector[j].first->heights[0] << " " << tempVector[j].first->getStringOfIO() << endl;
                         compr2 << tab <<  "\\draw[fill="<< tikz_colors[color++%N_TIKZ_COLORS] << "!50,opacity=0.75] ("<<-(int)c*0.25L+0.125L<<","<<(coveredBits[s][c]*0.25L)-0.125L<<")  {[rounded corners=2.5pt]";
                         for(cc = 0; cc < (int)tempVector[j].first->heights.size(); cc++){
                             compr2 << "--("<<-(int)(c+cc)*0.25+0.125<<","<<(coveredBits[s][c+cc]+tempVector[j].first->heights[cc])*0.25L-0.125L<<")";

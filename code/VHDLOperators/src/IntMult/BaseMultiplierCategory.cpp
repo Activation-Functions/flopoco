@@ -195,11 +195,11 @@ float BaseMultiplierCategory::shape_utilisation(int shape_x, int shape_y, int wX
         //if the inputs are signed, the left an bottom end of the tiles has to be aligned with the edge the tiled area |_ ,
         // to allow for the correct handling of the signed input vectors, so the DSPs are resized to align with the border.
         if( (wX-m_x_pos-tile_width) < 0){
-            //cout << "tile overlaps left by " << -(wX-m_x_pos-tile_width) << endl;
+            //cerr << "tile overlaps left by " << -(wX-m_x_pos-tile_width) << endl;
             tile_width = tile_width + (wX-m_x_pos-tile_width);
         }
         if((wY-m_y_pos-tile_height) < 0){
-            //cout << "tile overlaps at the bottom by " << -(wY-m_y_pos-tile_height) << endl;
+            //cerr << "tile overlaps at the bottom by " << -(wY-m_y_pos-tile_height) << endl;
             tile_height = tile_height + (wY-m_y_pos-tile_height);
         }
         return Parametrization(tile_width, tile_height, bmCat_, isSignedX_, isSignedY_, false, shape_para_,  output_weights, output_sizes, tilingWeight);
@@ -265,7 +265,7 @@ float BaseMultiplierCategory::shape_utilisation(int shape_x, int shape_y, int wX
 
     double BaseMultiplierCategory::getBitHeapCompressionCostperBit(){
 	    if(target == NULL){
-            cout << "WARNING target not defined in scope of the multiplier tile" << endl;
+            cerr << "WARNING target not defined in scope of the multiplier tile" << endl;
 	        return 0.65;
 	    } else {
 	        return target->getBitHeapCompressionCostperBit();

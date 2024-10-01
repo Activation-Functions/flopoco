@@ -112,13 +112,13 @@ namespace flopoco
         }
         pp_min = ((sum < pp_min) ? sum : pp_min);
         pp_max = ((pp_max < sum) ? sum : pp_max);
-        //cout << y << "," << x << " sum=" << sum << endl;
+        //cerr << y << "," << x << " sum=" << sum << endl;
         tile_trueth_table.push_back(sum);
       }
     }
-    //cout << endl;
+    //cerr << endl;
     if ((x_signed || y_signed) && (n_max == p_max)) used_bits |= (1 << (n_max + 1));
-    //cout << "used bits=" << used_bits << endl;
+    //cerr << "used bits=" << used_bits << endl;
 
     lsb = 0;
     msb = 0;
@@ -133,9 +133,9 @@ namespace flopoco
       {
         wR++;
         out_weights.push_back((1 << n));
-        //cout << out_weights.back() << ";";
+        //cerr << out_weights.back() << ";";
       }
-      //cout << ((used_bits & (1<<n))?1:0) << ",";
+      //cerr << ((used_bits & (1<<n))?1:0) << ",";
     }
     REPORT(LogLevel::VERBOSE, endl);
     REPORT(LogLevel::VERBOSE, "r={" << pp_min << ".." << pp_max << "}" );
@@ -163,14 +163,14 @@ namespace flopoco
     vector<int> n_dependencys(wR);
     for (int i = 0; i < minterms.size(); i++)
     {
-      //cout << "the eq. for out bit n=" << i << " has " << minterms[i].size() << "terms" << endl;
-      //cout << "r" << i << "=";
+      //cerr << "the eq. for out bit n=" << i << " has " << minterms[i].size() << "terms" << endl;
+      //cerr << "r" << i << "=";
       quine_mccluskey(minterms[i], input_size, simplified[i]);
       n_dependencys[i] = count_eq_dependencies(xy_dep_list.first.size(), xy_dep_list.second.size(), simplified[i], xy_dep_list);
       if(LogLevel::VERBOSE <= flopoco::get_log_lvl()) {
-	      cout << "r" << i << "(" << n_dependencys[i] << ")=";
+	      cerr << "r" << i << "(" << n_dependencys[i] << ")=";
 	      print_eq(xy_dep_list.first.size(), xy_dep_list.second.size(), simplified[i], xy_dep_list);
-	      cout << endl;
+	      cerr << endl;
       }
     }
     count_required_LUT(simplified, n_dependencys);
@@ -194,7 +194,7 @@ namespace flopoco
     }
     this->tile_param.setOutputWeights(weights);
     this->tile_param.setOutputSizes(out_sizes);
-    //cout << "the tile has " << weights.size() << " outputs" << endl;
+    //cerr << "the tile has " << weights.size() << " outputs" << endl;
   }
 
 
@@ -209,7 +209,7 @@ namespace flopoco
       {
         if (minterms[i] & (1 << j)) used_inputs++;
       }
-      //cout << "term " << minterms[i] << " no=" << i << " has " << used_inputs << " inputs set to 1." << endl;
+      //cerr << "term " << minterms[i] << " no=" << i << " has " << used_inputs << " inputs set to 1." << endl;
       tuple<int, int, vector<int>, bool> temp = {minterms[i], 0, {i}, false};   //{bit pattern, diff, source list}
       terms[used_inputs].push_back(temp);
     }
@@ -229,10 +229,10 @@ namespace flopoco
           {    //select minterm within the subsequent class
             int diff = (get<0>(level_terms[step_idx][i][j]) ^ get<0>(level_terms[step_idx][i + 1][k])) & ~((step_idx == 0) ? 0 : get<1>(level_terms[step_idx][i][j])), temp = (diff << 1), diffs = 0;
             while (temp) if ((temp >>= 1) & 1) diffs++;                   //count minterms the differ only by one additional bit set from current to next class
-            //cout << "class i=" << i << " j=" << j << " k=" << k << " " << get<0>(level_terms[step_idx][i][j]) << "," << get<0>(level_terms[step_idx][i+1][k]) << " diff=" << (get<0>(level_terms[step_idx][i][j]) ^ get<0>(level_terms[step_idx][i+1][k])) << " diffs=" << diffs << endl;
+            //cerr << "class i=" << i << " j=" << j << " k=" << k << " " << get<0>(level_terms[step_idx][i][j]) << "," << get<0>(level_terms[step_idx][i+1][k]) << " diff=" << (get<0>(level_terms[step_idx][i][j]) ^ get<0>(level_terms[step_idx][i+1][k])) << " diffs=" << diffs << endl;
             if (diffs == 1 && (get<1>(level_terms[step_idx][i][j]) == get<1>(level_terms[step_idx][i + 1][k])))
             {
-              //cout << "found terms " << (get<0>(level_terms[step_idx][i][j])) << " and " << (get<0>(level_terms[step_idx][i+1][k])) << " that differ only by one bit " << diff << " in current=" << i << " and subsequent=" << i+1 << " class with the same ignore mask=" << (get<1>(level_terms[step_idx][i][j])) << endl;
+              //cerr << "found terms " << (get<0>(level_terms[step_idx][i][j])) << " and " << (get<0>(level_terms[step_idx][i+1][k])) << " that differ only by one bit " << diff << " in current=" << i << " and subsequent=" << i+1 << " class with the same ignore mask=" << (get<1>(level_terms[step_idx][i][j])) << endl;
               vector<int> origin_list;
               int n;
               get<3>(level_terms[step_idx][i][j]) = true;     //mark origin term as covered
@@ -315,7 +315,7 @@ namespace flopoco
     //search for dominant columns
     for (int cur_mt = 0; cur_mt < minterms.size(); cur_mt++)
     {            //select minterm
-      //if(covered_minterms[cur_mt]) cout << "col=" << cur_mt << " is already covered" << endl;
+      //if(covered_minterms[cur_mt]) cerr << "col=" << cur_mt << " is already covered" << endl;
       if (covered_minterms[cur_mt]) continue;
       for (int comp_mt = 0; comp_mt < minterms.size(); comp_mt++)
       {        //minterm to compare to
@@ -323,9 +323,9 @@ namespace flopoco
         int cur_set = 0, ref_set = 0;
         for (int pimp = 0; pimp < second_quine_table.size(); pimp++)
         {            //go through the primeimplicants for both minterm to find which is dominant
-          //cout << "c_col=" << cur_mt << " r_col=" << comp_mt << " row=" << pimp << " cpi=" << core_primeimplicants[pimp] << " cur=" << second_quine_table[pimp][cur_mt] << " ref=" << second_quine_table[pimp][comp_mt] << " skip=" << (!second_quine_table[pimp][cur_mt] && second_quine_table[pimp][comp_mt]) << endl;
+          //cerr << "c_col=" << cur_mt << " r_col=" << comp_mt << " row=" << pimp << " cpi=" << core_primeimplicants[pimp] << " cur=" << second_quine_table[pimp][cur_mt] << " ref=" << second_quine_table[pimp][comp_mt] << " skip=" << (!second_quine_table[pimp][cur_mt] && second_quine_table[pimp][comp_mt]) << endl;
           if (core_primeimplicants[pimp]) continue;
-          //cout << "row=" << pimp << " cur=" << second_quine_table[pimp][cur_mt] << " ref=" << second_quine_table[pimp][comp_mt] << " skip=" << (!second_quine_table[pimp][cur_mt] && second_quine_table[pimp][comp_mt]) << endl;
+          //cerr << "row=" << pimp << " cur=" << second_quine_table[pimp][cur_mt] << " ref=" << second_quine_table[pimp][comp_mt] << " skip=" << (!second_quine_table[pimp][cur_mt] && second_quine_table[pimp][comp_mt]) << endl;
           if (!second_quine_table[pimp][cur_mt] && second_quine_table[pimp][comp_mt])
           {
             cur_set = 0;
@@ -339,7 +339,7 @@ namespace flopoco
           if (second_quine_table[pimp][cur_mt] && !second_quine_table[pimp][comp_mt]) cur_set++;
         }
         if (cur_set != 0 && ref_set <= cur_set) covered_minterms[cur_mt] = 1;                      //mark dominant minterm column as covered
-        //if(cur_set != 0 && ref_set<=cur_set) cout << "column=" << cur_mt << " is dominant over col=" << comp_mt << endl;
+        //if(cur_set != 0 && ref_set<=cur_set) cerr << "column=" << cur_mt << " is dominant over col=" << comp_mt << endl;
       }
     }
 
@@ -355,7 +355,7 @@ namespace flopoco
         for (int cur_mt = 0; cur_mt < minterms.size(); cur_mt++)
         {                    //select minterm
           if (covered_minterms[cur_mt]) continue;
-          //cout << "row=" << pimp << " cur=" << second_quine_table[pimp][cur_mt] << " ref=" << second_quine_table[pimp][comp_mt] << " skip=" << (!second_quine_table[pimp][cur_mt] && second_quine_table[pimp][comp_mt]) << endl;
+          //cerr << "row=" << pimp << " cur=" << second_quine_table[pimp][cur_mt] << " ref=" << second_quine_table[pimp][comp_mt] << " skip=" << (!second_quine_table[pimp][cur_mt] && second_quine_table[pimp][comp_mt]) << endl;
           if (!second_quine_table[cur_pimp][cur_mt] && second_quine_table[ref_pimp][cur_mt])
           {
             cur_set = 0;
@@ -369,7 +369,7 @@ namespace flopoco
           if (second_quine_table[cur_pimp][cur_mt] && !second_quine_table[ref_pimp][cur_mt]) cur_set++;
         }
         if (cur_set != 0 && ref_set <= cur_set) skip_primeimplicants[ref_pimp] = 1;                      //mark dominant minterm column as covered
-        //if(cur_set != 0 && ref_set<=cur_set) cout << "row=" << cur_pimp << " is dominant over row=" << ref_pimp << endl;
+        //if(cur_set != 0 && ref_set<=cur_set) cerr << "row=" << cur_pimp << " is dominant over row=" << ref_pimp << endl;
       }
     }
 
@@ -409,22 +409,22 @@ namespace flopoco
         {
           if (temp & (1 << j))
           {
-            //cout << "x" << j;
+            //cerr << "x" << j;
             term.push_back(j + 1);
           }
           else
           {
-            //cout << "!x" << j;
+            //cerr << "!x" << j;
             term.push_back(-(j + 1));
           }
         }
       }
-      //cout << ((pimp < used_primeimplicants.size()-1)?"||":" ");
+      //cerr << ((pimp < used_primeimplicants.size()-1)?"||":" ");
       simplified.push_back(term);
     }
-    //cout << endl;
+    //cerr << endl;
 
-    //cout << endl;
+    //cerr << endl;
   }
 
   int BaseMultiplierXilinxGeneralizedLUT::count_eq_dependencies(int nx, int ny, vector<vector<int>> &eq, pair<vector<int>, vector<int>> &xy_dep_list)
@@ -454,7 +454,7 @@ namespace flopoco
         }
       }
     }
-    //cout << "The equation depends on " << eq_xy_dep_list.first.size()+eq_xy_dep_list.second.size() << " variables" << endl;
+    //cerr << "The equation depends on " << eq_xy_dep_list.first.size()+eq_xy_dep_list.second.size() << " variables" << endl;
     return eq_xy_dep_list.first.size() + eq_xy_dep_list.second.size();
   }
 
@@ -467,14 +467,14 @@ namespace flopoco
         int idx = (((eq[t][v] < 0) ? -1 : 1) * eq[t][v] - 1);
         if (idx < nx)
         {
-          cout << ((eq[t][v] < 0) ? "!" : "") << "x" << xy_dep_list.first[idx] << ((v < eq[t].size() - 1) ? "&&" : "");
+          cerr << ((eq[t][v] < 0) ? "!" : "") << "x" << xy_dep_list.first[idx] << ((v < eq[t].size() - 1) ? "&&" : "");
         }
         else
         {
-          cout << ((eq[t][v] < 0) ? "!" : "") << "y" << xy_dep_list.second[idx - nx] << ((v < eq[t].size() - 1) ? "&&" : "");
+          cerr << ((eq[t][v] < 0) ? "!" : "") << "y" << xy_dep_list.second[idx - nx] << ((v < eq[t].size() - 1) ? "&&" : "");
         }
       }
-      cout << ((t < eq.size() - 1) ? "||" : "");
+      cerr << ((t < eq.size() - 1) ? "||" : "");
     }
   }
 
@@ -548,16 +548,16 @@ namespace flopoco
       }
     }
     if(LogLevel::VERBOSE <= flopoco::get_log_lvl()) {
-	    cout << "could combine " << best_combi.size() << " pairs of eqs " << endl;
+	    cerr << "could combine " << best_combi.size() << " pairs of eqs " << endl;
 	    for (int placed_combi = 0; placed_combi < best_combi.size(); placed_combi++)
-		    cout << best_combi[placed_combi].first << " and " << best_combi[placed_combi].second << ", ";
+		    cerr << best_combi[placed_combi].first << " and " << best_combi[placed_combi].second << ", ";
     }
     int additional_lut = 0; //consider when equation does not fit in a 6LUT
     for (int eq = 0; eq < n_dependencys.size(); eq++) additional_lut += ((5 < n_dependencys[eq]) ? (1 << (n_dependencys[eq] - 6)) : 1);
     luts = additional_lut - best_combi.size();
     cost = luts + wR * 0.65; //getBitHeapCompressionCostperBit(); //Target not yet defined
     efficiency = area / cost;
-    if(LogLevel::VERBOSE <= flopoco::get_log_lvl()) cout << endl << "#6LUTs=" << luts << " cost=" << cost << " eff=" << efficiency << endl << endl;
+    if(LogLevel::VERBOSE <= flopoco::get_log_lvl()) cerr << endl << "#6LUTs=" << luts << " cost=" << cost << " eff=" << efficiency << endl << endl;
     combined_eqs = best_combi;
   }
 
@@ -570,9 +570,9 @@ namespace flopoco
       {
         line = to_string(coverage[x][y]) + line;
       }
-      cout << line << endl;
+      cerr << line << endl;
     }
-    //cout << endl;
+    //cerr << endl;
   }
 
   bool BaseMultiplierXilinxGeneralizedLUT::shapeValid(Parametrization const &param, unsigned x, unsigned y) const
@@ -686,12 +686,12 @@ namespace flopoco
                   if (v == 0)
                   {
                     term = ~lut_in(lutInpMaps[idx]);
-                    if(LogLevel::VERBOSE <= flopoco::get_log_lvl()) cout << ((t != 0) ? "||" : "") << "!i" << lutInpMaps[idx];
+                    if(LogLevel::VERBOSE <= flopoco::get_log_lvl()) cerr << ((t != 0) ? "||" : "") << "!i" << lutInpMaps[idx];
                   }
                   else
                   {
                     term = term & ~lut_in(lutInpMaps[idx]);
-                    if(LogLevel::VERBOSE <= flopoco::get_log_lvl()) cout << "&&!i" << lutInpMaps[idx];
+                    if(LogLevel::VERBOSE <= flopoco::get_log_lvl()) cerr << "&&!i" << lutInpMaps[idx];
                   }
                 }
                 else
@@ -699,12 +699,12 @@ namespace flopoco
                   if (v == 0)
                   {
                     term = lut_in(lutInpMaps[idx]);
-                    if(LogLevel::VERBOSE <= flopoco::get_log_lvl()) cout << ((t != 0) ? "||" : "") << "i" << lutInpMaps[idx];
+                    if(LogLevel::VERBOSE <= flopoco::get_log_lvl()) cerr << ((t != 0) ? "||" : "") << "i" << lutInpMaps[idx];
                   }
                   else
                   {
                     term = term & lut_in(lutInpMaps[idx]);
-                    if(LogLevel::VERBOSE <= flopoco::get_log_lvl()) cout << "&&i" << lutInpMaps[idx];
+                    if(LogLevel::VERBOSE <= flopoco::get_log_lvl()) cerr << "&&i" << lutInpMaps[idx];
                   }
                 }
               }
@@ -717,8 +717,8 @@ namespace flopoco
                 lutop_o5 = lutop_o5 | term;
               }
             }
-            if(LogLevel::VERBOSE <= flopoco::get_log_lvl()) cout << endl;
-            if(LogLevel::VERBOSE <= flopoco::get_log_lvl()) cout << "processing second eq " << combined_eqs[comb_eq].second << endl;
+            if(LogLevel::VERBOSE <= flopoco::get_log_lvl()) cerr << endl;
+            if(LogLevel::VERBOSE <= flopoco::get_log_lvl()) cerr << "processing second eq " << combined_eqs[comb_eq].second << endl;
             for (int t = 0; t < equations[combined_eqs[comb_eq].second].size(); t++)
             {
               lut_op term;
@@ -730,12 +730,12 @@ namespace flopoco
                   if (v == 0)
                   {
                     term = ~lut_in(lutInpMaps[idx]);
-                    if(LogLevel::VERBOSE <= flopoco::get_log_lvl()) cout << ((t != 0) ? "||" : "") << "!i" << lutInpMaps[idx];
+                    if(LogLevel::VERBOSE <= flopoco::get_log_lvl()) cerr << ((t != 0) ? "||" : "") << "!i" << lutInpMaps[idx];
                   }
                   else
                   {
                     term = term & ~lut_in(lutInpMaps[idx]);
-                    if(LogLevel::VERBOSE <= flopoco::get_log_lvl()) cout << "&&!i" << lutInpMaps[idx];
+                    if(LogLevel::VERBOSE <= flopoco::get_log_lvl()) cerr << "&&!i" << lutInpMaps[idx];
                   }
                 }
                 else
@@ -743,12 +743,12 @@ namespace flopoco
                   if (v == 0)
                   {
                     term = lut_in(lutInpMaps[idx]);
-                    if(LogLevel::VERBOSE <= flopoco::get_log_lvl()) cout << ((t != 0) ? "||" : "") << "i" << lutInpMaps[idx];
+                    if(LogLevel::VERBOSE <= flopoco::get_log_lvl()) cerr << ((t != 0) ? "||" : "") << "i" << lutInpMaps[idx];
                   }
                   else
                   {
                     term = term & lut_in(lutInpMaps[idx]);
-                    if(LogLevel::VERBOSE <= flopoco::get_log_lvl()) cout << "&&i" << lutInpMaps[idx];
+                    if(LogLevel::VERBOSE <= flopoco::get_log_lvl()) cerr << "&&i" << lutInpMaps[idx];
                   }
                 }
               }
@@ -761,23 +761,23 @@ namespace flopoco
                 lutop_o6 = lutop_o6 | term;
               }
             }
-            if(LogLevel::VERBOSE <= flopoco::get_log_lvl()) cout << endl;
+            if(LogLevel::VERBOSE <= flopoco::get_log_lvl()) cerr << endl;
 
 
             lut_init lutop(lutop_o5, lutop_o6);
-            //cout << lutop.truth_table() << endl;
+            //cerr << lutop.truth_table() << endl;
             Xilinx_LUT6_2 *cur_lut = new Xilinx_LUT6_2(this, target);
             cur_lut->setGeneric("init", lutop.get_hex(), 64);
 
             if(LogLevel::VERBOSE <= flopoco::get_log_lvl()) {
 		    for (int d = 0; d < xy_dependency_list.first.size(); d++) {
-			    cout << xy_dependency_list.first[d] << ", ";
+			    cerr << xy_dependency_list.first[d] << ", ";
 		    }
-		    cout << endl;
+		    cerr << endl;
 		    for (int d = 0; d < xy_dependency_list.second.size(); d++) {
-			    cout << xy_dependency_list.second[d] << ", ";
+			    cerr << xy_dependency_list.second[d] << ", ";
 		    }
-		    cout << endl;
+		    cerr << endl;
 	    }
 
 	    int cvars = 0;
@@ -824,12 +824,12 @@ namespace flopoco
                 if (v == 0)
                 {
                   term = ~lut_in(lutInpMaps[idx]);
-                  if(LogLevel::VERBOSE <= flopoco::get_log_lvl()) cout << ((t != 0) ? "||" : "") << "!i" << lutInpMaps[idx];
+                  if(LogLevel::VERBOSE <= flopoco::get_log_lvl()) cerr << ((t != 0) ? "||" : "") << "!i" << lutInpMaps[idx];
                 }
                 else
                 {
                   term = term & ~lut_in(lutInpMaps[idx]);
-                  if(LogLevel::VERBOSE <= flopoco::get_log_lvl()) cout << "&&!i" << lutInpMaps[idx];
+                  if(LogLevel::VERBOSE <= flopoco::get_log_lvl()) cerr << "&&!i" << lutInpMaps[idx];
                 }
               }
               else
@@ -837,12 +837,12 @@ namespace flopoco
                 if (v == 0)
                 {
                   term = lut_in(lutInpMaps[idx]);
-                  if(LogLevel::VERBOSE <= flopoco::get_log_lvl()) cout << ((t != 0) ? "||" : "") << "i" << lutInpMaps[idx];
+                  if(LogLevel::VERBOSE <= flopoco::get_log_lvl()) cerr << ((t != 0) ? "||" : "") << "i" << lutInpMaps[idx];
                 }
                 else
                 {
                   term = term & lut_in(lutInpMaps[idx]);
-                  if(LogLevel::VERBOSE <= flopoco::get_log_lvl()) cout << "&&i" << lutInpMaps[idx];
+                  if(LogLevel::VERBOSE <= flopoco::get_log_lvl()) cerr << "&&i" << lutInpMaps[idx];
                 }
               }
             }
@@ -855,7 +855,7 @@ namespace flopoco
               lutop_o6 = lutop_o6 | term;
             }
           }
-          if(LogLevel::VERBOSE <= flopoco::get_log_lvl()) cout << endl;
+          if(LogLevel::VERBOSE <= flopoco::get_log_lvl()) cerr << endl;
 
           lut_init lutop(lutop_o6);
           Xilinx_LUT6 *cur_lut = new Xilinx_LUT6(this, target);
@@ -888,7 +888,7 @@ namespace flopoco
         test = test
         //test = lut_in(0) & lut_in(1) & lut_in(2) & lut_in(3);
         lut_init lutop( test, test1 );
-        cout << lutop.truth_table() << endl;*/
+        cerr << lutop.truth_table() << endl;*/
 
   }
 

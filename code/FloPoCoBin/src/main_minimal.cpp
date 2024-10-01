@@ -53,7 +53,7 @@ int main(int argc, char* argv[] )
 	
 	
 		cerr << endl<<"Final report:"<<endl;
-		op->outputFinalReport(cout, 0);
+		op->outputFinalReport(cerr, 0);
 	}
 	catch(string &e){
 		cerr << "FloPoCo raised the following exception: " << e << endl;

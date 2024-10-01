@@ -71,5 +71,5 @@ int main(int argc, char* argv[] )
   mpfr_init2 (mpx, wF+1);
   mpfr_set_str (mpx, argv[3], 10, GMP_RNDN);
 
-  cout<< fp2bin(mpx, wE, wF) << endl;
+  cerr<< fp2bin(mpx, wE, wF) << endl;
 }

@@ -257,7 +257,7 @@ namespace flopoco{
 		IEEENumber num(wEI, wFI, svX);
 		num.getMPFR(x);
 
-		//cout << "Double input to emulate: " << xx.d << endl;
+		//cerr << "Double input to emulate: " << xx.d << endl;
 
 		/* Round to output precision */
 		mpfr_t r;

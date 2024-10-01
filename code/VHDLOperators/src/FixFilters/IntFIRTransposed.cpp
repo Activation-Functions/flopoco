@@ -394,7 +394,7 @@ namespace flopoco {
 //#define ENUMERATE_ALL_VALUES
 #ifdef ENUMERATE_ALL_VALUES //the old interface
 #ifdef DEBUG
-//    cout << "!!! the old interface !!!" << endl;
+//    cerr << "!!! the old interface !!!" << endl;
 #endif
     tc->addExpectedOutput ("Y", signedToBitVector(y, wOut));
 
@@ -409,7 +409,7 @@ namespace flopoco {
     }
 #else
 #ifdef DEBUG
-//    cout << "!!! the new interface !!! [" << y-errorBudget << " " << y+errorBudget<< "]" <<endl;
+//    cerr << "!!! the new interface !!! [" << y-errorBudget << " " << y+errorBudget<< "]" <<endl;
 #endif
     if(wOut != wOutFull)
     {

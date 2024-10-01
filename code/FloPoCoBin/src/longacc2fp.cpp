@@ -70,7 +70,7 @@ int main(int argc, char* argv[] )
   int l=0;
   while (*p){
     if(*p!='0' && *p!='1') {
-      cout <<endl << *p <<endl;
+      cerr <<endl << *p <<endl;
       cerr<<"ERROR: expecting a binary string, got "<<argv[6]<<endl;
       usage(argv[0]);
     }
@@ -114,6 +114,6 @@ int main(int argc, char* argv[] )
 		0, // enough digits so that number may be read back
 		sig, 
 		GMP_RNDN);
-  cout << endl;
+  cerr << endl;
   return 0;
 }

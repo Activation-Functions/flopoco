@@ -275,18 +275,18 @@ namespace flopoco {
 		mpfr_set(yHistory[(currentIndex  +0)%(m+2)], s, GMP_RNDN);
 
 #if 0// debugging the emulate
-		cout << "x=" << 	mpfr_get_d(xHistory[currentIndex % n], GMP_RNDN);
-		cout << " //// y=" << 	mpfr_get_d(s,GMP_RNDN) << "  ////// ";
+		cerr << "x=" << 	mpfr_get_d(xHistory[currentIndex % n], GMP_RNDN);
+		cerr << " //// y=" << 	mpfr_get_d(s,GMP_RNDN) << "  ////// ";
 		for (uint32_t i=0; i< n; i++)		{
-			cout << "  x" << i<< "c" << i<<  "=" <<
+			cerr << "  x" << i<< "c" << i<<  "=" <<
 				mpfr_get_d(xHistory[(currentIndex+i)%n],GMP_RNDN) << "*" << mpfr_get_d(coeffb_mp[i],GMP_RNDN);
 		}
-		cout << "  // ";
+		cerr << "  // ";
 		for (uint32_t i=0; i<m; i++) {
-			cout <<"  ya" << i+1 << "=" <<
+			cerr <<"  ya" << i+1 << "=" <<
 				mpfr_get_d(yHistory[(currentIndex +i+1)%(m+2)],GMP_RNDN) << "*" << mpfr_get_d(coeffa_mp[i],GMP_RNDN);
 		}
-		cout << endl;
+		cerr << endl;
 
 #endif
 
@@ -301,7 +301,7 @@ namespace flopoco {
 		double d =  mpfr_get_d(s, GMP_RNDD);
 		miny=min(d,miny);
 		maxy=max(d,maxy);
-		//		cout << "y=" << d <<  "\t  log2(|y|)=" << (ceil(log2(abs(d)))) << endl;
+		//		cerr << "y=" << d <<  "\t  log2(|y|)=" << (ceil(log2(abs(d)))) << endl;
 
 
 		// make s an integer -- no rounding here
@@ -352,14 +352,14 @@ namespace flopoco {
 				y += ui[storageOffset+ k-i]*coeffb_d[i] ;
 			}
 			for(uint32_t i=0; i<m; i++) {
-				//		cout << "    k=" << k <<" i=" << i <<  "  yi[storageOffset+ k-i] =" << yi[storageOffset+ k-i] << endl;
+				//		cerr << "    k=" << k <<" i=" << i <<  "  yi[storageOffset+ k-i] =" << yi[storageOffset+ k-i] << endl;
 				y -= yi[storageOffset+ k-i]*coeffa_d[i] ;
 			}
 			k++;
 			yi[storageOffset+k] = y;
 
 			epsilon = abs(y);
-			//cout << "k=" << k << " yi=" << y << endl;
+			//cerr << "k=" << k << " yi=" << y << endl;
 			if(k>=300000){
 				REPORT(LogLevel::MESSAGE, "computeImpulseResponse: giving up for k=" <<k << " with errorBudget still at " << epsilon << ", it seems hopeless");
 				epsilon=0;

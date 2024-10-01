@@ -94,18 +94,18 @@ namespace flopoco {
                 outPortMap("o5","open");
                 carryInMapping=join("X", i) + of(2);
             } else {
-                cout << "this should not happen" << endl;
+                cerr << "this should not happen" << endl;
             }
             //instantiate LUT
             lut_init lutOp( lutOp_o5, lutOp_o6 );
-            //cout << lutOp.get_hex() << endl;
+            //cerr << lutOp.get_hex() << endl;
             Xilinx_LUT6_2 *cur_lut = new Xilinx_LUT6_2(this,target);
             cur_lut->setGeneric( "init", lutOp.get_hex() , 64 );
             //connect LUT inputs
             for(int j=0; j <= 5; j++)
             {
                 if(lutInputMappings[j].find("'") == string::npos){   //input is a dynamic signal
-                    //cout << lutInputMappings[j] << endl;
+                    //cerr << lutInputMappings[j] << endl;
                     inPortMap("i" + to_string(j),lutInputMappings[j]);
                 } else {    //input is a constant
                     inPortMapCst("i" + to_string(j),lutInputMappings[j]);
@@ -181,7 +181,7 @@ namespace flopoco {
     {
         area = wIn; //1 LUT per bit
         RowAdder::calc_widths(wIn, type, heights, outHeights);
-        //cout << heights.size() << " " << outHeights.size() << endl;
+        //cerr << heights.size() << " " << outHeights.size() << endl;
         rcType = 0;
     }
 

@@ -96,7 +96,7 @@ namespace flopoco{
 		int tableOutputSize = alpha + rSize;
 		int lutsPerOutputBit = 1<<(alpha+rSize-l);
 		int cost = tableOutputSize * lutsPerOutputBit * xDigits;
-		// cout << "l=" << l << " k=" << alpha << " r=" << rSize << " xDigits=" << xDigits << endl; 
+		// cerr << "l=" << l << " k=" << alpha << " r=" << rSize << " xDigits=" << xDigits << endl; 
 		return cost;
 	}
 

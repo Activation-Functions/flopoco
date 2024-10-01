@@ -367,7 +367,7 @@ namespace flopoco {
 			reDown = 0;
 		}
 
-				//cout << reUp << " " << reDown << " " << imUp << " " << imDown << endl;
+				//cerr << reUp << " " << reDown << " " << imUp << " " << imDown << endl;
 		//Add expected results to corresponding outputs
 		tc->addExpectedOutput("ReOut", reUp);	
 		tc->addExpectedOutput("ReOut", reDown);	

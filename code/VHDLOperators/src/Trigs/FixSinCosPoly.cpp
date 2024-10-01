@@ -746,7 +746,7 @@ namespace flopoco{
 				REPORT(LogLevel::VERBOSE, " wA=" << wA <<" wZ=" << wZ <<" wZ2=" << wZ2o2 <<" wZ3o6=" << wZ3o6 );
 
 				// For LateX in the paper
-				//	cout << "     " << w <<  "   &   "  << wA << "   &   " << wZ << "   &   " << wZ2o2 << "   &   " << wZ3o6 << "   \\\\ \n \\hline" <<  endl;
+				//	cerr << "     " << w <<  "   &   "  << wA << "   &   " << wZ << "   &   " << wZ2o2 << "   &   " << wZ3o6 << "   \\\\ \n \\hline" <<  endl;
 			} // closes if for generic case
 
 

@@ -2888,7 +2888,7 @@ namespace flopoco{
 
 
 		// schedule from the root parent op
-    //cout << "!!! parentOp_=" << parentOp_ << ", isShared=" << isShared() << endl;
+    //cerr << "!!! parentOp_=" << parentOp_ << ", isShared=" << isShared() << endl;
 		if(parentOp_ != nullptr && !isShared()) {
 			REPORT(LogLevel::DEBUG, "schedule(): Not the root Operator, moving up to " << parentOp_->getName());
 			parentOp_ ->schedule();

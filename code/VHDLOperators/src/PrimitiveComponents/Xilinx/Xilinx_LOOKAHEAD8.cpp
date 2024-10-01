@@ -60,10 +60,10 @@ namespace flopoco {
       addInput( "propg" );
       addInput( "proph" );
 
-      addOutput( "coutb" );
-      addOutput( "coutd" );
-      addOutput( "coutf" );
-      addOutput( "couth" );
+      addOutput( "cerrb" );
+      addOutput( "cerrd" );
+      addOutput( "cerrf" );
+      addOutput( "cerrh" );
 
       setGeneric("LOOKB", "\"" + lookb + "\"", 5);
       setGeneric("LOOKD", "\"" + lookd + "\"", 5);
@@ -155,14 +155,14 @@ namespace flopoco {
           outp << ",";
         }
 
-        outp << "cout" << std::string(1, 'b' + i) << "=>"
+        outp << "cerr" << std::string(1, 'b' + i) << "=>"
              << signame_out + of((i/2) + rlow_out);
       }
 
-      //std::cout << "create new lookahead instance" << std::endl;
-      //std::cout << "final inport mapping:\n  " << inp.str() + extra_ins << std::endl;
-      //std::cout << "final constant inport mapping:\n  " << inp_cst.str() + extra_ins_cst << std::endl;
-      //std::cout << "final outport mapping:\n  " << outp.str() << std::endl;
+      //std::cerr << "create new lookahead instance" << std::endl;
+      //std::cerr << "final inport mapping:\n  " << inp.str() + extra_ins << std::endl;
+      //std::cerr << "final constant inport mapping:\n  " << inp_cst.str() + extra_ins_cst << std::endl;
+      //std::cerr << "final outport mapping:\n  " << outp.str() << std::endl;
 
       return parentOp->newInstance("XilinxLOOKAHEAD8", instname, params,
          inp.str() + extra_ins, outp.str(), inp_cst.str() + extra_ins_cst

@@ -266,25 +266,25 @@ namespace flopoco{
 			carry = (adderDelay(100) - init) /100; 
 			cycles = (init + (wX+wY)*carry) *frequency_;
 		}
-		cout << "> Target: Warning: using generic Target::plainMultDepth(); pipelining a "<<wX<<"x"<<wY<< " multiplier in " << cycles << " cycles using a gross estimate of the target" << endl;
+		cerr << "> Target: Warning: using generic Target::plainMultDepth(); pipelining a "<<wX<<"x"<<wY<< " multiplier in " << cycles << " cycles using a gross estimate of the target" << endl;
 		return cycles;
 	}
 
 	
 	double Target::tableDelay(int wIn_, int wOut_, bool logicTable_){
-		cout << "Warning: using the generic Target::tableDelay(); it should be overloaded in your target instead" << endl;
+		cerr << "Warning: using the generic Target::tableDelay(); it should be overloaded in your target instead" << endl;
 		return 2e-9;
 	}
 
 	double Target::cycleDelay() {
-		cout << "Warning: using the generic Target::cycleDelay() with a Target which is not ManualPipeline" << endl;
+		cerr << "Warning: using the generic Target::cycleDelay() with a Target which is not ManualPipeline" << endl;
 		return 0.;
 	}
 
 
 
 	int Target::tableDepth(int wIn, int wOut){
-		cout << "Warning: using the generic Target::tableDepth(); pipelining using a gross estimate of the target" << endl;
+		cerr << "Warning: using the generic Target::tableDepth(); pipelining using a gross estimate of the target" << endl;
 		return 2; // TODO
 	}
 
@@ -306,7 +306,7 @@ namespace flopoco{
 			dec=1;
 		x = sizes.first - dec;
 		y = sizes.second - dec;
-		//cout << "Target::getMaxDSPWidths for " << (sign?"":"un") << "signed mult returns x="<<x <<" and y=" << y<<endl << "get rid of this annoying message in Target.cpp once it is clear it works" << endl; 
+		//cerr << "Target::getMaxDSPWidths for " << (sign?"":"un") << "signed mult returns x="<<x <<" and y=" << y<<endl << "get rid of this annoying message in Target.cpp once it is clear it works" << endl; 
 	}
 
 

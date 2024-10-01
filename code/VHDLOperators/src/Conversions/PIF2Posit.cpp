@@ -135,7 +135,7 @@ namespace flopoco {
 
 		outmap << "R=>extended_posit,Sticky=>pre_sticky";
 
-		cout << param.str() <<endl;
+		cerr << param.str() <<endl;
 
 		newInstance("Shifter", "rshift", param.str(), inmap.str(), outmap.str());
 

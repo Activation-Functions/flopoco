@@ -178,7 +178,7 @@ namespace flopoco {
 
 			if(26 < parametrization.getMultType().size() &&  parametrization.getMultType().substr(0,26).compare("BaseMultiplierDSPKaratsuba") == 0){
 				//int order = stoi(parametrization.getMultType().substr(parametrization.getMultType().find("size")+4, parametrization.getMultType().size()) );
-				cout << parametrization.getMultXWordSize() << " " << parametrization.getMultYWordSize()  << " " << parametrization.getShapePara() << endl;
+				cerr << parametrization.getMultXWordSize() << " " << parametrization.getMultYWordSize()  << " " << parametrization.getShapePara() << endl;
 				if(!parametrization.getShapePara()) continue;
 /*                int wX=24, wY=24, k = 0;
 				while(!(wX <= 24 && wY <= 16)  || !(wX <= 16 && wY <= 24)  || (16+24 < wX+wY) || ((int)parametrization.getMultXWordSize() != k + wX) || ((int)parametrization.getMultYWordSize() != k + wY)){
@@ -192,7 +192,7 @@ namespace flopoco {
 						}
 					}
 				}
-				cout << "wX " << wX  << " wY " << wY << " k " << k << endl;
+				cerr << "wX " << wX  << " wY " << wY << " k " << k << endl;
 */
 
 				int gcd=parametrization.getMultXWordSize(), b=parametrization.getMultYWordSize(), t;
@@ -204,7 +204,7 @@ namespace flopoco {
 					gcd = t;
 				}
 				if(24 < gcd && gcd % 2 == 0) gcd /= 2;
-				cout << "gcd " << gcd << endl;
+				cerr << "gcd " << gcd << endl;
 
 
 				int tX=0, tY=0;
@@ -224,9 +224,9 @@ namespace flopoco {
 
 				int kxy = gcd;
 				for(; kxy % tX || kxy % tY; kxy += gcd);
-				cout << "first possible position " << kxy << endl;
+				cerr << "first possible position " << kxy << endl;
 
-				cout << "wX " << tX  << " wY " << tY << " k " << kxy << endl;
+				cerr << "wX " << tX  << " wY " << tY << " k " << kxy << endl;
 
 				for(int xy = 0; xy <= parametrization.getShapePara(); xy++){     //diagonal
 					outstream << "\t\t<rect x=\"" << 10*(width-xmin-xstart -(kxy*xy + tX/2 + 2)) << "\" y=\"" << 10*(ystart+kxy*xy + tY/2 - 2) << "\" width=\"" << 10*4 << "\" height=\"" << 10*4 << "\" style=\"fill:" << colour[col%11] << ";fill-opacity:1.0;stroke:none\" />\n";

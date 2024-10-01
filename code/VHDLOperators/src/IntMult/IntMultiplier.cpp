@@ -614,7 +614,7 @@ namespace flopoco {
 				        bitheap->subtractSignal(ofname.str() + ((i)?to_string(i):""), exactProductLSB + bitHeapOffset + ((tile.first.getTilingWeight() == -2)?1:0) );
 				    }
 
-					cout << "output (" << i+1 << "/" << parameters.getOutputWeights().size() << "): " << ofname.str() + to_string(i) << " shift " << bitHeapOffset+parameters.getOutputWeights()[i] << endl;
+					cerr << "output (" << i+1 << "/" << parameters.getOutputWeights().size() << "): " << ofname.str() + to_string(i) << " shift " << bitHeapOffset+parameters.getOutputWeights()[i] << endl;
 				}
 			} else {
                 //The multiplier tile has only a single output signal
@@ -739,10 +739,10 @@ namespace flopoco {
 		mpfr_set_si(two, 2, GMP_RNDN);
 
 /*
-	cout << "sum=";
+	cerr << "sum=";
 	mpfr_out_str(stdout, 10, 0, sum, MPFR_RNDD);
-	cout << endl;
-	flush(cout);
+	cerr << endl;
+	flush(cerr);
 */
 
 		for(unsigned int i = 0; i < parameter.getTileXWordSize(); i++){
@@ -757,18 +757,18 @@ namespace flopoco {
 							mpfr_set_si(e, i+j, GMP_RNDD);
 							mpfr_pow(r, two, e, GMP_RNDD);
 							mpfr_add(sum, sum, r, GMP_RNDD);
-//                            cout << " added 2^" << (i+j) << endl;
+//                            cerr << " added 2^" << (i+j) << endl;
 						}
 						else{
-							//cout << "not true " << i << " " << j << endl;
+							//cerr << "not true " << i << " " << j << endl;
 						}
 					}
 					else{
-						//cout << "upper borders " << endl;
+						//cerr << "upper borders " << endl;
 					}
 				}
 				else{
-					//cout << "lower borders" << endl;
+					//cerr << "lower borders" << endl;
 				}
 			}
 		}
@@ -779,7 +779,7 @@ namespace flopoco {
 		mpfr_ceil(length,length);
 
 		unsigned long length_ul = mpfr_get_ui(length, GMP_RNDD);
-//        cout << " outputLength has a length of " << length_ul << endl;
+//        cerr << " outputLength has a length of " << length_ul << endl;
 		return (int) length_ul;
 	}
 
@@ -792,7 +792,7 @@ namespace flopoco {
 			unsigned int totalOffset,
 			int mode
 		){
-		//cout << "mode is " << mode << endl;
+		//cerr << "mode is " << mode << endl;
 		unsigned int max = min(int(param.getMultXWordSize()), int(param.getMultYWordSize()));
 		unsigned int zeros = 0;
 		unsigned int mode2Zeros = 0;
@@ -822,7 +822,7 @@ namespace flopoco {
 				if(mode == 2 && yPos + xPos + (steps - 1) >= 2 * totalOffset){
 					startCountingMode2 = true;
 				}
-				//cout << "position " << j << "," << (steps - (j + 1)) << " has " << bmHasInput << " and " << intMultiplierHasBit << endl;
+				//cerr << "position " << j << "," << (steps - (j + 1)) << " has " << bmHasInput << " and " << intMultiplierHasBit << endl;
 				if(bmHasInput && intMultiplierHasBit){
 					//this output gets some values. So finished computation and return
 					if(mode == 0){
@@ -1075,15 +1075,15 @@ namespace flopoco {
                         negTruncError += (mpz_class(1)<<(x+y));
                     }
                 }
-                cout << ((mulAreaI[x][y] == 1) ? 1 : 0);
+                cerr << ((mulAreaI[x][y] == 1) ? 1 : 0);
             }
-            cout << endl;
+            cerr << endl;
         }
 
         if(max(negTruncError,posTruncError) <= maxErr){
-            cout << "OK: actual truncation error=" << max(negTruncError,posTruncError) << " is smaller than the max. permissible error=" << maxErr << " by " << maxErr-max(negTruncError,posTruncError) << "." << endl;
+            cerr << "OK: actual truncation error=" << max(negTruncError,posTruncError) << " is smaller than the max. permissible error=" << maxErr << " by " << maxErr-max(negTruncError,posTruncError) << "." << endl;
         } else {
-            cout << "ERROR: actual truncation error=" << max(negTruncError,posTruncError) << " is larger than the max. permissible error=" << maxErr << " by " << max(negTruncError,posTruncError)-maxErr << "." << endl;
+            cerr << "ERROR: actual truncation error=" << max(negTruncError,posTruncError) << " is larger than the max. permissible error=" << maxErr << " by " << max(negTruncError,posTruncError)-maxErr << "." << endl;
         }
         return max(negTruncError,posTruncError);
 	}
@@ -1120,7 +1120,7 @@ namespace flopoco {
         do{
             nBits = 0;
             error = 0;
-            cout << " min weight=" << col << endl;
+            cerr << " min weight=" << col << endl;
             mpz_pow_ui(weight.get_mpz_t(), mpz_class(2).get_mpz_t(), col);
             for(int x = 0; x <= col && x < (int)wX; x++){
                 for(int y = 0; x+y <= col && y < (int)wY; y++){
@@ -1129,11 +1129,11 @@ namespace flopoco {
                 }
             }
             cnew -= (((cnew & weight) > 0)?weight:0);     //Remove bit from error re-centering constant if the column with the corresponding weight is removed from bitheap
-            cout << "trying to prune " << nBits << " bits with weight 2^" << col << " error is "  << error << " additional permissible error is " << errorBudget + cnew - actualTruncError << " recentering const=" << cnew << endl;
+            cerr << "trying to prune " << nBits << " bits with weight 2^" << col << " error is "  << error << " additional permissible error is " << errorBudget + cnew - actualTruncError << " recentering const=" << cnew << endl;
             col++;
         } while(actualTruncError + error < errorBudget + cnew || 0 == error);
         col--;
-        cout << "min req weight is=" << col << endl;
+        cerr << "min req weight is=" << col << endl;
         return col;
     }
 

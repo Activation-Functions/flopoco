@@ -45,7 +45,7 @@ namespace flopoco{
 		int k = min(int(log(wF+1)/log(2)+1), wE);
 		// negative number
 		double esszero1 = log(1. - pow(2., -(pow(2., -wF)))) / log(2.0) - dh;
-		//	cout << "esszero = " << esszero1 << endl;
+		//	cerr << "esszero = " << esszero1 << endl;
 	
 		// 2's-complement
 		return max(0, int(floor((1.+esszero1 / (1 << k)) * (1 << addrLen(wF, j, wE)))));
@@ -79,7 +79,7 @@ namespace flopoco{
 
 		// keep only low-order bits (2's-complement with wOut bits)
 		decval &= ((1 << wOut) - 1);
-		//	cout << "x=" << x << ", y=" << y << ", val=" << decval << endl;
+		//	cerr << "x=" << x << ", y=" << y << ", val=" << decval << endl;
 		return mpz_class(decval);
 	}
 
@@ -121,7 +121,7 @@ namespace flopoco{
 
 		// keep only low-order bits (2's-complement with wOut bits)
 		decval &= ((1 << wOut) - 1);
-		//	cout << "x=" << x << ", y=" << y << ", val=" << decval << endl;
+		//	cerr << "x=" << x << ", y=" << y << ", val=" << decval << endl;
 		return mpz_class(decval);
 	}
 
@@ -203,7 +203,7 @@ namespace flopoco{
 
 		// keep only low-order bits (2's-complement with wOut bits)
 		//	decval &= ((1 << wOut) - 1);
-		//	cout << "x=" << x << ", val=" << decval << endl;
+		//	cerr << "x=" << x << ", val=" << decval << endl;
 		return mpz_class(decval);
 	}
 

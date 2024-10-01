@@ -27,7 +27,7 @@ namespace flopoco {
 
     void report (LogLevel lvl, std::string const & message, std::string const & filename, int line, std::string const & funcname) {
     if (is_log_lvl_enabled(lvl)) {
-        std::ostream& out = (lvl < 0) ? std::cerr : std::cout;
+        std::ostream& out = (lvl < 0) ? std::cerr : std::cerr;
 				if(lvl>=3)	{
 					// the full file name annoys me
 					//					out << "" << filename << ":" << line <<" (" << funcname << "): ";

@@ -43,7 +43,7 @@ const int TWIDDLEIM = -1;
 
 		int extrabitno = 0, msbinextrabit = 0; 		//number of extra bits to increase msb in FFT stages to prevent overflow
 		bool bypassmultp = false;
-		//cout << endl << n;
+		//cerr << endl << n;
 		int NoButinSta = N / radix;	//number of butterflies in every stage
 		string tw_re="", tw_im="", bypassmultpstr="false", laststagestr="false";
 		int coeff= N/2;
@@ -54,7 +54,7 @@ const int TWIDDLEIM = -1;
 
 		guardbits = computeGuardBits(N);
 
-//		cout << endl << "Gaurdbits=============" << guardbits << endl;
+//		cerr << endl << "Gaurdbits=============" << guardbits << endl;
 
 		/////TODO For the first step, I set the lsbcomp=lsbout-guardbits for the lsbout of the butterflies in FFT computation
 		int lsbcomp = lsbout - guardbits;
@@ -177,7 +177,7 @@ const int TWIDDLEIM = -1;
 
 
 				//varstageno = stageNo+10;
-				//cout << endl << stageNo << tab << n << endl << endl;
+				//cerr << endl << stageNo << tab << n << endl << endl;
 				
 				/*if (stageNo != n-1)  //is not last stage
 					for (int i=0; i < N; i++)
@@ -185,15 +185,15 @@ const int TWIDDLEIM = -1;
 						vhdl << tab << declare(join("Xr", varstageno+1, i), input_width+stageNo+1) << ";" << endl;
 						vhdl << tab << declare(join("Xi", varstageno+1, i), input_width+stageNo+1) << ";" << endl;
 					}*/
-				//cout << endl << stride << tab << coeff << endl;
+				//cerr << endl << stride << tab << coeff << endl;
 
 				
 				for (submatrix=0; submatrix < ((N>>1)/stride); submatrix++)
 				{
-					//cout << endl << "for submatrix" << tab << submatrix << endl;
+					//cerr << endl << "for submatrix" << tab << submatrix << endl;
 					for (bfno=0; bfno<stride; bfno++)
 					{
-						//cout << endl << "for bfno" << tab << bfno << endl;
+						//cerr << endl << "for bfno" << tab << bfno << endl;
 						//tw_re = join("cos(pi*", bfno) + join("/",coeff) + ")";
 						//tw_im = join("sin(pi*", bfno) + join("/",coeff) + ")";
 						//tw_re = join("cos(2*", myconstPi, "*", bfno) + join("/",coeff) + ")";
@@ -218,14 +218,14 @@ const int TWIDDLEIM = -1;
 						
 						inportmap << "X0r=>Xr_S" << stageNo << "_" << uindex << ", X0i=>Xi_S" << stageNo << "_" << uindex << ", X1r=>Xr_S" << stageNo << "_" << lindex << ", 								X1i=>Xi_S" << stageNo << "_" << lindex;
 
-						//cout << endl << "for bfno" << tab << bfno << "point1" << endl;
+						//cerr << endl << "for bfno" << tab << bfno << "point1" << endl;
 
-						//cout << inportmap.str();
+						//cerr << inportmap.str();
 						if (stageNo == n-1)  //last stage
 						{
 							laststagestr = "true";
 							bypassmultp = true;	// The coefficients in the last stage is equal to one and the multiplication can be bypassed
-							//cout << endl << revbitorder << endl;
+							//cerr << endl << revbitorder << endl;
 							if(revbitorder)
 							{
 								uindex_rev = bitrev(uindex, n); // make and return a bit reversed integer
@@ -238,8 +238,8 @@ const int TWIDDLEIM = -1;
 //								outportmap << "Y0r=>Xr_S" << stageNo+1 << "_" << uindex << ", Y0i=>Xi_S" << stageNo+1 << "_" << uindex << ", Y1r=>Xr_S" << stageNo+1 << "_" << lindex << ", Y1i=>Xi_S" << stageNo+1 << "_" << lindex;
 								outportmap << "Y0r=>Yr" << uindex << ", Y0i=>Yi" << uindex << ", Y1r=>Yr" << lindex << ", Y1i=>Yi" << lindex;
 
-							//cout << endl << uindex << endl;
-							//cout << endl << uindex_rev << endl;
+							//cerr << endl << uindex << endl;
+							//cerr << endl << uindex_rev << endl;
 						}
 						else
 						{
@@ -252,32 +252,32 @@ const int TWIDDLEIM = -1;
 
 							outportmap << "Y0r=>Xr_S" << stageNo+1 << "_" << uindex << ", Y0i=>Xi_S" << stageNo+1 << "_" << uindex << ", Y1r=>Xr_S" << stageNo+1 << "_" << 									lindex << ", Y1i=>Xi_S" << stageNo+1 << "_" << lindex;
 						}
-						//cout << outportmap.str();
-						//cout << endl << "for bfno" << tab << bfno << "point2" << endl;
+						//cerr << outportmap.str();
+						//cerr << endl << "for bfno" << tab << bfno << "point2" << endl;
 
 						if(bypassmultp)
 							bypassmultpstr = "true";
 						else
 							bypassmultpstr = "false";
 						
-						//////////cout << endl << "for bfno" << tab << bfno <<  tab << tw_re << tab << tw_im << tab << bypassmultpstr << tab << inportmap.str() << tab << outportmap.str() << endl;
+						//////////cerr << endl << "for bfno" << tab << bfno <<  tab << tw_re << tab << tw_im << tab << bypassmultpstr << tab << inportmap.str() << tab << outportmap.str() << endl;
 
 
 //						newInstance("FixComplexR2Butterfly", join("BF_",stageNo, "_", submatrix, "_", bfno), "msbin=" + std::to_string(msbin+stageNo) + " lsbin=" + std::to_string(lsbin) + 
 //							" msbout=" + std::to_string(msbin+stageNo+1) + " lsbout=" + std::to_string(lsbout) + " Twiddle_re=\"" + tw_re + "\" Twiddle_im=\"" + tw_im + 
 //							"\" bypassmult=" + bypassmultpstr, inportmap.str(), outportmap.str());				
 ////							" bypassmult=" + std::to_string(bypassmultp), inportmap.str(), outportmap.str());				
-//				cout << endl << "msbin=" << std::to_string(msbin+stageNo) << " lsbin=" + std::to_string(lsbin) << 
+//				cerr << endl << "msbin=" << std::to_string(msbin+stageNo) << " lsbin=" + std::to_string(lsbin) << 
 //							" msbout=" << std::to_string(msbin+stageNo+1) << " lsbout=" << std::to_string(lsbout) << " Twiddle_re=\"" << tw_re << "\" Twiddle_im=\"" << tw_im << 
 //							"\" bypassmult=" << bypassmultpstr << " extrabit=" << extrabitstr << "laststage=" << laststagestr << " inportpam=" << inportmap.str() << " outportmap= " << outportmap.str() << endl;
 
-//cout << endl << "laststage============================= " << laststagestr << "  stage no=====" << stageNo << endl;
+//cerr << endl << "laststage============================= " << laststagestr << "  stage no=====" << stageNo << endl;
 
 						if (stageNo == 0)  //first stage
 						{
 							newInstance("FixComplexR2Butterfly", join("BF_",stageNo, "_", submatrix, "_", bfno), "msbin=" + std::to_string(msbin) + " lsbin=" + std::to_string(lsbin) + " msbout=" + std::to_string(msbin+stageNo+1+1) + " lsbout=" + std::to_string(lsbcomp) + " Twiddle_re=" + tw_re + " Twiddle_im=" + tw_im + " bypassmult=" + bypassmultpstr + " extrabit=" + extrabitstr + " laststage=" + laststagestr, inportmap.str(), outportmap.str());	
 			
-							//cout << endl << "stagno= " << stageNo << " msbin=" << std::to_string(msbin) << " lsbin=" + std::to_string(lsbin) << 							" msbout=" << std::to_string(msbin+stageNo+1+1) << " lsbout=" << std::to_string(lsbcomp) << " Twiddle_re=\"" << tw_re << "\" Twiddle_im=\"" << tw_im 								<< "\" bypassmult=" << bypassmultpstr << " extrabit=" << extrabitstr << "laststage=" << laststagestr << " inportpam=" << inportmap.str() << " 								outportmap= " << outportmap.str() << endl;
+							//cerr << endl << "stagno= " << stageNo << " msbin=" << std::to_string(msbin) << " lsbin=" + std::to_string(lsbin) << 							" msbout=" << std::to_string(msbin+stageNo+1+1) << " lsbout=" << std::to_string(lsbcomp) << " Twiddle_re=\"" << tw_re << "\" Twiddle_im=\"" << tw_im 								<< "\" bypassmult=" << bypassmultpstr << " extrabit=" << extrabitstr << "laststage=" << laststagestr << " inportpam=" << inportmap.str() << " 								outportmap= " << outportmap.str() << endl;
 						}
 						else if (stageNo == n-1)  //last stage
 						{
@@ -286,7 +286,7 @@ const int TWIDDLEIM = -1;
 							else
 								newInstance("FixComplexR2Butterfly", join("BF_",stageNo, "_", submatrix, "_", bfno), "msbin=" + std::to_string(msbin+stageNo+msbinextrabit) + " lsbin=" + std::to_string(lsbcomp) + " msbout=" + std::to_string(msbin+stageNo+1+1) + " lsbout=" + std::to_string(lsbout) + " Twiddle_re=" + tw_re + " Twiddle_im=" + tw_im + " bypassmult=" + bypassmultpstr + " extrabit=" + extrabitstr + " laststage=" + laststagestr, inportmap.str(), outportmap.str());	
 
-							//cout << endl << "stagno= " << stageNo << " msbin=" << std::to_string(msbin+stageNo+msbinextrabit) << " lsbin=" + std::to_string(lsbin) << 							" msbout=" << std::to_string(msbin+stageNo+1+1) << " lsbout=" << std::to_string(lsbout) << " Twiddle_re=\"" << tw_re << "\" Twiddle_im=\"" << tw_im 								<< "\" bypassmult=" << bypassmultpstr << " extrabit=" << extrabitstr << "laststage=" << laststagestr << " inportpam=" << inportmap.str() << " 								outportmap= " << outportmap.str() << endl;
+							//cerr << endl << "stagno= " << stageNo << " msbin=" << std::to_string(msbin+stageNo+msbinextrabit) << " lsbin=" + std::to_string(lsbin) << 							" msbout=" << std::to_string(msbin+stageNo+1+1) << " lsbout=" << std::to_string(lsbout) << " Twiddle_re=\"" << tw_re << "\" Twiddle_im=\"" << tw_im 								<< "\" bypassmult=" << bypassmultpstr << " extrabit=" << extrabitstr << "laststage=" << laststagestr << " inportpam=" << inportmap.str() << " 								outportmap= " << outportmap.str() << endl;
 						}
 						else
 						{
@@ -297,19 +297,19 @@ const int TWIDDLEIM = -1;
 								newInstance("FixComplexR2Butterfly", join("BF_",stageNo, "_", submatrix, "_", bfno), "msbin=" + std::to_string(msbin+stageNo+msbinextrabit) + " lsbin=" + std::to_string(lsbcomp) + " msbout=" + std::to_string(msbin+stageNo+1+1) + " lsbout=" + std::to_string(lsbcomp) + " Twiddle_re=" + tw_re + " Twiddle_im=" + tw_im + " bypassmult=" + bypassmultpstr + " extrabit=" + extrabitstr + " laststage=" + laststagestr, inportmap.str(), outportmap.str());	
 
 
-							//cout << endl << "stagno= " << stageNo << " msbin=" << std::to_string(msbin+stageNo+msbinextrabit) << " lsbin=" + std::to_string(lsbcomp) << 							" msbout=" << std::to_string(msbin+stageNo+1+1) << " lsbout=" << std::to_string(lsbcomp) << " Twiddle_re=\"" << tw_re << "\" Twiddle_im=\"" << tw_im 								<< "\" bypassmult=" << bypassmultpstr << " extrabit=" << extrabitstr << "laststage=" << laststagestr << " inportpam=" << inportmap.str() << " 								outportmap= " << outportmap.str() << endl;
+							//cerr << endl << "stagno= " << stageNo << " msbin=" << std::to_string(msbin+stageNo+msbinextrabit) << " lsbin=" + std::to_string(lsbcomp) << 							" msbout=" << std::to_string(msbin+stageNo+1+1) << " lsbout=" << std::to_string(lsbcomp) << " Twiddle_re=\"" << tw_re << "\" Twiddle_im=\"" << tw_im 								<< "\" bypassmult=" << bypassmultpstr << " extrabit=" << extrabitstr << "laststage=" << laststagestr << " inportpam=" << inportmap.str() << " 								outportmap= " << outportmap.str() << endl;
 						}
 
 			
-				//cout << endl << "msbin=" << std::to_string(msbin+stageNo) << " lsbin=" + std::to_string(lsbin) << 
+				//cerr << endl << "msbin=" << std::to_string(msbin+stageNo) << " lsbin=" + std::to_string(lsbin) << 
 				//			" msbout=" << std::to_string(msbin+stageNo+1) << " lsbout=" << std::to_string(lsbout) << " Twiddle_re=" << tw_re << " Twiddle_im=" << tw_im << 
 				//			" bypassmult=" << bypassmultpstr << " inportpam=" << inportmap.str() << " outportmap= " << outportmap.str() << endl;
 
-						//cout << endl << "for bfno" << tab << bfno << "point4" << endl;
+						//cerr << endl << "for bfno" << tab << bfno << "point4" << endl;
 						uindex++;
 						inportmap.str("");
 						outportmap.str("");
-						//cout << endl << "for bfno" << tab << bfno << "point5" << endl;
+						//cerr << endl << "for bfno" << tab << bfno << "point5" << endl;
 
 					}
 					//coeff = coeff*
@@ -536,10 +536,10 @@ const int TWIDDLEIM = -1;
 
 //				if ( svXi[i] > ( (mpz_class(1)<<(wIn-1))-1) )
 //				{
-//					cout << endl << "svXi before=" << svXi[i] << endl; 
-//					cout << endl << "mpzshift=" << ((mpz_class(1)<<(wIn-1))-1) << "badi=" << (mpz_class(1)<<wIn) << endl; 
+//					cerr << endl << "svXi before=" << svXi[i] << endl; 
+//					cerr << endl << "mpzshift=" << ((mpz_class(1)<<(wIn-1))-1) << "badi=" << (mpz_class(1)<<wIn) << endl; 
 //					svXi[i] -= (mpz_class(1)<<wIn);
-//					cout << endl << "svXi after=" << svXi[i] << endl; 
+//					cerr << endl << "svXi after=" << svXi[i] << endl; 
 //					negativeInputi = true;
 //				}
 				if (1==(svXr[i] >> (wIn-1))) // sign bit
@@ -652,7 +652,7 @@ const int TWIDDLEIM = -1;
 			mpfr_get_z(svRur.get_mpz_t(), mpRr[i], GMP_RNDU);
 //			svRur=signedToBitVector(svRur, 1+msbout-lsbout);
 
-			//		cout << " emulate x="<< svX <<"  before=" << svRd;
+			//		cerr << " emulate x="<< svX <<"  before=" << svRd;
 /*			if(negativeInputi != negativeConstanti)
 			{
 				svRdi += (mpz_class(1) << wOut);
@@ -663,7 +663,7 @@ const int TWIDDLEIM = -1;
 				svRdr += (mpz_class(1) << wOut);
 				svRur += (mpz_class(1) << wOut);
 			}
-			//		cout << " emulate after=" << svRd << endl;
+			//		cerr << " emulate after=" << svRd << endl;
 */
 			//Border cases
 			if(svRdi > (mpz_class(1) << wOut) - 1 )		
@@ -959,7 +959,7 @@ const int TWIDDLEIM = -1;
 			mpfr_get_z(svRdr.get_mpz_t(), mpXr[i], GMP_RNDD);
 			mpfr_get_z(svRur.get_mpz_t(), mpXr[i], GMP_RNDU);
 
-			//		cout << " emulate x="<< svX <<"  before=" << svRd;
+			//		cerr << " emulate x="<< svX <<"  before=" << svRd;
 			if(negativeInputi != negativeConstanti)
 			{
 				svRdi += (mpz_class(1) << wOut);
@@ -970,7 +970,7 @@ const int TWIDDLEIM = -1;
 				svRdr += (mpz_class(1) << wOut);
 				svRur += (mpz_class(1) << wOut);
 			}
-			//		cout << " emulate after=" << svRd << endl;
+			//		cerr << " emulate after=" << svRd << endl;
 
 			//Border cases
 			if(svRdi > (mpz_class(1) << wOut) - 1 )		

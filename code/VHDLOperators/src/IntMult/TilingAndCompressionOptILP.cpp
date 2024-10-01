@@ -42,7 +42,7 @@ TilingAndCompressionOptILP::TilingAndCompressionOptILP(
         minLutsFocus{!minStages}
 	{
 	    //Check if error bound fits into UINT64 and otherwise use optiTrunc=0
-        cout << errorBudget << endl;
+        cerr << errorBudget << endl;
         mpz_class max64;
         unsigned long long max64u = (1ULL << 52)-1ULL;//UINT64_MAX; //Limit to dynamic of double type
         mpz_import(max64.get_mpz_t(), 1, -1, sizeof max64u, 0, 0, &max64u);
@@ -50,17 +50,17 @@ TilingAndCompressionOptILP::TilingAndCompressionOptILP(
             mpz_export(&this->errorBudget, 0, -1, sizeof this->errorBudget, 0, 0, errorBudget.get_mpz_t());
         } else {
             if(performOptimalTruncation)
-                cout << "WARNING: errorBudget or constant exceeds the number range of uint64, switching to optiTrunc=0" << endl;
+                cerr << "WARNING: errorBudget or constant exceeds the number range of uint64, switching to optiTrunc=0" << endl;
             this->errorBudget = 0;
             this->performOptimalTruncation = false;
         }
-        cout << this->errorBudget << endl;
+        cerr << this->errorBudget << endl;
 
-        cout << "guardBits " << guardBits << " keepBits " << keepBits << endl;
+        cerr << "guardBits " << guardBits << " keepBits " << keepBits << endl;
 
         for(auto &p:tiles)
         {
-                cout << p->getLUTCost(0, 0, wX, wY, false) << " " << p->getType() << endl;
+                cerr << p->getLUTCost(0, 0, wX, wY, false) << " " << p->getType() << endl;
         }
         pipelineTiles_ = false;  //The combined optimization currently does not support bits that arrive to a later stage of the BH
  	}
@@ -71,7 +71,7 @@ void TilingAndCompressionOptILP::solve()
 #ifndef HAVE_SCALP
     throw "Error, TilingAndCompressionOptILP::solve() was called but FloPoCo was not built with ScaLP library";
 #else
-    cout << "using ILP solver " << target->getILPSolver() << endl;
+    cerr << "using ILP solver " << target->getILPSolver() << endl;
     solver = new ScaLP::Solver(ScaLP::newSolverDynamic({target->getILPSolver(),"Gurobi","CPLEX","SCIP","LPSolve"}));
     solver->timeout = target->getILPTimeout();
 
@@ -80,9 +80,9 @@ void TilingAndCompressionOptILP::solve()
     addFlipFlop();      //Add FF to list of compressors
     addRowAdder();
 
-    cout << "available compressors" << endl;
+    cerr << "available compressors" << endl;
     for(unsigned int i = 0; i < possibleCompressors.size(); i++){
-        cout << possibleCompressors[i]->getStringOfIO() << " cost " << possibleCompressors[i]->area << endl;
+        cerr << possibleCompressors[i]->getStringOfIO() << " cost " << possibleCompressors[i]->area << endl;
     }
 
     ScaLP::status stat;
@@ -104,7 +104,7 @@ void TilingAndCompressionOptILP::solve()
         constructProblem(s_max);
 
         // Try to solve
-        cout << "starting solver, this might take a while..." << endl;
+        cerr << "starting solver, this might take a while..." << endl;
         solver->quiet = false;
         stat = solver->solve();
 
@@ -119,11 +119,11 @@ void TilingAndCompressionOptILP::solve()
     ScaLP::Result res = solver->getResult();
     if(!bestResult.empty()){
         if(bestResult.objectiveValue <= res.objectiveValue){
-            cout << "The solution with " << s_max-1 << " stages is less or equally expensive (" << bestResult.objectiveValue << ") then with " << s_max << " stages (" << res.objectiveValue << ")" << endl;
+            cerr << "The solution with " << s_max-1 << " stages is less or equally expensive (" << bestResult.objectiveValue << ") then with " << s_max << " stages (" << res.objectiveValue << ")" << endl;
             s_max--;
             writeSolutionFile(bestResult);
         } else {
-            cout << "The solution with " << s_max-1 << " stages is more expensive (" << bestResult.objectiveValue << ") then with " << s_max << " stages (" << res.objectiveValue << ")" << endl;
+            cerr << "The solution with " << s_max-1 << " stages is more expensive (" << bestResult.objectiveValue << ") then with " << s_max << " stages (" << res.objectiveValue << ")" << endl;
             bestResult = res;
         }
     } else bestResult = res;
@@ -137,7 +137,7 @@ void TilingAndCompressionOptILP::solve()
             constructProblem(s_max);
 
             // Try to solve
-            cout << "starting solver, this might take a while..." << endl;
+            cerr << "starting solver, this might take a while..." << endl;
             solver->quiet = false;
             stat = solver->solve();
 
@@ -181,14 +181,14 @@ void TilingAndCompressionOptILP::solve()
 		{
 		    if(p.second > 0.5){     //parametrize all multipliers at a certain position, for which the solver returned 1 as solution, to flopoco solution structure
 		        std::string var_name = p.first->getName();
-		        cout << var_name << "\t " << p.second << endl;
+		        cerr << var_name << "\t " << p.second << endl;
 		        //if(var_name.substr(0,1).compare("k") != 0) continue;
 		        switch(var_name.substr(0,1).at(0)) {
 		            case 'k':{      //decision variables 'k' for placed compressors
 		                int sta_id = stoi(var_name.substr(2, dpSt));
 		                int com_id = stoi(var_name.substr(2 + dpSt + 1, dpK));
 		                int col_id = stoi(var_name.substr(2 + dpSt + 1 + dpK + 1, dpC));
-		                cout << p.second << " compressor" <<  setw(2) << com_id << " stage " << sta_id << " column " <<  setw(3) << col_id
+		                cerr << p.second << " compressor" <<  setw(2) << com_id << " stage " << sta_id << " column " <<  setw(3) << col_id
 		                << " compressor type " << ((com_id<(int)possibleCompressors.size())?possibleCompressors[com_id]->getStringOfIO():"?") << endl;
 		                if(possibleCompressors[com_id]->type == CompressorType::Variable){
 		                    for(int n = 0; n < (int)lrint(p.second);n++){
@@ -206,7 +206,7 @@ void TilingAndCompressionOptILP::solve()
 		                        CompressionStrategy::solution.addCompressor(sta_id, col_id, possibleCompressors[com_id]);
 		                    }
 		                } else {
-		                    //cout << "skipped FF " << possibleCompressors[com_id]  << "==" << flipflop << " " << (possibleCompressors[com_id] == flipflop) << endl;
+		                    //cerr << "skipped FF " << possibleCompressors[com_id]  << "==" << flipflop << " " << (possibleCompressors[com_id] == flipflop) << endl;
 		                }
 		                break;
 		            }
@@ -225,7 +225,7 @@ void TilingAndCompressionOptILP::solve()
 		    }
 		}
 
-		cout << "Total compressor LUT-cost: " << compressor_cost << endl;
+		cerr << "Total compressor LUT-cost: " << compressor_cost << endl;
 
 		replace_row_adders(CompressionStrategy::solution, row_adder);
 
@@ -242,12 +242,12 @@ void TilingAndCompressionOptILP::solve()
 #ifdef HAVE_SCALP
 void TilingAndCompressionOptILP::constructProblem(int s_max)
 {
-    cout << "constructing problem formulation with " << s_max << " stages..." << endl;
+    cerr << "constructing problem formulation with " << s_max << " stages..." << endl;
     wS = tiles.size();
 
 
     //Assemble cost function, declare problem variables
-    cout << "   assembling cost function, declaring problem variables..." << endl;
+    cerr << "   assembling cost function, declaring problem variables..." << endl;
     ScaLP::Term obj;
     int x_neg = 0, y_neg = 0, keepBits_ = keepBits;
     for(int s = 0; s < wS; s++){
@@ -278,7 +278,7 @@ void TilingAndCompressionOptILP::constructProblem(int s_max)
     vector<vector<vector<ScaLP::Variable>>> solve_Vars(wS, vector<vector<ScaLP::Variable>>(wX+x_neg, vector<ScaLP::Variable>(wY+y_neg)));
     ScaLP::Term maxEpsTerm, minEpsTerm, constVecTerm;
     // add the Constraints
-    cout << "   adding the constraints to problem formulation..." << endl;
+    cerr << "   adding the constraints to problem formulation..." << endl;
     for(int y = 0; y < wY; y++){
         for(int x = 0; x < wX; x++){
             stringstream consName;
@@ -296,7 +296,7 @@ void TilingAndCompressionOptILP::constructProblem(int s_max)
                                 if(solve_Vars[s][xs+x_neg][ys+y_neg] == nullptr){
                                     stringstream nvarName;
                                     nvarName << "d" << setfill('0') << setw(dpS) << s << ((xs < 0)?"m":"") << setfill('0') << setw(dpX) << ((xs<0)?-xs:xs) << ((ys < 0)?"m":"")<< setfill('0') << setw(dpY) << ((ys<0)?-ys:ys) ;
-                                    //std::cout << nvarName.str() << endl;
+                                    //std::cerr << nvarName.str() << endl;
                                     ScaLP::Variable tempV = ScaLP::newBinaryVariable(nvarName.str());
                                     solve_Vars[s][xs+x_neg][ys+y_neg] = tempV;
                                     obj.add(tempV, (double)tiles[s]->ownLUTCost(xs, ys, wX, wY, signedIO));    //append variable to cost function
@@ -342,9 +342,9 @@ void TilingAndCompressionOptILP::constructProblem(int s_max)
             } else if(!performOptimalTruncation && (wOut < (int)prodWidth) && ((x + y) == (int)(prodWidth - wOut - guardBits))){
                 if((keepBits_)?keepBits_--:0){
                     c1Constraint = pxyTerm == (bool)1;
-                    cout << "keepBit at" << x << "," << y << endl;
+                    cerr << "keepBit at" << x << "," << y << endl;
                 } else {
-                    cout << "NO keepBit at" << x << "," << y << endl;
+                    cerr << "NO keepBit at" << x << "," << y << endl;
                 }
             } else {
                 c1Constraint = pxyTerm == (bool)1;
@@ -363,7 +363,7 @@ void TilingAndCompressionOptILP::constructProblem(int s_max)
             if (tiles[s]->getDSPCost())
                 nDSPTiles++;
         if (nDSPTiles) {
-            cout << "   adding the constraint to limit the use of DSP-Blocks to " << max_pref_mult_ << " instances..."
+            cerr << "   adding the constraint to limit the use of DSP-Blocks to " << max_pref_mult_ << " instances..."
                  << endl;
             stringstream consName;
             consName << "limDSP";
@@ -385,9 +385,9 @@ void TilingAndCompressionOptILP::constructProblem(int s_max)
     //make shure the available precision is present in case of truncation
     if(performOptimalTruncation && (wOut < (int)prodWidth))
     {
-        cout << "   multiplier is truncated by " << (int)prodWidth-wOut << " bits (err=" << (unsigned long)wX*(((unsigned long)1<<((int)wOut-guardBits))) << "), ensure sufficient precision..." << endl;
-        //cout << "   guardBits=" << guardBits << endl;
-        //cout << "   g=" << guardBits << " k=" << keepBits << " errorBudget=" << errorBudget << " difference to conservative est: " << errorBudget-(long long)(((unsigned long)1)<<(prodWidth-(int)wOut-1)-1) << endl;
+        cerr << "   multiplier is truncated by " << (int)prodWidth-wOut << " bits (err=" << (unsigned long)wX*(((unsigned long)1<<((int)wOut-guardBits))) << "), ensure sufficient precision..." << endl;
+        //cerr << "   guardBits=" << guardBits << endl;
+        //cerr << "   g=" << guardBits << " k=" << keepBits << " errorBudget=" << errorBudget << " difference to conservative est: " << errorBudget-(long long)(((unsigned long)1)<<(prodWidth-(int)wOut-1)-1) << endl;
 
         stringstream nvarName;
         nvarName << "C";
@@ -400,7 +400,7 @@ void TilingAndCompressionOptILP::constructProblem(int s_max)
         for(unsigned i = prodWidth-wOut-guardBits; i < prodWidth-wOut-1; i++){
             stringstream cvarName;
             cvarName << "c" << i;
-            //cout << cvarName.str() << endl;
+            //cerr << cvarName.str() << endl;
             cVars[i] = ScaLP::newBinaryVariable(cvarName.str());
             cTerm.add(cVars[i],  (double)( 1ULL << i));
             constVecBits[i].add(cVars[i], 1);
@@ -421,7 +421,7 @@ void TilingAndCompressionOptILP::constructProblem(int s_max)
         solver->addConstraint(cLimConstraint);
 
         //Limit the error budget
-        cout << "  maxErr=" << errorBudget << endl;
+        cerr << "  maxErr=" << errorBudget << endl;
         ScaLP::Constraint maxErrConstraint = maxEpsTerm - Cvar <= errorBudget - 1;
         stringstream maxErrName;
         maxErrName << "maxEps";
@@ -429,7 +429,7 @@ void TilingAndCompressionOptILP::constructProblem(int s_max)
         solver->addConstraint(maxErrConstraint);
 
         //Limit the error budget
-        cout << "  minErr=" << errorBudget << endl;
+        cerr << "  minErr=" << errorBudget << endl;
         ScaLP::Constraint minErrConstraint = -minEpsTerm + Cvar <= errorBudget - 1;
         stringstream minErrName;
         minErrName << "minEps";
@@ -454,13 +454,13 @@ void TilingAndCompressionOptILP::constructProblem(int s_max)
         for(unsigned i = 0; i < prodWidth+5; i++){
             stringstream cvarName;
             cvarName << "v" << setfill('0') << setw(dpC) << i;
-            //cout << cvarName.str() << " weight " << (double)(1ULL << i) << endl;
+            //cerr << cvarName.str() << " weight " << (double)(1ULL << i) << endl;
             cvBits[i] = ScaLP::newBinaryVariable(cvarName.str());
             constVecTerm.add(cvBits[i], -(double)(1ULL << i));
 
             stringstream ovarName;
             ovarName << "o" << setfill('0') << setw(dpC) << i;
-            //cout << cvarName.str() << " weight " << (double)(1ULL << i) << endl;
+            //cerr << cvarName.str() << " weight " << (double)(1ULL << i) << endl;
             ovVars[i] = ScaLP::newIntegerVariable(ovarName.str());
             constVecBits[i].add(cvBits[i], -1);
             constVecBits[i].add(ovVars[i], -2);
@@ -501,13 +501,13 @@ void TilingAndCompressionOptILP::constructProblem(int s_max)
                     nvarName << "k_" << setfill('0') << setw(dpSt) << s << "_" << setfill('0') << setw(dpK) << e << "_" << setfill('0') << setw(dpC) << c;
                     ScaLP::Variable tempV = ScaLP::newIntegerVariable(nvarName.str(), 0, ScaLP::INF());
                     obj.add(tempV, possibleCompressors[e]->area );                    //append variable to cost function, for r.c.a.-area (cost) is 1 6LUT, FFs cost 0.5LUT
-//                    if(possibleCompressors[e]->type == CompressorType::Variable) cout << "cost=" << possibleCompressors[e]->area << " name=" << nvarName.str() << endl;
+//                    if(possibleCompressors[e]->type == CompressorType::Variable) cerr << "cost=" << possibleCompressors[e]->area << " name=" << nvarName.str() << endl;
                     for(int ce = 0; ce < (int) possibleCompressors[e]->heights.size() && ce < (int)bitsinCurrentColumn.size() - (int)c; ce++){                                //Bits that can be removed by compressor e in stage s in column c for constraint C1
-                        //cout << "take bits: " << possibleCompressors[e]->getHeightsAtColumn((unsigned) ce, false) << " c: " << c+ce << " " << nvarName.str() << endl;
+                        //cerr << "take bits: " << possibleCompressors[e]->getHeightsAtColumn((unsigned) ce, false) << " c: " << c+ce << " " << nvarName.str() << endl;
                         bitsinCurrentColumn[c+ce].add(tempV, possibleCompressors[e]->heights[ce]);
                     }
                     for(int ce = 0; ce < (int) possibleCompressors[e]->outHeights.size() && ce < (int)bitsinNextColumn.size() - (int)c; ce++){   //Bits that are added by compressor e in stage s+1 in column c for constraint C2
-                        //cout <<  "give bits: " << possibleCompressors[e]->getOutHeightsAtColumn((unsigned) ce, false) << " c: " << c+ce << " " << nvarName.str() << endl;
+                        //cerr <<  "give bits: " << possibleCompressors[e]->getOutHeightsAtColumn((unsigned) ce, false) << " c: " << c+ce << " " << nvarName.str() << endl;
                         bitsinNextColumn[c+ce].add(tempV, possibleCompressors[e]->outHeights[ce]);
                     }
                     handleRowAdderDependencies(tempV, rcdDependencies, c, e);
@@ -517,7 +517,7 @@ void TilingAndCompressionOptILP::constructProblem(int s_max)
             if(bitsInColAndStage[s][c] == nullptr){                                                                 //N_s_c: Bits that enter current compressor stage
                 stringstream curBits;
                 curBits << "N_" << setfill('0') << setw(dpSt) << s << "_" << setfill('0') << setw(dpC) << c;
-                //cout << curBits.str() << endl;
+                //cerr << curBits.str() << endl;
                 bitsInColAndStage[s][c] = ScaLP::newIntegerVariable(curBits.str(), 0, ScaLP::INF());
             }
             if(s == 0 && c <= (int)prodWidth)
@@ -539,11 +539,11 @@ void TilingAndCompressionOptILP::constructProblem(int s_max)
     }
 
     // Set the Objective
-    cout << "   setting objective (minimize cost function)..." << endl;
+    cerr << "   setting objective (minimize cost function)..." << endl;
     solver->setObjective(ScaLP::minimize(obj));
 
     // Write Linear Program to file for debug purposes
-    cout << "   writing LP-file for debuging..." << endl;
+    cerr << "   writing LP-file for debuging..." << endl;
     solver->writeLP("tile.lp");
 }
 
@@ -568,7 +568,7 @@ void TilingAndCompressionOptILP::C0_bithesp_input_bits(int s, int c, vector<ScaL
         stringstream consName1, zeroBits;
         consName1 << "C1_" << s << "_" << c;
         zeroBits << "Z_" << setfill('0') << setw(dpSt) << s << "_" << setfill('0') << setw(dpC) << c;
-        //cout << zeroBits.str() << endl;
+        //cerr << zeroBits.str() << endl;
         bitsinCurrentColumn[c].add(ScaLP::newIntegerVariable(zeroBits.str(), 0, ScaLP::INF()), -1);      //Unused compressor input bits, that will be set zero
         if(0 < s)
             bitsinCurrentColumn[c].add(bitsInColAndStage[s][c], -1);      //Bits arriving in current stage of the compressor tree
@@ -580,10 +580,10 @@ void TilingAndCompressionOptILP::C0_bithesp_input_bits(int s, int c, vector<ScaL
     void TilingAndCompressionOptILP::C2_compressor_output_bits(int s, int c, vector<ScaLP::Term> &bitsinNextColumn, vector<vector<ScaLP::Variable>> &bitsInColAndStage){
         stringstream consName2, nextBits;
         consName2 << "C2_" << s << "_" << c;
-        //cout << consName2.str() << endl;
+        //cerr << consName2.str() << endl;
         if(bitsInColAndStage[s+1][c] == nullptr){
             nextBits << "N_" << setfill('0') << setw(dpSt) << s+1 << "_" << setfill('0') << setw(dpC) << c;
-            //cout << nextBits.str() << endl;
+            //cerr << nextBits.str() << endl;
             bitsInColAndStage[s+1][c] = ScaLP::newIntegerVariable(nextBits.str(), 0, ScaLP::INF());
         }
         bitsinNextColumn[c].add(bitsInColAndStage[s+1][c], -1); //Output Bits of compressors to next stage
@@ -598,14 +598,14 @@ void TilingAndCompressionOptILP::C0_bithesp_input_bits(int s, int c, vector<ScaL
         ScaLP::Constraint c3Constraint = bitsInColAndStage[s][c] <= ((consider_final_adder)?1:bitheap->final_add_height);     //C3_s_c
         c3Constraint.name = consName3.str();
         solver->addConstraint(c3Constraint);
-        //cout << consName3.str() << " " << stage.str() << endl;
+        //cerr << consName3.str() << " " << stage.str() << endl;
     }
 
     void TilingAndCompressionOptILP::C5_RCA_dependencies(int s, int c, vector<vector<ScaLP::Term>> &rcdDependencies){
         for(int rcType = 0; rcType < 3; rcType++){
             stringstream consName5;
             consName5 << "C5" << char('a'+ rcType) << "_" << s << "_" << c;
-            //cout << consName5.str() << rcdDependencies[c-1][rcType] << endl;
+            //cerr << consName5.str() << rcdDependencies[c-1][rcType] << endl;
             ScaLP::Constraint c5Constraint = rcdDependencies[c-1][rcType] == 0;     //C5_s_c
             c5Constraint.name = consName5.str();
             solver->addConstraint(c5Constraint);
@@ -706,16 +706,16 @@ void TilingAndCompressionOptILP::C0_bithesp_input_bits(int s, int c, vector<ScaL
             for(int x = wX-1; 0 <= x; x--){
                 if(mulArea[x][y] == false)
                     truncError += (mpz_class(1)<<(x+y));
-                //cout << ((mulArea[x][y] == true)?1:0);
+                //cerr << ((mulArea[x][y] == true)?1:0);
             }
-            //cout << endl;
+            //cerr << endl;
         }
 
         if(truncError <= maxErr){
-            cout << "OK: actual truncation error=" << truncError << " is smaller than the max. permissible error=" << maxErr << " by " << maxErr-truncError << "." << endl;
+            cerr << "OK: actual truncation error=" << truncError << " is smaller than the max. permissible error=" << maxErr << " by " << maxErr-truncError << "." << endl;
             return true;
         } else {
-            cout << "WARNING: actual truncation error=" << truncError << " is larger than the max. permissible error=" << maxErr << " by " << truncError-maxErr << "." << endl;
+            cerr << "WARNING: actual truncation error=" << truncError << " is larger than the max. permissible error=" << maxErr << " by " << truncError-maxErr << "." << endl;
             return false;
         }
     }
@@ -724,14 +724,14 @@ void TilingAndCompressionOptILP::C0_bithesp_input_bits(int s, int c, vector<ScaL
         //parse tiling solution
         unsigned long long int new_constant = 0;
         double sum[4] = {0, 0, 0, 0};                   //variable to sum the rounded and double decision variables to check for numeric problems
-        if(wOut < (int) prodWidth) cout << "centerErrConstant was: " << centerErrConstant << endl;//new error re-centering constant for truncation from solution
+        if(wOut < (int) prodWidth) cerr << "centerErrConstant was: " << centerErrConstant << endl;//new error re-centering constant for truncation from solution
         double total_cost = 0 ;
         int dsp_cost = 0, own_lut_cost=0;
         for(auto &p:bestResult.values)
         {
             if(p.second > 0.5){     //parametrize all multipliers at a certain position, for which the solver returned 1 as solution, to flopoco solution structure
                 string var_name = p.first->getName();
-                //cout << var_name << "\t " << p.second << endl;
+                //cerr << var_name << "\t " << p.second << endl;
                 switch(var_name.substr(0,1).at(0)){
                     case 'd':{
                         int mult_id = stoi(var_name.substr(1, dpS));
@@ -739,7 +739,7 @@ void TilingAndCompressionOptILP::C0_bithesp_input_bits(int s, int c, vector<ScaL
                         int m_x_pos = stoi(var_name.substr(1 + dpS + x_negative, dpX)) * ((x_negative) ? (-1) : 1);
                         int y_negative = (var_name.substr(1 + dpS + x_negative + dpX, 1) == "m") ? 1 : 0;
                         int m_y_pos = stoi(var_name.substr(1 + dpS + dpX + x_negative + y_negative, dpY)) * ((y_negative) ? (-1) : 1);
-                        cout << "is true:  " << setfill(' ') << setw(dpY) << mult_id << " " << setfill(' ') << setw(dpY) << m_x_pos << " " << setfill(' ') << setw(
+                        cerr << "is true:  " << setfill(' ') << setw(dpY) << mult_id << " " << setfill(' ') << setw(dpY) << m_x_pos << " " << setfill(' ') << setw(
                                 dpY) << m_y_pos << " cost: " << setfill(' ') << setw(5) << tiles[mult_id]->getLUTCost(m_x_pos, m_y_pos, wX, wY, signedIO) << endl;
 
                         total_cost += (double) tiles[mult_id]->getLUTCost(m_x_pos, m_y_pos, wX, wY, signedIO);
@@ -757,7 +757,7 @@ void TilingAndCompressionOptILP::C0_bithesp_input_bits(int s, int c, vector<ScaL
                     case 'c':{
                         int c_id = stoi(var_name.substr(1, dpC));
                         new_constant |= (1ULL << c_id);
-                        cout << var_name << " pos " << c_id << " dpC " << dpC << endl;
+                        cerr << var_name << " pos " << c_id << " dpC " << dpC << endl;
                         break;
                     }
                     default:
@@ -777,19 +777,19 @@ void TilingAndCompressionOptILP::C0_bithesp_input_bits(int s, int c, vector<ScaL
                 if (p.second >= 0.5) sum[3] += (1 << shift);
             }
         }
-        cout << "Total LUT cost:" << total_cost << endl;
-        cout << "Own LUT cost:" << own_lut_cost << endl;
-        cout << "Total DSP cost:" << dsp_cost << endl;
+        cerr << "Total LUT cost:" << total_cost << endl;
+        cerr << "Own LUT cost:" << own_lut_cost << endl;
+        cerr << "Total DSP cost:" << dsp_cost << endl;
 
         if(performOptimalTruncation){
             //refresh centerErrConstant according to ILP solution
             mpz_import(centerErrConstant.get_mpz_t(), 1, -1, sizeof new_constant, 0, 0, &new_constant);
-            cout << "centerErrConstant now is: " << centerErrConstant << endl;
+            cerr << "centerErrConstant now is: " << centerErrConstant << endl;
 
             //check for numeric errors in solution
             optTruncNumericErr = (long long)ceil(fabs((sum[0] + sum[2]) - (sum[1] + sum[3])));
             if(0 < optTruncNumericErr){
-                cout << "Warning: Numeric problems in solution, repeating ILP with Offset for Error of " << optTruncNumericErr << endl;
+                cerr << "Warning: Numeric problems in solution, repeating ILP with Offset for Error of " << optTruncNumericErr << endl;
                 errorBudget -= optTruncNumericErr;      //Reduce errorBudget by scope of numeric derivation for next iteration
             }
         }
@@ -816,7 +816,7 @@ void TilingAndCompressionOptILP::C0_bithesp_input_bits(int s, int c, vector<ScaL
                         //int sta_id = stoi(var_name.substr(2, dpSt));
                         //int col_id = stoi(var_name.substr(2 + dpSt + 1, dpC));
                         //bitsOnBitHeap[sta_id][col_id] += 1;
-                        cout << var_name << "\t " << p.second << endl;
+                        cerr << var_name << "\t " << p.second << endl;
                         break;
                     }
                     case 'N': {          //bits present in a particular column an stage of BitHeap
@@ -825,7 +825,7 @@ void TilingAndCompressionOptILP::C0_bithesp_input_bits(int s, int c, vector<ScaL
                         if(sta_id < s_max+1 && col_id < prodWidth)
                             bitsOnBitHeap[sta_id][col_id] = p.second;
                         if(pow(10,colWidth[col_id]) <= p.second) colWidth[col_id]++;
-                        //cout << var_name << "\t " << p.second << endl;
+                        //cerr << var_name << "\t " << p.second << endl;
                         break;
                     }
                     default:            //Other decision variables are not needed for VHDL-Generation
@@ -834,23 +834,23 @@ void TilingAndCompressionOptILP::C0_bithesp_input_bits(int s, int c, vector<ScaL
             }
         }
         for(int c = bitsOnBitHeap[0].size()-1; 0 <= c; c--){
-            cout << setw(colWidth[c]) << ((c%4==0)?'|':' ');
+            cerr << setw(colWidth[c]) << ((c%4==0)?'|':' ');
         }
-        cout << endl;
+        cerr << endl;
         for(unsigned s = 0; s < bitsOnBitHeap.size(); s++){
             for(int c = bitsOnBitHeap[0].size()-1; 0 <= c; c--){
-                cout << setw(colWidth[c]) << bitsOnBitHeap[s][c];
+                cerr << setw(colWidth[c]) << bitsOnBitHeap[s][c];
             }
-            cout << endl;
+            cerr << endl;
         }
     }
 
     void TilingAndCompressionOptILP::replace_row_adders(BitHeapSolution &solution, vector<vector<vector<int>>> &row_adders){
-        cout << solution.getSolutionStatus() << endl;
+        cerr << solution.getSolutionStatus() << endl;
         for(int rcType = 0; rcType < 3; rcType++){
             for(unsigned s = 0; s < row_adders.size(); s++){
                 for(unsigned c = 0; c < row_adders[0].size(); c++){
-                    //cout << "at stage " << s << " col " << c << " " << row_adders[s][c][0] << row_adders[s][c][1] << row_adders[s][c][2] << endl;
+                    //cerr << "at stage " << s << " col " << c << " " << row_adders[s][c][0] << row_adders[s][c][1] << row_adders[s][c][2] << endl;
                     int ci; bool adder_started;
                     while(0 < row_adders[s][c][0+3*rcType]){
                         ci = 0;
@@ -868,33 +868,33 @@ void TilingAndCompressionOptILP::C0_bithesp_input_bits(int s, int c, vector<ScaL
                                         adder_started = false;
                                         switch(rcType){
                                             case 0:{
-                                                cout << "RCA row adder in stage " << s <<  " from col " << c << " to " << c+ci << " width " << ci+1 << endl;
+                                                cerr << "RCA row adder in stage " << s <<  " from col " << c << " to " << c+ci << " width " << ci+1 << endl;
                                                 BasicCompressor *newCompressor = new BasicRowAdder(bitheap->getOp(), bitheap->getOp()->getTarget(), ci+1);
                                                 //possibleCompressors.push_back(newCompressor);
-                                                cout << solution.getCompressorsAtPosition(s, c).size() << endl;
+                                                cerr << solution.getCompressorsAtPosition(s, c).size() << endl;
                                                 solution.addCompressor(s, c, newCompressor, ci-2);
-                                                cout << solution.getCompressorsAtPosition(s, c).size() << " " << solution.getCompressorsAtPosition(s, c)[0].first->outHeights.size() << endl;
-                                                cout << "ok" << endl;
+                                                cerr << solution.getCompressorsAtPosition(s, c).size() << " " << solution.getCompressorsAtPosition(s, c)[0].first->outHeights.size() << endl;
+                                                cerr << "ok" << endl;
                                                 break;
                                             }
                                             case 1:{
-                                                cout << "ternary row adder in stage " << s <<  " from col " << c << " to " << c+ci << " width " << ci+1 << endl;
+                                                cerr << "ternary row adder in stage " << s <<  " from col " << c << " to " << c+ci << " width " << ci+1 << endl;
                                                 BasicCompressor *newCompressor = new BasicRowAdder(bitheap->getOp(), bitheap->getOp()->getTarget(), ci+1, 3);
                                                 //possibleCompressors.push_back(newCompressor);
-                                                cout << solution.getCompressorsAtPosition(s, c).size() << endl;
+                                                cerr << solution.getCompressorsAtPosition(s, c).size() << endl;
                                                 solution.addCompressor(s, c, newCompressor, ci-2);
-                                                cout << solution.getCompressorsAtPosition(s, c).size() << " " << solution.getCompressorsAtPosition(s, c)[0].first->outHeights.size() << endl;
-                                                cout << "ok" << endl;
+                                                cerr << solution.getCompressorsAtPosition(s, c).size() << " " << solution.getCompressorsAtPosition(s, c)[0].first->outHeights.size() << endl;
+                                                cerr << "ok" << endl;
                                                 break;
                                             }
                                             case 2:{
-                                                cout << "4:2 row adder in stage " << s <<  " from col " << c << " to " << c+ci << " width " << ci+1 << endl;
+                                                cerr << "4:2 row adder in stage " << s <<  " from col " << c << " to " << c+ci << " width " << ci+1 << endl;
                                                 BasicCompressor *newCompressor = new BasicXilinxFourToTwoCompressor(bitheap->getOp(), bitheap->getOp()->getTarget(), ci+1);
                                                 //possibleCompressors.push_back(newCompressor);
-                                                cout << solution.getCompressorsAtPosition(s, c).size() << endl;
+                                                cerr << solution.getCompressorsAtPosition(s, c).size() << endl;
                                                 solution.addCompressor(s, c, newCompressor, ci-2);
-                                                cout << solution.getCompressorsAtPosition(s, c).size() << " " << solution.getCompressorsAtPosition(s, c)[0].first->outHeights.size() << endl;
-                                                cout << "ok" << endl;
+                                                cerr << solution.getCompressorsAtPosition(s, c).size() << " " << solution.getCompressorsAtPosition(s, c)[0].first->outHeights.size() << endl;
+                                                cerr << "ok" << endl;
                                                 break;
                                             }
                                             default:

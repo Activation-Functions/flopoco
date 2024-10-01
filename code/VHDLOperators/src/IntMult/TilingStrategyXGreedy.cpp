@@ -97,8 +97,8 @@ namespace flopoco {
             }
         }
 
-        cout << "Total cost: " << bestCost << " " << bestUsedDSPBlocks << endl;
-        cout << "Total area: " << bestArea << endl;
+        cerr << "Total cost: " << bestCost << " " << bestUsedDSPBlocks << endl;
+        cerr << "Total area: " << bestArea << endl;
         solution = std::move(bestSolution);
     }
 

@@ -188,7 +188,7 @@ namespace flopoco{
 			padX[i] = chunksX*multiplierWidth_[i] - wInX;
 			padY[i] = chunksY*multiplierWidth_[i] - wInY;
 			
-			cout << "Mult Size: " << multiplierWidth_[i] << ", Chunks X: " << chunksX << ", Y: " << chunksY << ", PaddX: "<<padX[i] << ", PaddY: " << padY[i] << endl;
+			cerr << "Mult Size: " << multiplierWidth_[i] << ", Chunks X: " << chunksX << ", Y: " << chunksY << ", PaddX: "<<padX[i] << ", PaddY: " << padY[i] << endl;
 			if (frequency() > maxF[i]) 
 				continue;
 			
@@ -223,7 +223,7 @@ namespace flopoco{
 				ix = iy;
 				padX[nrConfigs_] = padX[ix];
 			}
-			cout << "x: " << x << ", y: " << y << ", padX: " << padX[nrConfigs_] << ", padY: " << padY[nrConfigs_] << endl;
+			cerr << "x: " << x << ", y: " << y << ", padX: " << padX[nrConfigs_] << ", padY: " << padY[nrConfigs_] << endl;
 			}
 			
 			if ((x != 1) && (y != 1))

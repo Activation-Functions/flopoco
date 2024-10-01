@@ -146,7 +146,7 @@ namespace flopoco{
 #else
 			delay =  elemWireDelay_ + (double(fanout) * 0.001e-9);
 #endif
-		//cout << "localWireDelay(" << fanout << ") estimated to "<< delay*1e9 << "ns" << endl;
+		//cerr << "localWireDelay(" << fanout << ") estimated to "<< delay*1e9 << "ns" << endl;
 		TARGETREPORT("fanoutDelay(" << fanout << ") = " << delay*1e9 << " ns.");
 		return delay;
 	};

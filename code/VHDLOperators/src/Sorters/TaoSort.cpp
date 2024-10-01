@@ -123,7 +123,7 @@ namespace flopoco {
 		}
 
 		for (int i = 0; i < N; i++) {
-			//cout << " Calcul pour i = " << i << " : ";
+			//cerr << " Calcul pour i = " << i << " : ";
 			int index = 0;
 			for (int j = 0; j < i; j++) {
 				index += (1 - c_matrix[j][i]);
@@ -141,7 +141,7 @@ namespace flopoco {
 		for (int i = 0; i < N-1; i++) {
 			if (sorted_list[i] < sorted_list[i+1]) {
 				for (int j = 0; j < N; j++) {
-					cout << j << ", " << sorted_list[j] << endl;
+					cerr << j << ", " << sorted_list[j] << endl;
 				}
 				THROWERROR("Sort does not work for those entries");
 				break;

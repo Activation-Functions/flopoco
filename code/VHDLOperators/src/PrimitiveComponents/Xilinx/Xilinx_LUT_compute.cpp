@@ -133,38 +133,38 @@ lut_op::lut_op( int id_ ) {
 void lut_op::print( string pre ) {
     switch( type ) {
     case LUT_OR:
-        cout << "LUT_OR";
+        cerr << "LUT_OR";
         break;
 
     case LUT_AND:
-        cout << "LUT_AND";
+        cerr << "LUT_AND";
         break;
 
     case LUT_NOT:
-        cout << "LUT_NOT";
+        cerr << "LUT_NOT";
         break;
 
     case LUT_XOR:
-        cout << "LUT_XOR";
+        cerr << "LUT_XOR";
         break;
 
     case LUT_IN:
-        cout << "LUT_IN(" << id << ")";
+        cerr << "LUT_IN(" << id << ")";
         break;
 
     default:
-        cout << "LUT_NOOP";
+        cerr << "LUT_NOOP";
         break;
     }
 
-    cout << endl;
+    cerr << endl;
 
     for( int i = 0; i < ( int )el.size(); i++ ) {
         if( i == ( int )el.size() - 1 ) {
-            cout << pre << "*---";
+            cerr << pre << "*---";
             el[i].print( pre + "    " );
         } else {
-            cout << pre << "|---";
+            cerr << pre << "|---";
             el[i].print( pre + "|   " );
         }
     }

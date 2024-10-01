@@ -500,7 +500,7 @@ namespace flopoco{
 		db=mpfr_get_d(b, GMP_RNDN);
 		dc=mpfr_get_d(c, GMP_RNDN);
 		dr=mpfr_get_d(r, GMP_RNDN);
-		cout << "a=" << da << " b="<< db << " c=" << dc << "   r=" << dr << endl;
+		cerr << "a=" << da << " b="<< db << " c=" << dc << "   r=" << dr << endl;
 #endif
 
 		// clean up

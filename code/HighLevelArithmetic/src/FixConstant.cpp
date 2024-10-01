@@ -21,14 +21,14 @@ namespace flopoco{
 	FixConstant::FixConstant(const int MSB_, int LSB_, const bool isSigned_, const mpz_class zval):
 		isSigned(isSigned_), MSB(MSB_), LSB(LSB_), width(MSB_-LSB_+1)
 	{
-		// cout <<  "Entering FixConstant "<< zval  <<endl;
+		// cerr <<  "Entering FixConstant "<< zval  <<endl;
 		mpfr_init2(fpValue, width);
 		mpfr_set_z(fpValue, zval.get_mpz_t(), GMP_RNDN); // TODO check no error?
 		mpfr_mul_2si(fpValue, fpValue, LSB, GMP_RNDN); // exact
 		isZeroP = mpfr_zero_p(fpValue);
 		if( (! isSigned) && (mpfr_sgn(fpValue)<0) )
 			THROWERROR("In FixConstant constructor: Negative constant " << printMPFR(fpValue) << " cannot be represented as an unsigned constant");
-		// cout <<  "Exiting FixConstant "<< zval <<endl;
+		// cerr <<  "Exiting FixConstant "<< zval <<endl;
 	}
 
 
@@ -56,15 +56,15 @@ namespace flopoco{
 		}
 
 		// Normalisation?
-		cout << "Normalisation";
+		cerr << "Normalisation";
 		while(zval & mpz_class(1) == 0) {
-			cout << ".";
+			cerr << ".";
 			zval = zval>>1;
 			LSB++;
 		}
 		MSB=0;
 		while(zval!=0) {
-			cout << "*";
+			cerr << "*";
 			zval = zval>>1;
 			MSB++;
 		}
@@ -116,7 +116,7 @@ namespace flopoco{
 	}
 
 	std::string FixConstant::getBitVector(int margins){
-		//		cout <<  "in FixConstant::getBitVector, fpValue=" << printMPFR(fpValue) << endl;
+		//		cerr <<  "in FixConstant::getBitVector, fpValue=" << printMPFR(fpValue) << endl;
 		// use the function in utils.hpp
 		if(isSigned)
 			return signedFixPointNumber(fpValue, MSB, LSB);

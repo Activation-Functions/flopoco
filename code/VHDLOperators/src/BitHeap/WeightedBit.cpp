@@ -88,27 +88,27 @@ namespace flopoco
 
 	/* which bit was defined earlier */
 	bool operator< (WeightedBit& b1, WeightedBit& b2){
-		//cout <<"**** <" << endl;
+		//cerr <<"**** <" << endl;
 		return ((b1.cycle<b2.cycle) || (b1.cycle==b2.cycle && b1.criticalPath<b2.criticalPath));
 	}
 
 	bool operator<= (WeightedBit& b1, WeightedBit& b2){
-		//cout <<"**** <=" << endl;
+		//cerr <<"**** <=" << endl;
 		return ((b1.cycle<b2.cycle) || (b1.cycle==b2.cycle && b1.criticalPath<=b2.criticalPath));
 	}
 
 	bool operator> (WeightedBit& b1, WeightedBit& b2){
-		//cout <<"**** >" << endl;
+		//cerr <<"**** >" << endl;
 		return ((b1.cycle>b2.cycle) || (b1.cycle==b2.cycle && b1.criticalPath>b2.criticalPath));
 	}
 
 	bool operator>= (WeightedBit& b1, WeightedBit& b2){
-		//cout <<"**** >=" << endl;
+		//cerr <<"**** >=" << endl;
 		return ((b1.cycle>b2.cycle) || (b1.cycle==b2.cycle && b1.criticalPath>=b2.criticalPath));
 	}
 
 	bool operator== (WeightedBit& b1, WeightedBit& b2){
-		//cout <<"**** ==" << endl;
+		//cerr <<"**** ==" << endl;
 		return ((b1.cycle==b2.cycle) && (b1.criticalPath==b2.criticalPath));
 	}
 

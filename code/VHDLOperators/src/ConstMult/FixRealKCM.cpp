@@ -508,7 +508,7 @@ namespace flopoco{
 				// Add these bits to the bit heap
 				switch(tableOutputSign[i]) {
 				case 0:
-					//					cout << "****************************Case 0" << endl;
+					//					cerr << "****************************Case 0" << endl;
 					// bitHeap -> addSignedBitVector(
 					// 															sliceOutName, // name
 					// 															sliceOutWidth, // size
@@ -518,12 +518,12 @@ namespace flopoco{
 					bitHeap -> addSignal(sliceOutName);
 					break;
 				case 1:
-					//					cout << "****************************Case 1" << endl;
+					//					cerr << "****************************Case 1" << endl;
 					sliceOut -> setIsSigned(false);
 					bitHeap -> addSignal(sliceOutName);
 					break;
 				case -1: // In this case the table simply stores x* absC 
-					//					cout << "****************************Case -1" << endl;
+					//					cerr << "****************************Case -1" << endl;
 					sliceOut -> setIsSigned(false);
 					bitHeap -> subtractSignal(sliceOutName);
 					break;
@@ -596,7 +596,7 @@ namespace flopoco{
 				}
 			} // Now x is a signed number only if it was chunk 0 and its sign bit was set
 
-			//cout << "i=" << i << " x0=" << x0 << "  sx=" << x <<"  wIn="<<wIn<< "   "  <<"  wout="<<wOut<< "   " ;
+			//cerr << "i=" << i << " x0=" << x0 << "  sx=" << x <<"  wIn="<<wIn<< "   "  <<"  wout="<<wOut<< "   " ;
 
 			mpz_class result;
 			mpfr_t mpR, mpX;
@@ -609,7 +609,7 @@ namespace flopoco{
 			mpfr_mul_2si(mpX, mpX, l[i], GMP_RNDN); //Exact
 
 			//						double dx = mpfr_get_d(mpX, GMP_RNDN);
-			//			cout << "input as double=" <<dx << "  l[i]="  << l[i] << "    ";
+			//			cerr << "input as double=" <<dx << "  l[i]="  << l[i] << "    ";
 			
 			// do the mult in large precision
 			if(tableOutputSign[i]==0)	
@@ -624,15 +624,15 @@ namespace flopoco{
 										GMP_RNDN	); //Exact
 
 			//			double dr=mpfr_get_d(mpR, GMP_RNDN);
-			//			cout << "  dr=" << dr << "  ";
+			//			cerr << "  dr=" << dr << "  ";
 			
 			// Here is when we do the rounding
 			mpfr_get_z(result.get_mpz_t(), mpR, GMP_RNDN); // Should be exact
 
-			//cout << tableOutputSign[i] << "  result0=" << result << "  ";
+			//cerr << tableOutputSign[i] << "  result0=" << result << "  ";
 
 		
-			//cout  << result << "  " <<endl;
+			//cerr  << result << "  " <<endl;
 
 			// Add the rounding bit to the table 0 if there are guard bits,
 			if(addRoundBit && (i==0) && (g>0)) {

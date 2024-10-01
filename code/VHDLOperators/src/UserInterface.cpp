@@ -1234,13 +1234,13 @@ namespace flopoco
 		tabber("complete -F _flopoco flopoco");
 		file.close();
 
-		cout << "Bash autocomplete successfully generated !!" << endl;
-		cout << "(this is in no case a warranty nor a guarantee that the script will work)" << endl;
-		cout << "In order to make it work, we recommend that you link this file in your ~/.bash_completion.d directory" <<
+		cerr << "Bash autocomplete successfully generated !!" << endl;
+		cerr << "(this is in no case a warranty nor a guarantee that the script will work)" << endl;
+		cerr << "In order to make it work, we recommend that you link this file in your ~/.bash_completion.d directory" <<
 			endl << "you might have to create the ~/.bash_completion.d directory" << endl << endl;
-		cout << "\t\tmv flopoco_autocomplete ~/.bash_completion.d/flopoco" << endl << endl;
-		cout << "and then add the following line to your .bashrc :"<< endl << endl;
-		cout << "\t\t. ~/.bash_completion.d/flopoco" << endl;
+		cerr << "\t\tmv flopoco_autocomplete ~/.bash_completion.d/flopoco" << endl << endl;
+		cerr << "and then add the following line to your .bashrc :"<< endl << endl;
+		cerr << "\t\t. ~/.bash_completion.d/flopoco" << endl;
 	}
 
 	////////////////// Operator factory /////////////////////////
@@ -1429,7 +1429,7 @@ namespace flopoco
 			if(part.size()!=0) {
 				int nameEnd = part.find('(', 0);
 				string name=part.substr(0, nameEnd);
-//				cout << "Found parameter: {" << name<<"}";
+//				cerr << "Found parameter: {" << name<<"}";
 
 				int hiddenpos = name.find("[hidden]", 0);
 				if(hiddenpos != string::npos)
@@ -1447,7 +1447,7 @@ namespace flopoco
 				int typeEnd = part.find(')', 0);
 				string type=part.substr(nameEnd+1, typeEnd-nameEnd-1);
 
-//				cout << " (filtered: " << name << ") " << " of type  {" << type <<"}";
+//				cerr << " (filtered: " << name << ") " << " of type  {" << type <<"}";
 				if(type=="bool" || type=="int" || type=="real" || type=="string" || type=="intlist")
 					m_paramType[name] = type;
 				else {
@@ -1462,7 +1462,7 @@ namespace flopoco
 					j++;
 					int defaultValEnd = part.find(':', 0);
 					string defaultVal=part.substr(j, defaultValEnd-j);
-					//cout << " default to {" <<  defaultVal << "}  ";
+					//cerr << " default to {" <<  defaultVal << "}  ";
 					m_paramDefault[name]=defaultVal;
 					j=defaultValEnd;
 				}
@@ -1472,7 +1472,7 @@ namespace flopoco
 					while (part[j]==' ' || part[j]=='\t') j++; // remove leading spaces and tabs
 					string description = part.substr(j, -1);
 					m_paramDoc[name] = description;
-					// cout << " :  {" << description <<"}" << endl;
+					// cerr << " :  {" << description <<"}" << endl;
 				}
 				else throw("OperatorFactory: Error parsing parameter description");
 			}

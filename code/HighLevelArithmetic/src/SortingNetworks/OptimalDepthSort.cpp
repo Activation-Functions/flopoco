@@ -33,7 +33,7 @@ namespace flopoco{
 			flat_sort = flat_sort_17;
 		} else {
 			flat_sort = {};
-			std::cout << "Optimal depth sort not implemented for N=" << std::to_string(N) << ", bitonic sort used instead\n";
+			std::cerr << "Optimal depth sort not implemented for N=" << std::to_string(N) << ", bitonic sort used instead\n";
 		}
 	}
 	

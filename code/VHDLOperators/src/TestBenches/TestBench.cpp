@@ -416,7 +416,7 @@ vhdl << tab << tab << tab << "if possibilityNumber = -1 then -- this means an in
 		*/
 		vhdl << tab << tab << tab << "wait for 10 ns;" << endl;
 		vhdl << tab << tab << "end loop;" << endl;
-		vhdl << tab << tab << "report integer'image(errorCounter) & \" error(s) encoutered.\" severity note;" << endl;
+		vhdl << tab << tab << "report integer'image(errorCounter) & \" error(s) encerrered.\" severity note;" << endl;
 		vhdl << tab << tab << "report \"End of simulation after \" & integer'image(testCounter-1) & \" tests\" severity note;" <<endl;
 		vhdl << tab << "end process;" <<endl;
 
@@ -625,7 +625,7 @@ vhdl << tab << tab << tab << "if possibilityNumber = -1 then -- this means an in
 
 				if (s->type() != Signal::out) continue;
 				if (s->isFP() != true and s->isIEEE() != true) continue;
-				//				std::cout << "debug : inserting size " << s->width() << " in fp subtype map. " << std::endl;
+				//				std::cerr << "debug : inserting size " << s->width() << " in fp subtype map. " << std::endl;
 				widths.insert(s->width());
 			}
 

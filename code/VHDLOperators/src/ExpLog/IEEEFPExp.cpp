@@ -180,7 +180,7 @@ namespace flopoco{
 		outmap << "K=>K";
 
 
-		cout << param.str() <<endl;
+		cerr << param.str() <<endl;
 
 		newInstance("Exp", "exp_helper", param.str(), inmap.str(), outmap.str());
 
@@ -378,11 +378,11 @@ namespace flopoco{
 		fx = new IEEENumber(wE, wF, IEEENumber::greatestNormal);
 		fx->getMPFR(x);
 		mpfr_log(y, x, GMP_RNDN);
-		//		cout << "A " << fx->getSignalValue() << endl;
+		//		cerr << "A " << fx->getSignalValue() << endl;
 		//		 d = mpfr_get_d(x, GMP_RNDN);
-		// cout << d << endl;
+		// cerr << d << endl;
 		// d = mpfr_get_d(y, GMP_RNDN);
-		// cout << d << endl;
+		// cerr << d << endl;
 		fy = new IEEENumber(wE, wF, y);
 		tc->addIEEEInput("X", *fy);
 		emulate(tc);
@@ -405,11 +405,11 @@ namespace flopoco{
 		fx->getMPFR(x);
 		mpfr_log(y, x, GMP_RNDU);
 
-		// cout << "A " << fx->getSignalValue() << endl;
+		// cerr << "A " << fx->getSignalValue() << endl;
 		// d = mpfr_get_d(x, GMP_RNDN);
-		// cout << d << endl;
+		// cerr << d << endl;
 		// d = mpfr_get_d(y, GMP_RNDN);
-		// cout << d << endl;
+		// cerr << d << endl;
 
 		fy = new IEEENumber(wE, wF, y);
 		tc->addIEEEInput("X", *fy);
@@ -443,11 +443,11 @@ namespace flopoco{
 		fx->getMPFR(x);
 		mpfr_log(y, x, GMP_RNDU);
 
-		// cout << "A " << fx->getSignalValue() << endl;
+		// cerr << "A " << fx->getSignalValue() << endl;
 		// d = mpfr_get_d(x, GMP_RNDN);
-		// cout << d << endl;
+		// cerr << d << endl;
 		// d = mpfr_get_d(y, GMP_RNDN);
-		// cout << d << endl;
+		// cerr << d << endl;
 
 		fy = new IEEENumber(wE, wF, y);
 		tc->addIEEEInput("X", *fy);
@@ -487,7 +487,7 @@ namespace flopoco{
 		else
 		{
 				mpz_class e = (getLargeRandom(wE+wF) % (wE+wF+2) ) -wF-3; // Should be between -wF-3 and wE-2
-				//cout << e << endl;
+				//cerr << e << endl;
 				e = bias + e;
 				mpz_class sign = getLargeRandom(1);
 				x  = getLargeRandom(wF) + (e << wF) + (sign<<(wE+wF));

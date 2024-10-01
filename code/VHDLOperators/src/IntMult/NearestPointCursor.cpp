@@ -57,7 +57,7 @@ namespace flopoco {
             }
         }
 
-        cout << "REACHED MAX SEARCH RADIUS" << endl;
+        cerr << "REACHED MAX SEARCH RADIUS" << endl;
         field_->printField();
         setCursor(0,0);
         return;

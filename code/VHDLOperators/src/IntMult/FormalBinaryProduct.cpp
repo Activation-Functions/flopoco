@@ -2,7 +2,7 @@
 #include <iostream>
 
 using namespace flopoco;
-using std::cout;
+using std::cerr;
 using std::endl;
 
 MonomialOfBits::MonomialOfBits(size_t n): data(std::vector<bool>(n)), n(n) {

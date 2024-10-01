@@ -66,15 +66,15 @@ namespace flopoco{
 			j=function(i);
 			y=output2double(j);
 			if(is_log_lvl_enabled(LogLevel::DETAIL)
-				cout << "i="<<i<< " ("<<input2double(i)<<") j="<<j
+				cerr << "i="<<i<< " ("<<input2double(i)<<") j="<<j
 					  <<" min="<< x1*y <<" max="<< x2*y<< endl;
 			prod=x1*y; if (prod<minMulOut) minMulOut=prod;
 			prod=x2*y; if (prod>maxMulOut) maxMulOut=prod;
 			e1= fabs(x1*y-1); if (e1>maxerror) maxerror=e1;
 			e2= fabs(x2*y-1); if (e2>maxerror) maxerror=e2;
 		}
-		cout << "FirstInvTable: Max error=" <<maxerror << "  log2=" << log2(maxerror) <<endl;
-		cout << "               minMulOut=" <<minMulOut << " maxMulOut=" <<maxMulOut  <<endl;
+		cerr << "FirstInvTable: Max error=" <<maxerror << "  log2=" << log2(maxerror) <<endl;
+		cerr << "               minMulOut=" <<minMulOut << " maxMulOut=" <<maxMulOut  <<endl;
 
 		printf("%1.30e\n", log2(maxerror));
 
@@ -365,7 +365,7 @@ namespace flopoco{
 					/  ((double)(1<<a[0])); // 1.0xxxxx (binary)
 			mpz_class r =  ceil( ((double)(1<<a[0])) / xd); // double rounding, but who cares really
 		// The following line allows us to prove that the case a0=5 is lucky enough to need one bit less than the general case
-		//cout << "FirstInvTable> x=" << x<< "  r=" <<r << "  error=" << ceil( ((double)(1<<(wOut-1))) / d)  - ( ((double)(1<<(wOut-1))) / d) << endl;
+		//cerr << "FirstInvTable> x=" << x<< "  r=" <<r << "  error=" << ceil( ((double)(1<<(wOut-1))) / d)  - ( ((double)(1<<(wOut-1))) / d) << endl;
 			it0Content.push_back(r);
 		}
 		TableOperator::newUniqueInstance(this, "A0", "InvA0",
@@ -568,7 +568,7 @@ namespace flopoco{
 			mpz_class t = mpz_class(1) << target_prec;
 			result = t+result;
 			if(result>t) result-=t;
-			//  cout << "x="<<x<<" apprinv="<<apprinv<<" logapprinv="<<log(apprinv)<<" result="<<result<<endl;
+			//  cerr << "x="<<x<<" apprinv="<<apprinv<<" logapprinv="<<log(apprinv)<<" result="<<result<<endl;
 			mpfr_clear(i);
 			mpfr_clear(l);
 			mpz_clear(r);
@@ -606,12 +606,12 @@ namespace flopoco{
 
 				xd = ((double) (-x))   /   ((double) (((uint64_t) 1)<<(p[i]+wIn)));
 
-				//cout << endl << d << " " << Ei << "   " ;
+				//cerr << endl << d << " " << Ei << "   " ;
 				xd += Ei;
 				mpfr_set_d(xmp, xd, GMP_RNDN);
 				mpfr_log1p(l, xmp, GMP_RNDN);
 				mpfr_neg(l, l, GMP_RNDN);
-				// cout << "i=" << i <<  " div" << (p[i]+wIn+1) << "  x=" << x << "  apprinv=" << apprinv << "  l=" << mpfr_get_d(l, GMP_RNDN) << endl;
+				// cerr << "i=" << i <<  " div" << (p[i]+wIn+1) << "  x=" << x << "  apprinv=" << apprinv << "  l=" << mpfr_get_d(l, GMP_RNDN) << endl;
 				// Add the small offset that ensures that it never gets negative (the sum of these offsets will be subtracted to L0)
 				mpfr_set_d(xmp, 1.0, GMP_RNDN);
 				mpfr_mul_2si(xmp, xmp, -2*p[i], GMP_RNDN);

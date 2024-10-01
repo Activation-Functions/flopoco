@@ -33,7 +33,7 @@ namespace flopoco{
 		completeDescription << sollyaString_;
 		completeDescription << " for width=" << width << ", wES=" << wES;
 		description = completeDescription.str();
-		// cout << description;
+		// cerr << description;
 
 		// Now do the parsing in Sollya
 		fS= sollya_lib_parse_string(sollyaString_.c_str());

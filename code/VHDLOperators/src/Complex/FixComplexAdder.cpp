@@ -84,7 +84,7 @@ namespace flopoco {
 
 		   Each code transmitted to vhdl will be parsed and the variables previously declared in a previous cycle will be delayed automatically by a pipelined register.
 		*/
-//		cout << endl << "msbin=" << std::to_string(msbin) << " lsbin=" + std::to_string(lsbin) << 
+//		cerr << endl << "msbin=" << std::to_string(msbin) << " lsbin=" + std::to_string(lsbin) << 
 //							" msbout=" << std::to_string(msbout) << " lsbout=" << std::to_string(lsbout) << " laststage=" << std::to_string(laststage) << endl; 
 
 		if(signedIn)

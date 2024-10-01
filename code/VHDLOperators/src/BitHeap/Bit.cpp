@@ -14,7 +14,7 @@ namespace flopoco
 
 		uid = bitheap->newBitUid(weight);
 		p  << "bh" << bitheap->getGUid() << "_w" << ((weight<0)?"m":"") << ((weight<0)?(-1)*weight:weight) << "_" << uid;
-		//		cout << p.str() << endl;
+		//		cerr << p.str() << endl;
 		string name = p.str();
 		bitheap->getOp()-> vhdl << tab
 			<< bitheap->getOp()->declare(name)
@@ -34,7 +34,7 @@ namespace flopoco
 
 		uid = bitheap->newBitUid(weight);
 		p  << "bh" << bitheap->getGUid() << "_w" << ((weight<0)?"m":"") << ((weight<0)?(-1)*weight:weight) << "_" << uid;
-		// cout << p.str() << endl;
+		// cerr << p.str() << endl;
 		string name = p.str();
 
 		p.str("");
@@ -64,7 +64,7 @@ namespace flopoco
 		uid = bitheap->newBitUid(weight);
 
 		p  << "bh" << bitheap->getGUid() << "_w" << ((weight<0)?"m":"") << ((weight<0)?(-1)*weight:weight) << "_" << uid;
-		// cout << p.str() << endl;
+		// cerr << p.str() << endl;
 		string name = p.str();
 
 		bitheap->getOp()->vhdl << tab

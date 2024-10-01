@@ -49,7 +49,7 @@ namespace flopoco{
 
 		    if(coeffOdd <= maxCoefficient)
         {
-            cout << "nofs[" << coeff << "]=" << nofs[(coeff-1)>>1][0] << " " << nofs[(coeff-1)>>1][1] << endl;
+            cerr << "nofs[" << coeff << "]=" << nofs[(coeff-1)>>1][0] << " " << nofs[(coeff-1)>>1][1] << endl;
 
             int nof1 = nofs[(coeffOdd-1)>>1][0];
             int nof2 = nofs[(coeffOdd-1)>>1][1];
@@ -72,7 +72,7 @@ namespace flopoco{
             adderGraphStringStream << "{'O',[" << coeff << "],1,[" << coeffOdd << "],1," << shift << "}";
             adderGraphStringStream << "}";
 
-            cout << "adder_graph=" << adderGraphStringStream.str() << endl;
+            cerr << "adder_graph=" << adderGraphStringStream.str() << endl;
 
             ProcessIntConstMultShiftAdd(target,adderGraphStringStream.str());
 

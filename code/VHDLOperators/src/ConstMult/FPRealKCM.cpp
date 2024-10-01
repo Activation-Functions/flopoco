@@ -76,7 +76,7 @@ namespace flopoco{
 		
 		if(mpfr_cmp_ui_2exp(mpC, 1, iExp - 1) == 0)
 		{
-			cout << "Power of two " << endl;
+			cerr << "Power of two " << endl;
 			vhdl << tab << declare("nf", wF) << " <= fracX " << range(wF-1, 0) << ";" << endl ;
 			vhdl << tab << declare("norm") << " <= '0' ;" << endl ;
 		}

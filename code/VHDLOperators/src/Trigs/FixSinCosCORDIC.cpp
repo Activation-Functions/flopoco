@@ -373,13 +373,13 @@ namespace flopoco{
 			if(d==0) dd=1.0; else dd=-1.0;
 			cc = c - dd*p*s;
 			ss = s + dd*p*c;
-			cout << stage << "\t atan=" << atan(p)/pi<< "  \t d=" << d << "\t z=" << z << "\t c=" << c << "\t s=" << s;
-			cout  << "      \t z=" << (int)(z*scale) << "  \t c=" << (int)(c*scale*4) << "\t s=" << (int)(s*scale*4) << endl;
+			cerr << stage << "\t atan=" << atan(p)/pi<< "  \t d=" << d << "\t z=" << z << "\t c=" << c << "\t s=" << s;
+			cerr  << "      \t z=" << (int)(z*scale) << "  \t c=" << (int)(c*scale*4) << "\t s=" << (int)(s*scale*4) << endl;
 			z = z - dd*atan(p)/pi;
 			c=cc;
 			s=ss;
 			p=p*0.5;
 		}		
-		cout  << "Should be  \t\t\t\t\t\t c=" << cos(pi*z0) << "  \t s=" << sin(pi*z0) << endl;
+		cerr  << "Should be  \t\t\t\t\t\t c=" << cos(pi*z0) << "  \t s=" << sin(pi*z0) << endl;
 		//		manageCriticalPath(getTarget()->localWireDelay(wcs + g) + getTarget()->lutDelay());
 #endif		

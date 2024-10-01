@@ -37,7 +37,7 @@ TilingStrategyOptimalILP::TilingStrategyOptimalILP(
         performOptimalTruncation{performOptimalTruncation},
         squarer{squarer}
 	{
-	    cout << errorBudget << endl;
+	    cerr << errorBudget << endl;
         mpz_class max64;
         unsigned long long max64u = (1ULL << 52)-1ULL;//UINT64_MAX; //Limit to dynamic of double type
         mpz_import(max64.get_mpz_t(), 1, -1, sizeof max64u, 0, 0, &max64u);
@@ -45,16 +45,16 @@ TilingStrategyOptimalILP::TilingStrategyOptimalILP(
             mpz_export(&this->errorBudget, 0, -1, sizeof this->errorBudget, 0, 0, errorBudget.get_mpz_t());
         } else {
             if(performOptimalTruncation)
-                cout << "WARNING: errorBudget or constant exceeds the number range of uint64, switching to optiTrunc=0" << endl;
+                cerr << "WARNING: errorBudget or constant exceeds the number range of uint64, switching to optiTrunc=0" << endl;
             this->errorBudget = 0;
             this->performOptimalTruncation = false;
         }
-        cout << this->errorBudget << endl;
+        cerr << this->errorBudget << endl;
 
-	    cout << "guardBits " << guardBits << " keepBits " << keepBits << endl;
+	    cerr << "guardBits " << guardBits << " keepBits " << keepBits << endl;
         for(auto &p:tiles)
         {
-                cout << p->getLUTCost(0, 0, wX, wY, false) << " " << p->getType() << endl;
+                cerr << p->getLUTCost(0, 0, wX, wY, false) << " " << p->getType() << endl;
         }
 	}
 
@@ -65,11 +65,11 @@ void TilingStrategyOptimalILP::solve()
     throw "Error, TilingStrategyOptimalILP::solve() was called but FloPoCo was not built with ScaLP library";
 #else
     solver = new ScaLP::Solver(ScaLP::newSolverDynamic({target->getILPSolver(),"Gurobi","CPLEX","SCIP","LPSolve"}));
-    cout << "using ILP solver " << solver->getBackendName() << " (whish was " << target->getILPSolver() << ")" << endl;
+    cerr << "using ILP solver " << solver->getBackendName() << " (whish was " << target->getILPSolver() << ")" << endl;
 
     if(solver->getBackendName().find("LPSolve") != std::string::npos)
     {
-      cout << "LPSolve is used, disabling presolve as this caused problems in the past" << endl;
+      cerr << "LPSolve is used, disabling presolve as this caused problems in the past" << endl;
       solver->presolve = false;
     }
     solver->timeout = target->getILPTimeout();
@@ -81,7 +81,7 @@ void TilingStrategyOptimalILP::solve()
         constructProblem();
 
         // Try to solve
-        cout << "starting solver, this might take a while..." << endl;
+        cerr << "starting solver, this might take a while..." << endl;
         solver->quiet = false;
         ScaLP::status stat = solver->solve();
 
@@ -95,7 +95,7 @@ void TilingStrategyOptimalILP::solve()
         ScaLP::Result res = solver->getResult();
 
         //parse solution
-        cout << "centerErrConstant was: " << centerErrConstant << endl;
+        cerr << "centerErrConstant was: " << centerErrConstant << endl;
         unsigned long long new_constant = 0;
         double total_cost = 0, sum1 = 0, sum2 = 0, sum3 = 0, sum4 = 0;
         int dsp_cost = 0, own_lut_cost = 0;
@@ -109,7 +109,7 @@ void TilingStrategyOptimalILP::solve()
                     int y_negative = (var_name.substr(2 + dpS + x_negative + dpX, 1).compare("m") == 0) ? 1 : 0;
                     int m_y_pos = stoi(var_name.substr(2 + dpS + dpX + x_negative + y_negative, dpY)) *
                                   ((y_negative) ? (-1) : 1);
-                    cout << "is true:  " << setfill(' ') << setw(dpY) << mult_id << " " << setfill(' ') << setw(dpY)
+                    cerr << "is true:  " << setfill(' ') << setw(dpY) << mult_id << " " << setfill(' ') << setw(dpY)
                          << m_x_pos << " " << setfill(' ') << setw(dpY) << m_y_pos << " cost: " << setfill(' ')
                          << setw(5) << tiles[mult_id]->getLUTCost(m_x_pos, m_y_pos, wX, wY, signedIO) << std::endl;
 
@@ -124,7 +124,7 @@ void TilingStrategyOptimalILP::solve()
                 if (var_name.substr(0, 1) == "c") {
                     int c_id = stoi(var_name.substr(1, dpC));
                     new_constant |= (1ULL << c_id);
-                    cout << var_name << " pos " << c_id << " dpC " << dpC << endl;
+                    cerr << var_name << " pos " << c_id << " dpC " << dpC << endl;
                 }
             }
             //check variables for numeric derivations due to rounding for optimal truncation.
@@ -143,22 +143,22 @@ void TilingStrategyOptimalILP::solve()
                 if (p.second >= 0.5) sum4 += (1 << shift);
             }
         }
-        cout << "Total LUT cost:" << total_cost << std::endl;
-        cout << "Own LUT cost:" << own_lut_cost << std::endl;
-        cout << "Total DSP cost:" << dsp_cost << std::endl;
-        cout << std::setprecision(20) << sum1 << " s2 " << std::setprecision(20) << sum2 << " c:"
+        cerr << "Total LUT cost:" << total_cost << std::endl;
+        cerr << "Own LUT cost:" << own_lut_cost << std::endl;
+        cerr << "Total DSP cost:" << dsp_cost << std::endl;
+        cerr << std::setprecision(20) << sum1 << " s2 " << std::setprecision(20) << sum2 << " c:"
              << std::setprecision(20) << sum3 << " s2 " << std::setprecision(20) << sum4 << endl;
 
         if(performOptimalTruncation){
             //refresh centerErrConstant according to ILP solution
             //centerErrConstant = new_constant;
             mpz_import(centerErrConstant.get_mpz_t(), 1, -1, sizeof new_constant, 0, 0, &new_constant);
-            cout << "centerErrConstant now is: " << centerErrConstant << endl;
+            cerr << "centerErrConstant now is: " << centerErrConstant << endl;
 
             //check for numeric errors in solution
             optTruncNumericErr = (long long)ceil(fabs((sum1 + sum3) - (sum2 + sum4)));
             if(0 < optTruncNumericErr){
-                cout << "Warning: Numeric problems in solution, repeating ILP with Offset for Error of " << optTruncNumericErr << endl;
+                cerr << "Warning: Numeric problems in solution, repeating ILP with Offset for Error of " << optTruncNumericErr << endl;
                 errorBudget -= optTruncNumericErr;      //Reduce errorBudget by scope of numeric derivation for next iteration
             }
         }
@@ -184,15 +184,15 @@ void TilingStrategyOptimalILP::solve()
 #ifdef HAVE_SCALP
 void TilingStrategyOptimalILP::constructProblem()
 {
-    cout << "constructing problem formulation..." << endl;
+    cerr << "constructing problem formulation..." << endl;
     wS = tiles.size();
 
     for (auto const& i : tiles) {
-        std::cout << i->getType() << " weight=" << i->getParametrisation().getTilingWeight()  << endl;
+        std::cerr << i->getType() << " weight=" << i->getParametrisation().getTilingWeight()  << endl;
     }
 
     //Assemble cost function, declare problem variables
-    cout << "   assembling cost function, declaring problem variables..." << endl;
+    cerr << "   assembling cost function, declaring problem variables..." << endl;
     ScaLP::Term obj;
     prodWidth = IntMultiplier::prodsize(wX, wY, signedIO, signedIO);
     int x_neg = 0, y_neg = 0;
@@ -216,7 +216,7 @@ void TilingStrategyOptimalILP::constructProblem()
     vector<vector<vector<ScaLP::Variable>>> solve_Vars(wS, vector<vector<ScaLP::Variable>>(wX+x_neg, vector<ScaLP::Variable>(wY+y_neg)));
     ScaLP::Term maxEpsTerm, minEpsTerm;
     // add the Constraints
-    cout << "   adding the constraints to problem formulation..." << endl;
+    cerr << "   adding the constraints to problem formulation..." << endl;
     for(int y = 0; y < wY; y++){
         for(int x = 0; x < wX; x++){
             if(squarer && x < y) continue;
@@ -238,7 +238,7 @@ void TilingStrategyOptimalILP::constructProblem()
                                 if(solve_Vars[s][xs+x_neg][ys+y_neg] == nullptr){
                                     stringstream nvarName;
                                     nvarName << " d" << setfill('0') << setw(dpS) << s << ((xs < 0)?"m":"") << setfill('0') << setw(dpX) << ((xs<0)?-xs:xs) << ((ys < 0)?"m":"")<< setfill('0') << setw(dpY) << ((ys<0)?-ys:ys) ;
-                                    //std::cout << nvarName.str() << endl;
+                                    //std::cerr << nvarName.str() << endl;
                                     ScaLP::Variable tempV = ScaLP::newBinaryVariable(nvarName.str());
                                     solve_Vars[s][xs+x_neg][ys+y_neg] = tempV;
                                     obj.add(tempV, (double)tiles[s]->getLUTCost(xs, ys, wX, wY, signedIO));    //append variable to cost function
@@ -287,13 +287,13 @@ void TilingStrategyOptimalILP::constructProblem()
             } else if(!performOptimalTruncation && (wOut < (int)prodWidth) && ((x + y) < (int)(prodWidth - wOut - guardBits))){
                 //c1Constraint = pxyTerm <= (bool)1;
             } else if(!performOptimalTruncation && (wOut < (int)prodWidth) && ((x + y) == (int)(prodWidth - wOut - guardBits))){
-                //cout << "keepBit to place: " << keepBits << endl;
+                //cerr << "keepBit to place: " << keepBits << endl;
                 if((keepBits)?keepBits--:0){
                     c1Constraint = pxyTerm == ((squarer && x != y)?2:1);
                     if(squarer && x != y && keepBits) keepBits--;           //consider symmetric bit in squarer
-                    //cout << "keepBit at" << x << "," << y << endl;
+                    //cerr << "keepBit at" << x << "," << y << endl;
                 } else {
-                    //cout << "NO keepBit at" << x << "," << y << endl;
+                    //cerr << "NO keepBit at" << x << "," << y << endl;
                 }
             } else {
                 c1Constraint = pxyTerm == ((!squarer || x == y)?1.0:2.0);
@@ -316,7 +316,7 @@ void TilingStrategyOptimalILP::constructProblem()
         }
 
         if (nDSPTiles) {
-            cout << "   adding the constraint to limit the use of DSP-Blocks to " << max_pref_mult_ << " instances..."
+            cerr << "   adding the constraint to limit the use of DSP-Blocks to " << max_pref_mult_ << " instances..."
                  << endl;
             stringstream consName;
             consName << "limDSP";
@@ -338,9 +338,9 @@ void TilingStrategyOptimalILP::constructProblem()
     //make shure the available precision is present in case of truncation
     if(performOptimalTruncation == true && (wOut < (int)prodWidth))
     {
-        cout << "   multiplier is truncated by " << (int)prodWidth-wOut << " bits (err=" << (unsigned long)wX*(((unsigned long)1<<((int)wOut-guardBits))) << "), ensure sufficient precision..." << endl;
-        cout << "   guardBits=" << guardBits << endl;
-        cout << "   g=" << guardBits << " k=" << keepBits << " errorBudget=" << errorBudget << " difference to conservative est: " << errorBudget-(long long)(((unsigned long)1)<<((prodWidth-(int)wOut-1)-1)) << endl;
+        cerr << "   multiplier is truncated by " << (int)prodWidth-wOut << " bits (err=" << (unsigned long)wX*(((unsigned long)1<<((int)wOut-guardBits))) << "), ensure sufficient precision..." << endl;
+        cerr << "   guardBits=" << guardBits << endl;
+        cerr << "   g=" << guardBits << " k=" << keepBits << " errorBudget=" << errorBudget << " difference to conservative est: " << errorBudget-(long long)(((unsigned long)1)<<((prodWidth-(int)wOut-1)-1)) << endl;
 
         stringstream nvarName;
         nvarName << "C";
@@ -352,7 +352,7 @@ void TilingStrategyOptimalILP::constructProblem()
         for(unsigned i = 0; i < guardBits-1; i++){
             stringstream nvarName;
             nvarName << "c" << prodWidth-wOut-guardBits+i;
-            cout << nvarName.str() << endl;
+            cerr << nvarName.str() << endl;
             cVars[i] = ScaLP::newBinaryVariable(nvarName.str());
             cTerm.add(cVars[i],  ( 1ULL << (prodWidth-wOut-guardBits+i)));
             obj.add(cVars[i], (double)0.65);    //append variable to cost function
@@ -371,7 +371,7 @@ void TilingStrategyOptimalILP::constructProblem()
         solver->addConstraint(cLimConstraint);
 
         //Limit the error budget
-        cout << "  maxErr=" << errorBudget << endl;
+        cerr << "  maxErr=" << errorBudget << endl;
         ScaLP::Constraint maxErrConstraint = maxEpsTerm - Cvar < errorBudget;
         stringstream maxErrName;
         maxErrName << "maxEps";
@@ -379,7 +379,7 @@ void TilingStrategyOptimalILP::constructProblem()
         solver->addConstraint(maxErrConstraint);
 
         //Limit the error budget
-        cout << "  minErr=" << errorBudget << endl;
+        cerr << "  minErr=" << errorBudget << endl;
         ScaLP::Constraint minErrConstraint = -minEpsTerm + Cvar < errorBudget;
         stringstream minErrName;
         minErrName << "minEps";
@@ -394,13 +394,13 @@ void TilingStrategyOptimalILP::constructProblem()
         for(unsigned i = 0; i < prodWidth+5; i++){
             stringstream cvarName;
             cvarName << "v" << setfill('0') << setw(dpC) << i;
-            //cout << cvarName.str() << " weight " << (double)(1ULL << i) << endl;
+            //cerr << cvarName.str() << " weight " << (double)(1ULL << i) << endl;
             cvBits[i] = ScaLP::newBinaryVariable(cvarName.str());
             obj.add(cvBits[i], 0.65);    //append variable to cost function
 
             stringstream ovarName;
             ovarName << "o" << setfill('0') << setw(dpC) << i;
-            //cout << cvarName.str() << " weight " << (double)(1ULL << i) << endl;
+            //cerr << cvarName.str() << " weight " << (double)(1ULL << i) << endl;
             ovVars[i] = ScaLP::newIntegerVariable(ovarName.str());
             constVecBits[i].add(cvBits[i], -1);                 //constant bit in col i
             constVecBits[i].add(ovVars[i], -2);                 //for carry to next constraint
@@ -415,11 +415,11 @@ void TilingStrategyOptimalILP::constructProblem()
     }
 
     // Set the Objective
-    cout << "   setting objective (minimize cost function)..." << endl;
+    cerr << "   setting objective (minimize cost function)..." << endl;
     solver->setObjective(ScaLP::minimize(obj));
 
     // Write Linear Program to file for debug purposes
-    cout << "   writing LP-file for debuging..." << endl;
+    cerr << "   writing LP-file for debuging..." << endl;
     solver->writeLP("tile.lp");
 }
 

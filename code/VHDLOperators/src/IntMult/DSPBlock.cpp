@@ -54,7 +54,7 @@ DSPBlock::DSPBlock(Operator *parentOp, Target* target, int wX, int wY, bool xIsS
 	int wIntermMult = wX + wY + onlyOneDelta;
 	wM = IntMultiplier::prodsize(wX, wY, xIsSigned, yIsSigned);//(wX > 1 ? wX : 0) + (wY > 1 ? wY : 0) + (wX==1 && wY==1 ? 1 : 0); //consider special cases with wX or wY (or both) equals one
 //	wM = wX + wY;
-//	cout << "wM=" << wM << endl;
+//	cerr << "wM=" << wM << endl;
 
 	int dspRegisters=3;
 	vhdl << tab << declare((1.0/dspRegisters)*getTarget()->DSPMultiplierDelay(), "Mfull",wIntermMult) << " <= std_logic_vector(" << (signedMultOutput ? "signed" : "unsigned") << "("<<

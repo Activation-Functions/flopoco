@@ -66,7 +66,7 @@ namespace flopoco{
 	    mpfr_clears(a, r, NULL);
 	    result.push_back(h);
 
-	    //cout << x << " ok" << endl;
+	    //cerr << x << " ok" << endl;
 	  }
 	  return result;
 	};

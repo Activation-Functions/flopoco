@@ -233,7 +233,7 @@ bool BaseMultiplierDSPSuperTilesXilinx::shapeValid(int x, int y)
             int b = (xbl - xbr)*(ybd - ybu);
             int used = ((0 <= a)?a:-a) + ((0 <= b)?b:-b);
             int total = (xa2-xa1)*(ya2-ya1) + (xb2-xb1)*(yb2-yb1);
-            //cout << a << " " << b << " " << (float)used/total << endl;
+            //cerr << a << " " << b << " " << (float)used/total << endl;
             return (float)used/total;
         }
     }
@@ -246,7 +246,7 @@ BaseMultiplierDSPSuperTilesXilinxOp::BaseMultiplierDSPSuperTilesXilinxOp(Operato
 
     srcFileName = "BaseMultiplierDSPSuperTilesXilinx";
     uniqueName_ = string("BaseMultiplierDSPSuperTilesXilinxShape_") + string(1,shapeAsChar);
-    //cout << uniqueName_ << endl;
+    //cerr << uniqueName_ << endl;
     //char shapeAsChar = ((char) shape) + 'a' - 1; //convert enum to char
     setNameWithFreqAndUID(string("BaseMultiplierDSPSuperTilesXilinxShape_") + string(1,shapeAsChar));
 

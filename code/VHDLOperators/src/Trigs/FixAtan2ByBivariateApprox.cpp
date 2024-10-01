@@ -901,16 +901,16 @@ namespace flopoco {
 		bool errorSatisfied;
 		double errorLimit = 1.0/(1 << (wOut-1));
 
-		cout << "Beginning computations for error checking method based on the "
+		cerr << "Beginning computations for error checking method based on the "
 				<< (archType==0 ? "plane's equation" : (archType==1 ? "Taylor polynomial of order 1" : "Taylor polynomial of order 2"))
 				<< " Atan2, with wIn=" << wIn << " and wOut=" << wOut << endl;
 
-		cout << tab << "Computing the parameters for the a, b and d tables" << endl;
+		cerr << tab << "Computing the parameters for the a, b and d tables" << endl;
 		errorSatisfied = false;
 		while(!errorSatisfied)
 		{
 			bool runLoop = true;
-			cout << tab << tab << "trying k=" << k << endl;
+			cerr << tab << tab << "trying k=" << k << endl;
 
 			errorMax = 0.0;
 			errorMin = 1.0;
@@ -1055,8 +1055,8 @@ namespace flopoco {
 						//test if any of the errors are above the error limit
 						if((errorCenter>errorLimit) || (errorP1>errorLimit) || (errorP2>errorLimit) || (errorP2>errorLimit) || (errorP2>errorLimit))
 						{
-							cout << tab << tab << tab << "not worth continuing: distance from corners after adjustments is greater than the error limit" << endl;
-							cout << tab << tab << tab << tab << "distance from center=" << errorCenter << " P1=" << errorP1 << " P2=" << errorP2
+							cerr << tab << tab << tab << "not worth continuing: distance from corners after adjustments is greater than the error limit" << endl;
+							cerr << tab << tab << tab << tab << "distance from center=" << errorCenter << " P1=" << errorP1 << " P2=" << errorP2
 									<< " P3=" << errorP3 << " P4=" << errorP4 << " error limit=" << errorLimit << endl;
 
 							runLoop = false;
@@ -1112,8 +1112,8 @@ namespace flopoco {
 						if((errorCenter>errorLimit) || (errorP1>errorLimit) || (errorP2>errorLimit)
 								|| (errorP3>errorLimit) || (errorP4>errorLimit))
 						{
-							cout << tab << tab << tab << "not worth continuing: distance from corners is greater than the error limit" << endl;
-							cout << tab << tab << tab << tab << "distance from center=" << errorCenter << " P1=" << errorP1 << " P2=" << errorP2
+							cerr << tab << tab << tab << "not worth continuing: distance from corners is greater than the error limit" << endl;
+							cerr << tab << tab << tab << tab << "distance from center=" << errorCenter << " P1=" << errorP1 << " P2=" << errorP2
 									<< " P3=" << errorP3 << " P4=" << errorP4 << " error limit=" << errorLimit << endl;
 
 							runLoop = false;
@@ -1165,8 +1165,8 @@ namespace flopoco {
 						if((errorCenter>errorLimit) || (errorP1>errorLimit) || (errorP2>errorLimit)
 								|| (errorP3>errorLimit) || (errorP4>errorLimit))
 						{
-							cout << tab << tab << tab << "not worth continuing: distance from corners is greater than the error limit" << endl;
-							cout << tab << tab << tab << tab << "distance from center=" << errorCenter << " P1=" << errorP1 << " P2=" << errorP2
+							cerr << tab << tab << tab << "not worth continuing: distance from corners is greater than the error limit" << endl;
+							cerr << tab << tab << tab << tab << "distance from center=" << errorCenter << " P1=" << errorP1 << " P2=" << errorP2
 									<< " P3=" << errorP3 << " P4=" << errorP4 << " error limit=" << errorLimit << endl;
 
 							runLoop = false;
@@ -1273,8 +1273,8 @@ namespace flopoco {
 
 							if(errorMax > errorLimit)
 							{
-								cout << tab << tab << tab << "not worth continuing: error=" << errorMax << " error limit=" << errorLimit << endl;
-								cout << tab << tab << tab << tab << "i=" << i << " j=" << j << " n=" << n << " m=" << m << endl;
+								cerr << tab << tab << tab << "not worth continuing: error=" << errorMax << " error limit=" << errorLimit << endl;
+								cerr << tab << tab << tab << tab << "i=" << i << " j=" << j << " n=" << n << " m=" << m << endl;
 
 								runLoop = false;
 								break;
@@ -1283,13 +1283,13 @@ namespace flopoco {
 						*/
 				}
 
-				cout << "\r                                                                                                                   \r";
-				cout <<  tab << tab << tab << std::setprecision(4) << ((1.0*j/((1<<k)-1))*100) << "% done"
+				cerr << "\r                                                                                                                   \r";
+				cerr <<  tab << tab << tab << std::setprecision(4) << ((1.0*j/((1<<k)-1))*100) << "% done"
 						<< tab << "current maximum error=" << errorMax << " current minimum error=" << errorMin << " error limit=" << errorLimit;
-				cout.flush();
+				cerr.flush();
 			}
 
-			cout << endl << tab << tab << tab << "computed the maximum error" << endl;
+			cerr << endl << tab << tab << tab << "computed the maximum error" << endl;
 
 			//check to see if the current precision k is enough
 			//	if not, increase k and compute the maximum error again
@@ -1298,26 +1298,26 @@ namespace flopoco {
 				errorSatisfied = true;
 			}else
 			{
-				cout << tab << tab << tab << "error limit of " << errorLimit << " not satisfied at k=" << k
+				cerr << tab << tab << tab << "error limit of " << errorLimit << " not satisfied at k=" << k
 						<< ", with wIn=" << wIn << " and wOut=" << wOut << endl;
-				cout << tab << tab << tab << tab << "actual error errorMax=" << errorMax << endl;
+				cerr << tab << tab << tab << tab << "actual error errorMax=" << errorMax << endl;
 
 				k++;
 			}
 		}
 
-		cout << "Error limit of " << (1.0/(1 << (wOut-1))) << " satisfied at k=" << k
+		cerr << "Error limit of " << (1.0/(1 << (wOut-1))) << " satisfied at k=" << k
 				<< ", with wIn=" << wIn << " and wOut=" << wOut << endl;
 		if((archType == 0) || (archType == 1) || (archType == 2))
 		{
-			cout << tab << "Computed the maximum values of the table parameters (divided by Pi/2): maxValA="
+			cerr << tab << "Computed the maximum values of the table parameters (divided by Pi/2): maxValA="
 					<< maxValA << " maxValB=" << maxValB;
 			if(archType == 0)
-				cout << " maxValD=" << maxValC << endl;
+				cerr << " maxValD=" << maxValC << endl;
 			else if(archType == 1)
-				cout << " maxValC=" << maxValC << endl;
+				cerr << " maxValC=" << maxValC << endl;
 			else
-				cout << " maxValC=" << maxValC << " maxValD=" << maxValD
+				cerr << " maxValC=" << maxValC << " maxValD=" << maxValD
 					<< " maxValE=" << maxValE << " maxValF=" << maxValF << endl;
 		}
 

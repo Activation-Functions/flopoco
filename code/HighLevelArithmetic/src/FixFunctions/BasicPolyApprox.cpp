@@ -287,7 +287,7 @@ namespace flopoco{
 		});
 		sollya_obj_t supNormInputRangeS = sollya_lib_supnorm(polynomialS, fS, inputRangeS, absoluteS, supNormAccS);
 		if(sollya_lib_obj_is_error(supNormInputRangeS)) {
-			cout <<  ">   Sollya infnorm failed, but do not loose all hope yet: launching dirtyinfnorm:" << endl;
+			cerr <<  ">   Sollya infnorm failed, but do not loose all hope yet: launching dirtyinfnorm:" << endl;
 			sollya_obj_t pminusfS = sollya_lib_sub(polynomialS, fS);
 			external_log(LogLevel::VERBOSE, [&] {
 				sollya_lib_printf(">   dirtyinfnorm(%b, %b);\n",

@@ -462,7 +462,7 @@ namespace flopoco{
 			}
 			
 			}catch(std::string str){
-				cout << "execution interrupted: " << str << endl;
+				cerr << "execution interrupted: " << str << endl;
 				exit(1);
 			}
 		}

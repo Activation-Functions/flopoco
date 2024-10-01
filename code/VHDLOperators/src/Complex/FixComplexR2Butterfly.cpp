@@ -141,12 +141,12 @@ namespace flopoco{
 			outPortMap(FixTwiddleKCM, "ImOut", "Y1i");
 			vhdl << instance(FixTwiddleKCM, "TwiddleKCMMUL_X1");*/
 
-//				cout << endl << "mmmmmsbin=" << std::to_string(msbin) << " lsbin=" + std::to_string(lsbin) << 
+//				cerr << endl << "mmmmmsbin=" << std::to_string(msbin) << " lsbin=" + std::to_string(lsbin) << 
 //							" msbout=" << std::to_string(msbout) << " lsbout=" << std::to_string(lsbout) << " bypassmult=" << std::to_string(bypassmult) << " laststage=" << std::to_string(laststage) << endl; 
 
 //			if (laststage)
 //			{
-//				cout << endl << "laststage = trueeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee" << endl;
+//				cerr << endl << "laststage = trueeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee" << endl;
 //			}
 //			else
 			{
@@ -182,7 +182,7 @@ namespace flopoco{
 							"Sr=>Y0r,Si=>Y0i");
 
 
-				//cout << endl << "mmmmmmmmmmmmmmmmmmmmsbin=" << std::to_string(msbin) << " lsbin=" + std::to_string(lsbin) << " msbout=" << std::to_string(msbout) << " lsbout=" << 						std::to_string(lsbout) << " Twiddle_re=" << Twiddle_re << " Twiddle_im=" << Twiddle_im << " extrabit=" << extrabitstr << endl;
+				//cerr << endl << "mmmmmmmmmmmmmmmmmmmmsbin=" << std::to_string(msbin) << " lsbin=" + std::to_string(lsbin) << " msbout=" << std::to_string(msbout) << " lsbout=" << 						std::to_string(lsbout) << " Twiddle_re=" << Twiddle_re << " Twiddle_im=" << Twiddle_im << " extrabit=" << extrabitstr << endl;
 
 					if(extrabit)
 					{

@@ -79,8 +79,8 @@ namespace flopoco {
 		unsigned int usedDSPBlocks = 0;
 		//only one state, base state is also current state
 		greedySolution(fieldState, &solution, nullptr, cost, area, usedDSPBlocks);
-		cout << "Total cost: " << cost << " " << usedDSPBlocks << endl;
-		cout << "Total area: " << area << endl;
+		cerr << "Total cost: " << cost << " " << usedDSPBlocks << endl;
+		cerr << "Total area: " << area << endl;
         field.printField();
 	}
 

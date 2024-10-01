@@ -62,7 +62,7 @@ namespace flopoco {
 		            placement = placement.substr(placement.find(",")+1, placement.length());
 		            int y = stoi(placement.substr(0, placement.find(",")));
 		            placements.push_back(make_triplet(t,x,y));
-		            cout << "t=" << t << " x=" << x << " y=" << y << endl;
+		            cerr << "t=" << t << " x=" << x << " y=" << y << endl;
 		            
 		            cost += (double) tiles[t]->getLUTCost(x, y, wX, wY, signedIO);
 		            //own_lut_cost += tiles[t]->ownLUTCost(x, y, wX, wY, signedIO);
@@ -80,8 +80,8 @@ namespace flopoco {
 
 		//exit(1);
 
-		cout << "Total cost: " << cost << " " << usedDSPBlocks << endl;
-		//cout << "Total area: " << area << endl;
+		cerr << "Total cost: " << cost << " " << usedDSPBlocks << endl;
+		//cerr << "Total area: " << area << endl;
 
 	}
 }

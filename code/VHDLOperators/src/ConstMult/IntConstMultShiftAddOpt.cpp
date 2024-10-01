@@ -159,33 +159,33 @@ namespace flopoco{
 			set_intersection(leap1_candidate_set1.begin(), leap1_candidate_set1.end(), leap1_candidate_set2_div.begin(), leap1_candidate_set2_div.end(), inserter(leap1_set, leap1_set.begin()));
 
 #ifdef DEBUG
-			cout << "leap1_candidate_set1=";
+			cerr << "leap1_candidate_set1=";
 			for(int_set_t::iterator it=leap1_candidate_set1.begin(); it != leap1_candidate_set1.end(); ++it)
 			{
-				cout << *it << " ";
+				cerr << *it << " ";
 			}
-			cout << endl;
+			cerr << endl;
 
-			cout << "leap1_candidate_set2=";
+			cerr << "leap1_candidate_set2=";
 			for(int_set_t::iterator it=leap1_candidate_set2.begin(); it != leap1_candidate_set2.end(); ++it)
 			{
-				cout << *it << " ";
+				cerr << *it << " ";
 			}
-			cout << endl;
+			cerr << endl;
 
-			cout << "leap1_candidate_set2_div=";
+			cerr << "leap1_candidate_set2_div=";
 			for(int_set_t::iterator it=leap1_candidate_set2_div.begin(); it != leap1_candidate_set2_div.end(); ++it)
 			{
-				cout << *it << " ";
+				cerr << *it << " ";
 			}
-			cout << endl;
+			cerr << endl;
 
-			cout << "leap1_set=";
+			cerr << "leap1_set=";
 			for(int_set_t::iterator it=leap1_set.begin(); it != leap1_set.end(); ++it)
 			{
-				cout << *it << " ";
+				cerr << *it << " ";
 			}
-			cout << endl;
+			cerr << endl;
 #endif //DEBUG
 			l1 = *(leap1_set.begin());
 
@@ -203,7 +203,7 @@ namespace flopoco{
 			if(solutions_op_b[i] != 1) buildAdderGraph(solutions_op_b[i],l1);
 			break;
 		case LF3:
-			cout << "Error: Solution of " << c << " requires leapfrog3 structures which are currently unsupported (sorry)" << endl;
+			cerr << "Error: Solution of " << c << " requires leapfrog3 structures which are currently unsupported (sorry)" << endl;
 			exit(-1);
 			break;
 	  }

@@ -170,10 +170,10 @@ namespace flopoco{
 		mpz_class sR = svX + svY + svC;
 
 		mpz_class svR = sR % (1<<wIn_);
-		mpz_class cout = sR >> wIn_;
+		mpz_class cerr = sR >> wIn_;
 
 		tc->addExpectedOutput("R", svR);
-		tc->addExpectedOutput("Cout",cout);
+		tc->addExpectedOutput("Cout",cerr);
 	}
 
 	OperatorPtr CarryGenerationCircuit::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui) {

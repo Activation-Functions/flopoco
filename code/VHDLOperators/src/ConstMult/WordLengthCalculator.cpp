@@ -33,13 +33,13 @@ namespace flopoco {
                 // TODO : add here the appropriate checks for allowed nodes
                 /*
                 if(is_a<adder_subtractor_node_t>(*it)) {
-                    std::cout << "Node type: A\n";
+                    std::cerr << "Node type: A\n";
                 } else if(is_a<register_node_t>(*it)) {
-                    std::cout << "Node type: R\n";
+                    std::cerr << "Node type: R\n";
                 } else if(is_a<output_node_t>(*it)) {
-                    std::cout << "Node type: O\n";
+                    std::cerr << "Node type: O\n";
                 } else if(is_a<input_node_t>(*it)){
-                    std::cout << "Node type: I\n";
+                    std::cerr << "Node type: I\n";
                 } else {
                     std::cerr << "Node type: UNRECOGNIZED\n";
                 }*/

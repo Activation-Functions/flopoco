@@ -195,6 +195,8 @@ namespace flopoco{
 		REPORT(LogLevel::VERBOSE, "Poly table input size  = " << alpha);
 		REPORT(LogLevel::VERBOSE, "Poly table output size = " << polyTableOutputSize);
 
+		cout << alpha;
+
 		int x;
 		for(x=0; x<(1<<alpha); x++) {
 			mpz_class z=0;

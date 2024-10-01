@@ -59,7 +59,7 @@ namespace flopoco{
 		if(verbose){
 			double r;
 			r = mpfr_get_d(mpR, GMP_RNDN);
-			cout << "  Constant evaluates to " <<r <<endl; 
+			cerr << "  Constant evaluates to " <<r <<endl; 
 		}
 		// compute the precision -- TODO with NWB
 

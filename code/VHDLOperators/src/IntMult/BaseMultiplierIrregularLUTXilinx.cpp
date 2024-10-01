@@ -64,7 +64,7 @@ namespace flopoco
         int msb = x_max+y_max;
 
         int ws = (x_max-x_min==1)?y_max-y_min:((y_max-y_min==1)?x_max-x_min:msb - lsb);
-        cout << lut_required + ws*0.65 << " " << shape << " " << ws << " " << lut_required << endl;
+        cerr << lut_required + ws*0.65 << " " << shape << " " << ws << " " << lut_required << endl;
         return lut_required + ws*0.65;*/
     }
 
@@ -79,7 +79,7 @@ namespace flopoco
     bool BaseMultiplierIrregularLUTXilinx::shapeValid(int x, int y)
     {
         int pattern = BaseMultiplierIrregularLUTXilinxOp::get_pattern(this->shape);
-        //cout << "pattern " << pattern << " valid " << (pattern & (1 << (y * wX + x))) << " mask " << ( (1 << (y * wX + x)))  << " wX " << wX   << " wY " << wY << endl;
+        //cerr << "pattern " << pattern << " valid " << (pattern & (1 << (y * wX + x))) << " mask " << ( (1 << (y * wX + x)))  << " wX " << wX   << " wY " << wY << endl;
         if(0 <= x && x < wX && 0 <= y && y < wY)
             return (pattern & (1 << (y * wX + x)));
         return false;
@@ -128,10 +128,10 @@ namespace flopoco
             }
             if(nmsb <= pmsb && (isSignedX || isSignedY)) nmsb = pmsb + 1;
             msb = max(nmsb, pmsb);
-            //cout << " lsb=" << lsb << " msb=" << msb << endl;
+            //cerr << " lsb=" << lsb << " msb=" << msb << endl;
         }
         if(lsb == 6) lsb = 0;
-        //cout << "lsb=" << lsb << " msb=" << msb << " wOut=" << msb-lsb+1 << endl;
+        //cerr << "lsb=" << lsb << " msb=" << msb << " wOut=" << msb-lsb+1 << endl;
         return msb-lsb+1;
     }
 
@@ -369,7 +369,7 @@ namespace flopoco
         while((bit_pattern[(shape)-1]&(1<<((1+sy)*wX+sx))) != 0)
             sy++;
         cy = sy;
-        cout << "x=" << cx << " y=" << cy << " xdir=" << xdir << " ydir=" << ydir << endl;
+        cerr << "x=" << cx << " y=" << cy << " xdir=" << xdir << " ydir=" << ydir << endl;
         outline << tab << tab << "\\draw[black, thick, fill=lightgray, opacity=0.3] (" << cx << "," << cy << ")--";
         do{
             lx = cx; ly = cy;
@@ -391,7 +391,7 @@ namespace flopoco
             } else if( shapeValid(shape, cx,cy+ydir) &&  shapeValid(shape, cx+xdir,cy) &&  shapeValid(shape, cx+xdir,cy+ydir)){
                 cy += ydir;
             }
-            cout << "x=" << cx << " y=" << cy << " xdir=" << xdir << " ydir=" << ydir << endl;
+            cerr << "x=" << cx << " y=" << cy << " xdir=" << xdir << " ydir=" << ydir << endl;
             outline << "(" << (cx+((-1==xdir)?1:0)) << "," << (cy+((1==ydir)?1:0)) << ")--";
 
         } while(sx != cx || sy != cy);

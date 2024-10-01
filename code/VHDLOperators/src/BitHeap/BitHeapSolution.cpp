@@ -122,7 +122,7 @@ namespace flopoco{
 			status = BitheapSolutionStatus::HEURISTIC_COMPLETE;
 		}
 		else if(status == BitheapSolutionStatus::EMPTY){
-			cout << "tried to mark a Solution as complete, although it is empty" << endl;
+			cerr << "tried to mark a Solution as complete, although it is empty" << endl;
 		}
 		//else: already complete/compression not needed.
 	}

@@ -28,13 +28,13 @@ namespace flopoco{
         setWidth(width);
 
 /*        for(unsigned i = 0; i < heights.size(); i++){
-            cout << heights[i] << ", ";
+            cerr << heights[i] << ", ";
         }
-        cout << endl;
+        cerr << endl;
         for(unsigned i = 0; i < outHeights.size(); i++){
-            cout << outHeights[i] << ", ";
+            cerr << outHeights[i] << ", ";
         }
-        cout << endl;*/
+        cerr << endl;*/
 
         ostringstream name;
         name << "Compressor_4_to_2_type" << useLastColumn << "_width_" << width;
@@ -167,15 +167,15 @@ namespace flopoco{
         reverse(outHeights.begin(), outHeights.end());
         heights.erase(heights.cend()-1);
         outHeights.erase(outHeights.end()-1);
-        /*cout << "heights" << endl;
+        /*cerr << "heights" << endl;
         for(int i = 0; i < heights.size(); i++){
-            cout << heights[i] << "," ;
+            cerr << heights[i] << "," ;
         }
-        cout << endl;
+        cerr << endl;
         for(int i = 0; i < outHeights.size(); i++){
-            cout << outHeights[i] << "," ;
+            cerr << outHeights[i] << "," ;
         }
-        cout << endl;*/
+        cerr << endl;*/
     }
 
     XilinxFourToTwoCompressor::~XilinxFourToTwoCompressor()
@@ -267,18 +267,18 @@ namespace flopoco{
 
     BasicXilinxFourToTwoCompressor::BasicXilinxFourToTwoCompressor(Operator* parentOp_, Target * target, int wIn) : BasicCompressor(parentOp_, target, calc_heights( wIn), 0, CompressorType::Variable, true), wIn(wIn)
     {
-        //cout << "wIn= " << wIn << endl;
+        //cerr << "wIn= " << wIn << endl;
         area = wIn; //1 LUT per bit
         calc_widths(wIn, heights, outHeights);
-        /*cout << heights.size() << " " << outHeights.size() << endl;
+        /*cerr << heights.size() << " " << outHeights.size() << endl;
         for(int i = 0; i < heights.size(); i++){
-            cout << heights[i] << ", ";
+            cerr << heights[i] << ", ";
         }
-        cout << endl;
+        cerr << endl;
         for(int i = 0; i < outHeights.size(); i++){
-            cout << outHeights[i] << ", ";
+            cerr << outHeights[i] << ", ";
         }
-        cout << endl;*/
+        cerr << endl;*/
         rcType = 2;
     }
 

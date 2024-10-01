@@ -106,7 +106,7 @@ namespace flopoco{
 				int out_ebits = rint(ceil(log(-db(-ldexp(1.0, 3-i))) / log(2)));
 				double scale = ldexp(1.0, -out_ebits);
 		
-				//std::cout << "zmin=" << zmin << ", zmax=" << zmax << ", out_ebits=" << out_ebits << std::endl;
+				//std::cerr << "zmin=" << zmin << ", zmax=" << zmax << ", out_ebits=" << out_ebits << std::endl;
 
 				return new HOTBM(target_, "log2(abs(1-2^x))", uniqueName_, wF + 3 - i, wF + out_ebits, order, zmin, zmax, scale);
 			}

@@ -45,7 +45,7 @@ namespace flopoco {
 		addInput ("I" , widthI);
 		// declaring output
 		addOutput("O" , widthO);
-		cout << "in : " << widthI << " and out : " << widthO << endl;
+		cerr << "in : " << widthI << " and out : " << widthO << endl;
 
 		
 		addFullComment("Start of vhdl generation"); // this will be a large, centered comment in the VHDL

@@ -55,7 +55,7 @@ namespace flopoco {
         for(unsigned int i=0; i< inputCount; i++)
         {
             vhdl << tab << tab << tab << getInputName(i) << " when \"";
-            cout << "GenericMux: getInputName(" << i << ")=" << getInputName(i) << endl;
+            cerr << "GenericMux: getInputName(" << i << ")=" << getInputName(i) << endl;
             for(int j=select_ws-1; j>=0; --j)
             {
                 vhdl << (i&(1<<j)?"1":"0");
