@@ -30,7 +30,6 @@ squid_debian_build:
     - flopoco
   artifacts:
       paths:
-        - flopoco
         - build/bin
         - build/lib
         - build/dependencies/bin
