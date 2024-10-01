@@ -26,7 +26,7 @@
 
 #include "flopoco/BitHeap/BitHeap.hpp"
 #include "flopoco/FixFunctions/FixFunctionByMultipartiteTable.hpp"
-#include "flopoco/FixFunctions/FixFunctionEmulator.hpp"
+#include "flopoco/FixFunctions/FixFunctionHelper.hpp"
 #include "flopoco/FixFunctions/Multipartite.hpp"
 #include "flopoco/Tables/DiffCompressedTable.hpp"
 #include "flopoco/Tables/TableOperator.hpp"
@@ -775,85 +775,8 @@ namespace flopoco
 
 	TestList FixFunctionByMultipartiteTable::unitTest(int testLevel)
 	{
-		// the static list of mandatory tests
-		TestList testStateList;
-		vector<pair<string,string>> paramList;
-
-    if(testLevel >= TestLevel::SUBSTANTIAL)
-    { // The substantial unit tests
-			vector<string> function;
-			vector<bool> signedIn;
-			vector<int> msbOut;
-			vector<bool> tableCompression;
-			vector<bool> scaleOutput;			// multiply output by (1-2^lsbOut) to prevent it  reaching 2^(msbOut+1) due to faithful rounding
-
-			function.push_back("(2/(2-x)-1)");  // This is a regression test that used to trigger a compression bug
-			signedIn.push_back(false);
-			msbOut.push_back(0);
-			scaleOutput.push_back(false);
-			tableCompression.push_back(true);
-
-			
-			function.push_back("2^x-1");			// input in [0,1) output in [0, 1) : need scaleOutput
-			signedIn.push_back(false);
-			msbOut.push_back(0);
-			scaleOutput.push_back(true);
-			tableCompression.push_back(true);
-
-			function.push_back("1/(x+1)");  // input in [0,1) output in [0.5,1] but we don't want scaleOutput
-			signedIn.push_back(false);
-			msbOut.push_back(0);
-			scaleOutput.push_back(false);
-			tableCompression.push_back(true);
-
-			function.push_back("sin(pi/4*x)");
-			signedIn.push_back(false);
-			msbOut.push_back(-1);
-			scaleOutput.push_back(false);
-			tableCompression.push_back(true);
-
-			function.push_back("sin(pi/2*x)");
-			signedIn.push_back(false);
-			msbOut.push_back(-1);
-			scaleOutput.push_back(true);
-			tableCompression.push_back(true);
-
-
-			
-#if 0
-			// It seems we don't manage yet the case when the function may get negative
-			// but the code has been elegantly fixed: it now THROWERRORs
-			function.push_back("log(0.5+x)");
-			signedIn.push_back(false);
-			msbOut.push_back(-1);
-			scaleOutput.push_back(true);
-#endif
-
-			for (int lsbIn=-8; lsbIn >= -16; lsbIn--) {
-				for (size_t i =0; i<function.size(); i++) {
-					paramList.clear();
-					string f = function[i];
-					int lsbOut = lsbIn + msbOut[i]; // to have inputSize=outputSize
-					if (scaleOutput[i]) {
-						f = "(1-1b"+to_string(lsbOut) + ")*(" + f + ")";
-					}
-					paramList.push_back(make_pair("f", f));
-					paramList.push_back(make_pair("signedIn", to_string(signedIn[i]) ) );
-					paramList.push_back(make_pair("lsbIn", to_string(lsbIn)));
-					paramList.push_back(make_pair("lsbOut", to_string(lsbOut)));
-					paramList.push_back(make_pair("tableCompression", to_string(tableCompression[i])));
-					if(lsbIn>-14)
-						paramList.push_back(make_pair("TestBench n=","-2"));
-					testStateList.push_back(paramList);
-				}
-			}
-		}
-		else
-		{
-				// finite number of random test computed out of testLevel
-		}
-
-		return testStateList;
+		REPORT(DETAIL, "Starting unit test generation");
+		return generateFixFunctionUnitTest(testLevel, 1);
 	}
 
 

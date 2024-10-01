@@ -14,7 +14,7 @@
   */
 
 #include "flopoco/FixFunctions/FixFunctionByTable.hpp"
-#include "flopoco/FixFunctions/FixFunctionEmulator.hpp"
+#include "flopoco/FixFunctions/FixFunctionHelper.hpp"
 #include "flopoco/Tables/DiffCompressedTable.hpp"
 #include "flopoco/Tables/TableOperator.hpp"
 #include "flopoco/utils.hpp"
@@ -65,6 +65,12 @@ namespace flopoco{
 
 	void FixFunctionByTable::emulate(TestCase* tc){
 		emulate_fixfunction(*f, tc, true /* correct rounding */);
+	}
+
+	TestList FixFunctionByTable::unitTest(int testLevel)
+	{
+		REPORT(DETAIL, "Starting unit test generation");
+		return generateFixFunctionUnitTest(testLevel, 0);
 	}
 
 	OperatorPtr FixFunctionByTable::parseArguments(OperatorPtr parentOp, Target *target, vector<string> &args, UserInterface& ui)

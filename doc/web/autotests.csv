@@ -25,10 +25,10 @@ FixComplexR2Butterfly,0,0,0,0.0,Stable,n/a,Undefined
 FixFFTFullyPA,0,0,0,0.0,Stable,n/a,Undefined
 FixFIR,0,0,0,0.0,Stable,n/a,Undefined
 FixFixConstMult,0,0,0,0.0,Stable,n/a,Undefined
-FixFunctionByMultipartiteTable,0,0,0,0.0,Stable,n/a,Undefined
-FixFunctionByPiecewisePoly,0,0,0,0.0,Stable,n/a,Undefined
-FixFunctionBySimplePoly,0,0,0,0.0,Stable,n/a,Undefined
-FixFunctionByTable,0,0,0,0.0,Stable,n/a,Undefined
+FixFunctionByMultipartiteTable,4,2,1,25.0,Stable,d802da13749fc8338a1e79c9d69e5302d3f3e361,Stable
+FixFunctionByPiecewisePoly,4,4,4,100.0,Stable,1ebd381c4f23e45e5ad6a8ec4ef3cf1e0d23d2d8,Break
+FixFunctionBySimplePoly,4,4,4,100.0,Stable,1ebd381c4f23e45e5ad6a8ec4ef3cf1e0d23d2d8,Up
+FixFunctionByTable,4,4,4,100.0,Stable,1ebd381c4f23e45e5ad6a8ec4ef3cf1e0d23d2d8,Break
 FixHalfSine,0,0,0,0.0,Stable,n/a,Undefined
 FixIIR,1,1,1,100.0,Stable,n/a,Undefined
 FixIIRShiftAdd,0,0,0,0.0,Stable,n/a,Undefined
