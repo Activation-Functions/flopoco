@@ -32,7 +32,7 @@ squid_debian_build:
       paths:
         - build/bin
         - build/lib
-        - build/dependencies/bin
+        - build/dependencies/prefix
 
 squid_macos_build:
   stage: build
