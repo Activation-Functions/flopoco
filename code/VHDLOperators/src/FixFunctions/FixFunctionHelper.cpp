@@ -125,7 +125,7 @@ TestList generateFixFunctionUnitTest(int testLevel, int methodSize) {
 
 		//functionList.push_back("log(x/2+1)");
 		function.push_back("log(x/2+1)"); // f positive, increasing, concave
-		signedIn.push_back(true);
+		signedIn.push_back(false);
 		msbOut.push_back(-1);
 		scaleOutput.push_back(false);
 		tableCompression.push_back(true);
@@ -227,7 +227,7 @@ TestList generateFixFunctionUnitTest(int testLevel, int methodSize) {
 				}
 			}
 		}
-		else
+		else // quick or substantial test
 		{
 			// The whole testsuite is in Exhaustive so I give myself a bit more to test with Quick and Substantial
 			vector<string> function;
@@ -237,7 +237,7 @@ TestList generateFixFunctionUnitTest(int testLevel, int methodSize) {
 			vector<bool> scaleOutput;
 
 			function.push_back("log(x/2+1)"); // f positive, increasing, concave
-			signedIn.push_back(true);
+			signedIn.push_back(false);
 			msbOut.push_back(-1);
 			scaleOutput.push_back(false);
 			tableCompression.push_back(true);
