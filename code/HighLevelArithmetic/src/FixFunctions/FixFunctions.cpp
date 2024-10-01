@@ -45,6 +45,21 @@ namespace flopoco{
 		}
 		completeDescription << outputDescription;
 		description = completeDescription.str();
+
+		if (lsbIn>0) {
+			if(signedIn) {
+				REPORT(ERROR, "ERROR in FixFunctions : You are asking for a function with lsbIn=" << lsbIn << " but the input interval is on [-1,1). lsbIn should be negative.");
+				exit(1); // TODO add THROWERROR in HighLevelArithmetic
+			} else {
+				REPORT(ERROR, "ERROR in FixFunctions : You are asking for a function with lsbIn=" << lsbIn << " but the input interval is on [0,1). lsbIn should be negative.");
+				exit(1);
+			}
+		}
+
+		if(wOut<=0) {
+			REPORT(ERROR, "ERROR in FixFunctions : Output width wOut=" << wOut << " which makes no sense");
+			exit(1);
+		}
 }
 
 

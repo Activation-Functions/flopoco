@@ -3,6 +3,7 @@
 
 #include <string>
 #include <iostream>
+#include "flopoco/report.hpp"
 
 #include <sollya.h>
 #include <gmpxx.h>

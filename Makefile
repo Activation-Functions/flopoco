@@ -147,6 +147,14 @@ clean:
 	@rm -rf build
 
 # -----------------------------------------------------------------------------
+.PHONY: clean-flopoco
+# -----------------------------------------------------------------------------
+clean-flopoco:
+	@mv $(BUILD_DEPENDENCIES_DIR) $(MKROOT)
+	@rm -rf $(BUILD_DIR)
+	@mkdir $(BUILD_DIR) && mv $(MKROOT)/dependencies $(BUILD_DIR)/
+
+# -----------------------------------------------------------------------------
 .PHONY: docker
 # Build docker images with the minimum required to run flopoco
 # flopoco binary will be installed system-wide.
