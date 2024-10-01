@@ -98,8 +98,16 @@ static inline string output(size_t n)
 
 namespace flopoco
 {
-  SNAFU::SNAFU(
-    OperatorPtr parentOp_, Target* target_, string fIn, int wIn, int wOut, string methodIn, double inputScale, int deltaRelu_, bool expensiveSymmetry)
+  SNAFU::SNAFU(OperatorPtr parentOp_,
+    Target* target_,
+    string fIn,
+    int wIn,
+    int wOut,
+    string methodIn,
+    double inputScale,
+    int deltaRelu_,
+    bool expensiveSymmetry,
+    bool enableSymmetry)
       : Operator(parentOp_, target_), deltaRelu(static_cast<Compression>(deltaRelu_))
   {
     // Check sanity of inputs
@@ -155,7 +163,7 @@ namespace flopoco
 
     // Tackle symmetry, the symmetry is considered after reducing the function all the way, i.e. after delta and offset manipulations
     const bool cond = fd.offset != 0.0 || fd.deltaFunction == Delta::None;
-    const bool enableSymmetry = fd.parity != Parity::None && (!cond || deltaRelu == Compression::Enabled);
+    // const bool enableSymmetry = fd.parity != Parity::None && (!cond || deltaRelu == Compression::Enabled);
 
     // Process the function definition based on what we know
     const string scaleString = "(" + to_string(inputScale) + "*@)";
@@ -458,6 +466,7 @@ namespace flopoco
     string fIn, methodIn;
     int deltaRelu;
     bool expensiveSymmetry;
+    bool enableSymmetry;
     ui.parseString(args, "f", &fIn);
     ui.parseInt(args, "wIn", &wIn);
     ui.parseInt(args, "wOut", &wOut);
@@ -465,7 +474,8 @@ namespace flopoco
     ui.parseFloat(args, "inputScale", &inputScale);
     ui.parseInt(args, "deltaRelu", &deltaRelu);
     ui.parseBoolean(args, "expensiveSymmetry", &expensiveSymmetry);
-    return new SNAFU(parentOp, target, fIn, wIn, wOut, methodIn, inputScale, deltaRelu, expensiveSymmetry);
+    ui.parseBoolean(args, "enableSymmetry", &enableSymmetry);
+    return new SNAFU(parentOp, target, fIn, wIn, wOut, methodIn, inputScale, deltaRelu, expensiveSymmetry, enableSymmetry);
   }
 
 
@@ -479,6 +489,7 @@ namespace flopoco
     "wIn(int): number of bits of the input ;"
     "wOut(int): number of bits of the output; "
     "expensiveSymmetry(bool)=false: whether to add a special case for the input -1 when symmetry is used as 1 is not a representable fixed point;"
+    "enableSymmetry(bool)=false: whether to use the intrinsic symmetry of the function to compress a little the result;"
     "inputScale(real)=8.0: the input scaling factor: the 2^wIn input values are mapped on the interval[-inputScale, inputScale) ; "
     "method(string)=auto: approximation method, among \"PlainTable\",\"MultiPartite\", \"Horner\", \"PiecewiseHorner1\", \"PiecewiseHorner2\", "
     "\"PiecewiseHorner3\", "

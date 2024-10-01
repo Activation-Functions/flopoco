@@ -315,7 +315,16 @@ namespace flopoco
 
   class SNAFU : public Operator {
     public:
-    SNAFU(OperatorPtr parentOp, Target* target, string f, int wIn, int wOut, string method, double inputScale, int deltaRelu, bool expensiveSymmetry);
+    SNAFU(OperatorPtr parentOp,
+      Target* target,
+      string f,
+      int wIn,
+      int wOut,
+      string method,
+      double inputScale,
+      int deltaRelu,
+      bool expensiveSymmetry,
+      bool enableSymmetry);
 
     void emulate(TestCase* tc);
 
@@ -326,6 +335,7 @@ namespace flopoco
     double inputScale;
     Compression deltaRelu;
     bool expensiveSymmetry;
+    bool enableSymmetry;
     string sollyaDeltaFunction;  // when we use compression
     FixFunction* f;
     bool correctlyRounded;
