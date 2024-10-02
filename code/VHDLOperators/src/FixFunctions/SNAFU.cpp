@@ -154,6 +154,9 @@ namespace flopoco
     if(deltaRelu == Compression::Auto) {
       // The compression is only enabled for functions that have a delta
       deltaRelu = static_cast<Compression>(fd.deltaFunction != Delta::None);
+      if(af==GeLU && wOut<=6) {
+        deltaRelu = Compression::Disabled;
+      } 
     }
 
     if(fd.incompatibleMethods.find(method) != fd.incompatibleMethods.end()) {
@@ -211,6 +214,7 @@ namespace flopoco
     } else {
       delta = "(" + deltaTo + ")-(" + base + ")";
     }
+    
 
     // Underlying function definition, used to generate test cases
     f = new FixFunction(base, true, lsbIn, lsbOut);
@@ -229,7 +233,6 @@ namespace flopoco
       // TODO: a complex sequence of if then else once the experiments are done
       method = Method::PlainTable;
     }
-
     // Print a summary
     REPORT(LogLevel::MESSAGE, "Function after pre-processing: " << fd.longName << " evaluated on [-1,1)");
     REPORT(LogLevel::MESSAGE, "\twIn=" << wIn << " translates to lsbIn=" << lsbIn);
@@ -498,48 +501,18 @@ namespace flopoco
     }
     if(testLevel >= TestLevel::SUBSTANTIAL) {
       // same tests but add the other SRT values
-      moreParamValues = paramValues;
-#if 0  // TODO
-			for (auto params: paramValues) {
-				params[2]=43;
-				moreParamValues.push_back(params);
-				params[2]=87;
-				moreParamValues.push_back(params);
-			}
-#endif
-      paramValues = moreParamValues;
     }
     if(testLevel >= TestLevel::EXHAUSTIVE) {
-#if 0
-			std::array<int, 3> params;
-			for (int wF=5; wF<53; wF+=1) // test various input widths
-                {
-					int wE = 6+(wF/10);
-					while(wE>wF)
-						{
-							wE -= 2;
-						}
-					params[0]=wE;
-					params[1]=wF;
-					params[2]=42;
-					paramValues.push_back(params);
-					params[2]=43;
-					paramValues.push_back(params);
-					params[2]=87;
-					paramValues.push_back(params);
-				}
-#endif
     }
     // Now actually build the paramValues structure
     for(auto f: activationFunction) {
-      cerr << f.second.name << endl;
       for(auto params: paramValues) {
         paramList.push_back(make_pair("f", f.second.name));
         paramList.push_back(make_pair("wIn", to_string(params[0])));
         paramList.push_back(make_pair("wOut", to_string(params[1])));
 				string method = "auto";
-					paramList.push_back(make_pair("method", method));
-        paramList.push_back(make_pair("deltaRELU", to_string(params[3])));
+				paramList.push_back(make_pair("method", method));
+        paramList.push_back(make_pair("deltaRelu", to_string(params[3])));
         testStateList.push_back(paramList);
         // cerr << " " << params[0]  << " " << params[1]  << " " << params[2] << endl;
         paramList.clear();
