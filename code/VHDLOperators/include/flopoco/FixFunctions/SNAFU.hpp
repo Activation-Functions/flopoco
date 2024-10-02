@@ -188,7 +188,7 @@ static const map<ActivationFunction, FunctionData> activationFunction = {
       .longName = "Rectified Linear Unit",
       .formula = "X/(1+exp(-1b256*X))",  // Here we use a quasi-threshold function
       .signedOut = false,                // output unsigned
-      .scaleFactor = 1.0,                //
+      .scaleFactor = 2.0,                // because output unsigned
     }},
   {ELU,
     FunctionData{
