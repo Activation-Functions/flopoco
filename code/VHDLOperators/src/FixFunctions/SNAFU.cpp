@@ -303,7 +303,7 @@ namespace flopoco
     case Method::PlainTable: {
       // addComment("This function is correctly rounded");
       // When using DeltaReLUCompression, the best we can guarantee is faithful rounding
-      correctlyRounded = useDeltaReLU == DeltaReLUCompression::Disabled;
+      correctlyRounded = true;
       break;
     }
     case Method::MultiPartite: {
