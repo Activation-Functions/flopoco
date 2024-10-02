@@ -81,6 +81,7 @@ PositExp,0,0,0,0.0,Stable,n/a,Undefined
 PositFunctionByTable,0,0,0,0.0,Stable,n/a,Undefined
 RegisterSandwich,0,0,0,0.0,Stable,n/a,Undefined
 RowAdder,0,0,0,0.0,Stable,n/a,Undefined
+SNAFU,56,39,39,69.6429,Undefined,n/a,Undefined
 SRTDivNbBitsMin,0,0,0,0.0,Stable,n/a,Undefined
 ShiftReg,0,0,0,0.0,Stable,n/a,Undefined
 Shifter,0,0,0,0.0,Stable,n/a,Undefined
@@ -91,4 +92,4 @@ TestBench,0,0,0,0.0,Stable,n/a,Undefined
 TutorialOperator,0,0,0,0.0,Stable,n/a,Undefined
 UniformPiecewisePolyApprox,0,0,0,0.0,Stable,n/a,Undefined
 VaryingPiecewisePolyApprox,0,0,0,0.0,Stable,n/a,Undefined
-Total,240,237,237,98.75,Stable,766e714acf0261c6fca9a91373b598aa724de103,Stable
+Total,296,276,276,93.2432,Down,ddf63336d1f22871ce63accc8b0c6a7a4b2bb262,Stable
