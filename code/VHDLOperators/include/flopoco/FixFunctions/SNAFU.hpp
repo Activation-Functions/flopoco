@@ -146,8 +146,8 @@ struct FunctionData {
   string longName;
   string formula;
   bool signedOut;
-  Parity parity = Parity::None;       // No assumption is made on the parity, when a deltaFunction is given,
-                                      // the parity is considered after teh difference to this function
+  Parity parity = Parity::None;       // Intrinsic parity of the function
+  Parity deltaParity = Parity::None;  // Parity of the function after subtraction of the delta function
 
   Delta deltaFunction = Delta::None;  // The function to substract for compression
   bool signedDelta = false;           // Wether the delta-reduced function has a signed output
@@ -205,7 +205,7 @@ static const map<ActivationFunction, FunctionData> activationFunction = {
       .longName = "Sigmoid Linear Unit",
       .formula = "X/(1+exp(-X))",  // textbook
       .signedOut = true,           // output signed
-      .parity = Parity::Even,
+      .deltaParity = Parity::Even,
       .deltaFunction = Delta::ReLU,
       .scaleFactor = 1.0,          //
     }},
@@ -215,7 +215,7 @@ static const map<ActivationFunction, FunctionData> activationFunction = {
       .longName = "Gaussian Error Linear Unit",
       .formula = "(X/2)*(1+erf(X/sqrt(2)))",  // textbook
       .signedOut = true,                      // output signed
-      .parity = Parity::Even,
+      .deltaParity = Parity::Even,
       .deltaFunction = Delta::ReLU,
       .scaleFactor = 1.0,                     //
     }},
@@ -225,7 +225,6 @@ static const map<ActivationFunction, FunctionData> activationFunction = {
       .longName = "Inverse Exponential",
       .formula = "exp(-X)",  // textbook
       .signedOut = false,    // output unsigned
-      .parity = Parity::None,
       .scaleFactor = 1.0,    //
     }},
 
@@ -278,7 +277,7 @@ static const map<ActivationFunction, FunctionData> activationFunction = {
       .longName = "Sigmoid Linear Unit",
       .formula = "(1+X*exp(-X)+exp(-X))/(1+exp(-X))^2",  // textbook
       .signedOut = true,                                 // output signed
-      .parity = Parity::Odd,
+      .deltaParity = Parity::Odd,
       .deltaFunction = Delta::ReLU_P,
       .signedDelta = true,
       .scaleFactor = 0x1.198f14p0,  // Function is a derivative, so we need to take into account the inputScale
@@ -290,7 +289,7 @@ static const map<ActivationFunction, FunctionData> activationFunction = {
       .longName = "Gaussian Error Linear Unit",
       .formula = "(X*exp(-(X^2)/2))/sqrt(2*pi)+(1+erf(X/sqrt(2)))/2",  // textbook
       .signedOut = true,                                               // output signed
-      .parity = Parity::Odd,
+      .deltaParity = Parity::Odd,
       .deltaFunction = Delta::ReLU_P,
       .signedDelta = true,
       .scaleFactor = 0x1.20fffp0,  // Function is a derivative, so we need to take into account the inputScale
@@ -302,7 +301,6 @@ static const map<ActivationFunction, FunctionData> activationFunction = {
       .longName = "Inverse Exponential",
       .formula = "-exp(-X)",  // textbook
       .signedOut = true,      // output signed (always negative)
-      .parity = Parity::None,
       .scaleFactor = 1.0,     //
     }},
 };

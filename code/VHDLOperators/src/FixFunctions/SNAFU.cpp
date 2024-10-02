@@ -163,7 +163,7 @@ namespace flopoco
 
     // Tackle symmetry, the symmetry is considered after reducing the function all the way, i.e. after delta and offset manipulations
     const bool cond = fd.offset != 0.0 || fd.deltaFunction == Delta::None;
-    // const bool enableSymmetry = fd.parity != Parity::None && (!cond || deltaRelu == Compression::Enabled);
+    bool useSymmetry = deltaRelu == Compression::Enabled ? fd.deltaParity != Parity::None : fd.parity != Parity::None;
 
     // Process the function definition based on what we know
     const string scaleString = "(" + to_string(inputScale) + "*@)";
@@ -184,7 +184,7 @@ namespace flopoco
     }
 
     // Disable the threshold part when we exploit symmetry
-    if(enableSymmetry) {
+    if(useSymmetry) {
       _replace(base, "exp(-1b256*X)", "0", 13);
       _replace(deltaTo, "exp(-1b256*X)", "0", 13);
     }
@@ -290,7 +290,7 @@ namespace flopoco
       vhdl << tab << declare("ReLU", wOut) << " <= " << relu_fd(wIn, wOut, fd);
     }
 
-    if(enableSymmetry) {
+    if(useSymmetry) {
       REPORT(LogLevel::MESSAGE, "Symmetry enabled.")
     } else {
       REPORT(LogLevel::MESSAGE, "Symmetry disabled.")
@@ -331,7 +331,7 @@ namespace flopoco
     };
 
     // If we intend on using symmetry, only send the absolute value (modulo -1) in the operator
-    if(enableSymmetry) {
+    if(useSymmetry) {
       signedIn = false;  // We known how to exploit the symmetries
 
       // Compute the absolute value of X
@@ -403,7 +403,7 @@ namespace flopoco
       vhdl << tab << declare(output(y), wOut) << " <= E & " << C->getName() << ";" << endl;
     }
 
-    if(enableSymmetry && fd.parity == Parity::Odd) {
+    if(useSymmetry && (fd.parity == Parity::Odd || fd.deltaParity == Parity::Odd)) {
       // Reconstruct the function based on the required symmetry, this is only required for odd functions
       const size_t a = out;
       const size_t f = ++out;
@@ -434,7 +434,7 @@ namespace flopoco
     }
 
     // We are running in symmetry mode
-    if(expensiveSymmetry && enableSymmetry) {
+    if(expensiveSymmetry && useSymmetry) {
       mpz_class rc, ru;
       // TODO: fix for ELU ???
       f->eval(mpz_class(1) << (wIn - 1), rc, ru, true);  // Compute f(-1), which is '10...0' in 2's complement
