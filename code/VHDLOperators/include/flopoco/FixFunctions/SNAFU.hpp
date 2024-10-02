@@ -123,7 +123,7 @@ static inline const string methodOperator(Method m)
 
 static const Method defaultMethod = Method::PlainTable;
 
-enum class Compression : int {
+enum class DeltaReLUCompression : int {
   Auto = -1,
   Disabled = 0,
   Enabled = 1,
@@ -149,7 +149,7 @@ struct FunctionData {
   Parity parity = Parity::None;       // Intrinsic parity of the function
   Parity deltaParity = Parity::None;  // Parity of the function after subtraction of the delta function
 
-  Delta deltaFunction = Delta::None;  // The function to substract for compression
+  Delta deltaFunction = Delta::None;  // The function to substract for DeltaReLUCompressio
   bool signedDelta = false;           // Wether the delta-reduced function has a signed output
   double offset = 0.0;                // The offset
   bool slightRescale = false;         // for output range efficiency of functions that touch 1
@@ -321,7 +321,7 @@ namespace flopoco
       int wOut,
       string method,
       double inputScale,
-      int deltaRelu,
+      int useDeltaReLU,
       bool expensiveSymmetry,
       bool enableSymmetry);
 
@@ -334,10 +334,10 @@ namespace flopoco
     int wIn;
     int wOut;
     double inputScale;
-    Compression deltaRelu;
+    DeltaReLUCompression useDeltaReLU;
     bool expensiveSymmetry;
     bool enableSymmetry;
-    string sollyaDeltaFunction;  // when we use compression
+    string sollyaDeltaFunction;  // when we use DeltaReLUCompression
     FixFunction* f;
     bool correctlyRounded;
   };

@@ -105,10 +105,10 @@ namespace flopoco
     int wOut,
     string methodIn,
     double inputScale,
-    int deltaRelu_,
+    int useDeltaReLU_,
     bool expensiveSymmetry,
     bool enableSymmetry)
-      : Operator(parentOp_, target_), deltaRelu(static_cast<Compression>(deltaRelu_))
+      : Operator(parentOp_, target_), useDeltaReLU(static_cast<DeltaReLUCompression>(useDeltaReLU_))
   {
     // Check sanity of inputs
     if(inputScale <= 0) {
@@ -144,18 +144,18 @@ namespace flopoco
       if(e > 0) lsbOut += e;  // We only reduce precision when the output can get bigger than 1
     }
 
-    // deltaRelu is to use the difference to a known function to obtain smaller output values
-    if((deltaRelu == Compression::Enabled) && (fd.deltaFunction == Delta::None)) {
+    // useDeltaReLU is to use the difference to a known function to obtain smaller output values
+    if((useDeltaReLU == DeltaReLUCompression::Enabled) && (fd.deltaFunction == Delta::None)) {
       // the user asked to compress a function that is not compressible
       REPORT(LogLevel::MESSAGE, fd.longName << " has no simple delta to a fast function (ReLU or ReLU'), attempting to compress anyway." << endl);
-      // deltaRelu = Compression::Disabled;
+      // useDeltaReLU = DeltaReLUCompression::Disabled;
     }
 
-    if(deltaRelu == Compression::Auto) {
-      // The compression is only enabled for functions that have a delta
-      deltaRelu = static_cast<Compression>(fd.deltaFunction != Delta::None);
+    if(useDeltaReLU == DeltaReLUCompression::Auto) {
+      // The DeltaReLUCompression is only enabled for functions that have a delta
+      useDeltaReLU = static_cast<DeltaReLUCompression>(fd.deltaFunction != Delta::None);
       if(af==GeLU && wOut<=6) {
-        deltaRelu = Compression::Disabled;
+        useDeltaReLU = DeltaReLUCompression::Disabled;
       } 
     }
 
@@ -166,7 +166,7 @@ namespace flopoco
 
     // Tackle symmetry, the symmetry is considered after reducing the function all the way, i.e. after delta and offset manipulations
     const bool cond = fd.offset != 0.0 || fd.deltaFunction == Delta::None;
-    bool useSymmetry = deltaRelu == Compression::Enabled ? fd.deltaParity != Parity::None : fd.parity != Parity::None;
+    bool useSymmetry = useDeltaReLU == DeltaReLUCompression::Enabled ? fd.deltaParity != Parity::None : fd.parity != Parity::None;
 
     // Process the function definition based on what we know
     const string scaleString = "(" + to_string(inputScale) + "*@)";
@@ -221,7 +221,7 @@ namespace flopoco
     correctlyRounded = false;  // default is faithful
 
     // Only compute the delta function if one is defined
-    if(deltaRelu == Compression::Enabled && fd.deltaFunction != Delta::None) {
+    if(useDeltaReLU == DeltaReLUCompression::Enabled && fd.deltaFunction != Delta::None) {
       function = &delta;  // The function to really approximate is the delta one, the rest is only tricks
     } else {
       // Respect the whishes of the user
@@ -240,7 +240,7 @@ namespace flopoco
 
     REPORT(LogLevel::MESSAGE, "Method is " << methodIn);
 
-    if(deltaRelu == Compression::Enabled) {
+    if(useDeltaReLU == DeltaReLUCompression::Enabled) {
       REPORT(LogLevel::MESSAGE,
         "To plot the function with its delta function,"
           << " copy-paste the following lines in Sollya:" << endl
@@ -282,9 +282,9 @@ namespace flopoco
       return;
     }
 
-    if(deltaRelu == Compression::Enabled && fd.deltaFunction != Delta::None) {
+    if(useDeltaReLU == DeltaReLUCompression::Enabled && fd.deltaFunction != Delta::None) {
       if(wIn != wOut) {
-        throw(string("Too lazy so far to support wIn<>wOut in case of ad-hoc compression "));
+        throw(string("Too lazy so far to support wIn<>wOut in case of ad-hoc DeltaReLUCompression "));
       };
 
       // Declare the ReLU signal, when the function is a derivative, we use ReLU_P instead
@@ -302,8 +302,8 @@ namespace flopoco
     switch(method) {
     case Method::PlainTable: {
       // addComment("This function is correctly rounded");
-      // When using compression, the best we can guarantee is faithful rounding
-      correctlyRounded = deltaRelu == Compression::Disabled;
+      // When using DeltaReLUCompression, the best we can guarantee is faithful rounding
+      correctlyRounded = useDeltaReLU == DeltaReLUCompression::Disabled;
       break;
     }
     case Method::MultiPartite: {
@@ -383,7 +383,7 @@ namespace flopoco
     REPORT(LogLevel::MESSAGE, paramString);
 
     OperatorPtr op = newInstance(methodOperator(method),
-      fd.name + (deltaRelu == Compression::Enabled ? "_delta_SNAFU" : "_SNAFU"),
+      fd.name + (useDeltaReLU == DeltaReLUCompression::Enabled ? "_delta_SNAFU" : "_SNAFU"),
       paramString,
       "X => " + input(in),
       "Y => " + output(out));
@@ -397,7 +397,7 @@ namespace flopoco
       vhdl << tab << declare("E", wOut - C->width());
       auto E = getSignalByName("E");
 
-      if((deltaRelu == Compression::Enabled && fd.signedDelta) || (deltaRelu == Compression::Disabled && fd.signedOut)) {
+      if((useDeltaReLU == DeltaReLUCompression::Enabled && fd.signedDelta) || (useDeltaReLU == DeltaReLUCompression::Disabled && fd.signedOut)) {
         vhdl << " <= " << E->valueToVHDL(0) << " when " << C->getName() << of(C->width() - 1) << " = '0' else " << E->valueToVHDL(-1) << ";" << endl;
       } else {
         vhdl << " <= " << E->valueToVHDL(0) << ";" << endl;
@@ -420,7 +420,7 @@ namespace flopoco
       // TODO: Take into account potential offsets
     }
 
-    if(deltaRelu == Compression::Enabled && fd.deltaFunction != Delta::None) {
+    if(useDeltaReLU == DeltaReLUCompression::Enabled && fd.deltaFunction != Delta::None) {
       // Reconstruct the function
       size_t d = out;
       size_t f = ++out;
@@ -467,7 +467,7 @@ namespace flopoco
     int wIn, wOut;
     double inputScale;
     string fIn, methodIn;
-    int deltaRelu;
+    int useDeltaReLU;
     bool expensiveSymmetry;
     bool enableSymmetry;
     ui.parseString(args, "f", &fIn);
@@ -475,10 +475,10 @@ namespace flopoco
     ui.parseInt(args, "wOut", &wOut);
     ui.parseString(args, "method", &methodIn);
     ui.parseFloat(args, "inputScale", &inputScale);
-    ui.parseInt(args, "deltaRelu", &deltaRelu);
+    ui.parseInt(args, "useDeltaReLU", &useDeltaReLU);
     ui.parseBoolean(args, "expensiveSymmetry", &expensiveSymmetry);
     ui.parseBoolean(args, "enableSymmetry", &enableSymmetry);
-    return new SNAFU(parentOp, target, fIn, wIn, wOut, methodIn, inputScale, deltaRelu, expensiveSymmetry, enableSymmetry);
+    return new SNAFU(parentOp, target, fIn, wIn, wOut, methodIn, inputScale, useDeltaReLU, expensiveSymmetry, enableSymmetry);
   }
 
   TestList SNAFU::unitTest(int testLevel)
@@ -486,7 +486,7 @@ namespace flopoco
     // the static list of mandatory tests
     TestList testStateList;
     vector<pair<string, string>> paramList;
-    std::vector<std::array<int, 5>> paramValues, moreParamValues;  //  order is win, wout, method, deltarelu
+    std::vector<std::array<int, 5>> paramValues, moreParamValues;  //  order is win, wout, method, useDeltaReLU
 		// TODO method currently ignored
     paramValues = {
       // testing the default value on the most standard cases
@@ -512,7 +512,7 @@ namespace flopoco
         paramList.push_back(make_pair("wOut", to_string(params[1])));
 				string method = "auto";
 				paramList.push_back(make_pair("method", method));
-        paramList.push_back(make_pair("deltaRelu", to_string(params[3])));
+        paramList.push_back(make_pair("useDeltaReLU", to_string(params[3])));
         testStateList.push_back(paramList);
         // cerr << " " << params[0]  << " " << params[1]  << " " << params[2] << endl;
         paramList.clear();
@@ -537,7 +537,7 @@ namespace flopoco
     "method(string)=auto: approximation method, among \"PlainTable\",\"MultiPartite\", \"Horner\", \"PiecewiseHorner1\", \"PiecewiseHorner2\", "
     "\"PiecewiseHorner3\", "
     "\"auto\" ;"
-    "deltaRelu(int)=-1: 1: subtract the base function ReLU to implement only the non-linear part. 0: do nothing. -1: automatic;",
+    "useDeltaReLU(int)=-1: 1: subtract the base function ReLU to implement only the non-linear part. 0: do nothing. -1: automatic;",
     "",
   };
 
