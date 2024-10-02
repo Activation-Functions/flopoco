@@ -237,6 +237,7 @@ namespace flopoco
     REPORT(LogLevel::MESSAGE, "Function after pre-processing: " << fd.longName << " evaluated on [-1,1)");
     REPORT(LogLevel::MESSAGE, "\twIn=" << wIn << " translates to lsbIn=" << lsbIn);
     REPORT(LogLevel::MESSAGE, "\twOut=" << wOut << " translates to lsbOut=" << lsbOut);
+    REPORT(LogLevel::MESSAGE, "\t  f->wOut=" << f->wOut << "  f->signedOut=" << f->signedOut);
 
     REPORT(LogLevel::MESSAGE, "Method is " << methodIn);
 
@@ -251,9 +252,10 @@ namespace flopoco
           << "\tplot(f,relu,-deltaf, [-1;1]);");
     } else {
       REPORT(LogLevel::MESSAGE,
-        "To plot the function being implemented, copy-paste the following two lines in Sollya" << endl
-                                                                                               << "  f = " << base << ";" << endl
-                                                                                               << "  plot(f, [-1;1]); ");
+        "To plot the function being implemented, copy-paste the following two lines in Sollya" 
+        << endl
+        << "  f = " << base << ";" << endl
+        << "  plot(f, [-1;1]); ");
     }
 
     ostringstream name;
@@ -302,8 +304,7 @@ namespace flopoco
     switch(method) {
     case Method::PlainTable: {
       // addComment("This function is correctly rounded");
-      // When using DeltaReLUCompression, the best we can guarantee is faithful rounding
-      correctlyRounded = true;
+         correctlyRounded = true;
       break;
     }
     case Method::MultiPartite: {

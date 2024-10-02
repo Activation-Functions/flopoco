@@ -15,8 +15,10 @@
 */
 
 #include "flopoco/FixFunctions/FixFunction.hpp"
+#include "flopoco/report.hpp"
 
 #include <cstdio>
+#include <sollya.h>
 #include <sstream>
 
 namespace flopoco
@@ -117,12 +119,20 @@ namespace flopoco
       sollya_lib_clear_obj(infS);
       sollya_lib_clear_obj(outIntervalS);
     }
+    // Here we should take into account the rounding to lsbOut 
+    // (we had the bug that the MPFR eval was some minuscule -epsilon wich trigerred signedOut)
+    mpfr_set_d(tmp, 1.0, MPFR_RNDN); // exact
+    mpfr_mul_2si(tmp, tmp, lsbOut-1, MPFR_RNDN); // half-ulp: 2^(lsbOut-1), exact
+    mpfr_add(tmp, tmp, infMP, MPFR_RNDN); // infMP+one half-ulp. 
+    // If this one is still negative we have a signed output
 
-    if(mpfr_sgn(infMP) >= 0) {
+     // std::cerr << " infMP=" << mpfr_get_d(infMP, MPFR_RNDN) << "  lsbOut=" << lsbOut << std::endl;
+    if(mpfr_sgn(tmp) >= 0) {
       signedOut = false;
     } else {
       signedOut = true;
     }
+
     std::ostringstream t;  // write it before we take the absolute value below
     t << "Out interval: [" << mpfr_get_d(infMP, MPFR_RNDD) << "; " << mpfr_get_d(supMP, MPFR_RNDU) << "]";
     //std::cerr << " " << t.str() << "   signedIn="<<signedIn << ", computed signedOut="<<signedOut <<  std::endl;
