@@ -478,12 +478,82 @@ namespace flopoco
     return new SNAFU(parentOp, target, fIn, wIn, wOut, methodIn, inputScale, deltaRelu, expensiveSymmetry, enableSymmetry);
   }
 
+  TestList SNAFU::unitTest(int testLevel)
+  {
+    // the static list of mandatory tests
+    TestList testStateList;
+    vector<pair<string, string>> paramList;
+    std::vector<std::array<int, 5>> paramValues, moreParamValues;  //  order is win, wout, method, deltarelu
+		// TODO method currently ignored
+    paramValues = {
+      // testing the default value on the most standard cases
+      {6, 6, 0, 0},
+      {6, 6, 0, 1},
+      {8, 8, 0, 0},
+      {8, 8, 0, 1},
+    };
+
+    if(testLevel == TestLevel::QUICK) {
+      // just test paramValues
+    }
+    if(testLevel >= TestLevel::SUBSTANTIAL) {
+      // same tests but add the other SRT values
+      moreParamValues = paramValues;
+#if 0  // TODO
+			for (auto params: paramValues) {
+				params[2]=43;
+				moreParamValues.push_back(params);
+				params[2]=87;
+				moreParamValues.push_back(params);
+			}
+#endif
+      paramValues = moreParamValues;
+    }
+    if(testLevel >= TestLevel::EXHAUSTIVE) {
+#if 0
+			std::array<int, 3> params;
+			for (int wF=5; wF<53; wF+=1) // test various input widths
+                {
+					int wE = 6+(wF/10);
+					while(wE>wF)
+						{
+							wE -= 2;
+						}
+					params[0]=wE;
+					params[1]=wF;
+					params[2]=42;
+					paramValues.push_back(params);
+					params[2]=43;
+					paramValues.push_back(params);
+					params[2]=87;
+					paramValues.push_back(params);
+				}
+#endif
+    }
+    // Now actually build the paramValues structure
+    for(auto f: activationFunction) {
+      cerr << f.second.name << endl;
+      for(auto params: paramValues) {
+        paramList.push_back(make_pair("f", f.second.name));
+        paramList.push_back(make_pair("wIn", to_string(params[0])));
+        paramList.push_back(make_pair("wOut", to_string(params[1])));
+				string method = "auto";
+					paramList.push_back(make_pair("method", method));
+        paramList.push_back(make_pair("deltaRELU", to_string(params[3])));
+        testStateList.push_back(paramList);
+        // cerr << " " << params[0]  << " " << params[1]  << " " << params[2] << endl;
+        paramList.clear();
+      }
+    }
+    return testStateList;
+  }
+
 
   template <>
   const OperatorDescription<SNAFU> op_descriptor<SNAFU>{
     "SNAFU",   // name
     "Simple Neural Activation Function Unit, without reinventing the wheel",
-    "Hidden",  // some day: FunctionApproximation ?
+    "BasicFloatingPoint",  // some day: FunctionApproximation ?
     "Also see generic options",
     "f(string): function of interest, among \"Tanh\", \"Sigmoid\", \"ReLU\", \"GELU\", \"ELU\", \"SiLU\", \"InvExp\" (case-insensitive);"
     "wIn(int): number of bits of the input ;"

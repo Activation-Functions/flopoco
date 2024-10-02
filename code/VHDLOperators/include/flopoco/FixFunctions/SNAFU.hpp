@@ -79,13 +79,13 @@ enum class Method {
 };
 
 static const map<string, Method> methodMap = {
+  {"auto", Method::Auto},
   {"plaintable", Method::PlainTable},
   {"multipartite", Method::MultiPartite},
   {"horner", Method::Horner},
   {"piecewisehorner1", Method::PiecewiseHorner1},
   {"piecewisehorner2", Method::PiecewiseHorner2},
   {"piecewisehorner3", Method::PiecewiseHorner3},
-  {"auto", Method::Auto},
 };
 
 static inline const Method methodFromString(const string s)
@@ -305,6 +305,7 @@ static const map<ActivationFunction, FunctionData> activationFunction = {
     }},
 };
 
+
 namespace flopoco
 {
   /**
@@ -327,7 +328,9 @@ namespace flopoco
     void emulate(TestCase* tc);
 
     static OperatorPtr parseArguments(OperatorPtr parentOp, Target* target, vector<string>& args, UserInterface& ui);
-    private:
+    static TestList unitTest(int testLevel);
+
+	private:
     int wIn;
     int wOut;
     double inputScale;
