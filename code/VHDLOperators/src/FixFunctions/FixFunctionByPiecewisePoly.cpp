@@ -74,7 +74,6 @@ namespace flopoco{
 			THROWERROR("FinalRounding=false not implemented yet" );
 		}
 		useNumericStd();
-
 		f=new FixFunction(func, false, lsbIn, lsbOut); // this will provide emulate etc.
 		msbOut = f->msbOut;
 		signedOut = f->signedOut;

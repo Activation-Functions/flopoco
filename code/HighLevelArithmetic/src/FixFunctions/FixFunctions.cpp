@@ -21,57 +21,68 @@
 #include <sollya.h>
 #include <sstream>
 
-namespace flopoco
-{
-  FixFunction::FixFunction(std::string sollyaString_, bool signedIn_, int lsbIn_, int lsbOut_)
-      : sollyaString(sollyaString_), lsbIn(lsbIn_), lsbOut(lsbOut_), signedIn(signedIn_)
-  {
-    std::ostringstream completeDescription;
-    completeDescription << sollyaString_;
-    if(signedIn)
-      completeDescription << " on [-1,1)";
-    else
-      completeDescription << " on [0,1)";
+namespace flopoco{
+
+		FixFunction::FixFunction(std::string sollyaString_, bool signedIn_, int lsbIn_, int lsbOut_):
+		sollyaString(sollyaString_), lsbIn(lsbIn_),  lsbOut(lsbOut_),  signedIn(signedIn_)
+	{
+		std::ostringstream completeDescription;
+		completeDescription << sollyaString_;
+		if(signedIn)
+			completeDescription << " on [-1,1)";
+		else
+			completeDescription << " on [0,1)";
+		if (lsbIn>0) {
+			REPORT(ERROR, "ERROR in FixFunctions : You are asking for a function with lsbIn=" << lsbIn << " but the input interval is "
+							 << (signedIn?"[-1,1)":"[0,1)") <<". lsbIn should be negative.");
+			exit(1); // TODO add THROWERROR in HighLevelArithmetic
+		}
 
     // Now do the parsing in Sollya
     fS = sollya_lib_parse_string(sollyaString.c_str());
     /* If  parse error throw an exception */
-    if(sollya_lib_obj_is_error(fS) || !sollya_lib_obj_is_function(fS))
+    if(sollya_lib_obj_is_error(fS) || !sollya_lib_obj_is_function(fS)) {
       throw(std::string("FixFunction: Unable to parse input function: ") + sollyaString);
+		}
 
-    initialize();
+		initialize(); // computes msbOut, hence wOut. Does more sanity check
 
-    if(lsbIn != 0) {  // we have an IO specification
-      completeDescription << " for lsbIn=" << lsbIn << " (wIn=" << wIn << "), msbout=" << msbOut << ", lsbOut=" << lsbOut << " (wOut=" << wOut
-                          << "). ";
-    }
-    completeDescription << outputDescription;
-    description = completeDescription.str();
-  }
+		if(lsbIn!=1742) {
+			completeDescription << " for lsbIn=" << lsbIn << " (wIn=" << wIn << "), msbout=" << msbOut << ", lsbOut="
+													<< lsbOut << " (wOut=" << wOut << "). ";
+			completeDescription << outputDescription;
+		}
+		description = completeDescription.str();
 
-
-  FixFunction::FixFunction(sollya_obj_t fS_, bool signedIn_, int lsbIn_, int lsbOut_) : signedIn(signedIn_), lsbIn(lsbIn_), lsbOut(lsbOut_), fS(fS_)
-  {
-    initialize();
-  }
+}
 
 
-  void FixFunction::initialize()
-  {
-    if(signedIn)
-      wIn = -lsbIn + 1;  // add the sign bit at position 0
-    else
-      wIn = -lsbIn;
-#if 1                    // this sometimes enlarges the interval.
-    if(signedIn)
-      inputRangeS = sollya_lib_parse_string("[-1;1]");
-    else
-      inputRangeS = sollya_lib_parse_string("[0;1]");
-#else  // This is tighter : interval is [O, 1-1b-l]  but it causes more problems than it solves
-    string maxvalIn = "1-1b" + to_string(lsbIn);
-    ostringstream uselessNoise;
-    uselessNoise << "[" << (signedIn ? "-1" : "0") << ";" << maxvalIn << "]";
-    inputRangeS = sollya_lib_parse_string(uselessNoise.str().c_str());
+
+
+	FixFunction::FixFunction(sollya_obj_t fS_, bool signedIn_, int lsbIn_, int lsbOut_):
+		signedIn(signedIn_), lsbIn(lsbIn_),  lsbOut(lsbOut_), fS(fS_)
+	{
+		initialize();
+	}
+
+
+
+	void	FixFunction::initialize()
+	{
+		if(signedIn)
+			wIn=-lsbIn+1; // add the sign bit at position 0
+		else
+			wIn=-lsbIn;
+#if 1 // this sometimes enlarges the interval. 
+		if(signedIn)
+			inputRangeS = sollya_lib_parse_string("[-1;1]");
+		else
+			inputRangeS = sollya_lib_parse_string("[0;1]");
+#else // This is tighter : interval is [O, 1-1b-l]  but it causes more problems than it solves 
+		string maxvalIn="1-1b"+to_string(lsbIn);
+		ostringstream uselessNoise;
+		uselessNoise << "[" << (signedIn?"-1":"0") << ";" << maxvalIn << "]";
+		inputRangeS = sollya_lib_parse_string(uselessNoise.str().c_str());
 #endif
     sollya_obj_t outIntervalS, supS, infS;
     mpfr_t supMP, infMP, tmp;
@@ -105,7 +116,7 @@ namespace flopoco
 				mpfr_add(x, x, delta, MPFR_RNDN);
 			}
 			mpfr_clears(x,delta,r, NULL);
-		} else {
+		} else { // we can't do the exhaustive test
 			if(wIn>0) {
 				std::cerr << "Warning: the minimal output width is evaluated by Sollya and may be overestimated.\n";
 			}
@@ -151,11 +162,10 @@ namespace flopoco
     mpfr_clears(supMP, infMP, tmp, NULL);
 
 		wOut=msbOut-lsbOut+1;
-#if 0 // TODO: this sanity test breaks half of the autotest of FPExp, why ?
+
 		if(wOut<=0) {
 			throw(std::string("FixFunction determined that wOut=") + std::to_string(wOut) + std::string(" which makes no sense"));
 		}
-#endif
 	}
 
   FixFunction::~FixFunction()

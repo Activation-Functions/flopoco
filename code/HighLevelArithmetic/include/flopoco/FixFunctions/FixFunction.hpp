@@ -22,16 +22,24 @@ public:
 
 
 	/**
-			The FixFunctionByTable constructor
+		 A FixFunctionByTable constructor when the precision parameters are already known
 			@param[string] func    a string representing the function
 			@param[bool]   signedIn: if true, input range is [0,1], else input range is [0,1]
 			@param[int]    lsbIn    input LSB weight (-lsbX is the input size)
 			@param[int]    lsbOut  output LSB weight
-
-			There are defaults for lsbOut and msbOut for situations when they are computed afterwards.
+			Default value of -1717 correspond to a function for which the actuak lsbs are unknown yet.
 		*/
-	FixFunction(std::string sollyaString, bool signedIn, int lsbIn=0, int lsbOut=0);
-	FixFunction(sollya_obj_t fS, bool signedIn, int lsbIn=0, int lsbOut=0);
+	FixFunction(std::string sollyaString, bool signedIn, int lsbIn=-1717, int lsbOut=-1717);
+
+	/**
+		 A FixFunctionByTable constructor from a Sollya object
+			@param[sollya_obj_t] fS: the function provided as a Sollya expression
+			@param[bool]   signedIn: if true, input range is [0,1], else input range is [0,1]
+			@param[int]    lsbIn    input LSB weight (-lsbX is the input size)
+			@param[int]    lsbOut  output LSB weight
+			Default value of -1717 correspond to a function for which the actuak lsbs are unknown yet.
+		*/
+	FixFunction(sollya_obj_t fS, bool signedIn, int lsbIn=-1717, int lsbOut=-1717);
 
 	virtual ~FixFunction();
 
@@ -53,7 +61,7 @@ public:
 	// All the following public, not good practice I know, but life is complicated enough
 	// All these public attributes are read at some point by Operator classes
 	std::string sollyaString;
-	int lsbIn;   
+	int lsbIn;  /*< A value of -1717 is used for an unitialized lsb, so let's be ultra accurate. Ugly but hopefully harmless. */  
 	int wIn;   
 	int msbOut; /*< Now computed by the constructor; assuming signed out */
 	int lsbOut;
