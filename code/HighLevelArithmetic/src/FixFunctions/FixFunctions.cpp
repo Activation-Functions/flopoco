@@ -73,22 +73,32 @@ namespace flopoco{
 			wIn=-lsbIn+1; // add the sign bit at position 0
 		else
 			wIn=-lsbIn;
-#if 1 // this sometimes enlarges the interval. 
+
+		// Computing the input interval.
+		
+		// Some day we should remove the #if below.
+		// The tighter #else branch is the intended one,
+		// but it did nonsense when the default lsbIn was 0, hence the need for the first branch.
+		// This took some time to pin down, and it is now hopefully fixed (oct.2024),
+		// but we have lived so many years with the first branch that it has been tested more
+		// than the second one, so let's keep it for a while. 
+
+#if 0 // this is simpler but sometimes enlarges the interval.
 		if(signedIn)
 			inputRangeS = sollya_lib_parse_string("[-1;1]");
 		else
 			inputRangeS = sollya_lib_parse_string("[0;1]");
-#else // This is tighter : interval is [O, 1-1b-l]  but it causes more problems than it solves 
-		string maxvalIn="1-1b"+to_string(lsbIn);
-		ostringstream uselessNoise;
-		uselessNoise << "[" << (signedIn?"-1":"0") << ";" << maxvalIn << "]";
-		inputRangeS = sollya_lib_parse_string(uselessNoise.str().c_str());
+#else // This is tighter : interval is [O, 1-1b-l] ; for the default lsbIn it will be [0, 1-1b-1717] 
+		std::string maxvalIn = "1-1b" + std::to_string(lsbIn);
+		std::string interval = std::string("[") + (signedIn?"-1":"0") + ";" + maxvalIn + "]";
+		inputRangeS = sollya_lib_parse_string(interval.c_str());
 #endif
-    sollya_obj_t outIntervalS, supS, infS;
-    mpfr_t supMP, infMP, tmp;
-    mpfr_init2(supMP, 1000);  // no big deal if we are not accurate here
-    mpfr_init2(infMP, 1000);  // no big deal if we are not accurate here
-    mpfr_init2(tmp, 1000);    // no big deal if we are not accurate here
+		
+		sollya_obj_t outIntervalS, supS, infS;
+		mpfr_t supMP, infMP, tmp;
+		mpfr_init2(supMP, 1000); // no big deal if we are not accurate here 
+		mpfr_init2(infMP, 1000); // no big deal if we are not accurate here 
+		mpfr_init2(tmp, 1000); // no big deal if we are not accurate here 
 
 		// TODO: Use a more intelligent method for this, using the zeroes of the derivative
 
