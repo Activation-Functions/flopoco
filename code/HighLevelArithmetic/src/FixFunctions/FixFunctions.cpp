@@ -47,7 +47,7 @@ namespace flopoco{
 
 		initialize(); // computes msbOut, hence wOut. Does more sanity check
 
-		if(lsbIn!=1742) {
+		if(lsbIn!=1717) {
 			completeDescription << " for lsbIn=" << lsbIn << " (wIn=" << wIn << "), msbout=" << msbOut << ", lsbOut="
 													<< lsbOut << " (wOut=" << wOut << "). ";
 			completeDescription << outputDescription;

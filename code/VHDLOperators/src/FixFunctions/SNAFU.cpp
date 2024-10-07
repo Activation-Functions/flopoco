@@ -125,9 +125,9 @@ namespace flopoco
 
     FunctionData fd = activationFunction.at(af);
 
-    int lsbIn = -wIn + 1;               // The input is always signed, we need to account for it
-    int lsbOut = -wOut + fd.signedOut;  // The output sign bit depends on the exact function
     bool signedIn = fd.signedIn;               // The input is almost always signed, i.e. in [-1,1) (only InvExp is exception)
+    int lsbIn = -wIn + signedIn;               // The input is always signed, we need to account for it
+    int lsbOut = -wOut + fd.signedOut;  // The output sign bit depends on the exact function
 
     bool forceRescale = false;          // When the internal operator only works on [0,1), e.g. Horner & PieceWiseHorner
 
@@ -215,9 +215,10 @@ namespace flopoco
     delta = "(" + deltaTo + ")-(" + base + ")";
     // }
 
+    // REPORT(LogLevel::MESSAGE, "\t     lsbIn=" << lsbIn << "  lsbdOut=" << lsbOut);
 
     // Underlying function definition, used to generate test cases
-    f = new FixFunction(base, true, lsbIn, lsbOut);
+    f = new FixFunction(base, signedIn, lsbIn, lsbOut);
     correctlyRounded = false;  // default is faithful
 
     // Only compute the delta function if one is defined
