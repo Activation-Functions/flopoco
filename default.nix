@@ -24,11 +24,12 @@
       wcpg
 
       # Dev utilities
-      pre-commit
       clang-tools
-      rlwrap
       gnuplot
+      ninja
       nvc
+      pre-commit
+      rlwrap
     ];
 
     shellHook = ''
