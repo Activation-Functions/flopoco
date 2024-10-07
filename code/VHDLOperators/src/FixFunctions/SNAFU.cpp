@@ -208,12 +208,12 @@ namespace flopoco
       deltaTo = to_string(inputScale) + "*(" + deltaTo + ")";
     }
 
-    if(af == ELU) {
-      replaceX(base, "-@");       // ELU is a special case, the only complicated part is on the negative values
-      delta = "-(" + base + ")";  // Thus, we need to flip ths function, to go to [0,1)
-    } else {
-      delta = "(" + deltaTo + ")-(" + base + ")";
-    }
+    // if(af == ELU) {
+    //   replaceX(base, "-@");       // ELU is a special case, the only complicated part is on the negative values
+    //   delta = "-(" + base + ")";  // Thus, we need to flip ths function, to go to [0,1)
+    // } else {
+    delta = "(" + deltaTo + ")-(" + base + ")";
+    // }
 
 
     // Underlying function definition, used to generate test cases
@@ -427,13 +427,13 @@ namespace flopoco
 
       auto D = getSignalByName(output(d));
 
-      if(af == ELU) {
-        // Special case, when X is positive, then it is identical to the ReLU
-        vhdl << tab << declare(output(f), wOut) << " <= ReLU when X" << of(wIn - 1) << " = '0' else ReLU - (" + output(d) + ");" << endl;
-      } else {
-        // if all went well deltaOut should have fewer bits so we need to pad with zeroes
-        vhdl << tab << declare(output(f), wOut) << " <= ReLU - (" + output(d) + ");" << endl;
-      }
+      // if(af == ELU) {
+      //   // Special case, when X is positive, then it is identical to the ReLU
+      //   vhdl << tab << declare(output(f), wOut) << " <= ReLU when X" << of(wIn - 1) << " = '0' else ReLU - (" + output(d) + ");" << endl;
+      // } else {
+      // // if all went well deltaOut should have fewer bits so we need to pad with zeroes
+      vhdl << tab << declare(output(f), wOut) << " <= ReLU - (" + output(d) + ");" << endl;
+      // }
     }
 
     // We are running in symmetry mode
