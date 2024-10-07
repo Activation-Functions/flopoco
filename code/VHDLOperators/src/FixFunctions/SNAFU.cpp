@@ -154,9 +154,9 @@ namespace flopoco
     if(useDeltaReLU == DeltaReLUCompression::Auto) {
       // The DeltaReLUCompression is only enabled for functions that have a delta
       useDeltaReLU = static_cast<DeltaReLUCompression>(fd.deltaFunction != Delta::None);
-      if(af==GeLU && wOut<=6) {
+      if(af == GeLU && wOut <= 6) {
         useDeltaReLU = DeltaReLUCompression::Disabled;
-      } 
+      }
     }
 
     if(fd.incompatibleMethods.find(method) != fd.incompatibleMethods.end()) {
@@ -166,7 +166,7 @@ namespace flopoco
 
     // Tackle symmetry, the symmetry is considered after reducing the function all the way, i.e. after delta and offset manipulations
     const bool cond = fd.offset != 0.0 || fd.deltaFunction == Delta::None;
-    bool useSymmetry = useDeltaReLU == DeltaReLUCompression::Enabled ? fd.deltaParity != Parity::None : fd.parity != Parity::None;
+    bool useSymmetry = enableSymmetry && (useDeltaReLU == DeltaReLUCompression::Enabled ? fd.deltaParity != Parity::None : fd.parity != Parity::None);
 
     // Process the function definition based on what we know
     const string scaleString = "(" + to_string(inputScale) + "*@)";
@@ -214,7 +214,7 @@ namespace flopoco
     } else {
       delta = "(" + deltaTo + ")-(" + base + ")";
     }
-    
+
 
     // Underlying function definition, used to generate test cases
     f = new FixFunction(base, true, lsbIn, lsbOut);
@@ -252,10 +252,9 @@ namespace flopoco
           << "\tplot(f,relu,-deltaf, [-1;1]);");
     } else {
       REPORT(LogLevel::MESSAGE,
-        "To plot the function being implemented, copy-paste the following two lines in Sollya" 
-        << endl
-        << "  f = " << base << ";" << endl
-        << "  plot(f, [-1;1]); ");
+        "To plot the function being implemented, copy-paste the following two lines in Sollya" << endl
+                                                                                               << "  f = " << base << ";" << endl
+                                                                                               << "  plot(f, [-1;1]); ");
     }
 
     ostringstream name;
@@ -304,7 +303,7 @@ namespace flopoco
     switch(method) {
     case Method::PlainTable: {
       // addComment("This function is correctly rounded");
-         correctlyRounded = true;
+      correctlyRounded = true;
       break;
     }
     case Method::MultiPartite: {
@@ -488,7 +487,7 @@ namespace flopoco
     TestList testStateList;
     vector<pair<string, string>> paramList;
     std::vector<std::array<int, 5>> paramValues, moreParamValues;  //  order is win, wout, method, useDeltaReLU
-		// TODO method currently ignored
+                                                                   // TODO method currently ignored
     paramValues = {
       // testing the default value on the most standard cases
       {6, 6, 0, 0},
@@ -503,16 +502,15 @@ namespace flopoco
     if(testLevel >= TestLevel::SUBSTANTIAL) {
       // same tests but add the other SRT values
     }
-    if(testLevel >= TestLevel::EXHAUSTIVE) {
-    }
+    if(testLevel >= TestLevel::EXHAUSTIVE) { }
     // Now actually build the paramValues structure
     for(auto f: activationFunction) {
       for(auto params: paramValues) {
         paramList.push_back(make_pair("f", f.second.name));
         paramList.push_back(make_pair("wIn", to_string(params[0])));
         paramList.push_back(make_pair("wOut", to_string(params[1])));
-				string method = "auto";
-				paramList.push_back(make_pair("method", method));
+        string method = "auto";
+        paramList.push_back(make_pair("method", method));
         paramList.push_back(make_pair("useDeltaReLU", to_string(params[3])));
         testStateList.push_back(paramList);
         // cerr << " " << params[0]  << " " << params[1]  << " " << params[2] << endl;
@@ -525,7 +523,7 @@ namespace flopoco
 
   template <>
   const OperatorDescription<SNAFU> op_descriptor<SNAFU>{
-    "SNAFU",   // name
+    "SNAFU",               // name
     "Simple Neural Activation Function Unit, without reinventing the wheel",
     "BasicFloatingPoint",  // some day: FunctionApproximation ?
     "Also see generic options",
