@@ -127,7 +127,7 @@ namespace flopoco
 
     int lsbIn = -wIn + 1;               // The input is always signed, we need to account for it
     int lsbOut = -wOut + fd.signedOut;  // The output sign bit depends on the exact function
-    bool signedIn = true;               // The input is always signed, i.e. in [-1,1)
+    bool signedIn = fd.signedIn;               // The input is almost always signed, i.e. in [-1,1) (only InvExp is exception)
 
     bool forceRescale = false;          // When the internal operator only works on [0,1), e.g. Horner & PieceWiseHorner
 
@@ -234,7 +234,7 @@ namespace flopoco
       method = Method::PlainTable;
     }
     // Print a summary
-    REPORT(LogLevel::MESSAGE, "Function after pre-processing: " << fd.longName << " evaluated on [-1,1)");
+    REPORT(LogLevel::MESSAGE, "Function after pre-processing: " << fd.longName << " evaluated on " << (signedIn?"[-1,1)":"[0,1)"));
     REPORT(LogLevel::MESSAGE, "\twIn=" << wIn << " translates to lsbIn=" << lsbIn);
     REPORT(LogLevel::MESSAGE, "\twOut=" << wOut << " translates to lsbOut=" << lsbOut);
     REPORT(LogLevel::MESSAGE, "\t  f->wOut=" << f->wOut << "  f->signedOut=" << f->signedOut);
@@ -254,7 +254,7 @@ namespace flopoco
       REPORT(LogLevel::MESSAGE,
         "To plot the function being implemented, copy-paste the following two lines in Sollya" << endl
                                                                                                << "  f = " << base << ";" << endl
-                                                                                               << "  plot(f, [-1;1]); ");
+						 << "  plot(f, " << (signedIn?"[-1;1]":"[0;1]") << "); ");
     }
 
     ostringstream name;
@@ -302,28 +302,34 @@ namespace flopoco
 
     switch(method) {
     case Method::PlainTable: {
+			REPORT(LogLevel::MESSAGE, "Method is FixFunctionByPlainTable" );
       // addComment("This function is correctly rounded");
       correctlyRounded = true;
       break;
     }
     case Method::MultiPartite: {
+			REPORT(LogLevel::MESSAGE, "Method is FixFunctionByMultiPartite" );
       // params["d"] = "1";
       break;
     }
     case Method::Horner: {
+			REPORT(LogLevel::MESSAGE, "Method is Horner" );
       // FIXME: Make Horner work
       break;
     }
     case Method::PiecewiseHorner1: {
+			REPORT(LogLevel::MESSAGE, "Method is FixFunctionByPiecewisePoly, Horner evaluation, degree 1" );
       params["d"] = "1";
       break;
     }
     case Method::PiecewiseHorner2: {
+			REPORT(LogLevel::MESSAGE, "Method is FixFunctionByPiecewisePoly, Horner evaluation, degree 2" );
       params["d"] = "2";
       forceRescale = true;
       break;
     }
     case Method::PiecewiseHorner3: {
+			REPORT(LogLevel::MESSAGE, "Method is FixFunctionByPiecewisePoly, Horner evaluation, degree 3" );			
       params["d"] = "3";
       forceRescale = true;
       break;

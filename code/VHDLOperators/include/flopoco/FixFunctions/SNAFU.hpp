@@ -145,6 +145,7 @@ struct FunctionData {
   string name;
   string longName;
   string formula;
+  bool signedIn=true;
   bool signedOut;
   Parity parity = Parity::None;       // Intrinsic parity of the function
   Parity deltaParity = Parity::None;  // Parity of the function after subtraction of the delta function
@@ -224,8 +225,9 @@ static const map<ActivationFunction, FunctionData> activationFunction = {
       .name = "InvExp",
       .longName = "Inverse Exponential",
       .formula = "exp(-X)",  // textbook
+      .signedIn = false,    // input unsigned
       .signedOut = false,    // output unsigned
-      .scaleFactor = 1.0,    //
+			.slightRescale = true,                    // output touches 1 and needs to be slightly rescaled
     }},
 
   // Derivatives
