@@ -145,7 +145,7 @@ struct FunctionData {
   string name;
   string longName;
   string formula;
-  bool signedIn=true;
+  bool signedIn = true;
   bool signedOut;
   Parity parity = Parity::None;       // Intrinsic parity of the function
   Parity deltaParity = Parity::None;  // Parity of the function after subtraction of the delta function
@@ -169,7 +169,7 @@ static const map<ActivationFunction, FunctionData> activationFunction = {
       .longName = "Sigmoid",
       .formula = "1/(1+exp(-X))",  //textbook
       .signedOut = false,          // output unsigned
-      .parity = Parity::Odd,
+      .parity = Parity::None,
       .offset = 0.5,
       .slightRescale = true,       // output touches 1 and needs to be slightly rescaled
     }},
@@ -224,10 +224,10 @@ static const map<ActivationFunction, FunctionData> activationFunction = {
     FunctionData{
       .name = "InvExp",
       .longName = "Inverse Exponential",
-      .formula = "exp(-X)",  // textbook
-      .signedIn = false,    // input unsigned
-      .signedOut = false,    // output unsigned
-			.slightRescale = true,                    // output touches 1 and needs to be slightly rescaled
+      .formula = "exp(-X)",   // textbook
+      .signedIn = false,      // input unsigned
+      .signedOut = false,     // output unsigned
+      .slightRescale = true,  // output touches 1 and needs to be slightly rescaled
     }},
 
   // Derivatives
@@ -331,8 +331,7 @@ namespace flopoco
 
     static OperatorPtr parseArguments(OperatorPtr parentOp, Target* target, vector<string>& args, UserInterface& ui);
     static TestList unitTest(int testLevel);
-
-	private:
+    private:
     int wIn;
     int wOut;
     double inputScale;
