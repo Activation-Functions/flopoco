@@ -125,8 +125,8 @@ namespace flopoco
 
     FunctionData fd = activationFunction.at(af);
 
-    bool signedIn = fd.signedIn;               // The input is almost always signed, i.e. in [-1,1) (only InvExp is exception)
-    int lsbIn = -wIn + signedIn;               // The input is always signed, we need to account for it
+    bool signedIn = fd.signedIn;        // The input is almost always signed, i.e. in [-1,1) (only InvExp is exception)
+    int lsbIn = -wIn + signedIn;        // The input is always signed, we need to account for it
     int lsbOut = -wOut + fd.signedOut;  // The output sign bit depends on the exact function
 
     bool forceRescale = false;          // When the internal operator only works on [0,1), e.g. Horner & PieceWiseHorner
@@ -235,7 +235,7 @@ namespace flopoco
       method = Method::PlainTable;
     }
     // Print a summary
-    REPORT(LogLevel::MESSAGE, "Function after pre-processing: " << fd.longName << " evaluated on " << (signedIn?"[-1,1)":"[0,1)"));
+    REPORT(LogLevel::MESSAGE, "Function after pre-processing: " << fd.longName << " evaluated on " << (signedIn ? "[-1,1)" : "[0,1)"));
     REPORT(LogLevel::MESSAGE, "\twIn=" << wIn << " translates to lsbIn=" << lsbIn);
     REPORT(LogLevel::MESSAGE, "\twOut=" << wOut << " translates to lsbOut=" << lsbOut);
     REPORT(LogLevel::MESSAGE, "\t  f->wOut=" << f->wOut << "  f->signedOut=" << f->signedOut);
@@ -255,7 +255,8 @@ namespace flopoco
       REPORT(LogLevel::MESSAGE,
         "To plot the function being implemented, copy-paste the following two lines in Sollya" << endl
                                                                                                << "  f = " << base << ";" << endl
-						 << "  plot(f, " << (signedIn?"[-1;1]":"[0;1]") << "); ");
+                                                                                               << "  plot(f, " << (signedIn ? "[-1;1]" : "[0;1]")
+                                                                                               << "); ");
     }
 
     ostringstream name;
@@ -303,34 +304,34 @@ namespace flopoco
 
     switch(method) {
     case Method::PlainTable: {
-			REPORT(LogLevel::MESSAGE, "Method is FixFunctionByPlainTable" );
+      REPORT(LogLevel::MESSAGE, "Method is FixFunctionByPlainTable");
       // addComment("This function is correctly rounded");
       correctlyRounded = true;
       break;
     }
     case Method::MultiPartite: {
-			REPORT(LogLevel::MESSAGE, "Method is FixFunctionByMultiPartite" );
+      REPORT(LogLevel::MESSAGE, "Method is FixFunctionByMultiPartite");
       // params["d"] = "1";
       break;
     }
     case Method::Horner: {
-			REPORT(LogLevel::MESSAGE, "Method is Horner" );
+      REPORT(LogLevel::MESSAGE, "Method is Horner");
       // FIXME: Make Horner work
       break;
     }
     case Method::PiecewiseHorner1: {
-			REPORT(LogLevel::MESSAGE, "Method is FixFunctionByPiecewisePoly, Horner evaluation, degree 1" );
+      REPORT(LogLevel::MESSAGE, "Method is FixFunctionByPiecewisePoly, Horner evaluation, degree 1");
       params["d"] = "1";
       break;
     }
     case Method::PiecewiseHorner2: {
-			REPORT(LogLevel::MESSAGE, "Method is FixFunctionByPiecewisePoly, Horner evaluation, degree 2" );
+      REPORT(LogLevel::MESSAGE, "Method is FixFunctionByPiecewisePoly, Horner evaluation, degree 2");
       params["d"] = "2";
       forceRescale = true;
       break;
     }
     case Method::PiecewiseHorner3: {
-			REPORT(LogLevel::MESSAGE, "Method is FixFunctionByPiecewisePoly, Horner evaluation, degree 3" );			
+      REPORT(LogLevel::MESSAGE, "Method is FixFunctionByPiecewisePoly, Horner evaluation, degree 3");
       params["d"] = "3";
       forceRescale = true;
       break;
@@ -404,7 +405,9 @@ namespace flopoco
       vhdl << tab << declare("E", wOut - C->width());
       auto E = getSignalByName("E");
 
-      if((useDeltaReLU == DeltaReLUCompression::Enabled && fd.signedDelta) || (useDeltaReLU == DeltaReLUCompression::Disabled && fd.signedOut)) {
+      // When do we need to do a sign extension :
+      if((useDeltaReLU == DeltaReLUCompression::Enabled && fd.signedDelta) ||
+        (useDeltaReLU == DeltaReLUCompression::Disabled && fd.signedOut && !useSymmetry)) {
         vhdl << " <= " << E->valueToVHDL(0) << " when " << C->getName() << of(C->width() - 1) << " = '0' else " << E->valueToVHDL(-1) << ";" << endl;
       } else {
         vhdl << " <= " << E->valueToVHDL(0) << ";" << endl;
