@@ -322,6 +322,7 @@ namespace flopoco
     case Method::PiecewiseHorner1: {
       REPORT(LogLevel::MESSAGE, "Method is FixFunctionByPiecewisePoly, Horner evaluation, degree 1");
       params["d"] = "1";
+      forceRescale = true;
       break;
     }
     case Method::PiecewiseHorner2: {
@@ -356,8 +357,8 @@ namespace flopoco
     } else if(forceRescale) {  // This is incompatible with the exploitation of symmetry
       // The original input is in [-1,1) but for technical reasons, we need to set it in [0,1)
 
-      replaceX(*function, "((@+1)/2)");  // Mathematical rescaling of the function
-      lsbIn--;                           // lsbIn needs to be updated as we shift everything 1 bit
+      replaceX(*function, "(2*@-1)");  // Mathematical rescaling of the function
+      lsbIn--;                         // lsbIn needs to be updated as we shift everything 1 bit
       signedIn = false;
 
       const size_t x = in;
@@ -365,8 +366,8 @@ namespace flopoco
       auto X = getSignalByName(input(x));
       int w = X->width();
 
-      vhdl << tab << declare(input(s), w) << " <= not(" << input(x) << of(w - 1) << ") & " << input(x) << range(w - 2, 0) << " when " << input(x)
-           << of(w - 1) << " = '0' else (not(" << input(x) << range(w - 2, 0) << ") + " << X->valueToVHDL(1) << ");" << endl;
+      vhdl << tab << declare(input(s), w) << " <= ('0' & " << input(x) << range(w - 2, 0) << ") when " << input(x) << of(w - 1)
+           << " = '1' else ('1' & " << input(x) << range(w - 2, 0) << ");" << endl;
     }
 
     // if(!signedIn) {
