@@ -208,12 +208,7 @@ namespace flopoco
       deltaTo = to_string(inputScale) + "*(" + deltaTo + ")";
     }
 
-    // if(af == ELU) {
-    //   replaceX(base, "-@");       // ELU is a special case, the only complicated part is on the negative values
-    //   delta = "-(" + base + ")";  // Thus, we need to flip ths function, to go to [0,1)
-    // } else {
     delta = "(" + deltaTo + ")-(" + base + ")";
-    // }
 
     // REPORT(LogLevel::MESSAGE, "\t     lsbIn=" << lsbIn << "  lsbdOut=" << lsbOut);
 
@@ -221,12 +216,21 @@ namespace flopoco
     f = new FixFunction(base, signedIn, lsbIn, lsbOut);
     correctlyRounded = false;  // default is faithful
 
-    // Only compute the delta function if one is defined
-    if(useDeltaReLU == DeltaReLUCompression::Enabled && fd.deltaFunction != Delta::None) {
-      function = &delta;  // The function to really approximate is the delta one, the rest is only tricks
+    string base_elu = "expm1(I*(X-1))";
+    if(af == ELU) {
+      // In the case of ELU, we only need  to compute something for the negative X
+      // This is a smört trick to do it
+      _replace(base_elu, "I", to_string(inputScale));
+      signedIn = false;
+      function = &base_elu;
     } else {
-      // Respect the whishes of the user
-      function = &base;
+      // Only compute the delta function if one is defined
+      if(useDeltaReLU == DeltaReLUCompression::Enabled && fd.deltaFunction != Delta::None) {
+        function = &delta;  // The function to really approximate is the delta one, the rest is only tricks
+      } else {
+        // Respect the whishes of the user
+        function = &base;
+      }
     }
 
     // means "please choose for me"
@@ -235,7 +239,7 @@ namespace flopoco
       method = Method::PlainTable;
     }
     // Print a summary
-    REPORT(LogLevel::MESSAGE, "Function after pre-processing: " << fd.longName << " evaluated on " << (signedIn ? "[-1,1)" : "[0,1)"));
+    REPORT(LogLevel::MESSAGE, "Function after pre-processing: " << fd.longName << " evaluated on " << (f->signedIn ? "[-1,1)" : "[0,1)"));
     REPORT(LogLevel::MESSAGE, "\twIn=" << wIn << " translates to lsbIn=" << lsbIn);
     REPORT(LogLevel::MESSAGE, "\twOut=" << wOut << " translates to lsbOut=" << lsbOut);
     REPORT(LogLevel::MESSAGE, "\t  f->wOut=" << f->wOut << "  f->signedOut=" << f->signedOut);
@@ -354,7 +358,7 @@ namespace flopoco
            << of(wIn - 1) << " = '1' else " << input(x) << ";" << endl;
 
       vhdl << tab << declare(input(++in), wIn - 1) << " <= " << input(a) << range(wIn - 2, 0) << ";" << endl;
-    } else if(forceRescale) {  // This is incompatible with the exploitation of symmetry
+    } else if(forceRescale && af != ELU) {  // This is incompatible with the exploitation of symmetry
       // The original input is in [-1,1) but for technical reasons, we need to set it in [0,1)
 
       replaceX(*function, "(2*@-1)");  // Mathematical rescaling of the function
@@ -370,15 +374,13 @@ namespace flopoco
            << " = '1' else ('1' & " << input(x) << range(w - 2, 0) << ");" << endl;
     }
 
-    // if(!signedIn) {
-    //   // TODO use forceRescale
-    //   if(method == Method::Horner) {
-    //     // We need to scale the input
-    //     in++;
-    //     vhdl << tab << declare(input(in), wIn - 1) << " <= not(" << input(in - 1) << of(wIn - 2) << ") & " << input(in - 1) << range(wIn - 3, 0)
-    //          << ";" << endl;
-    //   }
-    // }
+    if(af == ELU) {
+      // Map [-1, 0) to [0, 1) by dropping the leading bit
+      size_t x = in;
+      size_t a = ++in;
+
+      vhdl << tab << declare(input(a), wIn - 1) << " <= " << input(x) << range(wIn - 2, 0) << ";" << endl;
+    }
 
     params["f"] = *function;
     params["signedIn"] = to_string(signedIn);
@@ -407,7 +409,9 @@ namespace flopoco
       auto E = getSignalByName("E");
 
       // When do we need to do a sign extension :
-      if((useDeltaReLU == DeltaReLUCompression::Enabled && fd.signedDelta) ||
+      if(af == ELU) {
+        vhdl << " <= " << E->valueToVHDL(-1) << ";" << endl;
+      } else if((useDeltaReLU == DeltaReLUCompression::Enabled && fd.signedDelta) ||
         (useDeltaReLU == DeltaReLUCompression::Disabled && fd.signedOut && !useSymmetry)) {
         vhdl << " <= " << E->valueToVHDL(0) << " when " << C->getName() << of(C->width() - 1) << " = '0' else " << E->valueToVHDL(-1) << ";" << endl;
       } else {
@@ -438,13 +442,8 @@ namespace flopoco
 
       auto D = getSignalByName(output(d));
 
-      // if(af == ELU) {
-      //   // Special case, when X is positive, then it is identical to the ReLU
-      //   vhdl << tab << declare(output(f), wOut) << " <= ReLU when X" << of(wIn - 1) << " = '0' else ReLU - (" + output(d) + ");" << endl;
-      // } else {
       // // if all went well deltaOut should have fewer bits so we need to pad with zeroes
       vhdl << tab << declare(output(f), wOut) << " <= ReLU - (" + output(d) + ");" << endl;
-      // }
     }
 
     // We are running in symmetry mode
@@ -459,6 +458,14 @@ namespace flopoco
       addComment("Expensive reconstruction for -1");
       vhdl << tab << declare(output(y), wOut) << " <= " << getSignalByName(output(f))->valueToVHDL(rc)
            << " when X = " << getSignalByName("X")->valueToVHDL(mpz_class(1) << wIn - 1) << " else " << output(f) << ";" << endl;
+    }
+
+    // Reconstruct the ELU value with a simple mux
+    if(af == ELU) {
+      size_t d = out;
+      size_t e = ++out;
+
+      vhdl << tab << declare(output(e), wOut) << " <= " << output(d) << " when X" << of(wIn - 1) << " = '1' else X;" << endl;
     }
 
     vhdl << tab << "Y <= " << output(out);

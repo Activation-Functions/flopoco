@@ -197,7 +197,6 @@ static const map<ActivationFunction, FunctionData> activationFunction = {
       .longName = "Exponential Linear Unit",
       .formula = "X/(1+exp(-1b256*X))+expm1(X)*(1-1/(1+exp(-1b256*X)))",  // Here we use a quasi-threshold function
       .signedOut = true,                                                  // output signed
-      .deltaFunction = Delta::ReLU,
       .scaleFactor = 1.0,                                                 //
     }},
   {SiLU,
