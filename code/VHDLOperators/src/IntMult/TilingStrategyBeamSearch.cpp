@@ -115,8 +115,8 @@ namespace flopoco {
             }
         }
 
-        cout << "Total cost: " << currentTotalCost << " " << usedDSPBlocks << endl;
-        cout << "Total area: " << currentArea << endl;
+        REPORT(LogLevel::VERBOSE, "Total cost: " << currentTotalCost << " " << usedDSPBlocks);
+        REPORT(LogLevel::VERBOSE, "Total area: " << currentArea);
     }
 
     bool TilingStrategyBeamSearch::placeSingleTile(BaseFieldState& fieldState, unsigned int& usedDSPBlocks, list<mult_tile_t>* solution, const unsigned int neededX, const unsigned int neededY, BaseMultiplierCategory* tile, double& cost, unsigned int& area, double cmpCost, vector<tuple<BaseMultiplierCategory*, BaseMultiplierParametrization, multiplier_coordinates_t>>& dspBlocks) {

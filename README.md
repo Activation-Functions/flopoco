@@ -1,3 +1,79 @@
+# AICAS 2025 - A.L.P.H.A.
+
+This fork of flopoco contains one supplementary commit `alpha: Init for AICAS`, which represent our contribution to this software.
+
+The changes have been anonymised for the review period.
+
+### Building
+
+The simplest way to build the version of FloPoCo with our changes is through the Nix build system.
+
+The recommended version is [Lix](https://lix.systems), and can be installed on any Linux/MacOS system by following the instructions on https://lix.systems/install/ .
+Once installed, and this repository cloned, one can enter a shell containing the necessary build tools by running:
+
+```bash
+nix-shell
+```
+
+To build FloPoCo, you can then run the following commands:
+
+```bash
+mkdir build && cd build
+
+cmake .. -G Ninja && ninja
+```
+
+### Running
+
+Once this is done, the `flopoco` executable is located in the `bin` directory of the build directory.
+
+The different options available can be shown by running:
+
+```bash
+./bin/flopoco alpha
+```
+
+#### Examples
+
+To generate the VHDL code corresponding to the Sigmoid function, run:
+
+```bash
+./bin/flopoco alpha f=Sigmoid wIn=8 wOut=8
+```
+
+It will generate an approximation of the Sigmoid function, using 8-bit fixed point numbers as input and output.
+
+```bash
+./bin/flopoco alpha f=Sigmoid wIn=16 wOut=16 method=PiecewiseHorner3 enableSymmetry=1
+```
+
+This more complicated example will produce an approximation on 16-bit fixed point numbers, using a Piecewise Polynomial of degree 3, and expo=loiting the intrinsic symmetry of the sigmoid function (for more readable code, it is possible to add the parameter `PlainVHDL=1`).
+
+The `method` parameter can be one of `PlainTable`, `Horner`, `Multipartite`, `PiecewiseHorner1`, `PiecewiseHorner2`, `PiecewiseHorner3`.
+
+#### Verifying the operator
+
+The generated operators can also be tested against the mathematical function they are approximating, adding the `TestBench` argument:
+
+```bash
+./bin/flopoco alpha f=GeLU wIn=9 wOut=9 TestBench
+```
+
+This will produce a `test.input` file representing the tests validationg the approximation, and will print a command to emulate the tests with `nvc`, in this particular case:
+
+```bash
+nvc -M 128m -a flopoco.vhdl --relaxed --error-limit=0 -e TestBench_GeLU_9_9_auto_comb_uid2_comb_uid6  -r --exit-severity=failure --wave=TestBench_GeLU_9_9_auto_comb_uid2_comb_uid6.fst --stop-time=5132ns
+```
+
+FloPoCo also contains automatic testing of operators, which will run the previous steps automatically. To execute it for the `alpha` operator, simply run:
+
+```bash
+./bin/flopoco autotest operator=alpha
+```
+
+All tests should pass, except for the approximation of `GeLU` on 6-bits fixed point numbers using the `deltaReLU` parameter.
+Indeed, for this small size, the `GeLU` function is indiscernable from the `ReLU` function, i.e. their difference is 0 and FloPoCo will consider that this request is meaningless.
+
 # FloPoCo
 
 FloPoCo is a generator of Floating-Point (but not only) Cores for FPGAs.

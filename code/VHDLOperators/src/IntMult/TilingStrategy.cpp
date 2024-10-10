@@ -25,10 +25,10 @@ namespace flopoco {
 			BaseMultiplierCategory::Parametrization& parametrization = tile.first;
 			multiplier_coordinates_t& coordinates = tile.second;
 
-			cerr << "multiplier of type " << parametrization.getMultType() << " placed at (" << coordinates.first << "," << coordinates.second <<
+			REPORT(LogLevel::VERBOSE, "multiplier of type " << parametrization.getMultType() << " placed at (" << coordinates.first << "," << coordinates.second <<
 					") of size (" << parametrization.getTileXWordSize() << ", " << parametrization.getTileYWordSize() << ")" <<
 					" and signedness (" << parametrization.isSignedMultX() << ", " << parametrization.isSignedMultY()  << ")" <<
-					" rel. bh weight=" << parametrization.getTilingWeight() << endl;
+					" rel. bh weight=" << parametrization.getTilingWeight());
 		}
 
 	}

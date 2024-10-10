@@ -461,7 +461,7 @@ namespace flopoco {
 		// restore to the last that worked
 		wcSumOfTruncatedBits -= weightOfNextBitToBeRemoved;
 			
-		cerr << "computeTruncMultParams: Finally actualLSB=" << actualLSB << " keepBits=" << keepBits << " wcSumOfTruncatedBits=" << wcSumOfTruncatedBits   <<  " corrConstant=" << errorCenteringConstant << endl;			
+		REPORT(LogLevel::VERBOSE, "computeTruncMultParams: Finally actualLSB=" << actualLSB << " keepBits=" << keepBits << " wcSumOfTruncatedBits=" << wcSumOfTruncatedBits   <<  " corrConstant=" << errorCenteringConstant);
 		return;
 	}
 

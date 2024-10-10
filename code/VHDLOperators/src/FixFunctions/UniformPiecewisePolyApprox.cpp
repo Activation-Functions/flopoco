@@ -401,15 +401,15 @@ namespace flopoco{
 	{
 		int totalOutputSize;
 
-		REPORT(LogLevel::DETAIL,"Parameters of the approximation polynomials: ");
-		REPORT(LogLevel::DETAIL,"  Degree=" << degree	<< "  alpha=" << alpha
+		REPORT(LogLevel::MESSAGE,"Parameters of the approximation polynomials: ");
+		REPORT(LogLevel::MESSAGE,"  Degree=" << degree	<< "  alpha=" << alpha
 				<< "    maxApproxErrorBound=" << approxErrorBound  << "    common coeff LSB="  << LSB);
 
 		totalOutputSize=0;
 		for (size_t j=0; j<=degree; j++) {
 			size_t size = MSB[j]-LSB + (coeffSigns[j] == 0);
 			totalOutputSize += size ;
-			REPORT(LogLevel::DETAIL,"  Coeff"<<setw(2) << j<<":  signedMSB =" <<setw(3)<< MSB[j]
+			REPORT(LogLevel::MESSAGE,"  Coeff"<<setw(2) << j<<":  signedMSB =" <<setw(3)<< MSB[j]
 						 << (coeffSigns[j]==0? ",  variable sign " : ", constant sign "+string(coeffSigns[j]==1?"+":"-") )
 						 << "   => stored size ="<<setw(3) << size << " bits"
 						 );

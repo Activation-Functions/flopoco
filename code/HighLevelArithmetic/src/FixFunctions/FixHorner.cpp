@@ -269,9 +269,9 @@ namespace flopoco{
 		} // closes the for loop on k (the intervals)
 
 		// Final reporting
-		REPORT(LogLevel::VERBOSE, "Architecture parameters:")
+		REPORT(LogLevel::MESSAGE, "Architecture parameters:")
 		for (int i = degree - 1; i >= 0; i--) {
-			REPORT(LogLevel::VERBOSE,
+			REPORT(LogLevel::MESSAGE,
 			       "  Horner step "
 				   << i << ": YLSB=" << setw(3) << wcYLSB[i]
 				   << "   SSgn=" << setw(2) << wcSumSign[i]

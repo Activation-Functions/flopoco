@@ -192,8 +192,7 @@ namespace flopoco{
 			vector<mpz_class> v;
 			SplitCoeffTableVector.push_back(v);
 		}
-		REPORT(LogLevel::VERBOSE, "Poly table input size  = " << alpha);
-		REPORT(LogLevel::VERBOSE, "Poly table output size = " << polyTableOutputSize);
+		REPORT(LogLevel::MESSAGE, "Size of the polynomial coeff table: 2^" << alpha << " x " << polyTableOutputSize << " bits")
 
 		int x;
 		for(x=0; x<(1<<alpha); x++) {
@@ -226,11 +225,11 @@ namespace flopoco{
 		int compressedCost=0;
 		for (int i=0; i<=degree; i++) {
 			auto dc = DifferentialCompression::find_differential_compression(SplitCoeffTableVector[i], alpha, pwp->MSB[i] - pwp->LSB + (pwp->coeffSigns[i]==0? 1: 0), getTarget());
-			REPORT(LogLevel::MESSAGE, "Differential compression of coeff table for degree " << i << endl << dc.report());
+			REPORT(LogLevel::DETAIL, "Differential compression of coeff table for degree " << i << endl << dc.report());
 			initialCost += (dc.originalWout)<< alpha;
 			compressedCost += dc.subsamplingStorageSize() + dc.diffsStorageSize();
 		}
-		REPORT(LogLevel::MESSAGE, "For the full table of coeffs, initial cost is: " << initialCost <<   ", compressed cost is: " << compressedCost <<   "   Saved: " << 100*((double)initialCost-compressedCost)/ ((double)initialCost) << " %");
+		REPORT(LogLevel::DETAIL, "For the full table of coeffs, initial cost is: " << initialCost <<   ", compressed cost is: " << compressedCost <<   "   Saved: " << 100*((double)initialCost-compressedCost)/ ((double)initialCost) << " %");
 
 
 	}

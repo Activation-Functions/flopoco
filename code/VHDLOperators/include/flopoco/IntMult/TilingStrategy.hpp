@@ -3,6 +3,7 @@
 #include "BaseMultiplierCollection.hpp"
 #include "BaseMultiplierCategory.hpp"
 #include <gmpxx.h>
+#include "flopoco/report.hpp"
 
 namespace flopoco {
 

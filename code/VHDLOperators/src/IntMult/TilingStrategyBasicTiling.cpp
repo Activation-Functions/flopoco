@@ -446,6 +446,6 @@ TilingStrategyBasicTiling::TilingStrategyBasicTiling(
 			}
 		}
 
-		cout << "Total cost: " << totalCost << endl;
+		REPORT(LogLevel::VERBOSE, "Total cost: " << totalCost);
 	}
 };
