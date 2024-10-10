@@ -107,7 +107,8 @@ namespace flopoco
     double inputScale,
     int useDeltaReLU_,
     bool expensiveSymmetry,
-    bool enableSymmetry)
+    bool enableSymmetry,
+    bool plotFunction)
       : Operator(parentOp_, target_), useDeltaReLU(static_cast<DeltaReLUCompression>(useDeltaReLU_))
   {
     // Check sanity of inputs
@@ -471,6 +472,61 @@ namespace flopoco
     vhdl << tab << "Y <= " << output(out);
 
     vhdl << ";" << endl;
+
+
+    // Add the plot with gnuplot
+    if (plotFunction) {
+    
+      // Start with the gnuplot file
+      ostringstream filename1;
+      filename1 << "plot_"<<vhdlize(f->description) << ".gp";
+      fstream d1;
+      d1.open(filename1.str().c_str(), ios::out);  // no precautions here, this is not prod code
+      d1 << "set title \"f(x)=" << f->description << "\"\nset xlabel \"x\"\nset ylabel \"f(x)\"\nset grid\nplot \"plot_" << vhdlize(f->description)  << ".dat\" using 1:2 title \"\" lt 1 pt 7 ps 1";
+      if (!correctlyRounded) {
+        d1 << ", \"plot_" << vhdlize(f->description)  << ".dat\" using 1:3 title \"\" lt 2 pt 7 ps 1";
+      }
+      d1.close();
+  
+      // Now the data file
+      ostringstream filename;
+      filename << "plot_"<<vhdlize(f->description) << ".dat";
+      fstream d;
+      d.open(filename.str().c_str(), ios::out);  // no precautions here, this is not prod code
+      
+      mpz_class sign_limit_in = (mpz_class(1)<<(wIn-1));
+      mpz_class sign_limit_out = (mpz_class(1)<<(wOut-1));
+      mpz_class max_input = (mpz_class(1)<<(wIn));
+      mpz_class max_output = (mpz_class(1)<<(wOut));
+
+      for (mpz_class i = 0; i < max_input; i++) {
+        mpz_class x = i;
+	      mpz_class rNorD,ru;
+	      f->eval(x,rNorD,ru,correctlyRounded);
+        // Signed input 
+        if (x >= sign_limit_in) {
+          x = x - max_input;
+        }
+        // Signed output
+        if (fd.signedOut) {
+          if (rNorD >= sign_limit_out) {
+            rNorD = rNorD - max_output;
+          }
+          if (ru >= sign_limit_out) {
+            ru = ru - max_output;
+          }
+        }
+
+        d << x << " " << rNorD;
+	      if(!correctlyRounded)
+          d << " " << ru;
+        d << endl;
+      }
+      
+      d.close();
+
+      REPORT(LogLevel::MESSAGE, "To plot function, either execute 'gnuplot -c \"plot_"<<vhdlize(f->description) << ".gp\"' in terminal or 'load \"plot_"<<vhdlize(f->description) << ".gp\"' in gnuplot.");
+    }
   }
 
 
@@ -488,6 +544,7 @@ namespace flopoco
     int useDeltaReLU;
     bool expensiveSymmetry;
     bool enableSymmetry;
+    bool plotFunction;
     ui.parseString(args, "f", &fIn);
     ui.parseInt(args, "wIn", &wIn);
     ui.parseInt(args, "wOut", &wOut);
@@ -496,7 +553,8 @@ namespace flopoco
     ui.parseInt(args, "useDeltaReLU", &useDeltaReLU);
     ui.parseBoolean(args, "expensiveSymmetry", &expensiveSymmetry);
     ui.parseBoolean(args, "enableSymmetry", &enableSymmetry);
-    return new SNAFU(parentOp, target, fIn, wIn, wOut, methodIn, inputScale, useDeltaReLU, expensiveSymmetry, enableSymmetry);
+    ui.parseBoolean(args, "plotFunction", &plotFunction);
+    return new SNAFU(parentOp, target, fIn, wIn, wOut, methodIn, inputScale, useDeltaReLU, expensiveSymmetry, enableSymmetry, plotFunction);
   }
 
   TestList SNAFU::unitTest(int testLevel)
@@ -548,6 +606,7 @@ namespace flopoco
     "f(string): function of interest, among \"Tanh\", \"Sigmoid\", \"ReLU\", \"GELU\", \"ELU\", \"SiLU\", \"InvExp\" (case-insensitive);"
     "wIn(int): number of bits of the input ;"
     "wOut(int): number of bits of the output; "
+    "plotFunction(bool)=false: generate files to plot the function. Not recommended for wIn > 12; "
     "expensiveSymmetry(bool)=false: whether to add a special case for the input -1 when symmetry is used as 1 is not a representable fixed point;"
     "enableSymmetry(bool)=false: whether to use the intrinsic symmetry of the function to compress a little the result;"
     "inputScale(real)=8.0: the input scaling factor: the 2^wIn input values are mapped on the interval[-inputScale, inputScale) ; "

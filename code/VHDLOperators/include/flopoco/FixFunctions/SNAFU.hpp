@@ -324,7 +324,8 @@ namespace flopoco
       double inputScale,
       int useDeltaReLU,
       bool expensiveSymmetry,
-      bool enableSymmetry);
+      bool enableSymmetry,
+      bool plotFunction);
 
     void emulate(TestCase* tc);
 
@@ -340,6 +341,7 @@ namespace flopoco
     string sollyaDeltaFunction;  // when we use DeltaReLUCompression
     FixFunction* f;
     bool correctlyRounded;
+    bool plotFunction;
   };
 
 }  // namespace flopoco
