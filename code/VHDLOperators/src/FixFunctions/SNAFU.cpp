@@ -106,7 +106,6 @@ namespace flopoco
     string methodIn,
     double inputScale,
     int useDeltaReLU_,
-    bool expensiveSymmetry,
     bool enableSymmetry,
     bool plotFunction)
       : Operator(parentOp_, target_), useDeltaReLU(static_cast<DeltaReLUCompression>(useDeltaReLU_))
@@ -170,7 +169,7 @@ namespace flopoco
     bool useSymmetry = enableSymmetry && (useDeltaReLU == DeltaReLUCompression::Enabled ? fd.deltaParity != Parity::None : fd.parity != Parity::None);
 
     // Process the function definition based on what we know
-    const string scaleString = "(" + to_string(inputScale) + "*@)";
+    const string scaleString = "(" + to_string(inputScale) + "*(1+1b" + to_string(lsbIn) + ")*@)";
 
     string base, deltaTo, delta;  // The standard formula, and the delta function associated to it
 
@@ -355,8 +354,9 @@ namespace flopoco
       size_t x = in;
       size_t a = ++in;
 
-      vhdl << tab << declare(input(a), wIn) << " <= (not(" << input(x) << ") + " << getSignalByName(input(x))->valueToVHDL(1) << ") when " << input(x)
-           << of(wIn - 1) << " = '1' else " << input(x) << ";" << endl;
+      // As the interval is slightly shifted, to get -X we only need to negate the bits
+      vhdl << tab << declare(input(a), wIn) << " <= not(" << input(x) << ") when " << input(x) << of(wIn - 1) << " = '1' else " << input(x) << ";"
+           << endl;
 
       vhdl << tab << declare(input(++in), wIn - 1) << " <= " << input(a) << range(wIn - 2, 0) << ";" << endl;
     } else if(forceRescale && af != ELU) {  // This is incompatible with the exploitation of symmetry
@@ -447,20 +447,6 @@ namespace flopoco
       vhdl << tab << declare(output(f), wOut) << " <= ReLU - (" + output(d) + ");" << endl;
     }
 
-    // We are running in symmetry mode
-    if(expensiveSymmetry && useSymmetry) {
-      mpz_class rc, ru;
-      // TODO: fix for ELU ???
-      f->eval(mpz_class(1) << (wIn - 1), rc, ru, true);  // Compute f(-1), which is '10...0' in 2's complement
-
-      size_t f = out;
-      size_t y = ++out;
-
-      addComment("Expensive reconstruction for -1");
-      vhdl << tab << declare(output(y), wOut) << " <= " << getSignalByName(output(f))->valueToVHDL(rc)
-           << " when X = " << getSignalByName("X")->valueToVHDL(mpz_class(1) << wIn - 1) << " else " << output(f) << ";" << endl;
-    }
-
     // Reconstruct the ELU value with a simple mux
     if(af == ELU) {
       size_t d = out;
@@ -542,7 +528,6 @@ namespace flopoco
     double inputScale;
     string fIn, methodIn;
     int useDeltaReLU;
-    bool expensiveSymmetry;
     bool enableSymmetry;
     bool plotFunction;
     ui.parseString(args, "f", &fIn);
@@ -551,10 +536,9 @@ namespace flopoco
     ui.parseString(args, "method", &methodIn);
     ui.parseFloat(args, "inputScale", &inputScale);
     ui.parseInt(args, "useDeltaReLU", &useDeltaReLU);
-    ui.parseBoolean(args, "expensiveSymmetry", &expensiveSymmetry);
     ui.parseBoolean(args, "enableSymmetry", &enableSymmetry);
     ui.parseBoolean(args, "plotFunction", &plotFunction);
-    return new SNAFU(parentOp, target, fIn, wIn, wOut, methodIn, inputScale, useDeltaReLU, expensiveSymmetry, enableSymmetry, plotFunction);
+    return new SNAFU(parentOp, target, fIn, wIn, wOut, methodIn, inputScale, useDeltaReLU, enableSymmetry, plotFunction);
   }
 
   TestList SNAFU::unitTest(int testLevel)
@@ -607,7 +591,6 @@ namespace flopoco
     "wIn(int): number of bits of the input ;"
     "wOut(int): number of bits of the output; "
     "plotFunction(bool)=false: generate files to plot the function. Not recommended for wIn > 12; "
-    "expensiveSymmetry(bool)=false: whether to add a special case for the input -1 when symmetry is used as 1 is not a representable fixed point;"
     "enableSymmetry(bool)=false: whether to use the intrinsic symmetry of the function to compress a little the result;"
     "inputScale(real)=8.0: the input scaling factor: the 2^wIn input values are mapped on the interval[-inputScale, inputScale) ; "
     "method(string)=auto: approximation method, among \"PlainTable\",\"MultiPartite\", \"Horner\", \"PiecewiseHorner1\", \"PiecewiseHorner2\", "

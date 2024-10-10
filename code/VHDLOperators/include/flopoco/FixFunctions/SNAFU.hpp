@@ -189,6 +189,7 @@ static const map<ActivationFunction, FunctionData> activationFunction = {
       .longName = "Rectified Linear Unit",
       .formula = "X/(1+exp(-1b256*X))",  // Here we use a quasi-threshold function
       .signedOut = false,                // output unsigned
+      .slightRescale = true,             // output touches 1 and needs to be slightly rescaled
       .scaleFactor = 1.0,                //
     }},
   {ELU,
@@ -197,6 +198,7 @@ static const map<ActivationFunction, FunctionData> activationFunction = {
       .longName = "Exponential Linear Unit",
       .formula = "X/(1+exp(-1b256*X))+expm1(X)*(1-1/(1+exp(-1b256*X)))",  // Here we use a quasi-threshold function
       .signedOut = true,                                                  // output signed
+      .slightRescale = true,                                              // output touches 1 and needs to be slightly rescaled
       .scaleFactor = 1.0,                                                 //
     }},
   {SiLU,
@@ -207,6 +209,7 @@ static const map<ActivationFunction, FunctionData> activationFunction = {
       .signedOut = true,           // output signed
       .deltaParity = Parity::Even,
       .deltaFunction = Delta::ReLU,
+      .slightRescale = true,       // output touches 1 and needs to be slightly rescaled
       .scaleFactor = 1.0,          //
     }},
   {GeLU,
@@ -217,6 +220,7 @@ static const map<ActivationFunction, FunctionData> activationFunction = {
       .signedOut = true,                      // output signed
       .deltaParity = Parity::Even,
       .deltaFunction = Delta::ReLU,
+      .slightRescale = true,                  // output touches 1 and needs to be slightly rescaled
       .scaleFactor = 1.0,                     //
     }},
   {InvExp,
@@ -323,7 +327,6 @@ namespace flopoco
       string method,
       double inputScale,
       int useDeltaReLU,
-      bool expensiveSymmetry,
       bool enableSymmetry,
       bool plotFunction);
 
@@ -336,7 +339,6 @@ namespace flopoco
     int wOut;
     double inputScale;
     DeltaReLUCompression useDeltaReLU;
-    bool expensiveSymmetry;
     bool enableSymmetry;
     string sollyaDeltaFunction;  // when we use DeltaReLUCompression
     FixFunction* f;
